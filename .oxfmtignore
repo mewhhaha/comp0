@@ -1,0 +1,5 @@
+node_modules
+dist
+apps/docs/dist
+pnpm-lock.yaml
+.agents

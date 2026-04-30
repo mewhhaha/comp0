@@ -1,0 +1,8 @@
+node_modules
+dist
+apps/docs/dist
+.vite
+.todo
+.vitest-attachments
+*.tsbuildinfo
+pnpm-lock.yaml.tmp

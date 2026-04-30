@@ -1,0 +1,25 @@
+{
+  "name": "@comp0/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --host 0.0.0.0",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@comp0/react": "workspace:*",
+    "lucide-react": "1.11.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "react-router": "7.14.1",
+    "shiki": "4.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.2.4",
+    "tailwindcss": "4.2.4",
+    "vite": "8.0.10"
+  }
+}

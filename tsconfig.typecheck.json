@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@comp0/core": ["./packages/core/src/index.ts"],
+      "@comp0/react": ["./packages/react/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/core/src/**/*.ts",
+    "packages/core/src/**/*.tsx",
+    "packages/react/src/**/*.ts",
+    "packages/react/src/**/*.tsx",
+    "packages/react/test/**/*.tsx",
+    "apps/docs/src/**/*.ts",
+    "apps/docs/src/**/*.tsx",
+    "apps/docs/vite.config.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ]
+}
