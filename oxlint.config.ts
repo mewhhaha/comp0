@@ -1,0 +1,50 @@
+import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  ignorePatterns: ["dist", "node_modules", "apps/docs/dist"],
+  plugins: ["typescript", "react", "jsx-a11y"],
+  rules: {
+    "react/jsx-key": "error",
+    "typescript/no-explicit-any": "warn",
+  },
+  settings: {
+    "better-tailwindcss": {
+      cwd: "./apps/docs",
+      entryPoint: "./src/styles.css",
+      selectors: [
+        {
+          kind: "callee",
+          match: [{ type: "strings" }],
+          name: "^(?:cx|cn)$",
+        },
+        {
+          kind: "callee",
+          match: [{ type: "objectKeys" }],
+          name: "^(?:cx|cn)$",
+        },
+      ],
+    },
+  },
+  overrides: [
+    {
+      files: ["apps/docs/src/*.ts", "apps/docs/src/*.tsx"],
+      jsPlugins: ["eslint-plugin-better-tailwindcss"],
+      rules: {
+        "better-tailwindcss/enforce-consistent-line-wrapping": [
+          "error",
+          {
+            classesPerLine: 0,
+            group: "newLine",
+            indent: 2,
+            lineBreakStyle: "unix",
+            preferSingleLine: false,
+            printWidth: 80,
+            strictness: "loose",
+          },
+        ],
+        "better-tailwindcss/no-duplicate-classes": "error",
+        "better-tailwindcss/no-unnecessary-whitespace": ["error", { allowMultiline: true }],
+      },
+    },
+  ],
+});

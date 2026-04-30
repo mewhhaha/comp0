@@ -1,16 +1,7 @@
-export {
-  Collection,
-  ListBox,
-  ListBoxItem,
-  ListBoxSection,
-  Menu,
-  MenuItem,
-  MenuSection,
-  type CollectionProps,
-  type ListBoxItemProps,
-  type ListBoxProps,
-  type ListBoxSectionProps,
-  type MenuItemProps,
-  type MenuProps,
-  type MenuSectionProps,
-} from "./collections.js";
+export * from "./components/Collection.js";
+export * from "./components/ListBox.js";
+export * from "./components/ListBoxItem.js";
+export * from "./components/ListBoxSection.js";
+export * from "./components/Menu.js";
+export * from "./components/MenuItem.js";
+export * from "./components/MenuSection.js";
