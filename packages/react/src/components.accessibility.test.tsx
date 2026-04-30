@@ -1,4 +1,4 @@
-import { act } from "react";
+import { act, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Autocomplete,
@@ -673,33 +673,104 @@ describe("overlay, table, file, toolbar, and parity accessibility", () => {
     expect(buttons[4]?.tabIndex).toBe(0);
   });
 
-  it("moves tag focus with arrow keys and removes focused tags with Backspace", () => {
-    const onRemove = vi.fn();
+  it("moves tag focus with arrow keys and skips disabled tags", () => {
     const { container } = render(
       <TagGroup aria-label="Selected filters">
-        <TagList onRemove={onRemove}>
+        <TagList>
           <Tag id="accessible">Accessible</Tag>
+          <Tag id="disabled" disabled>
+            Disabled
+          </Tag>
           <Tag id="headless">Headless</Tag>
           <Tag id="react">React</Tag>
         </TagList>
       </TagGroup>,
     );
-    const tagList = container.querySelector<HTMLElement>("[data-slot='tag-list']")!;
-    const tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+    let tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
 
     expect(tags[0]?.tabIndex).toBe(0);
     expect(tags[1]?.tabIndex).toBe(-1);
 
     tags[0]?.focus();
-    fireKeyDown(tagList, "ArrowRight");
+    fireKeyDown(tags[0]!, "ArrowRight");
+    tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
 
+    expect(document.activeElement).toBe(tags[2]);
+    expect(tags[0]?.tabIndex).toBe(-1);
+    expect(tags[1]?.hasAttribute("tabindex")).toBe(false);
+    expect(tags[2]?.tabIndex).toBe(0);
+
+    fireKeyDown(tags[2]!, "ArrowLeft");
+    tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    expect(document.activeElement).toBe(tags[0]);
+    expect(tags[0]?.tabIndex).toBe(0);
+    expect(tags[2]?.tabIndex).toBe(-1);
+
+    fireKeyDown(tags[0]!, "End");
+    tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    expect(document.activeElement).toBe(tags[3]);
+    expect(tags[3]?.tabIndex).toBe(0);
+
+    fireKeyDown(tags[3]!, "Home");
+    tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    expect(document.activeElement).toBe(tags[0]);
+  });
+
+  it("keeps tag focus on the next enabled tag after keyboard removal", () => {
+    const removed: string[] = [];
+
+    function RemovableTags() {
+      const [tags, setTags] = useState([
+        { id: "accessible", label: "Accessible" },
+        { id: "headless", label: "Headless" },
+        { id: "react", label: "React" },
+      ]);
+
+      return (
+        <TagGroup aria-label="Selected filters">
+          <TagList
+            onRemove={(id) => {
+              removed.push(id);
+              setTags((current) => current.filter((tag) => tag.id !== id));
+            }}
+          >
+            {tags.map((tag) => (
+              <Tag id={tag.id} key={tag.id}>
+                {tag.label}
+              </Tag>
+            ))}
+          </TagList>
+        </TagGroup>
+      );
+    }
+
+    const { container } = render(<RemovableTags />);
+    let tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    tags[0]?.focus();
+    fireKeyDown(tags[0]!, "ArrowRight");
+    fireKeyDown(tags[1]!, "Backspace");
+
+    expect(removed).toEqual(["headless"]);
+
+    tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    expect([...tags].map((tag) => tag.id)).toEqual(["accessible", "react"]);
     expect(document.activeElement).toBe(tags[1]);
     expect(tags[0]?.tabIndex).toBe(-1);
     expect(tags[1]?.tabIndex).toBe(0);
 
     fireKeyDown(tags[1]!, "Backspace");
 
-    expect(onRemove).toHaveBeenCalledWith("headless");
+    tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    expect(removed).toEqual(["headless", "react"]);
+    expect([...tags].map((tag) => tag.id)).toEqual(["accessible"]);
+    expect(document.activeElement).toBe(tags[0]);
+    expect(tags[0]?.tabIndex).toBe(0);
   });
 
   it("keeps visually hidden content in the DOM with clipping styles", () => {

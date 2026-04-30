@@ -18,6 +18,9 @@ export function Tag({
   ...props
 }: TagProps & RefProp<HTMLDivElement>) {
   const tagList = useContext(TagListContext);
+  const register = tagList?.register;
+  const remove = tagList?.remove;
+  const setActiveKey = tagList?.setActiveKey;
   const generatedId = useId();
   const key = id ?? generatedId;
   const resolvedDisabled = Boolean(disabled);
@@ -28,10 +31,10 @@ export function Tag({
 
   const tagRef = useCallback(
     (element: HTMLDivElement | null) => {
-      tagList?.register(key, element, resolvedDisabled);
+      register?.(key, element, resolvedDisabled);
       composeRefs(ref)(element);
     },
-    [key, ref, resolvedDisabled, tagList],
+    [key, ref, register, resolvedDisabled],
   );
 
   return (
@@ -47,15 +50,15 @@ export function Tag({
       data-value={key}
       onClick={(event) => {
         onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) tagList?.setActiveKey(key);
+        if (!event.defaultPrevented && !resolvedDisabled) setActiveKey?.(key);
       }}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.defaultPrevented || resolvedDisabled) return;
         if (event.key !== "Backspace" && event.key !== "Delete") return;
-        if (!tagList?.remove) return;
+        if (!remove) return;
         event.preventDefault();
-        tagList.remove(key);
+        remove(key);
       }}
     >
       {children}
