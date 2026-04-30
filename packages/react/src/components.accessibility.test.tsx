@@ -375,12 +375,13 @@ describe("combobox, listbox, menu, and autocomplete accessibility", () => {
 
   it("blocks disabled listbox and menu items from click or keyboard activation", () => {
     const listChanged = vi.fn();
+    const listClicked = vi.fn();
     const menuClicked = vi.fn();
     const { container } = render(
       <>
         <ListBox defaultValue="one" onChange={listChanged}>
           <ListBoxItem id="one">One</ListBoxItem>
-          <ListBoxItem id="two" disabled>
+          <ListBoxItem id="two" disabled onClick={listClicked}>
             Two
           </ListBoxItem>
         </ListBox>
@@ -401,13 +402,14 @@ describe("combobox, listbox, menu, and autocomplete accessibility", () => {
     expect(disabledOption.hasAttribute("tabindex")).toBe(false);
     fireClick(disabledOption);
     expect(listChanged).not.toHaveBeenCalledWith("two");
+    expect(listClicked).not.toHaveBeenCalled();
     expect(container.querySelector("#one")?.getAttribute("aria-selected")).toBe("true");
     expect(container.querySelector("[role='toolbar']")).toBeTruthy();
     expect(container.querySelector("#copy")?.getAttribute("role")).toBe("note");
 
     fireClick(disabledMenuItem);
     fireKeyDown(disabledMenuItem, "Enter");
-    expect(menuClicked).toHaveBeenCalledTimes(1);
+    expect(menuClicked).not.toHaveBeenCalled();
     expect(disabledMenuItem.getAttribute("aria-disabled")).toBe("true");
   });
 
@@ -533,7 +535,8 @@ describe("date and color accessibility", () => {
     expect(buttons[1]?.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("supports color slider bounds, keyboard increments, and swatch option state", () => {
+  it("supports color slider bounds, keyboard increments, and swatch picker focus", () => {
+    const disabledClicked = vi.fn();
     const { container } = render(
       <ColorField defaultValue="#ff0000" name="accent">
         <ColorSlider channel="hue" aria-label="Hue" />
@@ -542,10 +545,11 @@ describe("date and color accessibility", () => {
         <ColorSwatchPicker aria-label="Accent">
           <ColorSwatchPickerItem color="#ff0000" />
           <ColorSwatchPickerItem color="#00ff00" />
-          <ColorSwatchPickerItem color="#0000ff" disabled />
+          <ColorSwatchPickerItem color="#0000ff" disabled onClick={disabledClicked} />
         </ColorSwatchPicker>
       </ColorField>,
     );
+    const swatchPicker = container.querySelector<HTMLElement>("[role='listbox']")!;
     const sliders = container.querySelectorAll<HTMLElement>("[role='slider']");
     const swatches = container.querySelectorAll<HTMLElement>("[role='option']");
 
@@ -555,7 +559,10 @@ describe("date and color accessibility", () => {
     expect(sliders[2]?.getAttribute("aria-valuemax")).toBe("360");
     expect(container.querySelector("[role='listbox']")?.getAttribute("aria-label")).toBe("Accent");
     expect(swatches[0]?.getAttribute("aria-selected")).toBe("true");
+    expect(swatches[0]?.tabIndex).toBe(0);
+    expect(swatches[1]?.tabIndex).toBe(-1);
     expect(swatches[2]?.getAttribute("aria-disabled")).toBe("true");
+    expect(swatches[2]?.hasAttribute("tabindex")).toBe(false);
 
     fireKeyDown(sliders[0]!, "ArrowRight");
     expect(sliders[0]?.getAttribute("aria-valuenow")).toBe("1");
@@ -563,8 +570,21 @@ describe("date and color accessibility", () => {
     expect(sliders[0]?.getAttribute("aria-valuenow")).toBe("11");
 
     fireClick(swatches[2]!);
+    expect(disabledClicked).not.toHaveBeenCalled();
     expect(container.querySelector<HTMLInputElement>("input[name='accent']")?.value).not.toBe(
       "#0000ff",
+    );
+
+    swatches[0]?.focus();
+    fireKeyDown(swatchPicker, "ArrowRight");
+    expect(document.activeElement).toBe(swatches[1]);
+    expect(swatches[0]?.tabIndex).toBe(-1);
+    expect(swatches[1]?.tabIndex).toBe(0);
+
+    fireKeyDown(swatches[1]!, " ");
+    expect(swatches[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(container.querySelector<HTMLInputElement>("input[name='accent']")?.value).toBe(
+      "#00ff00",
     );
   });
 });

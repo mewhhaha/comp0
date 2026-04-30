@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import {
   InteractiveDiv,
@@ -21,6 +21,7 @@ export function MenuItem({
   const menu = useContext(MenuContext);
   const comboBox = useComboBoxRootContext();
   const autocomplete = useAutocompleteContext();
+  const registerMenuItem = menu?.register;
   const registerPickerItem = comboBox?.registerItem;
   const unregisterPickerItem = comboBox?.unregisterItem;
   const resolvedDisabled = Boolean(disabled);
@@ -33,15 +34,20 @@ export function MenuItem({
     return () => unregisterPickerItem?.(id);
   }, [id, label, registerPickerItem, unregisterPickerItem, visible]);
 
+  const itemRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      registerMenuItem?.(id, label, element, resolvedDisabled);
+      composeRefs(ref)(element);
+    },
+    [id, label, ref, registerMenuItem, resolvedDisabled],
+  );
+
   if (!visible) return null;
 
   return (
     <InteractiveDiv
       {...props}
-      ref={(element) => {
-        menu?.register(id, label, element, resolvedDisabled);
-        composeRefs(ref)(element);
-      }}
+      ref={itemRef}
       id={id}
       role={props.role ?? (autocomplete ? "option" : "menuitem")}
       tabIndex={resolvedDisabled ? undefined : -1}
@@ -50,8 +56,12 @@ export function MenuItem({
       data-disabled={dataAttr(resolvedDisabled)}
       data-selected={dataAttr(autocomplete ? comboBox?.selectedKey === id : undefined)}
       onClick={(event) => {
+        if (resolvedDisabled) {
+          event.preventDefault();
+          return;
+        }
         onClick?.(event);
-        if (event.defaultPrevented || resolvedDisabled) event.preventDefault();
+        if (event.defaultPrevented) event.preventDefault();
         if (!event.defaultPrevented && autocomplete) {
           comboBox?.setActiveKey(id);
           comboBox?.setSelectedKey(id);

@@ -64,8 +64,12 @@ export function ListBoxItem({
       data-disabled={dataAttr(resolvedDisabled)}
       data-value={id}
       onClick={(event) => {
+        if (resolvedDisabled) {
+          event.preventDefault();
+          return;
+        }
         onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) {
+        if (!event.defaultPrevented) {
           listBox?.setActiveKey(id);
           comboBox?.setActiveKey(id);
           listBox?.setSelectedKey(id);
