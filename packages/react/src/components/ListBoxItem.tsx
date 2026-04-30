@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import {
   useAutocompleteContext,
@@ -23,6 +23,7 @@ export function ListBoxItem({
   const comboBox = useComboBoxRootContext();
   const autocomplete = useAutocompleteContext();
   const picker = select ?? comboBox;
+  const registerListBoxItem = listBox?.register;
   const registerPickerItem = picker?.registerItem;
   const unregisterPickerItem = picker?.unregisterItem;
   const resolvedDisabled = Boolean(disabled);
@@ -40,15 +41,20 @@ export function ListBoxItem({
     return () => unregisterPickerItem?.(id);
   }, [id, label, registerPickerItem, unregisterPickerItem, visible]);
 
+  const itemRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      registerListBoxItem?.(id, label, element, resolvedDisabled);
+      composeRefs(ref)(element);
+    },
+    [id, label, ref, registerListBoxItem, resolvedDisabled],
+  );
+
   if (!visible) return null;
 
   return (
     <div
       {...props}
-      ref={(element) => {
-        listBox?.register(id, label, element, resolvedDisabled);
-        composeRefs(ref)(element);
-      }}
+      ref={itemRef}
       id={id}
       role="option"
       tabIndex={tabIndex}

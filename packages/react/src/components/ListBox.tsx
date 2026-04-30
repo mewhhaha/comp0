@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findTypeaheadMatch, getRovingFocusTarget, useControllableState } from "@comp0/core";
 import { useComboBoxRootContext, useSelectRootContext, type RefProp } from "../shared.js";
 import { ListBoxContext, sortItems } from "./collection-shared.js";
@@ -29,6 +29,11 @@ export function ListBox({
   const activeKeyRef = useRef(activeKey);
   const selectedRef = useRef(selected);
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
+  const itemVersion = useRef(0);
+  const sortedItemCache = useRef<{
+    version: number;
+    items: CollectionItemRecord[];
+  }>({ version: -1, items: [] });
 
   useEffect(() => {
     selectedRef.current = selected;
@@ -42,26 +47,52 @@ export function ListBox({
     activeKeyRef.current = activeKey;
   }, [activeKey]);
 
-  const context: SelectableCollectionContextValue = {
-    activeKey,
-    selectedKey: selected,
-    setActiveKey,
-    setSelectedKey: setSelected,
-    register(key, textValue, element, disabled) {
-      if (element) {
+  const register = useCallback(
+    (key: string, textValue: string, element: HTMLElement | null, disabled?: boolean) => {
+      if (!element) {
+        if (itemMap.current.delete(key)) itemVersion.current += 1;
+        return;
+      }
+
+      const current = itemMap.current.get(key);
+      if (
+        current?.textValue !== textValue ||
+        current.element !== element ||
+        current.disabled !== disabled
+      ) {
         itemMap.current.set(key, { key, textValue, element, disabled });
-        if (!selectedRef.current && !activeKeyRef.current && !disabled) {
-          activeKeyRef.current = key;
-          setActiveKey(key);
-        }
-      } else {
-        itemMap.current.delete(key);
+        itemVersion.current += 1;
+      }
+
+      if (!selectedRef.current && !activeKeyRef.current && !disabled) {
+        activeKeyRef.current = key;
+        setActiveKey(key);
       }
     },
-    items() {
-      return sortItems([...itemMap.current.values()]);
-    },
-  };
+    [],
+  );
+
+  const items = useCallback(() => {
+    if (sortedItemCache.current.version !== itemVersion.current) {
+      sortedItemCache.current = {
+        version: itemVersion.current,
+        items: sortItems([...itemMap.current.values()]),
+      };
+    }
+    return sortedItemCache.current.items;
+  }, []);
+
+  const context: SelectableCollectionContextValue = useMemo(
+    () => ({
+      activeKey,
+      selectedKey: selected,
+      setActiveKey,
+      setSelectedKey: setSelected,
+      register,
+      items,
+    }),
+    [activeKey, items, register, selected, setSelected],
+  );
 
   return (
     <ListBoxContext.Provider value={context}>

@@ -1,8 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": true,
     "noEmit": false,
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
     "paths": {
       "@comp0/core": ["../core/dist/index.d.ts"]
     }

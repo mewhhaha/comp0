@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldIds } from "../field.js";
 import { SelectRootContext, type RefProp } from "../shared.js";
@@ -19,7 +19,9 @@ export function Select({
 }: SelectProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
   const [open, setOpen] = useState(false);
-  const [itemText, setItemText] = useState<Record<string, ReactNode>>({});
+  const itemTextRef = useRef(new Map<string, ReactNode>());
+  const selectedRef = useRef("");
+  const [selectedText, setSelectedText] = useState<ReactNode>();
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
@@ -29,18 +31,19 @@ export function Select({
     defaultValue: defaultValue ?? "",
     onChange,
   });
+  useEffect(() => {
+    selectedRef.current = selected;
+    setSelectedText(itemTextRef.current.get(selected));
+  }, [selected]);
   const registerItem = useCallback((key: string, textValue: ReactNode) => {
-    setItemText((current) =>
-      Object.is(current[key], textValue) ? current : { ...current, [key]: textValue },
-    );
+    const current = itemTextRef.current.get(key);
+    if (Object.is(current, textValue)) return;
+    itemTextRef.current.set(key, textValue);
+    if (key === selectedRef.current) setSelectedText(textValue);
   }, []);
   const unregisterItem = useCallback((key: string) => {
-    setItemText((current) => {
-      if (!(key in current)) return current;
-      const next = { ...current };
-      delete next[key];
-      return next;
-    });
+    if (!itemTextRef.current.delete(key)) return;
+    setSelectedText((current) => (key === selectedRef.current ? undefined : current));
   }, []);
   const { controlId, descriptionId, errorId, labelId } = ids;
   const fieldContext = useMemo(
@@ -73,7 +76,7 @@ export function Select({
       popoverId: `${controlId}-popover`,
       labelId,
       descriptionId,
-      selectedText: itemText[selected],
+      selectedText,
       setOpen,
       setSelectedKey: setSelected,
       registerItem,
@@ -84,10 +87,10 @@ export function Select({
       descriptionId,
       labelId,
       resolvedDisabled,
-      itemText,
       open,
       registerItem,
       selected,
+      selectedText,
       setSelected,
       unregisterItem,
     ],

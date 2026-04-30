@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { useFieldIds } from "../field.js";
 import { AutocompleteContext, ComboBoxRootContext, type RefProp } from "../shared.js";
@@ -21,29 +21,22 @@ export function Autocomplete({
   const [open, setOpen] = useState(false);
   const [activeKey, setActiveKey] = useState("");
   const [selectedKey, setSelectedKeyState] = useState("");
-  const [itemText, setItemText] = useState<Record<string, ReactNode>>({});
+  const itemTextRef = useRef(new Map<string, ReactNode>());
   const [inputValue, setInputValue] = useControllableState({ value, defaultValue, onChange });
   const resolvedDisabled = Boolean(disabled);
   const registerItem = useCallback((key: string, textValue: ReactNode) => {
-    setItemText((current) =>
-      Object.is(current[key], textValue) ? current : { ...current, [key]: textValue },
-    );
+    itemTextRef.current.set(key, textValue);
   }, []);
   const unregisterItem = useCallback((key: string) => {
-    setItemText((current) => {
-      if (!(key in current)) return current;
-      const next = { ...current };
-      delete next[key];
-      return next;
-    });
+    itemTextRef.current.delete(key);
   }, []);
   const setSelectedKey = useCallback(
     (key: string) => {
       setSelectedKeyState(key);
-      const text = itemText[key];
+      const text = itemTextRef.current.get(key);
       if (typeof text === "string") setInputValue(text);
     },
-    [itemText, setInputValue],
+    [setInputValue],
   );
   const comboBoxContext = useMemo(
     () => ({
