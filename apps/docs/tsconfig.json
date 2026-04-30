@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist-types",
     "declaration": true,
     "declarationMap": true,
@@ -14,5 +14,5 @@
     }
   },
   "references": [{ "path": "../../packages/core" }, { "path": "../../packages/react" }],
-  "include": ["src"]
+  "include": ["src", ".react-router/types/**/*"]
 }

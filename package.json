@@ -8,7 +8,7 @@
     "dev": "pnpm --filter @comp0/docs dev",
     "format": "oxfmt --write --ignore-path .oxfmtignore \"**/*.{ts,tsx,js,json,css,html,md,yaml}\"",
     "format:check": "oxfmt --check --ignore-path .oxfmtignore \"**/*.{ts,tsx,js,json,css,html,md,yaml}\"",
-    "lint": "oxlint -c oxlint.config.ts packages/core/src/**/*.ts packages/core/src/**/*.tsx packages/react/src/**/*.ts packages/react/src/**/*.tsx packages/react/test/**/*.ts packages/react/test/**/*.tsx apps/docs/src/**/*.ts apps/docs/src/**/*.tsx apps/docs/vite.config.ts vitest.config.ts vitest.setup.ts --no-ignore --deny-warnings",
+    "lint": "oxlint -c oxlint.config.ts packages/core/src/**/*.ts packages/core/src/**/*.tsx packages/react/src/**/*.ts packages/react/src/**/*.tsx packages/react/test/**/*.ts packages/react/test/**/*.tsx apps/docs/src/**/*.ts apps/docs/src/**/*.tsx apps/docs/vite.config.ts apps/docs/react-router.config.ts vitest.config.ts vitest.setup.ts --no-ignore --deny-warnings",
     "test": "vitest run --project unit",
     "test:all": "vitest run",
     "test:browser": "vitest run --project browser",

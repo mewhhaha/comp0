@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Menu as MenuIcon, Moon, Search, Sun, X } from "lucide-react";
-import {
-  createBrowserRouter,
-  Navigate,
-  NavLink,
-  RouterProvider,
-  useLoaderData,
-} from "react-router";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import type { HighlighterCore } from "shiki/core";
 import {
   componentGroups,
@@ -20,7 +14,7 @@ import {
   type ComponentDoc,
   type ComponentPage,
   type Theme,
-} from "./docs-data.js";
+} from "../../docs-data.js";
 import {
   Autocomplete,
   Calendar,
@@ -147,33 +141,20 @@ function getSystemTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-const routes = [
-  {
-    index: true,
-    element: <Navigate to={`/${pages[0]!.slug}`} replace />,
-  },
-  ...pages.map((page) => ({
-    path: page.slug,
-    loader: () => page,
-    element: <DocsPage />,
-  })),
-  {
-    path: "*",
-    element: <Navigate to={`/${pages[0]!.slug}`} replace />,
-  },
-];
-
-function createDocsRouter() {
-  return createBrowserRouter(routes);
-}
-
 function displayGroupTitle(group: string) {
-  return group === "Field anatomy" ? "Fields" : group;
+  if (group === "Drag and drop") return "Drag & drop";
+  if (group === "Status and motion") return "Status & motion";
+  if (group === "Text and layout") return "Text & layout";
+  return group;
 }
 
 const groups = componentGroups.map((group) => group.title);
 const pageSections = ["Examples", "Value", "API", "Styling", "Accessibility", "SSR", "Related"];
 let highlighterPromise: Promise<HighlighterCore> | undefined;
+
+function pagePath(slug: string) {
+  return `/components/${slug}`;
+}
 
 function getHighlighter() {
   highlighterPromise ??= Promise.all([
@@ -448,7 +429,8 @@ function RelatedPages({ page }: { page: ComponentPage }) {
         <li key={relatedPage.slug}>
           <NavLink
             className="grid min-h-6 gap-1 border-t border-zinc-950/10 py-3 text-base/7 hover:border-cyan-700 dark:border-white/10 dark:hover:border-cyan-400 sm:text-sm/6"
-            to={`/${relatedPage.slug}`}
+            preventScrollReset
+            to={pagePath(relatedPage.slug)}
           >
             <span className="font-medium text-zinc-950 dark:text-white">{relatedPage.title}</span>
             <span className="text-zinc-600 dark:text-zinc-400">{relatedPage.summary}</span>
@@ -621,6 +603,7 @@ function Playground({ name }: { name: string }) {
   const [searchValue, setSearchValue] = useState("");
   const [numberValue, setNumberValue] = useState(3);
   const [droppedFiles, setDroppedFiles] = useState<string[]>([]);
+  const [tags, setTags] = useState(["Accessible", "Headless", "React 19"]);
 
   if (name === "Button") {
     return (
@@ -1482,10 +1465,14 @@ function Playground({ name }: { name: string }) {
   if (name === "TagGroup") {
     return (
       <TagGroup className="grid max-w-sm gap-2" aria-label="Selected filters">
-        <TagList className="flex flex-wrap gap-2">
-          {["Accessible", "Headless", "React 19"].map((tag) => (
+        <TagList
+          className="flex flex-wrap gap-2"
+          onRemove={(id) => setTags((current) => current.filter((tag) => tag !== id))}
+        >
+          {tags.map((tag) => (
             <Tag
-              className="rounded-full border border-zinc-950/10 px-3 py-1.5 text-base/7 text-zinc-800 data-selected:border-cyan-700 data-selected:bg-cyan-50 dark:border-white/10 dark:text-zinc-200 sm:text-sm/6"
+              className="rounded-full border border-zinc-950/10 px-3 py-1.5 text-base/7 text-zinc-800 data-focused:border-cyan-700 data-focused:bg-cyan-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:border-white/10 dark:text-zinc-200 dark:data-focused:bg-cyan-500/10 sm:text-sm/6"
+              id={tag}
               key={tag}
             >
               {tag}
@@ -1626,6 +1613,7 @@ function Playground({ name }: { name: string }) {
           <ColorSwatch className="size-10 rounded-md border border-zinc-950/10 dark:border-white/10" />
           <Input
             className="min-w-0 rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6"
+            aria-label="Accent hex value"
             defaultValue="#0891b2"
           />
         </div>
@@ -1645,9 +1633,14 @@ function Playground({ name }: { name: string }) {
           <ColorThumb className="absolute left-1/2 top-1 size-4 rounded-full border-2 border-white shadow" />
         </ColorWheel>
         <ColorSwatchPicker className="flex gap-2" aria-label="Saved colors">
-          {["#0891b2", "#16a34a", "#dc2626"].map((color) => (
+          {[
+            ["#0891b2", "Cyan"],
+            ["#16a34a", "Green"],
+            ["#dc2626", "Red"],
+          ].map(([color, label]) => (
             <ColorSwatchPickerItem
               className="rounded-md border border-zinc-950/10 p-1 data-selected:ring-2 data-selected:ring-cyan-700 dark:border-white/10"
+              aria-label={label}
               color={color}
               key={color}
             />
@@ -1657,7 +1650,7 @@ function Playground({ name }: { name: string }) {
     );
   }
 
-  if (name === "DropZone") {
+  if (name === "DropZone" || name === "FileTrigger") {
     return (
       <div className="grid max-w-sm gap-3">
         <DropZone
@@ -2104,7 +2097,7 @@ function AppNav({
           />
         </div>
       )}
-      <div className="min-h-0 overflow-y-auto">
+      <div className="-mx-1 min-h-0 overflow-y-auto px-1">
         {groups.map((group) => {
           const items = pagesToShow.filter((page) => page.group === group);
           if (!items.length) return null;
@@ -2137,7 +2130,8 @@ function AppNav({
                             `,
                         )
                       }
-                      to={`/${page.slug}`}
+                      preventScrollReset
+                      to={pagePath(page.slug)}
                       onClick={onNavigate}
                     >
                       <span>{page.title}</span>
@@ -2213,9 +2207,10 @@ function DocsHeader({
           />
           <MenuIcon className="size-5" aria-hidden="true" />
         </button>
-        <a
+        <Link
           className="inline-flex min-h-8 shrink-0 items-center gap-2 text-lg font-semibold tracking-tight text-zinc-950 dark:text-white"
-          href="/"
+          preventScrollReset
+          to={pagePath(pages[0]!.slug)}
           aria-label="Homepage"
         >
           <span
@@ -2225,17 +2220,18 @@ function DocsHeader({
             c
           </span>
           <span>comp0</span>
-        </a>
+        </Link>
         <nav
           className="hidden items-center gap-5 text-sm/6 text-zinc-600 dark:text-zinc-400 lg:flex"
           aria-label="Docs"
         >
-          <a
+          <Link
             className="inline-flex min-h-6 items-center hover:text-zinc-950 dark:hover:text-white"
-            href={`/${pages[0]!.slug}`}
+            preventScrollReset
+            to={pagePath(pages[0]!.slug)}
           >
             Components
-          </a>
+          </Link>
           <a
             className="inline-flex min-h-6 items-center hover:text-zinc-950 dark:hover:text-white"
             href="#api"
@@ -2273,8 +2269,14 @@ function DocsHeader({
   );
 }
 
-function DocsPage() {
-  const current = useLoaderData() as ComponentPage;
+function currentPageFromPath(pathname: string) {
+  const slug = pathname.split("/").filter(Boolean).at(-1);
+  return pages.find((page) => page.slug === slug) ?? pages[0]!;
+}
+
+export function DocsPageView({ current: currentOverride }: { current?: ComponentPage }) {
+  const location = useLocation();
+  const current = currentOverride ?? currentPageFromPath(location.pathname);
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(getSystemTheme);
@@ -2458,12 +2460,11 @@ function DocsPage() {
           </aside>
         </div>
       </div>
+      <Outlet />
     </div>
   );
 }
 
-export function App() {
-  const [router] = useState(createDocsRouter);
-
-  return <RouterProvider router={router} />;
+export default function ComponentsLayout() {
+  return <DocsPageView />;
 }

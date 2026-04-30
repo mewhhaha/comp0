@@ -673,6 +673,35 @@ describe("overlay, table, file, toolbar, and parity accessibility", () => {
     expect(buttons[4]?.tabIndex).toBe(0);
   });
 
+  it("moves tag focus with arrow keys and removes focused tags with Backspace", () => {
+    const onRemove = vi.fn();
+    const { container } = render(
+      <TagGroup aria-label="Selected filters">
+        <TagList onRemove={onRemove}>
+          <Tag id="accessible">Accessible</Tag>
+          <Tag id="headless">Headless</Tag>
+          <Tag id="react">React</Tag>
+        </TagList>
+      </TagGroup>,
+    );
+    const tagList = container.querySelector<HTMLElement>("[data-slot='tag-list']")!;
+    const tags = container.querySelectorAll<HTMLElement>("[data-slot='tag']");
+
+    expect(tags[0]?.tabIndex).toBe(0);
+    expect(tags[1]?.tabIndex).toBe(-1);
+
+    tags[0]?.focus();
+    fireKeyDown(tagList, "ArrowRight");
+
+    expect(document.activeElement).toBe(tags[1]);
+    expect(tags[0]?.tabIndex).toBe(-1);
+    expect(tags[1]?.tabIndex).toBe(0);
+
+    fireKeyDown(tags[1]!, "Backspace");
+
+    expect(onRemove).toHaveBeenCalledWith("headless");
+  });
+
   it("keeps visually hidden content in the DOM with clipping styles", () => {
     const { container } = render(<VisuallyHidden>Screen reader copy</VisuallyHidden>);
     const hidden = container.querySelector<HTMLElement>("[data-slot='visually-hidden']")!;

@@ -3,6 +3,7 @@ import { page } from "vitest/browser";
 import { createRoot, type Root } from "react-dom/client";
 import type { ReactNode } from "react";
 import axe from "axe-core";
+import { MemoryRouter } from "react-router";
 import {
   Autocomplete,
   Button,
@@ -18,7 +19,7 @@ import {
   Popover,
   SearchField,
 } from "@comp0/react";
-import { App, GroupPlayground } from "./App.js";
+import { DocsPageView, GroupPlayground } from "./routes/components/route.js";
 import {
   accessibilityAuditDimensions,
   accessibilityReferenceCatalog,
@@ -43,11 +44,17 @@ function renderPlayground(pageTitle: string) {
 }
 
 function renderDocsRoute(slug: string) {
-  window.history.pushState({}, "", `/${slug}`);
+  const componentPage = pages.find((item) => item.slug === slug);
+  if (!componentPage) throw new Error(`Missing docs route: ${slug}`);
+
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  root.render(<App />);
+  root.render(
+    <MemoryRouter initialEntries={[`/components/${slug}`]}>
+      <DocsPageView current={componentPage} />
+    </MemoryRouter>,
+  );
 }
 
 function renderInline(element: ReactNode) {
@@ -409,17 +416,22 @@ describe("docs playgrounds", () => {
     await waitForPaint();
 
     const input = page.getByRole("combobox", { name: "Framework" });
-    const inputElement = document.querySelector<HTMLInputElement>("input[role='combobox']")!;
-    inputElement.focus();
-    pressKey(inputElement, "ArrowDown");
+    let inputElement: HTMLInputElement | null = null;
     await waitForCondition(() => {
-      expect(inputElement.getAttribute("aria-activedescendant")).toBe("react");
+      inputElement = document.querySelector<HTMLInputElement>("input[role='combobox']");
+      expect(inputElement).not.toBeNull();
     });
-    pressKey(inputElement, "ArrowDown");
+    const activeInput = inputElement!;
+    activeInput.focus();
+    pressKey(activeInput, "ArrowDown");
     await waitForCondition(() => {
-      expect(inputElement.getAttribute("aria-activedescendant")).toBe("svelte");
+      expect(activeInput.getAttribute("aria-activedescendant")).toBe("react");
     });
-    pressKey(inputElement, "Enter");
+    pressKey(activeInput, "ArrowDown");
+    await waitForCondition(() => {
+      expect(activeInput.getAttribute("aria-activedescendant")).toBe("svelte");
+    });
+    pressKey(activeInput, "Enter");
 
     await expect.element(input).toHaveValue("Svelte");
   });

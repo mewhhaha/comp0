@@ -64,61 +64,43 @@ export type ComponentPage = {
 
 export const componentGroups = [
   {
-    title: "Primitives",
+    title: "Buttons",
+    names: ["Button", "ToggleButton", "ToggleButtonGroup", "Pressable", "FileTrigger"],
+  },
+  {
+    title: "Forms",
     names: [
-      "Button",
-      "ToggleButton",
-      "ToggleButtonGroup",
-      "Link",
-      "Text",
-      "Heading",
-      "Header",
-      "Keyboard",
-      "Separator",
-      "Group",
-      "Toolbar",
-      "Pressable",
-      "Focusable",
-      "VisuallyHidden",
-    ],
-  },
-  {
-    title: "Field anatomy",
-    names: ["Label", "Description", "FieldError", "Fieldset", "Legend"],
-  },
-  {
-    title: "Text inputs",
-    names: ["TextField", "Input", "TextArea", "SearchField"],
-  },
-  {
-    title: "Choice inputs",
-    names: ["Checkbox", "CheckboxGroup", "RadioGroup", "Radio", "Switch"],
-  },
-  {
-    title: "Range and status",
-    names: [
+      "Label",
+      "Description",
+      "FieldError",
+      "Fieldset",
+      "Legend",
+      "TextField",
+      "Input",
+      "TextArea",
+      "SearchField",
+      "Checkbox",
+      "CheckboxGroup",
+      "RadioGroup",
+      "Radio",
+      "Switch",
       "NumberField",
       "Slider",
       "SliderOutput",
       "SliderTrack",
       "SliderThumb",
-      "ProgressBar",
-      "Meter",
     ],
   },
   {
-    title: "Disclosure and navigation",
+    title: "Pickers",
     names: [
-      "Disclosure",
-      "DisclosureGroup",
-      "DisclosurePanel",
-      "Tabs",
-      "TabList",
-      "Tab",
-      "TabPanels",
-      "TabPanel",
-      "Breadcrumbs",
-      "BreadcrumbLink",
+      "Select",
+      "SelectValue",
+      "SelectOption",
+      "Combobox",
+      "ComboBoxValue",
+      "ComboboxOption",
+      "Autocomplete",
     ],
   },
   {
@@ -152,15 +134,21 @@ export const componentGroups = [
     ],
   },
   {
-    title: "Pickers",
+    title: "Navigation",
     names: [
-      "Select",
-      "SelectValue",
-      "SelectOption",
-      "Combobox",
-      "ComboBoxValue",
-      "ComboboxOption",
-      "Autocomplete",
+      "Link",
+      "Disclosure",
+      "DisclosureGroup",
+      "DisclosurePanel",
+      "DisclosureTrigger",
+      "Tabs",
+      "TabList",
+      "Tab",
+      "TabPanels",
+      "TabPanel",
+      "Breadcrumbs",
+      "BreadcrumbLink",
+      "Toolbar",
     ],
   },
   {
@@ -184,16 +172,16 @@ export const componentGroups = [
   {
     title: "Color",
     names: [
-      "ColorArea",
-      "ColorField",
       "ColorPicker",
+      "ColorField",
+      "ColorArea",
       "ColorSlider",
+      "ColorWheel",
+      "ColorWheelTrack",
       "ColorSwatch",
       "ColorSwatchPicker",
       "ColorSwatchPickerItem",
       "ColorThumb",
-      "ColorWheel",
-      "ColorWheelTrack",
     ],
   },
   {
@@ -211,10 +199,10 @@ export const componentGroups = [
   },
   {
     title: "Drag and drop",
-    names: ["DropZone", "DropIndicator", "FileTrigger"],
+    names: ["DropZone", "DropIndicator"],
   },
   {
-    title: "Table",
+    title: "Tables",
     names: [
       "Table",
       "ResizableTableContainer",
@@ -228,8 +216,23 @@ export const componentGroups = [
     ],
   },
   {
-    title: "Transitions and toast",
+    title: "Text and layout",
     names: [
+      "Text",
+      "Heading",
+      "Header",
+      "Keyboard",
+      "Separator",
+      "Group",
+      "Focusable",
+      "VisuallyHidden",
+    ],
+  },
+  {
+    title: "Status and motion",
+    names: [
+      "ProgressBar",
+      "Meter",
       "SharedElementTransition",
       "SharedElement",
       "UNSTABLE_ToastRegion",
@@ -239,6 +242,19 @@ export const componentGroups = [
     ],
   },
 ] as const;
+
+const groupDefaultAliases: Record<string, string> = {
+  Buttons: "Primitives",
+  Forms: "Text inputs",
+  Navigation: "Disclosure and navigation",
+  Tables: "Table",
+  "Text and layout": "Primitives",
+  "Status and motion": "Transitions and toast",
+};
+
+function defaultsForGroup(group: string) {
+  return groupDefaults[group] ?? groupDefaults[groupDefaultAliases[group]!]!;
+}
 
 const groupDefaults: Record<
   string,
@@ -1844,10 +1860,11 @@ export const accessibilityReferenceCatalog = [
 
 function referencesFor(name: string, group: string) {
   const deduped = new Map<string, ComponentDoc["references"][number]>();
+  const referenceGroup = groupReferences[group] ? group : groupDefaultAliases[group];
 
   for (const reference of [
     ...(componentReferences[name] ?? []),
-    ...(groupReferences[group] ?? []),
+    ...(groupReferences[referenceGroup ?? group] ?? []),
     wcagReferences.nameRoleValue,
   ]) {
     deduped.set(reference.href, reference);
@@ -1876,6 +1893,11 @@ const componentAccessibility: Record<string, string[]> = {
     "Exactly one enabled option is tabbable when no value is selected; arrow keys move through enabled options.",
     "Each option uses role=option, aria-selected, aria-disabled, and a stable id.",
     "Use aria-label when visual content is not plain text so typeahead and announcements have a useful label.",
+  ],
+  TagGroup: [
+    "TagList exposes list semantics with one tabbable tag at a time.",
+    "Left and Right arrow keys move focus across tags; Home and End move to the boundaries.",
+    "Backspace or Delete calls TagList onRemove with the focused tag id when removal is enabled.",
   ],
   Modal: [
     "Modal renders a native dialog, opens with showModal, and sets aria-modal=true.",
@@ -1915,7 +1937,7 @@ function propsWithClassName(props: ComponentDoc["props"]) {
 
 const docs: ComponentDoc[] = componentGroups.flatMap((group) =>
   group.names.map((name) => {
-    const defaults = groupDefaults[group.title];
+    const defaults = defaultsForGroup(group.title);
     const override = overrides[name] ?? {};
     const examples = fallbackExamples(name, group.title);
 
@@ -1951,39 +1973,28 @@ function slugify(value: string) {
 }
 
 const pageDefinitions: [string, string, string[]][] = [
-  ["Primitives", "Button", ["Button"]],
-  ["Primitives", "ToggleButton", ["ToggleButton"]],
-  ["Primitives", "ToggleButtonGroup", ["ToggleButtonGroup", "ToggleButton"]],
-  ["Primitives", "Link", ["Link"]],
-  ["Primitives", "Text", ["Text"]],
-  ["Primitives", "Heading", ["Heading"]],
-  ["Primitives", "Separator", ["Separator"]],
-  ["Primitives", "Group", ["Group"]],
-  ["Primitives", "Toolbar", ["Toolbar"]],
-  ["Primitives", "Pressable", ["Pressable"]],
-  ["Primitives", "Focusable", ["Focusable"]],
-  ["Primitives", "VisuallyHidden", ["VisuallyHidden"]],
-  ["Field anatomy", "TextField", ["TextField", "Label", "Input", "Description", "FieldError"]],
-  ["Field anatomy", "Fieldset", ["Fieldset", "Legend"]],
-  ["Text inputs", "Input", ["Input", "Label", "Description", "FieldError"]],
-  ["Text inputs", "TextArea", ["TextArea", "Label", "Description", "FieldError"]],
-  ["Text inputs", "SearchField", ["SearchField", "Input", "Label"]],
-  ["Choice inputs", "Checkbox", ["Checkbox"]],
-  ["Choice inputs", "CheckboxGroup", ["CheckboxGroup", "Checkbox"]],
-  ["Choice inputs", "RadioGroup", ["RadioGroup", "Radio"]],
-  ["Choice inputs", "Switch", ["Switch"]],
-  ["Range and status", "NumberField", ["NumberField", "Label", "Input"]],
-  ["Range and status", "Slider", ["Slider", "SliderOutput", "SliderTrack", "SliderThumb"]],
-  ["Range and status", "ProgressBar", ["ProgressBar"]],
-  ["Range and status", "Meter", ["Meter"]],
+  ["Buttons", "Button", ["Button"]],
+  ["Buttons", "ToggleButton", ["ToggleButton"]],
+  ["Buttons", "ToggleButtonGroup", ["ToggleButtonGroup", "ToggleButton"]],
+  ["Buttons", "Pressable", ["Pressable"]],
+  ["Buttons", "FileTrigger", ["FileTrigger"]],
+  ["Forms", "TextField", ["TextField", "Label", "Input", "Description", "FieldError"]],
+  ["Forms", "Fieldset", ["Fieldset", "Legend"]],
+  ["Forms", "Input", ["Input", "Label", "Description", "FieldError"]],
+  ["Forms", "TextArea", ["TextArea", "Label", "Description", "FieldError"]],
+  ["Forms", "SearchField", ["SearchField", "Input", "Label"]],
+  ["Forms", "Checkbox", ["Checkbox"]],
+  ["Forms", "CheckboxGroup", ["CheckboxGroup", "Checkbox"]],
+  ["Forms", "RadioGroup", ["RadioGroup", "Radio"]],
+  ["Forms", "Switch", ["Switch"]],
+  ["Forms", "NumberField", ["NumberField", "Label", "Input"]],
+  ["Forms", "Slider", ["Slider", "SliderOutput", "SliderTrack", "SliderThumb"]],
   [
-    "Disclosure and navigation",
-    "Disclosure",
-    ["Disclosure", "DisclosureTrigger", "DisclosurePanel"],
+    "Pickers",
+    "Select",
+    ["Select", "SelectValue", "SelectOption", "Popover", "ListBox", "ListBoxItem"],
   ],
-  ["Disclosure and navigation", "DisclosureGroup", ["DisclosureGroup", "Disclosure"]],
-  ["Disclosure and navigation", "Tabs", ["Tabs", "TabList", "Tab", "TabPanels", "TabPanel"]],
-  ["Disclosure and navigation", "Breadcrumbs", ["Breadcrumbs", "BreadcrumbLink"]],
+  ["Pickers", "Combobox", ["Combobox", "ComboBoxValue", "ComboboxOption", "Autocomplete"]],
   ["Collections", "Collection", ["Collection", "CollectionBuilder"]],
   ["Collections", "ListBox", ["ListBox", "ListBoxItem", "ListBoxSection", "ListBoxLoadMoreItem"]],
   ["Collections", "Menu", ["Menu", "MenuItem", "MenuSection", "MenuTrigger", "SubmenuTrigger"]],
@@ -1998,12 +2009,12 @@ const pageDefinitions: [string, string, string[]][] = [
     "Tree",
     ["Tree", "TreeItem", "TreeItemContent", "TreeHeader", "TreeSection", "TreeLoadMoreItem"],
   ],
-  [
-    "Pickers",
-    "Select",
-    ["Select", "SelectValue", "SelectOption", "Popover", "ListBox", "ListBoxItem"],
-  ],
-  ["Pickers", "Combobox", ["Combobox", "ComboBoxValue", "ComboboxOption", "Autocomplete"]],
+  ["Navigation", "Link", ["Link"]],
+  ["Navigation", "Disclosure", ["Disclosure", "DisclosureTrigger", "DisclosurePanel"]],
+  ["Navigation", "DisclosureGroup", ["DisclosureGroup", "Disclosure"]],
+  ["Navigation", "Tabs", ["Tabs", "TabList", "Tab", "TabPanels", "TabPanel"]],
+  ["Navigation", "Breadcrumbs", ["Breadcrumbs", "BreadcrumbLink"]],
+  ["Navigation", "Toolbar", ["Toolbar"]],
   [
     "Date and time",
     "Calendar",
@@ -2037,18 +2048,26 @@ const pageDefinitions: [string, string, string[]][] = [
       "ColorThumb",
     ],
   ],
-  ["Drag and drop", "Drag and drop", ["DropZone", "FileTrigger", "DropIndicator"]],
   ["Overlays", "Dialog", ["Dialog"]],
   ["Overlays", "Modal", ["Modal", "ModalOverlay", "Dialog"]],
   ["Overlays", "Popover", ["Popover", "OverlayArrow"]],
   ["Overlays", "Tooltip", ["Tooltip", "TooltipTrigger"]],
-  ["Table", "Table", ["Table", "TableHeader", "Column", "TableBody", "Row", "Cell"]],
-  ["Table", "TableHeader", ["TableHeader", "Column"]],
-  ["Table", "TableBody", ["TableBody", "Row", "Cell"]],
-  ["Table", "Row", ["Row", "Cell"]],
-  ["Transitions and toast", "Transitions", ["SharedElementTransition", "SharedElement"]],
+  ["Drag and drop", "Drag and drop", ["DropZone", "FileTrigger", "DropIndicator"]],
+  ["Tables", "Table", ["Table", "TableHeader", "Column", "TableBody", "Row", "Cell"]],
+  ["Tables", "TableHeader", ["TableHeader", "Column"]],
+  ["Tables", "TableBody", ["TableBody", "Row", "Cell"]],
+  ["Tables", "Row", ["Row", "Cell"]],
+  ["Text and layout", "Text", ["Text"]],
+  ["Text and layout", "Heading", ["Heading"]],
+  ["Text and layout", "Separator", ["Separator"]],
+  ["Text and layout", "Group", ["Group"]],
+  ["Text and layout", "Focusable", ["Focusable"]],
+  ["Text and layout", "VisuallyHidden", ["VisuallyHidden"]],
+  ["Status and motion", "ProgressBar", ["ProgressBar"]],
+  ["Status and motion", "Meter", ["Meter"]],
+  ["Status and motion", "Transitions", ["SharedElementTransition", "SharedElement"]],
   [
-    "Transitions and toast",
+    "Status and motion",
     "Toast",
     ["UNSTABLE_ToastRegion", "UNSTABLE_ToastList", "UNSTABLE_Toast", "UNSTABLE_ToastContent"],
   ],
@@ -2056,7 +2075,7 @@ const pageDefinitions: [string, string, string[]][] = [
 
 export const pages: ComponentPage[] = pageDefinitions
   .map(([group, title, names]) => {
-    const defaults = groupDefaults[group]!;
+    const defaults = defaultsForGroup(group);
     const pageDocs = names
       .map((name) => docs.find((doc) => doc.name === name))
       .filter((doc): doc is ComponentDoc => Boolean(doc));
@@ -2115,6 +2134,7 @@ export const accessibilityAuditDimensionLabels = {
 } satisfies Record<AccessibilityAuditDimension, string>;
 
 const formLabelGroups = new Set([
+  "Forms",
   "Field anatomy",
   "Text inputs",
   "Choice inputs",
@@ -2135,7 +2155,15 @@ const statusComponents = new Set([
   "UNSTABLE_ToastRegion",
 ]);
 const pointerOnlyRiskGroups = new Set(["Color", "Drag and drop"]);
-const structuralGroups = new Set(["Primitives", "Field anatomy", "Table", "Transitions and toast"]);
+const structuralGroups = new Set([
+  "Primitives",
+  "Field anatomy",
+  "Tables",
+  "Table",
+  "Text and layout",
+  "Status and motion",
+  "Transitions and toast",
+]);
 
 function auditStatusesFor(doc: ComponentDoc): AccessibilityAuditEntry["statuses"] {
   const interactive = doc.keyboard.some(([key]) => key !== "Native behavior");

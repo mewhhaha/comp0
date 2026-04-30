@@ -1,4 +1,6 @@
 node_modules
+apps/docs/.react-router
+apps/docs/build
 dist
 apps/docs/dist
 .vite
