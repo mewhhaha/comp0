@@ -718,7 +718,7 @@ describe("overlay, table, file, toolbar, and parity accessibility", () => {
       "rowheader",
     );
     expect(container.querySelector("[data-slot='grid-list-section']")?.getAttribute("role")).toBe(
-      "group",
+      "rowgroup",
     );
     expect(
       container.querySelector("[data-slot='grid-list-load-more-item']")?.getAttribute("role"),

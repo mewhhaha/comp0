@@ -22,6 +22,33 @@ export type ComponentDoc = {
   ssr: string;
 };
 
+export type AccessibilityAuditStatus =
+  | "covered"
+  | "consumer responsibility"
+  | "not applicable"
+  | "needs manual audit";
+
+export type AccessibilityAuditDimension =
+  | "nameRoleValue"
+  | "keyboardAccess"
+  | "focusOrder"
+  | "focusVisible"
+  | "labelsInstructions"
+  | "errorIdentification"
+  | "statusMessages"
+  | "pointerAlternatives"
+  | "contrastSensitiveStates"
+  | "targetSize";
+
+export type AccessibilityAuditEntry = {
+  component: string;
+  group: string;
+  statuses: Record<AccessibilityAuditDimension, AccessibilityAuditStatus>;
+  wcag: string[];
+  apg: string[];
+  notes: string;
+};
+
 type DocOverride = Partial<Omit<ComponentDoc, "name" | "group" | "examples">> & {
   examples?: Partial<ComponentDoc["examples"]>;
 };
@@ -398,7 +425,7 @@ const groupDefaults: Record<
     summary:
       "Selectable and actionable collections with roving focus, disabled items, and typeahead.",
     nativeMarkup:
-      "div role=listbox, div role=option, div role=menu, div role=menuitem, and role=group.",
+      "div role=listbox, div role=option, div role=menu, div role=menuitem, role=group, and role=rowgroup.",
     anatomy: [
       ["Collection root", "Owns item registry and keyboard navigation."],
       ["Section", "Optional grouped items."],
@@ -1214,7 +1241,8 @@ const componentNativeMarkup: Record<string, string> = {
   FieldError: "div role=alert when field validation is invalid.",
   Fieldset: "fieldset element for related form controls.",
   FileTrigger: "label containing hidden input type=file.",
-  GridList: "div role=grid with row-like GridListItem children.",
+  GridList:
+    "div role=grid with row-like GridListItem children, optionally grouped by GridListSection role=rowgroup.",
   Group: "div role=group.",
   Header: "header element.",
   Heading: "h1 through h6, controlled by the level prop.",
@@ -1477,6 +1505,22 @@ function componentAnatomyFor(
 }
 
 const wcagReferences = {
+  reflow: {
+    label: "WCAG 2.2: Reflow",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/reflow",
+  },
+  nonTextContrast: {
+    label: "WCAG 2.2: Non-text Contrast",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast",
+  },
+  focusVisible: {
+    label: "WCAG 2.2: Focus Visible",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible",
+  },
+  focusNotObscured: {
+    label: "WCAG 2.2: Focus Not Obscured",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum",
+  },
   keyboard: {
     label: "WCAG 2.2: Keyboard",
     href: "https://www.w3.org/WAI/WCAG22/Understanding/keyboard",
@@ -1512,6 +1556,14 @@ const wcagReferences = {
   draggingMovements: {
     label: "WCAG 2.2: Dragging Movements",
     href: "https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements",
+  },
+  targetSize: {
+    label: "WCAG 2.2: Target Size",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum",
+  },
+  pointerCancellation: {
+    label: "WCAG 2.2: Pointer Cancellation",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/pointer-cancellation",
   },
 };
 
@@ -1749,15 +1801,35 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
 
 const groupReferences: Record<string, ComponentDoc["references"]> = {
   Collections: [apgReferences.listbox, wcagReferences.keyboard, wcagReferences.nameRoleValue],
-  Color: [apgReferences.slider, apgReferences.listbox, wcagReferences.nameRoleValue],
+  Color: [
+    apgReferences.slider,
+    apgReferences.listbox,
+    wcagReferences.nameRoleValue,
+    wcagReferences.nonTextContrast,
+  ],
   "Choice inputs": [wcagReferences.keyboard, wcagReferences.nameRoleValue],
   "Date and time": [apgReferences.grid, apgReferences.spinbutton, wcagReferences.keyboard],
   "Disclosure and navigation": [wcagReferences.keyboard, wcagReferences.focusOrder],
-  "Drag and drop": [wcagReferences.draggingMovements, wcagReferences.keyboard],
+  "Drag and drop": [
+    wcagReferences.draggingMovements,
+    wcagReferences.pointerCancellation,
+    wcagReferences.keyboard,
+  ],
   "Field anatomy": [wcagReferences.labelsInstructions, wcagReferences.errorIdentification],
-  Overlays: [apgReferences.dialog, wcagReferences.focusOrder, wcagReferences.nameRoleValue],
+  Overlays: [
+    apgReferences.dialog,
+    wcagReferences.focusOrder,
+    wcagReferences.focusNotObscured,
+    wcagReferences.nameRoleValue,
+  ],
   Pickers: [apgReferences.combobox, apgReferences.listbox, wcagReferences.keyboard],
-  Primitives: [wcagReferences.keyboard, wcagReferences.nameRoleValue],
+  Primitives: [
+    wcagReferences.keyboard,
+    wcagReferences.focusVisible,
+    wcagReferences.reflow,
+    wcagReferences.targetSize,
+    wcagReferences.nameRoleValue,
+  ],
   "Range and status": [apgReferences.slider, wcagReferences.nameRoleValue],
   Table: [wcagReferences.infoRelationships, ariaReferences.table],
   "Text inputs": [wcagReferences.labelsInstructions, wcagReferences.keyboard],
@@ -1949,6 +2021,22 @@ const pageDefinitions: [string, string, string[]][] = [
   ["Date and time", "TimeField", ["TimeField", "DateInput", "DateSegment"]],
   ["Date and time", "DatePicker", ["DatePicker", "DateField", "Popover", "Calendar"]],
   ["Date and time", "DateRangePicker", ["DateRangePicker", "DateField", "RangeCalendar"]],
+  [
+    "Color",
+    "Color",
+    [
+      "ColorField",
+      "ColorPicker",
+      "ColorSwatch",
+      "ColorArea",
+      "ColorSlider",
+      "ColorWheel",
+      "ColorWheelTrack",
+      "ColorSwatchPicker",
+      "ColorSwatchPickerItem",
+      "ColorThumb",
+    ],
+  ],
   ["Drag and drop", "Drag and drop", ["DropZone", "FileTrigger", "DropIndicator"]],
   ["Overlays", "Dialog", ["Dialog"]],
   ["Overlays", "Modal", ["Modal", "ModalOverlay", "Dialog"]],
@@ -1986,3 +2074,173 @@ export const pages: ComponentPage[] = pageDefinitions
     };
   })
   .filter((page): page is ComponentPage => Boolean(page));
+
+export const accessibilitySupportStatement = [
+  "Components are designed to support WCAG 2.2 AA implementations when used correctly.",
+  "Full WCAG conformance applies to complete pages, flows, and processes, so this library does not claim standalone WCAG conformance.",
+  "WCAG 3 is not targeted because it is still a draft, not a W3C Recommendation.",
+];
+
+export const accessibilityAuditDimensions = [
+  "nameRoleValue",
+  "keyboardAccess",
+  "focusOrder",
+  "focusVisible",
+  "labelsInstructions",
+  "errorIdentification",
+  "statusMessages",
+  "pointerAlternatives",
+  "contrastSensitiveStates",
+  "targetSize",
+] satisfies AccessibilityAuditDimension[];
+
+export const accessibilityAuditStatusLabels = {
+  covered: "Covered",
+  "consumer responsibility": "Consumer responsibility",
+  "not applicable": "Not applicable",
+  "needs manual audit": "Needs manual audit",
+} satisfies Record<AccessibilityAuditStatus, string>;
+
+export const accessibilityAuditDimensionLabels = {
+  nameRoleValue: "Name, role, value",
+  keyboardAccess: "Keyboard access",
+  focusOrder: "Focus order",
+  focusVisible: "Focus visible",
+  labelsInstructions: "Labels and instructions",
+  errorIdentification: "Error identification",
+  statusMessages: "Status messages",
+  pointerAlternatives: "Pointer alternatives",
+  contrastSensitiveStates: "Contrast-sensitive states",
+  targetSize: "Target size",
+} satisfies Record<AccessibilityAuditDimension, string>;
+
+const formLabelGroups = new Set([
+  "Field anatomy",
+  "Text inputs",
+  "Choice inputs",
+  "Range and status",
+  "Pickers",
+  "Date and time",
+  "Color",
+  "Drag and drop",
+]);
+
+const errorComponents = new Set(["FieldError", "TextField", "Input", "TextArea", "SearchField"]);
+const statusComponents = new Set([
+  "ProgressBar",
+  "Meter",
+  "UNSTABLE_Toast",
+  "UNSTABLE_ToastContent",
+  "UNSTABLE_ToastList",
+  "UNSTABLE_ToastRegion",
+]);
+const pointerOnlyRiskGroups = new Set(["Color", "Drag and drop"]);
+const structuralGroups = new Set(["Primitives", "Field anatomy", "Table", "Transitions and toast"]);
+
+function auditStatusesFor(doc: ComponentDoc): AccessibilityAuditEntry["statuses"] {
+  const interactive = doc.keyboard.some(([key]) => key !== "Native behavior");
+  let statusMessages: AccessibilityAuditStatus = "not applicable";
+  let pointerAlternatives: AccessibilityAuditStatus = "covered";
+  let keyboardAccess: AccessibilityAuditStatus = "not applicable";
+  let focusOrder: AccessibilityAuditStatus = "not applicable";
+  let labelsInstructions: AccessibilityAuditStatus = "consumer responsibility";
+  let errorIdentification: AccessibilityAuditStatus = "consumer responsibility";
+  let targetSize: AccessibilityAuditStatus = "not applicable";
+
+  if (statusComponents.has(doc.name)) {
+    statusMessages = "covered";
+  }
+
+  if (pointerOnlyRiskGroups.has(doc.group)) {
+    pointerAlternatives = "needs manual audit";
+  }
+
+  if (interactive || !structuralGroups.has(doc.group)) {
+    keyboardAccess = "covered";
+    focusOrder = "covered";
+    targetSize = "consumer responsibility";
+  }
+
+  if (
+    formLabelGroups.has(doc.group) ||
+    doc.references.some((reference) => reference.href === wcagReferences.labelsInstructions.href)
+  ) {
+    labelsInstructions = "covered";
+  }
+
+  if (errorComponents.has(doc.name)) {
+    errorIdentification = "covered";
+  }
+
+  return {
+    nameRoleValue: "covered",
+    keyboardAccess,
+    focusOrder,
+    focusVisible: "needs manual audit",
+    labelsInstructions,
+    errorIdentification,
+    statusMessages,
+    pointerAlternatives,
+    contrastSensitiveStates: "needs manual audit",
+    targetSize,
+  };
+}
+
+function hrefsFor(doc: ComponentDoc, predicate: (href: string) => boolean) {
+  return doc.references.map((reference) => reference.href).filter(predicate);
+}
+
+export const accessibilityTraceabilityMatrix = docs.map((doc) => ({
+  component: doc.name,
+  group: doc.group,
+  statuses: auditStatusesFor(doc),
+  wcag: [
+    ...new Set([
+      ...hrefsFor(doc, (href) => href.includes("/WCAG22/Understanding/")),
+      wcagReferences.focusVisible.href,
+      wcagReferences.nonTextContrast.href,
+      wcagReferences.targetSize.href,
+    ]),
+  ],
+  apg: hrefsFor(
+    doc,
+    (href) => href.includes("/WAI/ARIA/apg/patterns/") || href.includes("w3c.github.io/aria/"),
+  ),
+  notes:
+    "Component-owned roles, states, properties, keyboard behavior, and form semantics are covered by component tests and docs examples; page composition, labels, visual contrast, target size, zoom/reflow, and content-specific validation require implementation audit.",
+})) satisfies AccessibilityAuditEntry[];
+
+export const manualAuditScripts = [
+  {
+    title: "Keyboard-only component scripts",
+    items: [
+      "Button and Link: Tab to each control, activate with Enter, and activate buttons with Space.",
+      "Toolbar: Tab into the toolbar, move with arrow keys, use Home and End, then Shift+Tab out.",
+      "Tabs: Tab to the tablist, move tabs with arrows, verify the active tab controls the visible panel.",
+      "ListBox, Menu, Select, Combobox, and Autocomplete: open, move through enabled options, skip disabled options, select, dismiss with Escape, and verify focus returns predictably.",
+      "Dialog and Modal: open from the trigger, keep tab focus inside the dialog task, close with Escape or an explicit close control, and verify focus restoration.",
+      "DatePicker and date fields: move among date segments or grid cells with keyboard controls and commit a date without pointer input.",
+      "Color controls: move sliders, wheels, areas, and swatches with keyboard alternatives and verify the submitted value changes.",
+      "Table: navigate cells, headers, sortable or resizable controls, and selected rows without losing table relationships.",
+      "DropZone and FileTrigger: verify file selection has a keyboard path equivalent to drag and drop.",
+      "Toast: trigger a notification and verify focus is not stolen while the status is announced.",
+    ],
+  },
+  {
+    title: "Screen reader smoke scripts",
+    items: [
+      "NVDA with Firefox: navigate each playground by landmarks and headings, then inspect focus announcements for name, role, value, state, and position.",
+      "VoiceOver with Safari: use Tab and rotor navigation on each playground, then verify dialogs, popovers, list options, date grids, and status messages are announced with useful labels.",
+    ],
+  },
+  {
+    title: "Visual and responsive checks",
+    items: [
+      "Check 200% zoom and narrow viewport reflow without horizontal page scrolling for ordinary text content.",
+      "Verify focus indicators are visible, have sufficient contrast, and are not obscured by sticky headers, overlays, or popovers.",
+      "Check text contrast, Shiki syntax token contrast, and non-text contrast for borders, selected states, disabled states, focus rings, charts, swatches, and drag/drop targets in light and dark themes.",
+      "Verify pointer targets meet WCAG 2.2 AA target-size exceptions or have spacing that prevents accidental activation.",
+      "Enable reduced motion and verify transitions, popovers, toasts, and shared-element effects remain usable.",
+    ],
+  },
+];

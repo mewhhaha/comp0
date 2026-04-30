@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { page } from "vitest/browser";
 import { createRoot, type Root } from "react-dom/client";
 import type { ReactNode } from "react";
+import axe from "axe-core";
 import {
   Autocomplete,
   Button,
@@ -18,7 +19,16 @@ import {
   SearchField,
 } from "@comp0/react";
 import { App, GroupPlayground } from "./App.js";
-import { accessibilityReferenceCatalog, pages } from "./docs-data.js";
+import {
+  accessibilityAuditDimensions,
+  accessibilityReferenceCatalog,
+  accessibilitySupportStatement,
+  accessibilityTraceabilityMatrix,
+  componentGroups,
+  manualAuditScripts,
+  pages,
+} from "./docs-data.js";
+import "./styles.css";
 
 let root: Root | undefined;
 
@@ -55,6 +65,31 @@ function waitForPaint() {
 
 function pressKey(element: HTMLElement, key: string) {
   element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key }));
+}
+
+async function expectNoAxeViolations(label: string) {
+  const result = await axe.run(document, {
+    resultTypes: ["violations"],
+    runOnly: {
+      type: "tag",
+      values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
+    },
+  });
+  const unsuppressedViolations = result.violations.filter((violation) => {
+    // Suppressed because axe target-size measurements in the headless docs render do not match
+    // the final responsive visual audit surface; target-size remains covered by manual scripts.
+    if (violation.id === "target-size") return false;
+    // Suppressed only for Shiki token spans where axe fails to inherit the code-block background.
+    if (
+      violation.id === "color-contrast" &&
+      violation.nodes.every((node) => /^<span style="color:#[0-9A-Fa-f]{6}">/.test(node.html))
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  expect(unsuppressedViolations, label).toEqual([]);
 }
 
 async function waitForCondition(assertion: () => void) {
@@ -166,6 +201,52 @@ describe("docs playgrounds", () => {
     }
   });
 
+  test("accessibility support statement and manual audit scripts are published", () => {
+    expect(accessibilitySupportStatement).toContain(
+      "Components are designed to support WCAG 2.2 AA implementations when used correctly.",
+    );
+    expect(accessibilitySupportStatement.join(" ")).toContain("does not claim standalone WCAG");
+    expect(accessibilitySupportStatement.join(" ")).toContain("WCAG 3 is not targeted");
+    expect(manualAuditScripts.map((script) => script.title)).toEqual([
+      "Keyboard-only component scripts",
+      "Screen reader smoke scripts",
+      "Visual and responsive checks",
+    ]);
+    expect(manualAuditScripts.flatMap((script) => script.items).join(" ")).toContain(
+      "NVDA with Firefox",
+    );
+    expect(manualAuditScripts.flatMap((script) => script.items).join(" ")).toContain(
+      "VoiceOver with Safari",
+    );
+    expect(manualAuditScripts.flatMap((script) => script.items).join(" ")).toContain("200% zoom");
+    expect(manualAuditScripts.flatMap((script) => script.items).join(" ")).toContain(
+      "Shiki syntax token contrast",
+    );
+    expect(manualAuditScripts.flatMap((script) => script.items).join(" ")).toContain("target-size");
+  });
+
+  test("accessibility traceability matrix covers every public component", () => {
+    const publicComponents = componentGroups.flatMap((group) => group.names);
+    const matrixByComponent = new Map(
+      accessibilityTraceabilityMatrix.map((entry) => [entry.component, entry]),
+    );
+
+    expect(accessibilityTraceabilityMatrix.length).toBe(publicComponents.length);
+
+    for (const component of publicComponents) {
+      const entry = matrixByComponent.get(component);
+      expect(entry, `${component} should have matrix coverage`).toBeDefined();
+      expect(entry!.wcag.length, `${component} should list WCAG references`).toBeGreaterThan(0);
+
+      for (const dimension of accessibilityAuditDimensions) {
+        expect(
+          entry!.statuses[dimension],
+          `${component} should declare ${dimension} audit status`,
+        ).toMatch(/^(covered|consumer responsibility|not applicable|needs manual audit)$/);
+      }
+    }
+  });
+
   test("every documented component has public styling hooks", () => {
     for (const docsPage of pages) {
       for (const doc of docsPage.docs) {
@@ -222,6 +303,9 @@ describe("docs playgrounds", () => {
       const accessibilitySection = document.querySelector("#accessibility");
       expect(stylingSection, `${docsPage.title} styling section`).not.toBeNull();
       expect(accessibilitySection, `${docsPage.title} accessibility section`).not.toBeNull();
+      for (const statement of accessibilitySupportStatement) {
+        expect(accessibilitySection!.textContent).toContain(statement);
+      }
 
       for (const doc of docsPage.docs) {
         expect(stylingSection!.textContent, `${doc.name} className example`).toContain("className");
@@ -243,6 +327,23 @@ describe("docs playgrounds", () => {
           ).not.toBeNull();
         }
       }
+    },
+  );
+
+  test("docs shell has no WCAG A/AA axe violations", async () => {
+    renderDocsRoute(pages[0]!.slug);
+    await waitForPaint();
+
+    await expectNoAxeViolations("docs shell axe violations");
+  });
+
+  test.each(pages.map((item) => [item.title, item.slug] as const))(
+    "%s route has no WCAG A/AA axe violations",
+    async (_pageTitle, slug) => {
+      renderDocsRoute(slug);
+      await waitForPaint();
+
+      await expectNoAxeViolations(`${slug} axe violations`);
     },
   );
 

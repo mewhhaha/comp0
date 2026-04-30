@@ -10,6 +10,12 @@ import {
 import type { HighlighterCore } from "shiki/core";
 import {
   componentGroups,
+  accessibilityAuditDimensionLabels,
+  accessibilityAuditDimensions,
+  accessibilityAuditStatusLabels,
+  accessibilitySupportStatement,
+  accessibilityTraceabilityMatrix,
+  manualAuditScripts,
   pages,
   type ComponentDoc,
   type ComponentPage,
@@ -242,6 +248,13 @@ function CodeBlock({
     );
   }
 
+  let backgroundColor = "#ffffff";
+  if (surface === "inverted") {
+    backgroundColor = "#171717";
+  } else if (theme === "dark") {
+    backgroundColor = "#0a0a0a";
+  }
+
   return (
     <div
       className={cx(
@@ -253,6 +266,7 @@ function CodeBlock({
             dark:border-white/10 dark:bg-neutral-950
           `,
       )}
+      style={{ backgroundColor }}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -433,7 +447,7 @@ function RelatedPages({ page }: { page: ComponentPage }) {
       {relatedPagesFor(page).map((relatedPage) => (
         <li key={relatedPage.slug}>
           <NavLink
-            className="grid gap-1 border-t border-zinc-950/10 py-3 text-base/7 hover:border-cyan-700 dark:border-white/10 dark:hover:border-cyan-400 sm:text-sm/6"
+            className="grid min-h-6 gap-1 border-t border-zinc-950/10 py-3 text-base/7 hover:border-cyan-700 dark:border-white/10 dark:hover:border-cyan-400 sm:text-sm/6"
             to={`/${relatedPage.slug}`}
           >
             <span className="font-medium text-zinc-950 dark:text-white">{relatedPage.title}</span>
@@ -575,6 +589,10 @@ export function GroupPlayground({ page }: { page: ComponentPage }) {
           </div>
           <SliderThumb
             className="absolute size-5 rounded-full border border-zinc-950/10 bg-white shadow-sm dark:border-white/10 dark:bg-neutral-950"
+            aria-label="Volume"
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={volume}
             style={{ left: `calc(${volume}% - 10px)` }}
           />
         </SliderTrack>
@@ -1031,12 +1049,20 @@ function Playground({ name }: { name: string }) {
   if (name === "NumberField") {
     return (
       <NumberField
-        aria-label="Retries"
+        className="grid max-w-xs gap-2"
         defaultValue={numberValue}
-        onChange={setNumberValue}
-        min={0}
         max={10}
-      />
+        min={0}
+        onChange={setNumberValue}
+      >
+        <Label className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
+          Retries
+        </Label>
+        <Input
+          className="rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-base/7 dark:border-white/10 dark:bg-neutral-950 sm:text-sm/6"
+          type="number"
+        />
+      </NumberField>
     );
   }
 
@@ -1053,7 +1079,11 @@ function Playground({ name }: { name: string }) {
 
   if (name === "ProgressBar") {
     return (
-      <ProgressBar className="grid w-full max-w-sm gap-2" value={volume}>
+      <ProgressBar
+        className="grid w-full max-w-sm gap-2"
+        aria-label="Build progress"
+        value={volume}
+      >
         {({ percentage }: { percentage: number | undefined }) => (
           <>
             <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-white/10">
@@ -1327,7 +1357,12 @@ function Playground({ name }: { name: string }) {
     ];
     return (
       <CollectionBuilder className="grid max-w-xs gap-2">
-        <ListBox className="grid gap-1" value={choice} onChange={setChoice}>
+        <ListBox
+          className="grid gap-1"
+          aria-label="Collection examples"
+          value={choice}
+          onChange={setChoice}
+        >
           <Collection items={items}>
             {(item) => (
               <ListBoxItem
@@ -1346,7 +1381,12 @@ function Playground({ name }: { name: string }) {
 
   if (name === "ListBox" || name === "ListBoxItem") {
     return (
-      <ListBox className="grid max-w-xs gap-1" value={choice} onChange={setChoice}>
+      <ListBox
+        className="grid max-w-xs gap-1"
+        aria-label="Libraries"
+        value={choice}
+        onChange={setChoice}
+      >
         <ListBoxSection
           aria-label="Libraries"
           className="grid gap-1 border-b border-zinc-950/10 pb-1 dark:border-white/10"
@@ -1417,8 +1457,11 @@ function Playground({ name }: { name: string }) {
 
   if (name === "GridList") {
     return (
-      <GridList className="grid max-w-sm gap-1 rounded-md border border-zinc-950/10 p-1 dark:border-white/10">
-        <GridListSection className="grid gap-1" aria-label="Packages">
+      <GridList
+        className="grid max-w-sm gap-1 rounded-md border border-zinc-950/10 p-1 dark:border-white/10"
+        aria-label="Packages"
+      >
+        <GridListSection aria-label="Published packages">
           <GridListItem className="grid grid-cols-[1fr_auto] items-center rounded px-3 py-2 text-base/7 data-selected:bg-cyan-50 dark:text-zinc-200 sm:text-sm/6">
             <GridListHeader className="font-medium text-zinc-950 dark:text-white">
               @comp0/react
@@ -1455,7 +1498,10 @@ function Playground({ name }: { name: string }) {
 
   if (name === "Tree") {
     return (
-      <Tree className="grid max-w-sm gap-1 rounded-md border border-zinc-950/10 p-2 dark:border-white/10">
+      <Tree
+        className="grid max-w-sm gap-1 rounded-md border border-zinc-950/10 p-2 dark:border-white/10"
+        aria-label="Docs"
+      >
         <TreeSection className="grid gap-1" aria-label="Docs">
           <TreeHeader className="px-2 py-1 text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
             Components
@@ -1498,7 +1544,10 @@ function Playground({ name }: { name: string }) {
             </ListBox>
           </Popover>
         </Select>
-        <select className="rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6">
+        <select
+          className="rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6"
+          aria-label="Native plan"
+        >
           <SelectOption value="native-basic">Native basic</SelectOption>
           <SelectOption value="native-pro">Native pro</SelectOption>
         </select>
@@ -1516,6 +1565,7 @@ function Playground({ name }: { name: string }) {
           <Autocomplete className="contents">
             <Input
               className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-base/7 outline-none data-focus-visible:ring-2 data-focus-visible:ring-cyan-600 dark:text-white sm:text-sm/6"
+              aria-label="Framework"
               list="framework-options"
             />
             <datalist id="framework-options">
@@ -1882,6 +1932,8 @@ function ComponentApiTable({ doc }: { doc: ComponentDoc }) {
 }
 
 function ComponentAccessibilityTable({ doc }: { doc: ComponentDoc }) {
+  const auditEntry = accessibilityTraceabilityMatrix.find((entry) => entry.component === doc.name);
+
   return (
     <article className="grid gap-4">
       <Heading
@@ -1931,7 +1983,7 @@ function ComponentAccessibilityTable({ doc }: { doc: ComponentDoc }) {
           {doc.references.map((reference) => (
             <li key={reference.href}>
               <a
-                className="inline-flex rounded-md border border-zinc-950/10 px-2.5 py-1 text-base/7 text-cyan-800 underline decoration-cyan-700/30 underline-offset-4 hover:bg-cyan-50 dark:border-white/10 dark:text-cyan-300 dark:hover:bg-cyan-500/10 sm:text-sm/6"
+                className="inline-flex min-h-6 items-center rounded-md border border-zinc-950/10 px-2.5 py-1 text-base/7 text-cyan-800 underline decoration-cyan-700/30 underline-offset-4 hover:bg-cyan-50 dark:border-white/10 dark:text-cyan-300 dark:hover:bg-cyan-500/10 sm:text-sm/6"
                 href={reference.href}
               >
                 {reference.label}
@@ -1940,7 +1992,81 @@ function ComponentAccessibilityTable({ doc }: { doc: ComponentDoc }) {
           ))}
         </ul>
       </div>
+      {auditEntry && (
+        <div className="-mx-4 -my-2 overflow-x-auto whitespace-nowrap sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full px-4 py-2 align-middle sm:px-6 lg:px-8">
+            <Table className="w-full text-left text-base/7 sm:text-sm/6">
+              <TableHeader>
+                <Row className="border-b border-zinc-950/10 dark:border-white/10">
+                  <Column className="whitespace-nowrap py-2 pr-4 font-medium">
+                    Audit dimension
+                  </Column>
+                  <Column className="whitespace-nowrap py-2 pl-4 font-medium">Status</Column>
+                </Row>
+              </TableHeader>
+              <TableBody>
+                {accessibilityAuditDimensions.map((dimension) => (
+                  <Row className="border-b border-zinc-950/5 dark:border-white/10" key={dimension}>
+                    <Cell className="py-2 pr-4">
+                      {accessibilityAuditDimensionLabels[dimension]}
+                    </Cell>
+                    <Cell className="py-2 pl-4 text-zinc-700 dark:text-zinc-300">
+                      {accessibilityAuditStatusLabels[auditEntry.statuses[dimension]]}
+                    </Cell>
+                  </Row>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
     </article>
+  );
+}
+
+function AccessibilitySupportSection() {
+  return (
+    <div className="grid gap-6">
+      <div className="grid gap-2 rounded-md border border-zinc-950/10 p-4 dark:border-white/10">
+        <p className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
+          WCAG 2.2 AA support target
+        </p>
+        <ul className="grid gap-2 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+          {accessibilitySupportStatement.map((item) => (
+            <li className="grid grid-cols-[auto_1fr] gap-2" key={item}>
+              <span aria-hidden="true">-</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="grid gap-4">
+        <p className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
+          Manual audit scripts
+        </p>
+        {manualAuditScripts.map((script) => (
+          <article
+            className="grid gap-2 border-t border-zinc-950/10 pt-4 dark:border-white/10"
+            key={script.title}
+          >
+            <Heading
+              className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6"
+              level={3}
+            >
+              {script.title}
+            </Heading>
+            <ul className="grid gap-2 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+              {script.items.map((item) => (
+                <li className="grid grid-cols-[auto_1fr] gap-2" key={item}>
+                  <span aria-hidden="true">-</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1995,7 +2121,7 @@ function AppNav({
                       className={({ isActive }) =>
                         cx(
                           `
-                            grid gap-1 rounded-md px-3 py-2 text-left
+                            grid min-h-6 gap-1 rounded-md px-3 py-2 text-left
                             text-base/7 text-zinc-700
                             hover:bg-neutral-100
                             dark:text-zinc-300
@@ -2088,7 +2214,7 @@ function DocsHeader({
           <MenuIcon className="size-5" aria-hidden="true" />
         </button>
         <a
-          className="inline-flex shrink-0 items-center gap-2 text-lg font-semibold tracking-tight text-zinc-950 dark:text-white"
+          className="inline-flex min-h-8 shrink-0 items-center gap-2 text-lg font-semibold tracking-tight text-zinc-950 dark:text-white"
           href="/"
           aria-label="Homepage"
         >
@@ -2104,13 +2230,22 @@ function DocsHeader({
           className="hidden items-center gap-5 text-sm/6 text-zinc-600 dark:text-zinc-400 lg:flex"
           aria-label="Docs"
         >
-          <a className="hover:text-zinc-950 dark:hover:text-white" href={`/${pages[0]!.slug}`}>
+          <a
+            className="inline-flex min-h-6 items-center hover:text-zinc-950 dark:hover:text-white"
+            href={`/${pages[0]!.slug}`}
+          >
             Components
           </a>
-          <a className="hover:text-zinc-950 dark:hover:text-white" href="#api">
+          <a
+            className="inline-flex min-h-6 items-center hover:text-zinc-950 dark:hover:text-white"
+            href="#api"
+          >
             API
           </a>
-          <a className="hover:text-zinc-950 dark:hover:text-white" href="#accessibility">
+          <a
+            className="inline-flex min-h-6 items-center hover:text-zinc-950 dark:hover:text-white"
+            href="#accessibility"
+          >
             Accessibility
           </a>
         </nav>
@@ -2170,7 +2305,7 @@ function DocsPage() {
     <div
       className={cx(
         `
-          isolate min-h-dvh bg-neutral-50 text-zinc-950 antialiased
+          docs-shell isolate min-h-dvh bg-neutral-50 text-zinc-950 antialiased
           dark:bg-neutral-950 dark:text-zinc-100
         `,
         theme === "dark" && "dark",
@@ -2274,6 +2409,7 @@ function DocsPage() {
 
               <Section id="accessibility" title="Accessibility">
                 <div className="grid gap-8">
+                  <AccessibilitySupportSection />
                   {current.docs.map((doc) => (
                     <ComponentAccessibilityTable doc={doc} key={doc.name} />
                   ))}
@@ -2311,7 +2447,7 @@ function DocsPage() {
               </p>
               {pageSections.map((section) => (
                 <a
-                  className="border-l border-transparent px-3 text-base/7 text-zinc-600 hover:border-cyan-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:border-cyan-400 dark:hover:text-white sm:text-sm/6"
+                  className="inline-flex min-h-6 items-center border-l border-transparent px-3 text-base/7 text-zinc-600 hover:border-cyan-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:border-cyan-400 dark:hover:text-white sm:text-sm/6"
                   href={`#${section.toLocaleLowerCase().replaceAll(" ", "-")}`}
                   key={section}
                 >
