@@ -68,7 +68,7 @@ describe("source conventions", () => {
 
   it("keeps collection item textValue out of public React props and docs", () => {
     const collectionsSource = readFileSync(
-      resolve(root, "packages/react/src/collections.tsx"),
+      resolve(root, "packages/react/src/components/collection-shared.tsx"),
       "utf8",
     );
     const docsSources = sources.filter(({ relativePath }) => relativePath.startsWith("apps/docs/"));
@@ -130,5 +130,55 @@ describe("source conventions", () => {
     );
 
     expect(extractedClassNames).toEqual([]);
+  });
+
+  it("keeps public React component modules as root barrels over individual component files", () => {
+    const reactSourceRoot = resolve(root, "packages/react/src");
+    const componentRoot = resolve(reactSourceRoot, "components");
+    const rootBarrels = sourceFiles(reactSourceRoot).filter((path) => {
+      const relativePath = relative(reactSourceRoot, path);
+      return (
+        !relativePath.includes("/") &&
+        relativePath !== "shared.tsx" &&
+        relativePath !== "source-conventions.test.ts"
+      );
+    });
+    const componentBarrelExports = rootBarrels.flatMap((path) => {
+      const relativePath = relative(root, path);
+      const source = readFileSync(path, "utf8");
+      const implementations = matchingLines(source, /\bexport\s+(?:function|const)\s+[A-Z]/).map(
+        (line) => `${relativePath}:${line}`,
+      );
+      expect(implementations).toEqual([]);
+
+      return [...source.matchAll(/export\s+\*\s+from\s+"\.\/components\/([A-Z][\w]*)\.js";/g)]
+        .map((match) => match[1])
+        .filter((name) => name !== undefined);
+    });
+    const missingComponentFiles = componentBarrelExports
+      .filter((name) => !statSync(resolve(componentRoot, `${name}.tsx`), { throwIfNoEntry: false }))
+      .map((name) => `packages/react/src/components/${name}.tsx`);
+    const sharedImplementations = sourceFiles(componentRoot)
+      .filter((path) => path.endsWith("-shared.tsx"))
+      .flatMap((path) => {
+        const relativePath = relative(root, path);
+        return matchingLines(
+          readFileSync(path, "utf8"),
+          /\bexport\s+(?:function|const)\s+[A-Z]\w*Impl\b/,
+        ).map((line) => `${relativePath}:${line}`);
+      });
+    const componentAliases = sourceFiles(componentRoot)
+      .filter((path) => !path.endsWith("-shared.tsx"))
+      .flatMap((path) => {
+        const relativePath = relative(root, path);
+        return matchingLines(
+          readFileSync(path, "utf8"),
+          /\bexport\s+\{\s+[A-Z]\w*Impl\s+as\s+[A-Z]\w*/,
+        ).map((line) => `${relativePath}:${line}`);
+      });
+
+    expect(missingComponentFiles).toEqual([]);
+    expect(sharedImplementations).toEqual([]);
+    expect(componentAliases).toEqual([]);
   });
 });

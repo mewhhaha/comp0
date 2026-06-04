@@ -199,6 +199,129 @@ describe("primitives", () => {
   });
 });
 
+describe("performance-sensitive paths", () => {
+  function ManyOptions({ count = 24 }: { count?: number }) {
+    return Array.from({ length: count }, (_, index) => (
+      <ListBoxItem key={index} id={`item-${index}`}>
+        {`Item ${index}`}
+      </ListBoxItem>
+    ));
+  }
+
+  it("does not re-render picker children for each mounted item registration", () => {
+    let selectRenderCount = 0;
+    let comboboxRenderCount = 0;
+    let autocompleteRenderCount = 0;
+
+    function SelectProbe() {
+      selectRenderCount += 1;
+      return null;
+    }
+
+    function ComboboxProbe() {
+      comboboxRenderCount += 1;
+      return null;
+    }
+
+    function AutocompleteProbe() {
+      autocompleteRenderCount += 1;
+      return null;
+    }
+
+    render(
+      <>
+        <Select>
+          <SelectProbe />
+          <ListBox>
+            <ManyOptions />
+          </ListBox>
+        </Select>
+        <Combobox>
+          <ComboboxProbe />
+          <ListBox>
+            <ManyOptions />
+          </ListBox>
+        </Combobox>
+        <Autocomplete>
+          <AutocompleteProbe />
+          <ListBox>
+            <ManyOptions />
+          </ListBox>
+        </Autocomplete>
+      </>,
+    );
+
+    expect(selectRenderCount).toBe(1);
+    expect(comboboxRenderCount).toBe(1);
+    expect(autocompleteRenderCount).toBe(1);
+  });
+
+  it("reuses cached listbox document order across repeated keyboard movement", () => {
+    const compareDocumentPosition = HTMLElement.prototype.compareDocumentPosition;
+    const compare = vi.fn(compareDocumentPosition);
+    HTMLElement.prototype.compareDocumentPosition = compare;
+
+    try {
+      const { container } = render(
+        <ListBox defaultValue="item-0">
+          <ManyOptions count={8} />
+        </ListBox>,
+      );
+      const listbox = container.querySelector<HTMLElement>("[role='listbox']")!;
+
+      fireKeyDown(listbox, "ArrowDown");
+      const firstSortComparisons = compare.mock.calls.length;
+      fireKeyDown(listbox, "ArrowDown");
+      fireKeyDown(listbox, "ArrowDown");
+
+      expect(firstSortComparisons).toBeGreaterThan(0);
+      expect(compare).toHaveBeenCalledTimes(firstSortComparisons);
+    } finally {
+      HTMLElement.prototype.compareDocumentPosition = compareDocumentPosition;
+    }
+  });
+
+  it("keeps toolbar focus movement DOM-local", () => {
+    let boldRenderCount = 0;
+
+    function Bold() {
+      boldRenderCount += 1;
+      return <Button>Bold</Button>;
+    }
+
+    const { container } = render(
+      <Toolbar aria-label="Formatting">
+        <Bold />
+        <Button>Italic</Button>
+        <Button>Underline</Button>
+      </Toolbar>,
+    );
+    const toolbar = container.querySelector<HTMLElement>("[role='toolbar']")!;
+    const buttons = container.querySelectorAll<HTMLButtonElement>("button");
+
+    buttons[0]?.focus();
+    fireKeyDown(toolbar, "ArrowRight");
+    fireKeyDown(toolbar, "ArrowRight");
+    fireKeyDown(toolbar, "ArrowLeft");
+
+    expect(boldRenderCount).toBe(1);
+    expect(document.activeElement).toBe(buttons[1]);
+  });
+
+  it("keeps calendar navigation and selection behavior stable", () => {
+    const changed = vi.fn();
+    const { container } = render(
+      <Calendar defaultValue="2026-04-30" focusedValue="2026-04-30" onChange={changed} />,
+    );
+    const grid = container.querySelector<HTMLElement>("[role='grid']")!;
+
+    fireKeyDown(grid, "ArrowRight");
+    fireKeyDown(grid, "Enter");
+
+    expect(changed).toHaveBeenLastCalledWith("2026-05-01");
+  });
+});
+
 describe("field anatomy and text inputs", () => {
   it("wires label, description, and error ids without DOM reads during render", () => {
     const { container } = render(
@@ -1066,6 +1189,12 @@ describe("date, time, and color inputs", () => {
     expect(container.querySelector("[data-date='2026-04-30']")?.getAttribute("aria-disabled")).toBe(
       "true",
     );
+    expect(
+      container.querySelector("[data-date='2026-03-29']")?.hasAttribute("data-outside-month"),
+    ).toBe(true);
+    expect(
+      container.querySelector("[data-date='2026-04-29']")?.hasAttribute("data-outside-month"),
+    ).toBe(false);
     expect(container.querySelectorAll("[role='gridcell'][tabindex='0']")).toHaveLength(1);
 
     fireKeyDown(calendar, "ArrowRight");
@@ -1154,6 +1283,7 @@ describe("date, time, and color inputs", () => {
     expect(month.getAttribute("aria-valuemax")).toBe("12");
     expect(month.getAttribute("aria-valuenow")).toBe("12");
     expect(month.getAttribute("aria-valuetext")).toBe("12");
+    expect(month.getAttribute("aria-label")).toBe("Month");
     expect(hour.getAttribute("aria-valuemin")).toBe("0");
     expect(hour.getAttribute("aria-valuemax")).toBe("23");
     expect(minute.getAttribute("aria-valuemax")).toBe("59");
@@ -1188,6 +1318,15 @@ describe("date, time, and color inputs", () => {
     const { container } = render(
       <>
         <DatePicker id="release" defaultValue="2026-04-29" name="release">
+          <DateField>
+            <DateInput>
+              <DateSegment part="month" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="day" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="year" />
+            </DateInput>
+          </DateField>
           <Button>Open date</Button>
           <Popover>
             <Calendar focusedValue="2026-04-29" />
@@ -1198,6 +1337,24 @@ describe("date, time, and color inputs", () => {
           defaultValue={{ start: "2026-04-27", end: "2026-04-29" }}
           name="sprint"
         >
+          <DateField slot="start">
+            <DateInput>
+              <DateSegment part="month" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="day" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="year" />
+            </DateInput>
+          </DateField>
+          <DateField slot="end">
+            <DateInput>
+              <DateSegment part="month" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="day" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="year" />
+            </DateInput>
+          </DateField>
           <Button>Open range</Button>
           <Popover>
             <RangeCalendar focusedValue="2026-04-27" />
@@ -1220,6 +1377,17 @@ describe("date, time, and color inputs", () => {
     expect(buttons[0]?.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelector<HTMLInputElement>("input[name='release']")?.value).toBe(
       "2026-04-30",
+    );
+    const daySegments = container.querySelectorAll<HTMLElement>(
+      "[data-slot='date-field'] [data-type='day']",
+    );
+    fireKeyDown(daySegments[0]!, "ArrowDown");
+    expect(container.querySelector<HTMLInputElement>("input[name='release']")?.value).toBe(
+      "2026-04-29",
+    );
+    fireKeyDown(daySegments[1]!, "ArrowUp");
+    expect(container.querySelector<HTMLInputElement>("input[name='sprint-start']")?.value).toBe(
+      "2026-04-28",
     );
 
     fireKeyDown(buttons[1]!, "Enter");

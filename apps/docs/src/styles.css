@@ -51,3 +51,180 @@ code,
 pre {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace;
 }
+
+.combobox-field:has(input[data-focused]) {
+  border-color: #0e7490;
+}
+
+.combobox-field:has(input[data-focus-visible]) {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+.dark .combobox-field:has(input[data-focused]) {
+  border-color: #22d3ee;
+}
+
+.docs-shell
+  :where(
+    button,
+    summary,
+    a[href],
+    [role="button"],
+    [role="gridcell"],
+    [role="menuitem"],
+    [role="option"],
+    [role="slider"],
+    [role="tab"],
+    [role="treeitem"],
+    [data-slot="carousel-indicator"],
+    [data-slot="carousel-next"],
+    [data-slot="carousel-previous"],
+    [data-slot="carousel-rotation-control"],
+    [data-slot="checkbox"],
+    [data-slot="color-swatch-picker-item"],
+    [data-slot="file-trigger"],
+    [data-slot="pressable"],
+    [data-slot="radio"],
+    [data-slot="switch"],
+    [data-slot="tag"]
+  ):not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease,
+    filter 140ms ease;
+}
+
+.docs-shell [data-slot="window-splitter"] {
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    filter 140ms ease;
+}
+
+.docs-shell [data-slot="window-splitter"][data-orientation="vertical"] {
+  cursor: col-resize;
+}
+
+.docs-shell [data-slot="window-splitter"][data-orientation="horizontal"] {
+  cursor: row-resize;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .docs-shell
+    :where(
+      button,
+      summary,
+      a[href],
+      [role="button"],
+      [role="gridcell"],
+      [role="menuitem"],
+      [role="option"],
+      [role="slider"],
+      [role="tab"],
+      [role="treeitem"],
+      [data-slot="carousel-indicator"],
+      [data-slot="carousel-next"],
+      [data-slot="carousel-previous"],
+      [data-slot="carousel-rotation-control"],
+      [data-slot="checkbox"],
+      [data-slot="color-swatch-picker-item"],
+      [data-slot="file-trigger"],
+      [data-slot="pressable"],
+      [data-slot="radio"],
+      [data-slot="switch"],
+      [data-slot="tag"]
+    ):hover:not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
+    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #0891b2 8%, transparent);
+    filter: brightness(0.99);
+  }
+
+  .docs-shell.dark
+    :where(
+      button,
+      summary,
+      a[href],
+      [role="button"],
+      [role="gridcell"],
+      [role="menuitem"],
+      [role="option"],
+      [role="slider"],
+      [role="tab"],
+      [role="treeitem"],
+      [data-slot="carousel-indicator"],
+      [data-slot="carousel-next"],
+      [data-slot="carousel-previous"],
+      [data-slot="carousel-rotation-control"],
+      [data-slot="checkbox"],
+      [data-slot="color-swatch-picker-item"],
+      [data-slot="file-trigger"],
+      [data-slot="pressable"],
+      [data-slot="radio"],
+      [data-slot="switch"],
+      [data-slot="tag"]
+    ):hover:not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
+    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #22d3ee 10%, transparent);
+    filter: brightness(1.06);
+  }
+
+  .docs-shell [data-slot="window-splitter"]:hover:not([data-disabled]) {
+    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #0891b2 16%, transparent);
+    filter: brightness(0.98);
+  }
+
+  .docs-shell.dark [data-slot="window-splitter"]:hover:not([data-disabled]) {
+    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #22d3ee 18%, transparent);
+    filter: brightness(1.08);
+  }
+}
+
+.accordion-panel,
+.disclosure-panel {
+  height: auto;
+  overflow: hidden;
+  opacity: 1;
+  transition:
+    display 180ms allow-discrete,
+    height 180ms ease,
+    opacity 180ms ease;
+  interpolate-size: allow-keywords;
+}
+
+.docs-shell details::details-content {
+  block-size: 0;
+  overflow: clip;
+  opacity: 0;
+  transition:
+    block-size 180ms ease,
+    content-visibility 180ms allow-discrete,
+    opacity 180ms ease;
+  interpolate-size: allow-keywords;
+}
+
+.docs-shell details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+.accordion-panel[hidden],
+.disclosure-panel[hidden] {
+  display: none;
+  height: 0;
+  opacity: 0;
+}
+
+@starting-style {
+  .accordion-panel:not([hidden]),
+  .disclosure-panel:not([hidden]) {
+    height: 0;
+    opacity: 0;
+  }
+
+  .docs-shell details[open]::details-content {
+    block-size: 0;
+    opacity: 0;
+  }
+}

@@ -1,0 +1,48 @@
+import { type RefProp } from "../shared.js";
+import { useRef } from "react";
+import { useControllableState } from "@comp0/core";
+import { TabsContext } from "./disclosure-shared.js";
+import { type TabsProps } from "./disclosure-shared.js";
+export type { TabsProps } from "./disclosure-shared.js";
+export function Tabs({
+  value,
+  defaultValue,
+  onChange,
+  ref,
+  ...props
+}: TabsProps & RefProp<HTMLDivElement>) {
+  const [selected, setSelected] = useControllableState({
+    value,
+    defaultValue: defaultValue ?? "",
+    onChange,
+  });
+  const tabMap = useRef(
+    new Map<
+      string,
+      { key: string; disabled?: boolean | undefined; element: HTMLButtonElement | null }
+    >(),
+  );
+
+  return (
+    <TabsContext.Provider
+      value={{
+        selectedKey: selected,
+        setSelectedKey: setSelected,
+        registerTab(key, element, disabled) {
+          tabMap.current.set(key, { key, element, disabled });
+        },
+        tabs() {
+          return [...tabMap.current.values()].sort((a, b) => {
+            if (!a.element || !b.element) return 0;
+            if (a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_PRECEDING) {
+              return 1;
+            }
+            return -1;
+          });
+        },
+      }}
+    >
+      <div {...props} ref={ref} />
+    </TabsContext.Provider>
+  );
+}

@@ -22,6 +22,33 @@ export type ComponentDoc = {
   ssr: string;
 };
 
+export type AccessibilityAuditStatus =
+  | "covered"
+  | "consumer responsibility"
+  | "not applicable"
+  | "needs manual audit";
+
+export type AccessibilityAuditDimension =
+  | "nameRoleValue"
+  | "keyboardAccess"
+  | "focusOrder"
+  | "focusVisible"
+  | "labelsInstructions"
+  | "errorIdentification"
+  | "statusMessages"
+  | "pointerAlternatives"
+  | "contrastSensitiveStates"
+  | "targetSize";
+
+export type AccessibilityAuditEntry = {
+  component: string;
+  group: string;
+  statuses: Record<AccessibilityAuditDimension, AccessibilityAuditStatus>;
+  wcag: string[];
+  apg: string[];
+  notes: string;
+};
+
 type DocOverride = Partial<Omit<ComponentDoc, "name" | "group" | "examples">> & {
   examples?: Partial<ComponentDoc["examples"]>;
 };
@@ -37,61 +64,43 @@ export type ComponentPage = {
 
 export const componentGroups = [
   {
-    title: "Primitives",
+    title: "Buttons",
+    names: ["Button", "ToggleButton", "ToggleButtonGroup", "Pressable", "FileTrigger"],
+  },
+  {
+    title: "Forms",
     names: [
-      "Button",
-      "ToggleButton",
-      "ToggleButtonGroup",
-      "Link",
-      "Text",
-      "Heading",
-      "Header",
-      "Keyboard",
-      "Separator",
-      "Group",
-      "Toolbar",
-      "Pressable",
-      "Focusable",
-      "VisuallyHidden",
-    ],
-  },
-  {
-    title: "Field anatomy",
-    names: ["Label", "Description", "FieldError", "Fieldset", "Legend"],
-  },
-  {
-    title: "Text inputs",
-    names: ["TextField", "Input", "TextArea", "SearchField"],
-  },
-  {
-    title: "Choice inputs",
-    names: ["Checkbox", "CheckboxGroup", "RadioGroup", "Radio", "Switch"],
-  },
-  {
-    title: "Range and status",
-    names: [
+      "Label",
+      "Description",
+      "FieldError",
+      "Fieldset",
+      "Legend",
+      "TextField",
+      "Input",
+      "TextArea",
+      "SearchField",
+      "Checkbox",
+      "CheckboxGroup",
+      "RadioGroup",
+      "Radio",
+      "Switch",
       "NumberField",
       "Slider",
       "SliderOutput",
       "SliderTrack",
       "SliderThumb",
-      "ProgressBar",
-      "Meter",
     ],
   },
   {
-    title: "Disclosure and navigation",
+    title: "Pickers",
     names: [
-      "Disclosure",
-      "DisclosureGroup",
-      "DisclosurePanel",
-      "Tabs",
-      "TabList",
-      "Tab",
-      "TabPanels",
-      "TabPanel",
-      "Breadcrumbs",
-      "BreadcrumbLink",
+      "Select",
+      "SelectValue",
+      "SelectOption",
+      "Combobox",
+      "ComboBoxValue",
+      "ComboboxOption",
+      "Autocomplete",
     ],
   },
   {
@@ -108,6 +117,11 @@ export const componentGroups = [
       "MenuSection",
       "MenuTrigger",
       "SubmenuTrigger",
+      "ContextMenu",
+      "ContextMenuTrigger",
+      "ContextMenuContent",
+      "Feed",
+      "FeedArticle",
       "GridList",
       "GridListItem",
       "GridListHeader",
@@ -125,15 +139,31 @@ export const componentGroups = [
     ],
   },
   {
-    title: "Pickers",
+    title: "Navigation",
     names: [
-      "Select",
-      "SelectValue",
-      "SelectOption",
-      "Combobox",
-      "ComboBoxValue",
-      "ComboboxOption",
-      "Autocomplete",
+      "Link",
+      "Accordion",
+      "AccordionItem",
+      "AccordionHeader",
+      "AccordionTrigger",
+      "AccordionPanel",
+      "Disclosure",
+      "DisclosureGroup",
+      "DisclosurePanel",
+      "DisclosureTrigger",
+      "Tabs",
+      "TabList",
+      "Tab",
+      "TabPanels",
+      "TabPanel",
+      "Breadcrumbs",
+      "BreadcrumbLink",
+      "Toolbar",
+      "Menubar",
+      "MenubarItem",
+      "MenubarMenu",
+      "MenubarTrigger",
+      "MenubarContent",
     ],
   },
   {
@@ -157,16 +187,16 @@ export const componentGroups = [
   {
     title: "Color",
     names: [
-      "ColorArea",
-      "ColorField",
       "ColorPicker",
+      "ColorField",
+      "ColorArea",
       "ColorSlider",
+      "ColorWheel",
+      "ColorWheelTrack",
       "ColorSwatch",
       "ColorSwatchPicker",
       "ColorSwatchPickerItem",
       "ColorThumb",
-      "ColorWheel",
-      "ColorWheelTrack",
     ],
   },
   {
@@ -174,6 +204,7 @@ export const componentGroups = [
     names: [
       "DialogTrigger",
       "Dialog",
+      "AlertDialog",
       "Modal",
       "ModalOverlay",
       "Popover",
@@ -184,10 +215,10 @@ export const componentGroups = [
   },
   {
     title: "Drag and drop",
-    names: ["DropZone", "DropIndicator", "FileTrigger"],
+    names: ["DropZone", "DropIndicator"],
   },
   {
-    title: "Table",
+    title: "Tables",
     names: [
       "Table",
       "ResizableTableContainer",
@@ -201,8 +232,32 @@ export const componentGroups = [
     ],
   },
   {
-    title: "Transitions and toast",
+    title: "Text and layout",
     names: [
+      "Text",
+      "Heading",
+      "Header",
+      "Keyboard",
+      "Separator",
+      "Group",
+      "WindowSplitter",
+      "Focusable",
+      "VisuallyHidden",
+    ],
+  },
+  {
+    title: "Status and motion",
+    names: [
+      "ProgressBar",
+      "Meter",
+      "Carousel",
+      "CarouselViewport",
+      "CarouselSlide",
+      "CarouselPrevious",
+      "CarouselNext",
+      "CarouselRotationControl",
+      "CarouselIndicatorGroup",
+      "CarouselIndicator",
       "SharedElementTransition",
       "SharedElement",
       "UNSTABLE_ToastRegion",
@@ -212,6 +267,19 @@ export const componentGroups = [
     ],
   },
 ] as const;
+
+const groupDefaultAliases: Record<string, string> = {
+  Buttons: "Primitives",
+  Forms: "Text inputs",
+  Navigation: "Disclosure and navigation",
+  Tables: "Table",
+  "Text and layout": "Primitives",
+  "Status and motion": "Transitions and toast",
+};
+
+function defaultsForGroup(group: string) {
+  return groupDefaults[group] ?? groupDefaults[groupDefaultAliases[group]!]!;
+}
 
 const groupDefaults: Record<
   string,
@@ -398,7 +466,7 @@ const groupDefaults: Record<
     summary:
       "Selectable and actionable collections with roving focus, disabled items, and typeahead.",
     nativeMarkup:
-      "div role=listbox, div role=option, div role=menu, div role=menuitem, and role=group.",
+      "div role=listbox, div role=option, div role=menu, div role=menuitem, role=group, and role=rowgroup.",
     anatomy: [
       ["Collection root", "Owns item registry and keyboard navigation."],
       ["Section", "Optional grouped items."],
@@ -620,6 +688,33 @@ const groupDefaults: Record<
 };
 
 const overrides: Record<string, DocOverride> = {
+  Accordion: {
+    summary:
+      "A grouped disclosure pattern with button triggers, controlled single or multiple selection, and APG panel relationships.",
+    nativeMarkup:
+      "div wrapper, heading elements, native button triggers, and div panels with optional role=region.",
+    anatomyCode: `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`,
+    examples: {
+      uncontrolled: `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n  <AccordionItem value="usage">\n    <AccordionHeader>\n      <AccordionTrigger>Use</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Compose the slots you need.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`,
+      controlled: `<Accordion value={section} onChange={(value) => setSection(String(value))} collapsible>\n  <AccordionItem value="install">\n    <AccordionHeader><AccordionTrigger>Install</AccordionTrigger></AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`,
+    },
+    keyboard: [
+      ["Enter / Space", "Toggles the focused trigger when the item can be collapsed or expanded."],
+      ["Up / Down Arrow", "Moves focus between accordion triggers."],
+      ["Home / End", "Moves focus to the first or last trigger."],
+    ],
+    data: ["data-slot", "data-open", "data-disabled"],
+  },
+  AlertDialog: {
+    summary:
+      "A modal dialog specialization for interruptive messages that require acknowledgement or confirmation.",
+    anatomyCode: `<AlertDialog open={open} onChange={setOpen} aria-labelledby="delete-title" aria-describedby="delete-desc">\n  <Heading id="delete-title" level={2}>Delete project?</Heading>\n  <Text id="delete-desc">This action cannot be undone.</Text>\n  <Button onClick={() => setOpen(false)}>Cancel</Button>\n</AlertDialog>`,
+    examples: {
+      uncontrolled: `<AlertDialog defaultOpen aria-label="Delete project confirmation">\n  <Heading level={2}>Delete project?</Heading>\n  <Text>This action cannot be undone.</Text>\n  <Button>Cancel</Button>\n</AlertDialog>`,
+      controlled: `<AlertDialog open={open} onChange={setOpen} aria-labelledby="delete-title" aria-describedby="delete-desc">\n  <Heading id="delete-title" level={2}>Delete project?</Heading>\n  <Text id="delete-desc">This action cannot be undone.</Text>\n  <Button onClick={() => setOpen(false)}>Cancel</Button>\n</AlertDialog>`,
+    },
+    data: ["data-open", "data-slot"],
+  },
   Button: {
     summary: "A native button with press, hover, focus, disabled, pending, and render-prop state.",
     anatomyCode: `<Button type="button">\n  Save changes\n</Button>`,
@@ -743,6 +838,89 @@ const overrides: Record<string, DocOverride> = {
       ["aria-label", "string", "Names the toolbar when no visible label is present."],
     ],
     ssr: "Toolbar renders static role markup on the server; roving tabIndex is applied after mount.",
+  },
+  Menubar: {
+    summary:
+      "A persistent application menu bar with APG top-level menuitem focus and popup menu content.",
+    nativeMarkup: "div role=menubar, button role=menuitem triggers, and div role=menu popups.",
+    anatomyCode: `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenuItem id="new">New</MenuItem>\n      <MenuItem id="open">Open</MenuItem>\n    </MenubarContent>\n  </MenubarMenu>\n</Menubar>`,
+    examples: {
+      uncontrolled: `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenuItem id="new">New</MenuItem>\n      <MenuItem id="open">Open</MenuItem>\n    </MenubarContent>\n  </MenubarMenu>\n  <MenubarItem id="help">Help</MenubarItem>\n</Menubar>`,
+      controlled: `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      {actions.map((action) => <MenuItem id={action.id} key={action.id}>{action.label}</MenuItem>)}\n    </MenubarContent>\n  </MenubarMenu>\n</Menubar>`,
+    },
+    keyboard: [
+      ["Tab", "Moves focus into the menubar to the active top-level item."],
+      ["Left / Right Arrow", "Moves between top-level items in a horizontal menubar."],
+      ["Down Arrow / Enter / Space", "Opens a submenu from a MenubarTrigger."],
+      ["Escape", "Closes open submenu content and returns focus to the trigger."],
+    ],
+    data: ["data-slot", "data-open", "data-disabled", "data-orientation"],
+  },
+  ContextMenu: {
+    summary:
+      "A context-invoked menu that opens from pointer context menu events or keyboard context commands.",
+    nativeMarkup: "div trigger plus div role=menu content with MenuItem children.",
+    anatomyCode: `<ContextMenu>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="rename">Rename</MenuItem>\n    <MenuItem id="delete">Delete</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+    examples: {
+      uncontrolled: `<ContextMenu>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="rename">Rename</MenuItem>\n    <MenuItem id="delete">Delete</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+      controlled: `<ContextMenu open={open} onChange={setOpen}>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="copy">Copy</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+    },
+    keyboard: [
+      ["Shift + F10 / ContextMenu", "Opens the menu from the focused trigger."],
+      ["Arrow keys", "Move through menu items."],
+      ["Escape", "Closes the menu and restores focus to the trigger."],
+    ],
+    data: ["data-slot", "data-open", "data-disabled"],
+  },
+  Feed: {
+    summary:
+      "A dynamic content stream with feed/article roles and page-wise keyboard navigation between articles.",
+    nativeMarkup: "div role=feed containing article elements with role=article.",
+    anatomyCode: `<Feed aria-label="Activity">\n  <FeedArticle id="build">Build passed</FeedArticle>\n  <FeedArticle id="deploy">Deploy started</FeedArticle>\n</Feed>`,
+    examples: {
+      uncontrolled: `<Feed aria-label="Activity">\n  <FeedArticle id="build">Build passed</FeedArticle>\n  <FeedArticle id="deploy">Deploy started</FeedArticle>\n</Feed>`,
+      controlled: `<Feed aria-label="Activity" busy={loading}>\n  {items.map((item) => <FeedArticle id={item.id} key={item.id}>{item.title}</FeedArticle>)}\n</Feed>`,
+    },
+    keyboard: [
+      ["PageDown", "Moves focus to the next article."],
+      ["PageUp", "Moves focus to the previous article."],
+      ["Ctrl + Home / End", "Moves focus to the first or last article."],
+    ],
+    data: ["data-slot", "data-busy"],
+  },
+  WindowSplitter: {
+    summary:
+      "A focusable separator that resizes adjacent panes with ARIA value metadata and pointer dragging.",
+    nativeMarkup:
+      "div role=separator with aria-valuemin, aria-valuemax, aria-valuenow, and aria-controls.",
+    anatomyCode: `<div style={{ gridTemplateColumns: \`calc(\${splitterValue}% - 0.25rem) 0.5rem calc(\${100 - splitterValue}% - 0.25rem)\` }}>\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" value={splitterValue} onChange={setSplitterValue} />\n  <section id="preview-pane">Preview</section>\n</div>`,
+    examples: {
+      uncontrolled: `<div style={{ gridTemplateColumns: "calc(40% - 0.25rem) 0.5rem calc(60% - 0.25rem)" }}>\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />\n  <section id="preview-pane">Preview</section>\n</div>`,
+      controlled: `<div style={{ gridTemplateColumns: \`calc(\${splitterValue}% - 0.25rem) 0.5rem calc(\${100 - splitterValue}% - 0.25rem)\` }}>\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" value={splitterValue} onChange={setSplitterValue} />\n  <section id="preview-pane">Preview</section>\n</div>`,
+    },
+    keyboard: [
+      ["Left / Up Arrow", "Decreases the splitter value by step."],
+      ["Right / Down Arrow", "Increases the splitter value by step."],
+      ["Home / End", "Moves to the minimum or maximum value."],
+    ],
+    data: ["data-slot", "data-orientation", "data-dragging", "data-disabled"],
+  },
+  Carousel: {
+    summary:
+      "A slide carousel with live-region viewport behavior, explicit previous/next controls, rotation control, and tab-style indicators.",
+    nativeMarkup:
+      "region with aria-roledescription=carousel, grouped slides, native buttons, and tablist indicators.",
+    anatomyCode: `<Carousel aria-label="Featured releases" defaultValue="one">\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>\n  <CarouselNext aria-label="Next slide">Next</CarouselNext>\n</Carousel>`,
+    examples: {
+      uncontrolled: `<Carousel aria-label="Featured releases" defaultValue="one">\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>\n  <CarouselNext aria-label="Next slide">Next</CarouselNext>\n</Carousel>`,
+      controlled: `<Carousel aria-label="Featured releases" value={slide} onChange={setSlide}>\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselIndicatorGroup>\n    <CarouselIndicator id="one">1</CarouselIndicator>\n    <CarouselIndicator id="two">2</CarouselIndicator>\n  </CarouselIndicatorGroup>\n</Carousel>`,
+    },
+    keyboard: [
+      ["Tab", "Moves through carousel controls and into the selected indicator."],
+      ["Left / Right Arrow", "Moves between indicators in the indicator group."],
+      ["Enter / Space", "Activates focused buttons and indicators."],
+    ],
+    data: ["data-slot", "data-selected", "data-rotating", "data-orientation"],
   },
   TextField: {
     anatomyCode: `<form action="/api/profile">\n  <TextField>\n    <Label>Email</Label>\n    <Input name="email" defaultValue="headless" />\n    <Description>Used for account notifications.</Description>\n    <FieldError>Enter a valid email.</FieldError>\n  </TextField>\n  <Button type="submit">Save</Button>\n</form>`,
@@ -1047,17 +1225,17 @@ const overrides: Record<string, DocOverride> = {
     },
   },
   DatePicker: {
-    anatomyCode: `<DatePicker defaultValue="2026-04-29" name="release">\n  <DateField defaultValue="2026-04-29">\n    <DateInput><DateSegment part="month" /><DateSegment part="day" /><DateSegment part="year" /></DateInput>\n  </DateField>\n  <Button>Open calendar</Button>\n  <Popover><Calendar /></Popover>\n</DatePicker>`,
+    anatomyCode: `<DatePicker value={date} onChange={setDate} name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><Calendar focusedValue={date} /></Popover>\n</DatePicker>`,
     examples: {
-      uncontrolled: `<DatePicker defaultValue="2026-04-29" name="release">\n  <Button>Open calendar</Button>\n  <Popover><Calendar /></Popover>\n</DatePicker>`,
-      controlled: `<DatePicker value={date} onChange={setDate}>\n  <Button>Open calendar</Button>\n  <Popover><Calendar value={date} onChange={setDate} /></Popover>\n</DatePicker>`,
+      uncontrolled: `<DatePicker defaultValue="2026-04-29" name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><Calendar focusedValue="2026-04-29" /></Popover>\n</DatePicker>`,
+      controlled: `<DatePicker value={date} onChange={setDate} name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><Calendar focusedValue={date} /></Popover>\n</DatePicker>`,
     },
   },
   DateRangePicker: {
-    anatomyCode: `<DateRangePicker defaultValue={{ start: "2026-04-22", end: "2026-04-25" }}>\n  <Button>Open range calendar</Button>\n  <Popover><RangeCalendar /></Popover>\n</DateRangePicker>`,
+    anatomyCode: `<DateRangePicker value={range} onChange={setRange} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><RangeCalendar focusedValue={range.start} /></Popover>\n</DateRangePicker>`,
     examples: {
-      uncontrolled: `<DateRangePicker defaultValue={{ start: "2026-04-22", end: "2026-04-25" }}>\n  <Button>Open range calendar</Button>\n  <Popover><RangeCalendar /></Popover>\n</DateRangePicker>`,
-      controlled: `<DateRangePicker value={range} onChange={setRange}>\n  <Button>Open range calendar</Button>\n  <Popover><RangeCalendar value={range} onChange={setRange} /></Popover>\n</DateRangePicker>`,
+      uncontrolled: `<DateRangePicker defaultValue={{ start: "2026-04-22", end: "2026-04-25" }} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><RangeCalendar focusedValue="2026-04-22" /></Popover>\n</DateRangePicker>`,
+      controlled: `<DateRangePicker value={range} onChange={setRange} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><RangeCalendar focusedValue={range.start} /></Popover>\n</DateRangePicker>`,
     },
   },
   ColorField: {
@@ -1214,7 +1392,8 @@ const componentNativeMarkup: Record<string, string> = {
   FieldError: "div role=alert when field validation is invalid.",
   Fieldset: "fieldset element for related form controls.",
   FileTrigger: "label containing hidden input type=file.",
-  GridList: "div role=grid with row-like GridListItem children.",
+  GridList:
+    "div role=grid with row-like GridListItem children, optionally grouped by GridListSection role=rowgroup.",
   Group: "div role=group.",
   Header: "header element.",
   Heading: "h1 through h6, controlled by the level prop.",
@@ -1477,6 +1656,22 @@ function componentAnatomyFor(
 }
 
 const wcagReferences = {
+  reflow: {
+    label: "WCAG 2.2: Reflow",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/reflow",
+  },
+  nonTextContrast: {
+    label: "WCAG 2.2: Non-text Contrast",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast",
+  },
+  focusVisible: {
+    label: "WCAG 2.2: Focus Visible",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible",
+  },
+  focusNotObscured: {
+    label: "WCAG 2.2: Focus Not Obscured",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum",
+  },
   keyboard: {
     label: "WCAG 2.2: Keyboard",
     href: "https://www.w3.org/WAI/WCAG22/Understanding/keyboard",
@@ -1513,9 +1708,25 @@ const wcagReferences = {
     label: "WCAG 2.2: Dragging Movements",
     href: "https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements",
   },
+  targetSize: {
+    label: "WCAG 2.2: Target Size",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum",
+  },
+  pointerCancellation: {
+    label: "WCAG 2.2: Pointer Cancellation",
+    href: "https://www.w3.org/WAI/WCAG22/Understanding/pointer-cancellation",
+  },
 };
 
 const apgReferences = {
+  accordion: {
+    label: "ARIA APG: Accordion Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
+  },
+  alertDialog: {
+    label: "ARIA APG: Alert Dialog Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/",
+  },
   breadcrumb: {
     label: "ARIA APG: Breadcrumb Pattern",
     href: "https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/",
@@ -1551,6 +1762,18 @@ const apgReferences = {
   listbox: {
     label: "ARIA APG: Listbox Pattern",
     href: "https://www.w3.org/WAI/ARIA/apg/patterns/listbox/",
+  },
+  carousel: {
+    label: "ARIA APG: Carousel Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/carousel/",
+  },
+  feed: {
+    label: "ARIA APG: Feed Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/feed/",
+  },
+  menu: {
+    label: "ARIA APG: Menu and Menubar Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
   },
   menuButton: {
     label: "ARIA APG: Menu Button Pattern",
@@ -1588,6 +1811,10 @@ const apgReferences = {
     label: "ARIA APG: Tree View Pattern",
     href: "https://www.w3.org/WAI/ARIA/apg/patterns/treeview/",
   },
+  windowSplitter: {
+    label: "ARIA APG: Window Splitter Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/",
+  },
 };
 
 const ariaReferences = {
@@ -1618,6 +1845,12 @@ const ariaReferences = {
 };
 
 const componentReferences: Record<string, ComponentDoc["references"]> = {
+  Accordion: [apgReferences.accordion],
+  AccordionHeader: [apgReferences.accordion],
+  AccordionItem: [apgReferences.accordion],
+  AccordionPanel: [apgReferences.accordion],
+  AccordionTrigger: [apgReferences.accordion],
+  AlertDialog: [apgReferences.alertDialog, apgReferences.dialog],
   Autocomplete: [apgReferences.combobox],
   BreadcrumbLink: [apgReferences.breadcrumb],
   Breadcrumbs: [apgReferences.breadcrumb],
@@ -1633,6 +1866,14 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   Cell: [ariaReferences.table],
   Collection: [apgReferences.listbox],
   CollectionBuilder: [apgReferences.listbox],
+  Carousel: [apgReferences.carousel],
+  CarouselIndicator: [apgReferences.carousel],
+  CarouselIndicatorGroup: [apgReferences.carousel],
+  CarouselNext: [apgReferences.carousel],
+  CarouselPrevious: [apgReferences.carousel],
+  CarouselRotationControl: [apgReferences.carousel],
+  CarouselSlide: [apgReferences.carousel],
+  CarouselViewport: [apgReferences.carousel],
   ColorArea: [apgReferences.slider, wcagReferences.nameRoleValue],
   ColorField: [wcagReferences.labelsInstructions, wcagReferences.nameRoleValue],
   ColorPicker: [apgReferences.dialog, wcagReferences.nameRoleValue],
@@ -1648,6 +1889,9 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   Combobox: [apgReferences.combobox],
   ComboboxOption: [apgReferences.combobox],
   ComboBoxValue: [apgReferences.combobox],
+  ContextMenu: [apgReferences.menu],
+  ContextMenuContent: [apgReferences.menu],
+  ContextMenuTrigger: [apgReferences.menu],
   DateField: [apgReferences.spinbutton],
   DateInput: [apgReferences.spinbutton],
   DatePicker: [apgReferences.dialog, apgReferences.grid],
@@ -1664,6 +1908,8 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   DropZone: [wcagReferences.draggingMovements],
   FieldError: [wcagReferences.errorIdentification],
   Fieldset: [wcagReferences.infoRelationships, wcagReferences.labelsInstructions],
+  Feed: [apgReferences.feed],
+  FeedArticle: [apgReferences.feed],
   FileTrigger: [wcagReferences.draggingMovements, apgReferences.button],
   Focusable: [wcagReferences.keyboard, wcagReferences.focusOrder],
   GridList: [apgReferences.grid],
@@ -1687,6 +1933,11 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   MenuItem: [apgReferences.menuButton],
   MenuSection: [apgReferences.menuButton],
   MenuTrigger: [apgReferences.menuButton],
+  Menubar: [apgReferences.menu],
+  MenubarContent: [apgReferences.menu],
+  MenubarItem: [apgReferences.menu],
+  MenubarMenu: [apgReferences.menu],
+  MenubarTrigger: [apgReferences.menu],
   Meter: [ariaReferences.meter],
   Modal: [apgReferences.dialog],
   ModalOverlay: [apgReferences.dialog],
@@ -1745,19 +1996,40 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   UNSTABLE_ToastList: [ariaReferences.status],
   UNSTABLE_ToastRegion: [ariaReferences.status, wcagReferences.statusMessages],
   VisuallyHidden: [wcagReferences.nameRoleValue],
+  WindowSplitter: [apgReferences.windowSplitter, ariaReferences.separator],
 };
 
 const groupReferences: Record<string, ComponentDoc["references"]> = {
   Collections: [apgReferences.listbox, wcagReferences.keyboard, wcagReferences.nameRoleValue],
-  Color: [apgReferences.slider, apgReferences.listbox, wcagReferences.nameRoleValue],
+  Color: [
+    apgReferences.slider,
+    apgReferences.listbox,
+    wcagReferences.nameRoleValue,
+    wcagReferences.nonTextContrast,
+  ],
   "Choice inputs": [wcagReferences.keyboard, wcagReferences.nameRoleValue],
   "Date and time": [apgReferences.grid, apgReferences.spinbutton, wcagReferences.keyboard],
   "Disclosure and navigation": [wcagReferences.keyboard, wcagReferences.focusOrder],
-  "Drag and drop": [wcagReferences.draggingMovements, wcagReferences.keyboard],
+  "Drag and drop": [
+    wcagReferences.draggingMovements,
+    wcagReferences.pointerCancellation,
+    wcagReferences.keyboard,
+  ],
   "Field anatomy": [wcagReferences.labelsInstructions, wcagReferences.errorIdentification],
-  Overlays: [apgReferences.dialog, wcagReferences.focusOrder, wcagReferences.nameRoleValue],
+  Overlays: [
+    apgReferences.dialog,
+    wcagReferences.focusOrder,
+    wcagReferences.focusNotObscured,
+    wcagReferences.nameRoleValue,
+  ],
   Pickers: [apgReferences.combobox, apgReferences.listbox, wcagReferences.keyboard],
-  Primitives: [wcagReferences.keyboard, wcagReferences.nameRoleValue],
+  Primitives: [
+    wcagReferences.keyboard,
+    wcagReferences.focusVisible,
+    wcagReferences.reflow,
+    wcagReferences.targetSize,
+    wcagReferences.nameRoleValue,
+  ],
   "Range and status": [apgReferences.slider, wcagReferences.nameRoleValue],
   Table: [wcagReferences.infoRelationships, ariaReferences.table],
   "Text inputs": [wcagReferences.labelsInstructions, wcagReferences.keyboard],
@@ -1772,10 +2044,11 @@ export const accessibilityReferenceCatalog = [
 
 function referencesFor(name: string, group: string) {
   const deduped = new Map<string, ComponentDoc["references"][number]>();
+  const referenceGroup = groupReferences[group] ? group : groupDefaultAliases[group];
 
   for (const reference of [
     ...(componentReferences[name] ?? []),
-    ...(groupReferences[group] ?? []),
+    ...(groupReferences[referenceGroup ?? group] ?? []),
     wcagReferences.nameRoleValue,
   ]) {
     deduped.set(reference.href, reference);
@@ -1785,6 +2058,21 @@ function referencesFor(name: string, group: string) {
 }
 
 const componentAccessibility: Record<string, string[]> = {
+  Accordion: [
+    "Each trigger is a native button with aria-expanded and aria-controls pointing at its panel.",
+    "AccordionHeader should wrap only the trigger button so heading semantics match the APG pattern.",
+    "Arrow keys, Home, and End can move focus between accordion triggers without removing them from the Tab sequence.",
+  ],
+  AlertDialog: [
+    "AlertDialog renders a modal dialog with role=alertdialog for interruptive confirmation or warning flows.",
+    "Provide aria-labelledby and aria-describedby when the alert message is short enough to announce as one description.",
+    "Keep a visible cancel or close button inside the dialog and return focus to the invoking control on close.",
+  ],
+  Carousel: [
+    "The carousel root exposes region semantics and aria-roledescription=carousel.",
+    "The viewport uses aria-live=polite while not rotating and aria-live=off while rotation is active.",
+    "Auto-rotation is opt-in and stops when keyboard focus enters or the pointer hovers the carousel.",
+  ],
   Combobox: [
     "Input receives combobox role, expanded state, active-descendant, popup relationship, and list autocomplete metadata.",
     "Listbox options are selected through the composed ListBox; committed value is mirrored to hidden form input when name is supplied.",
@@ -1804,6 +2092,11 @@ const componentAccessibility: Record<string, string[]> = {
     "Exactly one enabled option is tabbable when no value is selected; arrow keys move through enabled options.",
     "Each option uses role=option, aria-selected, aria-disabled, and a stable id.",
     "Use aria-label when visual content is not plain text so typeahead and announcements have a useful label.",
+  ],
+  TagGroup: [
+    "TagList exposes list semantics with one tabbable tag at a time.",
+    "Left and Right arrow keys move focus across tags; Home and End move to the boundaries.",
+    "Backspace or Delete calls TagList onRemove with the focused tag id when removal is enabled.",
   ],
   Modal: [
     "Modal renders a native dialog, opens with showModal, and sets aria-modal=true.",
@@ -1825,6 +2118,26 @@ const componentAccessibility: Record<string, string[]> = {
     "Left/Right arrows move through horizontal toolbars; Up/Down arrows move through vertical toolbars.",
     "Home and End move to the first and last enabled controls.",
   ],
+  ContextMenu: [
+    "ContextMenuTrigger opens a menu from pointer context-menu events, Shift+F10, or the ContextMenu key.",
+    "ContextMenuContent uses menu semantics and moves focus into the first enabled menu item when opened.",
+    "Escape closes the menu and returns focus to the trigger.",
+  ],
+  Feed: [
+    "Feed renders role=feed and each FeedArticle renders role=article with set position metadata.",
+    "PageUp and PageDown move focus between articles; Ctrl+Home and Ctrl+End move to feed boundaries.",
+    "Use aria-busy while loading or appending articles so assistive technology does not announce incomplete updates.",
+  ],
+  Menubar: [
+    "Menubar renders role=menubar and uses one tabbable top-level item with arrow-key navigation.",
+    "MenubarTrigger exposes aria-haspopup=menu, aria-expanded, and aria-controls for submenu content.",
+    "MenuItem children inside MenubarContent close the submenu after activation and return focus to the trigger.",
+  ],
+  WindowSplitter: [
+    "WindowSplitter renders a focusable separator with aria-valuemin, aria-valuemax, aria-valuenow, and aria-controls.",
+    "Arrow keys resize by step; Home and End move to the minimum and maximum values.",
+    "Pointer dragging updates the same value exposed to assistive technology.",
+  ],
 };
 
 function accessibilityFor(name: string, group: string, fallback: string[]) {
@@ -1843,7 +2156,7 @@ function propsWithClassName(props: ComponentDoc["props"]) {
 
 const docs: ComponentDoc[] = componentGroups.flatMap((group) =>
   group.names.map((name) => {
-    const defaults = groupDefaults[group.title];
+    const defaults = defaultsForGroup(group.title);
     const override = overrides[name] ?? {};
     const examples = fallbackExamples(name, group.title);
 
@@ -1879,42 +2192,37 @@ function slugify(value: string) {
 }
 
 const pageDefinitions: [string, string, string[]][] = [
-  ["Primitives", "Button", ["Button"]],
-  ["Primitives", "ToggleButton", ["ToggleButton"]],
-  ["Primitives", "ToggleButtonGroup", ["ToggleButtonGroup", "ToggleButton"]],
-  ["Primitives", "Link", ["Link"]],
-  ["Primitives", "Text", ["Text"]],
-  ["Primitives", "Heading", ["Heading"]],
-  ["Primitives", "Separator", ["Separator"]],
-  ["Primitives", "Group", ["Group"]],
-  ["Primitives", "Toolbar", ["Toolbar"]],
-  ["Primitives", "Pressable", ["Pressable"]],
-  ["Primitives", "Focusable", ["Focusable"]],
-  ["Primitives", "VisuallyHidden", ["VisuallyHidden"]],
-  ["Field anatomy", "TextField", ["TextField", "Label", "Input", "Description", "FieldError"]],
-  ["Field anatomy", "Fieldset", ["Fieldset", "Legend"]],
-  ["Text inputs", "Input", ["Input", "Label", "Description", "FieldError"]],
-  ["Text inputs", "TextArea", ["TextArea", "Label", "Description", "FieldError"]],
-  ["Text inputs", "SearchField", ["SearchField", "Input", "Label"]],
-  ["Choice inputs", "Checkbox", ["Checkbox"]],
-  ["Choice inputs", "CheckboxGroup", ["CheckboxGroup", "Checkbox"]],
-  ["Choice inputs", "RadioGroup", ["RadioGroup", "Radio"]],
-  ["Choice inputs", "Switch", ["Switch"]],
-  ["Range and status", "NumberField", ["NumberField", "Label", "Input"]],
-  ["Range and status", "Slider", ["Slider", "SliderOutput", "SliderTrack", "SliderThumb"]],
-  ["Range and status", "ProgressBar", ["ProgressBar"]],
-  ["Range and status", "Meter", ["Meter"]],
+  ["Buttons", "Button", ["Button"]],
+  ["Buttons", "ToggleButton", ["ToggleButton"]],
+  ["Buttons", "ToggleButtonGroup", ["ToggleButtonGroup", "ToggleButton"]],
+  ["Buttons", "Pressable", ["Pressable"]],
+  ["Buttons", "FileTrigger", ["FileTrigger"]],
+  ["Forms", "TextField", ["TextField", "Label", "Input", "Description", "FieldError"]],
+  ["Forms", "Fieldset", ["Fieldset", "Legend"]],
+  ["Forms", "Input", ["Input", "Label", "Description", "FieldError"]],
+  ["Forms", "TextArea", ["TextArea", "Label", "Description", "FieldError"]],
+  ["Forms", "SearchField", ["SearchField", "Input", "Label"]],
+  ["Forms", "Checkbox", ["Checkbox"]],
+  ["Forms", "CheckboxGroup", ["CheckboxGroup", "Checkbox"]],
+  ["Forms", "RadioGroup", ["RadioGroup", "Radio"]],
+  ["Forms", "Switch", ["Switch"]],
+  ["Forms", "NumberField", ["NumberField", "Label", "Input"]],
+  ["Forms", "Slider", ["Slider", "SliderOutput", "SliderTrack", "SliderThumb"]],
   [
-    "Disclosure and navigation",
-    "Disclosure",
-    ["Disclosure", "DisclosureTrigger", "DisclosurePanel"],
+    "Pickers",
+    "Select",
+    ["Select", "SelectValue", "SelectOption", "Popover", "ListBox", "ListBoxItem"],
   ],
-  ["Disclosure and navigation", "DisclosureGroup", ["DisclosureGroup", "Disclosure"]],
-  ["Disclosure and navigation", "Tabs", ["Tabs", "TabList", "Tab", "TabPanels", "TabPanel"]],
-  ["Disclosure and navigation", "Breadcrumbs", ["Breadcrumbs", "BreadcrumbLink"]],
+  ["Pickers", "Combobox", ["Combobox", "ComboBoxValue", "ComboboxOption", "Autocomplete"]],
   ["Collections", "Collection", ["Collection", "CollectionBuilder"]],
   ["Collections", "ListBox", ["ListBox", "ListBoxItem", "ListBoxSection", "ListBoxLoadMoreItem"]],
   ["Collections", "Menu", ["Menu", "MenuItem", "MenuSection", "MenuTrigger", "SubmenuTrigger"]],
+  [
+    "Collections",
+    "ContextMenu",
+    ["ContextMenu", "ContextMenuTrigger", "ContextMenuContent", "MenuItem", "MenuSection"],
+  ],
+  ["Collections", "Feed", ["Feed", "FeedArticle"]],
   [
     "Collections",
     "GridList",
@@ -1926,12 +2234,22 @@ const pageDefinitions: [string, string, string[]][] = [
     "Tree",
     ["Tree", "TreeItem", "TreeItemContent", "TreeHeader", "TreeSection", "TreeLoadMoreItem"],
   ],
+  ["Navigation", "Link", ["Link"]],
   [
-    "Pickers",
-    "Select",
-    ["Select", "SelectValue", "SelectOption", "Popover", "ListBox", "ListBoxItem"],
+    "Navigation",
+    "Accordion",
+    ["Accordion", "AccordionItem", "AccordionHeader", "AccordionTrigger", "AccordionPanel"],
   ],
-  ["Pickers", "Combobox", ["Combobox", "ComboBoxValue", "ComboboxOption", "Autocomplete"]],
+  ["Navigation", "Disclosure", ["Disclosure", "DisclosureTrigger", "DisclosurePanel"]],
+  ["Navigation", "DisclosureGroup", ["DisclosureGroup", "Disclosure"]],
+  ["Navigation", "Tabs", ["Tabs", "TabList", "Tab", "TabPanels", "TabPanel"]],
+  ["Navigation", "Breadcrumbs", ["Breadcrumbs", "BreadcrumbLink"]],
+  ["Navigation", "Toolbar", ["Toolbar"]],
+  [
+    "Navigation",
+    "Menubar",
+    ["Menubar", "MenubarItem", "MenubarMenu", "MenubarTrigger", "MenubarContent", "MenuItem"],
+  ],
   [
     "Date and time",
     "Calendar",
@@ -1949,18 +2267,58 @@ const pageDefinitions: [string, string, string[]][] = [
   ["Date and time", "TimeField", ["TimeField", "DateInput", "DateSegment"]],
   ["Date and time", "DatePicker", ["DatePicker", "DateField", "Popover", "Calendar"]],
   ["Date and time", "DateRangePicker", ["DateRangePicker", "DateField", "RangeCalendar"]],
-  ["Drag and drop", "Drag and drop", ["DropZone", "FileTrigger", "DropIndicator"]],
+  [
+    "Color",
+    "Color",
+    [
+      "ColorField",
+      "ColorPicker",
+      "ColorSwatch",
+      "ColorArea",
+      "ColorSlider",
+      "ColorWheel",
+      "ColorWheelTrack",
+      "ColorSwatchPicker",
+      "ColorSwatchPickerItem",
+      "ColorThumb",
+    ],
+  ],
   ["Overlays", "Dialog", ["Dialog"]],
+  ["Overlays", "AlertDialog", ["AlertDialog", "Dialog", "Button"]],
   ["Overlays", "Modal", ["Modal", "ModalOverlay", "Dialog"]],
   ["Overlays", "Popover", ["Popover", "OverlayArrow"]],
   ["Overlays", "Tooltip", ["Tooltip", "TooltipTrigger"]],
-  ["Table", "Table", ["Table", "TableHeader", "Column", "TableBody", "Row", "Cell"]],
-  ["Table", "TableHeader", ["TableHeader", "Column"]],
-  ["Table", "TableBody", ["TableBody", "Row", "Cell"]],
-  ["Table", "Row", ["Row", "Cell"]],
-  ["Transitions and toast", "Transitions", ["SharedElementTransition", "SharedElement"]],
+  ["Drag and drop", "Drag and drop", ["DropZone", "FileTrigger", "DropIndicator"]],
+  ["Tables", "Table", ["Table", "TableHeader", "Column", "TableBody", "Row", "Cell"]],
+  ["Tables", "TableHeader", ["TableHeader", "Column"]],
+  ["Tables", "TableBody", ["TableBody", "Row", "Cell"]],
+  ["Tables", "Row", ["Row", "Cell"]],
+  ["Text and layout", "Text", ["Text"]],
+  ["Text and layout", "Heading", ["Heading"]],
+  ["Text and layout", "Separator", ["Separator"]],
+  ["Text and layout", "Group", ["Group"]],
+  ["Text and layout", "WindowSplitter", ["WindowSplitter"]],
+  ["Text and layout", "Focusable", ["Focusable"]],
+  ["Text and layout", "VisuallyHidden", ["VisuallyHidden"]],
+  ["Status and motion", "ProgressBar", ["ProgressBar"]],
+  ["Status and motion", "Meter", ["Meter"]],
   [
-    "Transitions and toast",
+    "Status and motion",
+    "Carousel",
+    [
+      "Carousel",
+      "CarouselViewport",
+      "CarouselSlide",
+      "CarouselPrevious",
+      "CarouselNext",
+      "CarouselRotationControl",
+      "CarouselIndicatorGroup",
+      "CarouselIndicator",
+    ],
+  ],
+  ["Status and motion", "Transitions", ["SharedElementTransition", "SharedElement"]],
+  [
+    "Status and motion",
     "Toast",
     ["UNSTABLE_ToastRegion", "UNSTABLE_ToastList", "UNSTABLE_Toast", "UNSTABLE_ToastContent"],
   ],
@@ -1968,7 +2326,7 @@ const pageDefinitions: [string, string, string[]][] = [
 
 export const pages: ComponentPage[] = pageDefinitions
   .map(([group, title, names]) => {
-    const defaults = groupDefaults[group]!;
+    const defaults = defaultsForGroup(group);
     const pageDocs = names
       .map((name) => docs.find((doc) => doc.name === name))
       .filter((doc): doc is ComponentDoc => Boolean(doc));
@@ -1986,3 +2344,182 @@ export const pages: ComponentPage[] = pageDefinitions
     };
   })
   .filter((page): page is ComponentPage => Boolean(page));
+
+export const accessibilitySupportStatement = [
+  "Components are designed to support WCAG 2.2 AA implementations when used correctly.",
+  "Full WCAG conformance applies to complete pages, flows, and processes, so this library does not claim standalone WCAG conformance.",
+  "WCAG 3 is not targeted because it is still a draft, not a W3C Recommendation.",
+];
+
+export const accessibilityAuditDimensions = [
+  "nameRoleValue",
+  "keyboardAccess",
+  "focusOrder",
+  "focusVisible",
+  "labelsInstructions",
+  "errorIdentification",
+  "statusMessages",
+  "pointerAlternatives",
+  "contrastSensitiveStates",
+  "targetSize",
+] satisfies AccessibilityAuditDimension[];
+
+export const accessibilityAuditStatusLabels = {
+  covered: "Covered",
+  "consumer responsibility": "Consumer responsibility",
+  "not applicable": "Not applicable",
+  "needs manual audit": "Needs manual audit",
+} satisfies Record<AccessibilityAuditStatus, string>;
+
+export const accessibilityAuditDimensionLabels = {
+  nameRoleValue: "Name, role, value",
+  keyboardAccess: "Keyboard access",
+  focusOrder: "Focus order",
+  focusVisible: "Focus visible",
+  labelsInstructions: "Labels and instructions",
+  errorIdentification: "Error identification",
+  statusMessages: "Status messages",
+  pointerAlternatives: "Pointer alternatives",
+  contrastSensitiveStates: "Contrast-sensitive states",
+  targetSize: "Target size",
+} satisfies Record<AccessibilityAuditDimension, string>;
+
+const formLabelGroups = new Set([
+  "Forms",
+  "Field anatomy",
+  "Text inputs",
+  "Choice inputs",
+  "Range and status",
+  "Pickers",
+  "Date and time",
+  "Color",
+  "Drag and drop",
+]);
+
+const errorComponents = new Set(["FieldError", "TextField", "Input", "TextArea", "SearchField"]);
+const statusComponents = new Set([
+  "ProgressBar",
+  "Meter",
+  "UNSTABLE_Toast",
+  "UNSTABLE_ToastContent",
+  "UNSTABLE_ToastList",
+  "UNSTABLE_ToastRegion",
+]);
+const pointerOnlyRiskGroups = new Set(["Color", "Drag and drop"]);
+const structuralGroups = new Set([
+  "Primitives",
+  "Field anatomy",
+  "Tables",
+  "Table",
+  "Text and layout",
+  "Status and motion",
+  "Transitions and toast",
+]);
+
+function auditStatusesFor(doc: ComponentDoc): AccessibilityAuditEntry["statuses"] {
+  const interactive = doc.keyboard.some(([key]) => key !== "Native behavior");
+  let statusMessages: AccessibilityAuditStatus = "not applicable";
+  let pointerAlternatives: AccessibilityAuditStatus = "covered";
+  let keyboardAccess: AccessibilityAuditStatus = "not applicable";
+  let focusOrder: AccessibilityAuditStatus = "not applicable";
+  let labelsInstructions: AccessibilityAuditStatus = "consumer responsibility";
+  let errorIdentification: AccessibilityAuditStatus = "consumer responsibility";
+  let targetSize: AccessibilityAuditStatus = "not applicable";
+
+  if (statusComponents.has(doc.name)) {
+    statusMessages = "covered";
+  }
+
+  if (pointerOnlyRiskGroups.has(doc.group)) {
+    pointerAlternatives = "needs manual audit";
+  }
+
+  if (interactive || !structuralGroups.has(doc.group)) {
+    keyboardAccess = "covered";
+    focusOrder = "covered";
+    targetSize = "consumer responsibility";
+  }
+
+  if (
+    formLabelGroups.has(doc.group) ||
+    doc.references.some((reference) => reference.href === wcagReferences.labelsInstructions.href)
+  ) {
+    labelsInstructions = "covered";
+  }
+
+  if (errorComponents.has(doc.name)) {
+    errorIdentification = "covered";
+  }
+
+  return {
+    nameRoleValue: "covered",
+    keyboardAccess,
+    focusOrder,
+    focusVisible: "needs manual audit",
+    labelsInstructions,
+    errorIdentification,
+    statusMessages,
+    pointerAlternatives,
+    contrastSensitiveStates: "needs manual audit",
+    targetSize,
+  };
+}
+
+function hrefsFor(doc: ComponentDoc, predicate: (href: string) => boolean) {
+  return doc.references.map((reference) => reference.href).filter(predicate);
+}
+
+export const accessibilityTraceabilityMatrix = docs.map((doc) => ({
+  component: doc.name,
+  group: doc.group,
+  statuses: auditStatusesFor(doc),
+  wcag: [
+    ...new Set([
+      ...hrefsFor(doc, (href) => href.includes("/WCAG22/Understanding/")),
+      wcagReferences.focusVisible.href,
+      wcagReferences.nonTextContrast.href,
+      wcagReferences.targetSize.href,
+    ]),
+  ],
+  apg: hrefsFor(
+    doc,
+    (href) => href.includes("/WAI/ARIA/apg/patterns/") || href.includes("w3c.github.io/aria/"),
+  ),
+  notes:
+    "Component-owned roles, states, properties, keyboard behavior, and form semantics are covered by component tests and docs examples; page composition, labels, visual contrast, target size, zoom/reflow, and content-specific validation require implementation audit.",
+})) satisfies AccessibilityAuditEntry[];
+
+export const manualAuditScripts = [
+  {
+    title: "Keyboard-only component scripts",
+    items: [
+      "Button and Link: Tab to each control, activate with Enter, and activate buttons with Space.",
+      "Toolbar: Tab into the toolbar, move with arrow keys, use Home and End, then Shift+Tab out.",
+      "Tabs: Tab to the tablist, move tabs with arrows, verify the active tab controls the visible panel.",
+      "ListBox, Menu, Select, Combobox, and Autocomplete: open, move through enabled options, skip disabled options, select, dismiss with Escape, and verify focus returns predictably.",
+      "Dialog and Modal: open from the trigger, keep tab focus inside the dialog task, close with Escape or an explicit close control, and verify focus restoration.",
+      "DatePicker and date fields: move among date segments or grid cells with keyboard controls and commit a date without pointer input.",
+      "Color controls: move sliders, wheels, areas, and swatches with keyboard alternatives and verify the submitted value changes.",
+      "Table: navigate cells, headers, sortable or resizable controls, and selected rows without losing table relationships.",
+      "DropZone and FileTrigger: verify file selection has a keyboard path equivalent to drag and drop.",
+      "Toast: trigger a notification and verify focus is not stolen while the status is announced.",
+    ],
+  },
+  {
+    title: "Screen reader smoke scripts",
+    items: [
+      "NVDA with Firefox: navigate each playground by landmarks and headings, then inspect focus announcements for name, role, value, state, and position.",
+      "VoiceOver with Safari: use Tab and rotor navigation on each playground, then verify dialogs, popovers, list options, date grids, and status messages are announced with useful labels.",
+    ],
+  },
+  {
+    title: "Visual and responsive checks",
+    items: [
+      "Check 200% zoom and narrow viewport reflow without horizontal page scrolling for ordinary text content.",
+      "Verify focus indicators are visible, have sufficient contrast, and are not obscured by sticky headers, overlays, or popovers.",
+      "Check text contrast, Shiki syntax token contrast, and non-text contrast for borders, selected states, disabled states, focus rings, charts, swatches, and drag/drop targets in light and dark themes.",
+      "Verify pointer targets meet WCAG 2.2 AA target-size exceptions or have spacing that prevents accidental activation.",
+      "Enable reduced motion and verify transitions, popovers, toasts, and shared-element effects remain usable.",
+    ],
+  },
+];
