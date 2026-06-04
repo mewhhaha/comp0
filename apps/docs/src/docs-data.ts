@@ -117,6 +117,11 @@ export const componentGroups = [
       "MenuSection",
       "MenuTrigger",
       "SubmenuTrigger",
+      "ContextMenu",
+      "ContextMenuTrigger",
+      "ContextMenuContent",
+      "Feed",
+      "FeedArticle",
       "GridList",
       "GridListItem",
       "GridListHeader",
@@ -137,6 +142,11 @@ export const componentGroups = [
     title: "Navigation",
     names: [
       "Link",
+      "Accordion",
+      "AccordionItem",
+      "AccordionHeader",
+      "AccordionTrigger",
+      "AccordionPanel",
       "Disclosure",
       "DisclosureGroup",
       "DisclosurePanel",
@@ -149,6 +159,11 @@ export const componentGroups = [
       "Breadcrumbs",
       "BreadcrumbLink",
       "Toolbar",
+      "Menubar",
+      "MenubarItem",
+      "MenubarMenu",
+      "MenubarTrigger",
+      "MenubarContent",
     ],
   },
   {
@@ -189,6 +204,7 @@ export const componentGroups = [
     names: [
       "DialogTrigger",
       "Dialog",
+      "AlertDialog",
       "Modal",
       "ModalOverlay",
       "Popover",
@@ -224,6 +240,7 @@ export const componentGroups = [
       "Keyboard",
       "Separator",
       "Group",
+      "WindowSplitter",
       "Focusable",
       "VisuallyHidden",
     ],
@@ -233,6 +250,14 @@ export const componentGroups = [
     names: [
       "ProgressBar",
       "Meter",
+      "Carousel",
+      "CarouselViewport",
+      "CarouselSlide",
+      "CarouselPrevious",
+      "CarouselNext",
+      "CarouselRotationControl",
+      "CarouselIndicatorGroup",
+      "CarouselIndicator",
       "SharedElementTransition",
       "SharedElement",
       "UNSTABLE_ToastRegion",
@@ -663,6 +688,33 @@ const groupDefaults: Record<
 };
 
 const overrides: Record<string, DocOverride> = {
+  Accordion: {
+    summary:
+      "A grouped disclosure pattern with button triggers, controlled single or multiple selection, and APG panel relationships.",
+    nativeMarkup:
+      "div wrapper, heading elements, native button triggers, and div panels with optional role=region.",
+    anatomyCode: `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`,
+    examples: {
+      uncontrolled: `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n  <AccordionItem value="usage">\n    <AccordionHeader>\n      <AccordionTrigger>Use</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Compose the slots you need.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`,
+      controlled: `<Accordion value={section} onChange={(value) => setSection(String(value))} collapsible>\n  <AccordionItem value="install">\n    <AccordionHeader><AccordionTrigger>Install</AccordionTrigger></AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`,
+    },
+    keyboard: [
+      ["Enter / Space", "Toggles the focused trigger when the item can be collapsed or expanded."],
+      ["Up / Down Arrow", "Moves focus between accordion triggers."],
+      ["Home / End", "Moves focus to the first or last trigger."],
+    ],
+    data: ["data-slot", "data-open", "data-disabled"],
+  },
+  AlertDialog: {
+    summary:
+      "A modal dialog specialization for interruptive messages that require acknowledgement or confirmation.",
+    anatomyCode: `<AlertDialog open={open} onChange={setOpen} aria-labelledby="delete-title" aria-describedby="delete-desc">\n  <Heading id="delete-title" level={2}>Delete project?</Heading>\n  <Text id="delete-desc">This action cannot be undone.</Text>\n  <Button onClick={() => setOpen(false)}>Cancel</Button>\n</AlertDialog>`,
+    examples: {
+      uncontrolled: `<AlertDialog defaultOpen aria-label="Delete project confirmation">\n  <Heading level={2}>Delete project?</Heading>\n  <Text>This action cannot be undone.</Text>\n  <Button>Cancel</Button>\n</AlertDialog>`,
+      controlled: `<AlertDialog open={open} onChange={setOpen} aria-labelledby="delete-title" aria-describedby="delete-desc">\n  <Heading id="delete-title" level={2}>Delete project?</Heading>\n  <Text id="delete-desc">This action cannot be undone.</Text>\n  <Button onClick={() => setOpen(false)}>Cancel</Button>\n</AlertDialog>`,
+    },
+    data: ["data-open", "data-slot"],
+  },
   Button: {
     summary: "A native button with press, hover, focus, disabled, pending, and render-prop state.",
     anatomyCode: `<Button type="button">\n  Save changes\n</Button>`,
@@ -786,6 +838,89 @@ const overrides: Record<string, DocOverride> = {
       ["aria-label", "string", "Names the toolbar when no visible label is present."],
     ],
     ssr: "Toolbar renders static role markup on the server; roving tabIndex is applied after mount.",
+  },
+  Menubar: {
+    summary:
+      "A persistent application menu bar with APG top-level menuitem focus and popup menu content.",
+    nativeMarkup: "div role=menubar, button role=menuitem triggers, and div role=menu popups.",
+    anatomyCode: `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenuItem id="new">New</MenuItem>\n      <MenuItem id="open">Open</MenuItem>\n    </MenubarContent>\n  </MenubarMenu>\n</Menubar>`,
+    examples: {
+      uncontrolled: `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenuItem id="new">New</MenuItem>\n      <MenuItem id="open">Open</MenuItem>\n    </MenubarContent>\n  </MenubarMenu>\n  <MenubarItem id="help">Help</MenubarItem>\n</Menubar>`,
+      controlled: `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      {actions.map((action) => <MenuItem id={action.id} key={action.id}>{action.label}</MenuItem>)}\n    </MenubarContent>\n  </MenubarMenu>\n</Menubar>`,
+    },
+    keyboard: [
+      ["Tab", "Moves focus into the menubar to the active top-level item."],
+      ["Left / Right Arrow", "Moves between top-level items in a horizontal menubar."],
+      ["Down Arrow / Enter / Space", "Opens a submenu from a MenubarTrigger."],
+      ["Escape", "Closes open submenu content and returns focus to the trigger."],
+    ],
+    data: ["data-slot", "data-open", "data-disabled", "data-orientation"],
+  },
+  ContextMenu: {
+    summary:
+      "A context-invoked menu that opens from pointer context menu events or keyboard context commands.",
+    nativeMarkup: "div trigger plus div role=menu content with MenuItem children.",
+    anatomyCode: `<ContextMenu>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="rename">Rename</MenuItem>\n    <MenuItem id="delete">Delete</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+    examples: {
+      uncontrolled: `<ContextMenu>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="rename">Rename</MenuItem>\n    <MenuItem id="delete">Delete</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+      controlled: `<ContextMenu open={open} onChange={setOpen}>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="copy">Copy</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`,
+    },
+    keyboard: [
+      ["Shift + F10 / ContextMenu", "Opens the menu from the focused trigger."],
+      ["Arrow keys", "Move through menu items."],
+      ["Escape", "Closes the menu and restores focus to the trigger."],
+    ],
+    data: ["data-slot", "data-open", "data-disabled"],
+  },
+  Feed: {
+    summary:
+      "A dynamic content stream with feed/article roles and page-wise keyboard navigation between articles.",
+    nativeMarkup: "div role=feed containing article elements with role=article.",
+    anatomyCode: `<Feed aria-label="Activity">\n  <FeedArticle id="build">Build passed</FeedArticle>\n  <FeedArticle id="deploy">Deploy started</FeedArticle>\n</Feed>`,
+    examples: {
+      uncontrolled: `<Feed aria-label="Activity">\n  <FeedArticle id="build">Build passed</FeedArticle>\n  <FeedArticle id="deploy">Deploy started</FeedArticle>\n</Feed>`,
+      controlled: `<Feed aria-label="Activity" busy={loading}>\n  {items.map((item) => <FeedArticle id={item.id} key={item.id}>{item.title}</FeedArticle>)}\n</Feed>`,
+    },
+    keyboard: [
+      ["PageDown", "Moves focus to the next article."],
+      ["PageUp", "Moves focus to the previous article."],
+      ["Ctrl + Home / End", "Moves focus to the first or last article."],
+    ],
+    data: ["data-slot", "data-busy"],
+  },
+  WindowSplitter: {
+    summary:
+      "A focusable separator that resizes adjacent panes with ARIA value metadata and pointer dragging.",
+    nativeMarkup:
+      "div role=separator with aria-valuemin, aria-valuemax, aria-valuenow, and aria-controls.",
+    anatomyCode: `<WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />`,
+    examples: {
+      uncontrolled: `<WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />`,
+      controlled: `<WindowSplitter controls="preview-pane" aria-label="Resize preview" value={size} onChange={setSize} />`,
+    },
+    keyboard: [
+      ["Left / Up Arrow", "Decreases the splitter value by step."],
+      ["Right / Down Arrow", "Increases the splitter value by step."],
+      ["Home / End", "Moves to the minimum or maximum value."],
+    ],
+    data: ["data-slot", "data-orientation", "data-dragging", "data-disabled"],
+  },
+  Carousel: {
+    summary:
+      "A slide carousel with live-region viewport behavior, explicit previous/next controls, rotation control, and tab-style indicators.",
+    nativeMarkup:
+      "region with aria-roledescription=carousel, grouped slides, native buttons, and tablist indicators.",
+    anatomyCode: `<Carousel aria-label="Featured releases" defaultValue="one">\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>\n  <CarouselNext aria-label="Next slide">Next</CarouselNext>\n</Carousel>`,
+    examples: {
+      uncontrolled: `<Carousel aria-label="Featured releases" defaultValue="one">\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>\n  <CarouselNext aria-label="Next slide">Next</CarouselNext>\n</Carousel>`,
+      controlled: `<Carousel aria-label="Featured releases" value={slide} onChange={setSlide}>\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselIndicatorGroup>\n    <CarouselIndicator id="one">1</CarouselIndicator>\n    <CarouselIndicator id="two">2</CarouselIndicator>\n  </CarouselIndicatorGroup>\n</Carousel>`,
+    },
+    keyboard: [
+      ["Tab", "Moves through carousel controls and into the selected indicator."],
+      ["Left / Right Arrow", "Moves between indicators in the indicator group."],
+      ["Enter / Space", "Activates focused buttons and indicators."],
+    ],
+    data: ["data-slot", "data-selected", "data-rotating", "data-orientation"],
   },
   TextField: {
     anatomyCode: `<form action="/api/profile">\n  <TextField>\n    <Label>Email</Label>\n    <Input name="email" defaultValue="headless" />\n    <Description>Used for account notifications.</Description>\n    <FieldError>Enter a valid email.</FieldError>\n  </TextField>\n  <Button type="submit">Save</Button>\n</form>`,
@@ -1584,6 +1719,14 @@ const wcagReferences = {
 };
 
 const apgReferences = {
+  accordion: {
+    label: "ARIA APG: Accordion Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
+  },
+  alertDialog: {
+    label: "ARIA APG: Alert Dialog Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/",
+  },
   breadcrumb: {
     label: "ARIA APG: Breadcrumb Pattern",
     href: "https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/",
@@ -1619,6 +1762,18 @@ const apgReferences = {
   listbox: {
     label: "ARIA APG: Listbox Pattern",
     href: "https://www.w3.org/WAI/ARIA/apg/patterns/listbox/",
+  },
+  carousel: {
+    label: "ARIA APG: Carousel Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/carousel/",
+  },
+  feed: {
+    label: "ARIA APG: Feed Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/feed/",
+  },
+  menu: {
+    label: "ARIA APG: Menu and Menubar Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
   },
   menuButton: {
     label: "ARIA APG: Menu Button Pattern",
@@ -1656,6 +1811,10 @@ const apgReferences = {
     label: "ARIA APG: Tree View Pattern",
     href: "https://www.w3.org/WAI/ARIA/apg/patterns/treeview/",
   },
+  windowSplitter: {
+    label: "ARIA APG: Window Splitter Pattern",
+    href: "https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/",
+  },
 };
 
 const ariaReferences = {
@@ -1686,6 +1845,12 @@ const ariaReferences = {
 };
 
 const componentReferences: Record<string, ComponentDoc["references"]> = {
+  Accordion: [apgReferences.accordion],
+  AccordionHeader: [apgReferences.accordion],
+  AccordionItem: [apgReferences.accordion],
+  AccordionPanel: [apgReferences.accordion],
+  AccordionTrigger: [apgReferences.accordion],
+  AlertDialog: [apgReferences.alertDialog, apgReferences.dialog],
   Autocomplete: [apgReferences.combobox],
   BreadcrumbLink: [apgReferences.breadcrumb],
   Breadcrumbs: [apgReferences.breadcrumb],
@@ -1701,6 +1866,14 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   Cell: [ariaReferences.table],
   Collection: [apgReferences.listbox],
   CollectionBuilder: [apgReferences.listbox],
+  Carousel: [apgReferences.carousel],
+  CarouselIndicator: [apgReferences.carousel],
+  CarouselIndicatorGroup: [apgReferences.carousel],
+  CarouselNext: [apgReferences.carousel],
+  CarouselPrevious: [apgReferences.carousel],
+  CarouselRotationControl: [apgReferences.carousel],
+  CarouselSlide: [apgReferences.carousel],
+  CarouselViewport: [apgReferences.carousel],
   ColorArea: [apgReferences.slider, wcagReferences.nameRoleValue],
   ColorField: [wcagReferences.labelsInstructions, wcagReferences.nameRoleValue],
   ColorPicker: [apgReferences.dialog, wcagReferences.nameRoleValue],
@@ -1716,6 +1889,9 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   Combobox: [apgReferences.combobox],
   ComboboxOption: [apgReferences.combobox],
   ComboBoxValue: [apgReferences.combobox],
+  ContextMenu: [apgReferences.menu],
+  ContextMenuContent: [apgReferences.menu],
+  ContextMenuTrigger: [apgReferences.menu],
   DateField: [apgReferences.spinbutton],
   DateInput: [apgReferences.spinbutton],
   DatePicker: [apgReferences.dialog, apgReferences.grid],
@@ -1732,6 +1908,8 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   DropZone: [wcagReferences.draggingMovements],
   FieldError: [wcagReferences.errorIdentification],
   Fieldset: [wcagReferences.infoRelationships, wcagReferences.labelsInstructions],
+  Feed: [apgReferences.feed],
+  FeedArticle: [apgReferences.feed],
   FileTrigger: [wcagReferences.draggingMovements, apgReferences.button],
   Focusable: [wcagReferences.keyboard, wcagReferences.focusOrder],
   GridList: [apgReferences.grid],
@@ -1755,6 +1933,11 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   MenuItem: [apgReferences.menuButton],
   MenuSection: [apgReferences.menuButton],
   MenuTrigger: [apgReferences.menuButton],
+  Menubar: [apgReferences.menu],
+  MenubarContent: [apgReferences.menu],
+  MenubarItem: [apgReferences.menu],
+  MenubarMenu: [apgReferences.menu],
+  MenubarTrigger: [apgReferences.menu],
   Meter: [ariaReferences.meter],
   Modal: [apgReferences.dialog],
   ModalOverlay: [apgReferences.dialog],
@@ -1813,6 +1996,7 @@ const componentReferences: Record<string, ComponentDoc["references"]> = {
   UNSTABLE_ToastList: [ariaReferences.status],
   UNSTABLE_ToastRegion: [ariaReferences.status, wcagReferences.statusMessages],
   VisuallyHidden: [wcagReferences.nameRoleValue],
+  WindowSplitter: [apgReferences.windowSplitter, ariaReferences.separator],
 };
 
 const groupReferences: Record<string, ComponentDoc["references"]> = {
@@ -1874,6 +2058,21 @@ function referencesFor(name: string, group: string) {
 }
 
 const componentAccessibility: Record<string, string[]> = {
+  Accordion: [
+    "Each trigger is a native button with aria-expanded and aria-controls pointing at its panel.",
+    "AccordionHeader should wrap only the trigger button so heading semantics match the APG pattern.",
+    "Arrow keys, Home, and End can move focus between accordion triggers without removing them from the Tab sequence.",
+  ],
+  AlertDialog: [
+    "AlertDialog renders a modal dialog with role=alertdialog for interruptive confirmation or warning flows.",
+    "Provide aria-labelledby and aria-describedby when the alert message is short enough to announce as one description.",
+    "Keep a visible cancel or close button inside the dialog and return focus to the invoking control on close.",
+  ],
+  Carousel: [
+    "The carousel root exposes region semantics and aria-roledescription=carousel.",
+    "The viewport uses aria-live=polite while not rotating and aria-live=off while rotation is active.",
+    "Auto-rotation is opt-in and stops when keyboard focus enters or the pointer hovers the carousel.",
+  ],
   Combobox: [
     "Input receives combobox role, expanded state, active-descendant, popup relationship, and list autocomplete metadata.",
     "Listbox options are selected through the composed ListBox; committed value is mirrored to hidden form input when name is supplied.",
@@ -1918,6 +2117,26 @@ const componentAccessibility: Record<string, string[]> = {
     "Only one enabled child control is tabbable from the page tab sequence.",
     "Left/Right arrows move through horizontal toolbars; Up/Down arrows move through vertical toolbars.",
     "Home and End move to the first and last enabled controls.",
+  ],
+  ContextMenu: [
+    "ContextMenuTrigger opens a menu from pointer context-menu events, Shift+F10, or the ContextMenu key.",
+    "ContextMenuContent uses menu semantics and moves focus into the first enabled menu item when opened.",
+    "Escape closes the menu and returns focus to the trigger.",
+  ],
+  Feed: [
+    "Feed renders role=feed and each FeedArticle renders role=article with set position metadata.",
+    "PageUp and PageDown move focus between articles; Ctrl+Home and Ctrl+End move to feed boundaries.",
+    "Use aria-busy while loading or appending articles so assistive technology does not announce incomplete updates.",
+  ],
+  Menubar: [
+    "Menubar renders role=menubar and uses one tabbable top-level item with arrow-key navigation.",
+    "MenubarTrigger exposes aria-haspopup=menu, aria-expanded, and aria-controls for submenu content.",
+    "MenuItem children inside MenubarContent close the submenu after activation and return focus to the trigger.",
+  ],
+  WindowSplitter: [
+    "WindowSplitter renders a focusable separator with aria-valuemin, aria-valuemax, aria-valuenow, and aria-controls.",
+    "Arrow keys resize by step; Home and End move to the minimum and maximum values.",
+    "Pointer dragging updates the same value exposed to assistive technology.",
   ],
 };
 
@@ -2000,6 +2219,12 @@ const pageDefinitions: [string, string, string[]][] = [
   ["Collections", "Menu", ["Menu", "MenuItem", "MenuSection", "MenuTrigger", "SubmenuTrigger"]],
   [
     "Collections",
+    "ContextMenu",
+    ["ContextMenu", "ContextMenuTrigger", "ContextMenuContent", "MenuItem", "MenuSection"],
+  ],
+  ["Collections", "Feed", ["Feed", "FeedArticle"]],
+  [
+    "Collections",
     "GridList",
     ["GridList", "GridListItem", "GridListHeader", "GridListSection", "GridListLoadMoreItem"],
   ],
@@ -2010,11 +2235,21 @@ const pageDefinitions: [string, string, string[]][] = [
     ["Tree", "TreeItem", "TreeItemContent", "TreeHeader", "TreeSection", "TreeLoadMoreItem"],
   ],
   ["Navigation", "Link", ["Link"]],
+  [
+    "Navigation",
+    "Accordion",
+    ["Accordion", "AccordionItem", "AccordionHeader", "AccordionTrigger", "AccordionPanel"],
+  ],
   ["Navigation", "Disclosure", ["Disclosure", "DisclosureTrigger", "DisclosurePanel"]],
   ["Navigation", "DisclosureGroup", ["DisclosureGroup", "Disclosure"]],
   ["Navigation", "Tabs", ["Tabs", "TabList", "Tab", "TabPanels", "TabPanel"]],
   ["Navigation", "Breadcrumbs", ["Breadcrumbs", "BreadcrumbLink"]],
   ["Navigation", "Toolbar", ["Toolbar"]],
+  [
+    "Navigation",
+    "Menubar",
+    ["Menubar", "MenubarItem", "MenubarMenu", "MenubarTrigger", "MenubarContent", "MenuItem"],
+  ],
   [
     "Date and time",
     "Calendar",
@@ -2049,6 +2284,7 @@ const pageDefinitions: [string, string, string[]][] = [
     ],
   ],
   ["Overlays", "Dialog", ["Dialog"]],
+  ["Overlays", "AlertDialog", ["AlertDialog", "Dialog", "Button"]],
   ["Overlays", "Modal", ["Modal", "ModalOverlay", "Dialog"]],
   ["Overlays", "Popover", ["Popover", "OverlayArrow"]],
   ["Overlays", "Tooltip", ["Tooltip", "TooltipTrigger"]],
@@ -2061,10 +2297,25 @@ const pageDefinitions: [string, string, string[]][] = [
   ["Text and layout", "Heading", ["Heading"]],
   ["Text and layout", "Separator", ["Separator"]],
   ["Text and layout", "Group", ["Group"]],
+  ["Text and layout", "WindowSplitter", ["WindowSplitter"]],
   ["Text and layout", "Focusable", ["Focusable"]],
   ["Text and layout", "VisuallyHidden", ["VisuallyHidden"]],
   ["Status and motion", "ProgressBar", ["ProgressBar"]],
   ["Status and motion", "Meter", ["Meter"]],
+  [
+    "Status and motion",
+    "Carousel",
+    [
+      "Carousel",
+      "CarouselViewport",
+      "CarouselSlide",
+      "CarouselPrevious",
+      "CarouselNext",
+      "CarouselRotationControl",
+      "CarouselIndicatorGroup",
+      "CarouselIndicator",
+    ],
+  ],
   ["Status and motion", "Transitions", ["SharedElementTransition", "SharedElement"]],
   [
     "Status and motion",

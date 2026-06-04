@@ -1,7 +1,13 @@
 import { act, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  Accordion,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
   Autocomplete,
+  AlertDialog,
   BreadcrumbLink,
   Button,
   CalendarCell,
@@ -18,6 +24,16 @@ import {
   ColorSwatchPicker,
   ColorSwatchPickerItem,
   ColorWheel,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+  Carousel,
+  CarouselIndicator,
+  CarouselIndicatorGroup,
+  CarouselNext,
+  CarouselPrevious,
+  CarouselSlide,
+  CarouselViewport,
   Column,
   ColumnResizer,
   Combobox,
@@ -33,6 +49,8 @@ import {
   DropZone,
   FieldError,
   Fieldset,
+  Feed,
+  FeedArticle,
   FileTrigger,
   GridList,
   GridListHeader,
@@ -51,6 +69,11 @@ import {
   ListBoxLoadMoreItem,
   Menu,
   MenuItem,
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
   Modal,
   NumberField,
   Popover,
@@ -85,6 +108,7 @@ import {
   UNSTABLE_ToastList,
   UNSTABLE_ToastRegion,
   VisuallyHidden,
+  WindowSplitter,
 } from "./index.js";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 
@@ -337,6 +361,220 @@ describe("disclosure, tabs, and picker trigger accessibility", () => {
     expect(trigger.getAttribute("aria-controls")).toBe(listbox.id);
     expect(trigger.getAttribute("aria-labelledby")).toBe("plan-label plan");
     expect(value.hasAttribute("data-placeholder")).toBe(true);
+  });
+});
+
+describe("APG core composite accessibility", () => {
+  it("wires accordion trigger and panel relationships with keyboard trigger navigation", () => {
+    const { container } = render(
+      <Accordion defaultValue="install">
+        <AccordionItem value="install">
+          <AccordionHeader>
+            <AccordionTrigger>Install</AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel>Install with pnpm.</AccordionPanel>
+        </AccordionItem>
+        <AccordionItem value="style">
+          <AccordionHeader>
+            <AccordionTrigger>Style</AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel>Style with data attributes.</AccordionPanel>
+        </AccordionItem>
+      </Accordion>,
+    );
+    const triggers = container.querySelectorAll<HTMLButtonElement>(
+      "[data-slot='accordion-trigger']",
+    );
+    const panels = container.querySelectorAll<HTMLElement>("[data-slot='accordion-panel']");
+
+    expect(triggers[0]?.getAttribute("aria-expanded")).toBe("true");
+    expect(triggers[0]?.getAttribute("aria-controls")).toBe(panels[0]?.id);
+    expect(panels[0]?.getAttribute("aria-labelledby")).toBe(triggers[0]?.id);
+    expect(panels[0]?.hidden).toBe(false);
+    expect(panels[1]?.hidden).toBe(true);
+
+    triggers[0]?.focus();
+    fireKeyDown(triggers[0]!, "ArrowDown");
+
+    expect(document.activeElement).toBe(triggers[1]);
+
+    fireClick(triggers[1]!);
+
+    expect(triggers[1]?.getAttribute("aria-expanded")).toBe("true");
+    expect(panels[0]?.hidden).toBe(true);
+    expect(panels[1]?.hidden).toBe(false);
+  });
+
+  it("renders alert dialog semantics through the modal primitive", () => {
+    render(
+      <AlertDialog defaultOpen aria-labelledby="confirm-title" aria-describedby="confirm-body">
+        <h2 id="confirm-title">Delete project?</h2>
+        <p id="confirm-body">This action cannot be undone.</p>
+        <Button>Cancel</Button>
+      </AlertDialog>,
+    );
+    const dialog = document.body.querySelector<HTMLDialogElement>("dialog")!;
+
+    expect(dialog.getAttribute("role")).toBe("alertdialog");
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.getAttribute("aria-labelledby")).toBe("confirm-title");
+    expect(dialog.getAttribute("aria-describedby")).toBe("confirm-body");
+  });
+
+  it("opens menubar menu content from a trigger and closes it after item activation", () => {
+    const activated = vi.fn();
+    const { container } = render(
+      <Menubar aria-label="Application">
+        <MenubarMenu id="file">
+          <MenubarTrigger>File</MenubarTrigger>
+          <MenubarContent>
+            <MenuItem id="new" onClick={activated}>
+              New
+            </MenuItem>
+            <MenuItem id="open">Open</MenuItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarItem id="help">Help</MenubarItem>
+      </Menubar>,
+    );
+    const menubar = container.querySelector<HTMLElement>("[role='menubar']")!;
+    const trigger = container.querySelector<HTMLButtonElement>("[data-slot='menubar-trigger']")!;
+    const content = document.body.querySelector<HTMLElement>("[data-slot='menubar-content']")!;
+    const items = content.querySelectorAll<HTMLElement>("[role='menuitem']");
+
+    expect(menubar.getAttribute("aria-orientation")).toBe("horizontal");
+    expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
+    expect(trigger.getAttribute("aria-controls")).toBe(content.id);
+    expect(content.hidden).toBe(true);
+
+    trigger.focus();
+    fireKeyDown(trigger, "ArrowDown");
+
+    expect(content.hidden).toBe(false);
+    expect(document.activeElement).toBe(items[0]);
+
+    fireClick(items[0]!);
+
+    expect(activated).toHaveBeenCalled();
+    expect(content.hidden).toBe(true);
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("opens context menus from keyboard invocation and restores focus on Escape", () => {
+    const { container } = render(
+      <ContextMenu>
+        <ContextMenuTrigger>Repository row</ContextMenuTrigger>
+        <ContextMenuContent>
+          <MenuItem id="rename">Rename</MenuItem>
+          <MenuItem id="delete">Delete</MenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+    const trigger = container.querySelector<HTMLElement>("[data-slot='context-menu-trigger']")!;
+    const content = container.querySelector<HTMLElement>("[data-slot='context-menu-content']")!;
+
+    trigger.focus();
+    fireModifiedKeyDown(trigger, "F10", { shiftKey: true });
+
+    const item = content.querySelector<HTMLElement>("[role='menuitem']")!;
+
+    expect(content.hidden).toBe(false);
+    expect(document.activeElement).toBe(item);
+
+    fireKeyDown(item, "Escape");
+
+    expect(content.hidden).toBe(true);
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("moves carousel selection with controls and roving indicators", () => {
+    const { container } = render(
+      <Carousel aria-label="Featured releases" defaultValue="one">
+        <CarouselViewport>
+          <CarouselSlide id="one">One</CarouselSlide>
+          <CarouselSlide id="two">Two</CarouselSlide>
+        </CarouselViewport>
+        <CarouselPrevious>Previous</CarouselPrevious>
+        <CarouselNext>Next</CarouselNext>
+        <CarouselIndicatorGroup aria-label="Slides">
+          <CarouselIndicator id="one">1</CarouselIndicator>
+          <CarouselIndicator id="two">2</CarouselIndicator>
+        </CarouselIndicatorGroup>
+      </Carousel>,
+    );
+    const slides = container.querySelectorAll<HTMLElement>("[data-slot='carousel-slide']");
+    const next = container.querySelector<HTMLButtonElement>("[data-slot='carousel-next']")!;
+    const indicators = container.querySelectorAll<HTMLButtonElement>("[role='tab']");
+
+    expect(container.querySelector("[aria-roledescription='carousel']")).toBeTruthy();
+    expect(
+      container.querySelector("[data-slot='carousel-viewport']")?.getAttribute("aria-live"),
+    ).toBe("polite");
+    expect(slides[0]?.hidden).toBe(false);
+    expect(slides[1]?.hidden).toBe(true);
+
+    fireClick(next);
+
+    expect(slides[0]?.hidden).toBe(true);
+    expect(slides[1]?.hidden).toBe(false);
+    expect(indicators[1]?.getAttribute("aria-selected")).toBe("true");
+
+    fireKeyDown(indicators[1]!, "ArrowLeft");
+
+    expect(document.activeElement).toBe(indicators[0]);
+    expect(slides[0]?.hidden).toBe(false);
+  });
+
+  it("updates window splitter values from keyboard input", () => {
+    const changed = vi.fn();
+    const { container } = render(
+      <WindowSplitter
+        aria-label="Resize preview"
+        controls="preview"
+        defaultValue={40}
+        minValue={20}
+        maxValue={80}
+        step={10}
+        onChange={changed}
+      />,
+    );
+    const splitter = container.querySelector<HTMLElement>("[role='separator']")!;
+
+    expect(splitter.getAttribute("aria-controls")).toBe("preview");
+    expect(splitter.getAttribute("aria-valuenow")).toBe("40");
+
+    fireKeyDown(splitter, "ArrowRight");
+
+    expect(splitter.getAttribute("aria-valuenow")).toBe("50");
+    expect(changed).toHaveBeenLastCalledWith(50);
+
+    fireKeyDown(splitter, "Home");
+
+    expect(splitter.getAttribute("aria-valuenow")).toBe("20");
+  });
+
+  it("moves feed focus between articles with page navigation keys", () => {
+    const { container } = render(
+      <Feed aria-label="Activity">
+        <FeedArticle id="build">Build passed</FeedArticle>
+        <FeedArticle id="deploy">Deploy started</FeedArticle>
+      </Feed>,
+    );
+    const feed = container.querySelector<HTMLElement>("[role='feed']")!;
+    const articles = container.querySelectorAll<HTMLElement>("[role='article']");
+
+    expect(feed.hasAttribute("aria-busy")).toBe(false);
+    expect(articles[0]?.getAttribute("aria-posinset")).toBe("1");
+    expect(articles[1]?.getAttribute("aria-setsize")).toBe("2");
+
+    articles[0]?.focus();
+    fireKeyDown(articles[0]!, "PageDown");
+
+    expect(document.activeElement).toBe(articles[1]);
+
+    fireModifiedKeyDown(articles[1]!, "Home", { ctrlKey: true });
+
+    expect(document.activeElement).toBe(articles[0]);
   });
 });
 
@@ -611,6 +849,47 @@ describe("overlay, table, file, toolbar, and parity accessibility", () => {
     expect(popovers[2]?.hidden).toBe(false);
     expect(tooltip.id).toBeTruthy();
     expect(tooltip.hidden).toBe(false);
+  });
+
+  it("uses native modal dialog semantics and restores focus when the modal closes", () => {
+    const originalClose = HTMLDialogElement.prototype.close;
+    HTMLDialogElement.prototype.close = function closeDialog() {
+      this.removeAttribute("open");
+    };
+
+    function ModalFocusHarness() {
+      const [open, setOpen] = useState(false);
+
+      return (
+        <>
+          <Button onClick={() => setOpen(true)}>Open settings</Button>
+          <Modal open={open} onChange={setOpen} aria-label="Settings">
+            <Button onClick={() => setOpen(false)}>Close settings</Button>
+          </Modal>
+          <Button>After modal</Button>
+        </>
+      );
+    }
+
+    try {
+      const { container } = render(<ModalFocusHarness />);
+      const trigger = container.querySelector<HTMLButtonElement>("button")!;
+
+      trigger.focus();
+      fireClick(trigger);
+
+      const modal = document.body.querySelector("dialog")!;
+
+      expect(modal.getAttribute("aria-modal")).toBe("true");
+      expect(modal.hasAttribute("open")).toBe(true);
+
+      fireClick(modal.querySelector("button")!);
+
+      expect(modal.hasAttribute("open")).toBe(false);
+      expect(document.activeElement).toBe(trigger);
+    } finally {
+      HTMLDialogElement.prototype.close = originalClose;
+    }
   });
 
   it("keeps native table semantics and row ARIA state", () => {

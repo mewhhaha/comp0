@@ -68,6 +68,8 @@ export function MenuItem({
           autocomplete.selectItem(id, label);
           comboBox?.setOpen(false);
           document.getElementById(comboBox?.inputId ?? "")?.focus();
+        } else if (!event.defaultPrevented) {
+          menu?.close?.();
         }
       }}
       onKeyDown={(event) => {

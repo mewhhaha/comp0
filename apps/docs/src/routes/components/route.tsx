@@ -16,7 +16,13 @@ import {
   type Theme,
 } from "../../docs-data.js";
 import {
+  Accordion,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
   Autocomplete,
+  AlertDialog,
   Calendar,
   CalendarCell,
   CalendarGrid,
@@ -44,6 +50,17 @@ import {
   Combobox,
   ComboBoxValue,
   ComboboxOption,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+  Carousel,
+  CarouselIndicator,
+  CarouselIndicatorGroup,
+  CarouselNext,
+  CarouselPrevious,
+  CarouselRotationControl,
+  CarouselSlide,
+  CarouselViewport,
   Description,
   Dialog,
   DialogTrigger,
@@ -57,6 +74,8 @@ import {
   Fieldset,
   FileTrigger,
   Focusable,
+  Feed,
+  FeedArticle,
   GridList,
   GridListHeader,
   GridListItem,
@@ -76,6 +95,11 @@ import {
   Menu as MenuPrimitive,
   MenuItem,
   MenuSection,
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
   Meter,
   Modal,
   ModalOverlay,
@@ -127,6 +151,7 @@ import {
   UNSTABLE_ToastList,
   UNSTABLE_ToastRegion,
   VisuallyHidden,
+  WindowSplitter,
   DateField,
   DateInput,
   DatePicker,
@@ -255,6 +280,34 @@ function CodeBlock({
 
 function groupExampleCode(page: ComponentPage) {
   if (page.docs.length === 1) return page.docs[0]!.examples.uncontrolled;
+
+  if (page.title === "Accordion") {
+    return `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n  <AccordionItem value="style">\n    <AccordionHeader>\n      <AccordionTrigger>Style</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Style from data attributes.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`;
+  }
+
+  if (page.title === "Menubar") {
+    return `<Menubar aria-label="Application">\n  <MenubarMenu id="file">\n    <MenubarTrigger>File</MenubarTrigger>\n    <MenubarContent>\n      <MenuItem id="new">New</MenuItem>\n      <MenuItem id="open">Open</MenuItem>\n    </MenubarContent>\n  </MenubarMenu>\n  <MenubarItem id="help">Help</MenubarItem>\n</Menubar>`;
+  }
+
+  if (page.title === "ContextMenu") {
+    return `<ContextMenu>\n  <ContextMenuTrigger>Right click this row</ContextMenuTrigger>\n  <ContextMenuContent>\n    <MenuItem id="rename">Rename</MenuItem>\n    <MenuItem id="delete">Delete</MenuItem>\n  </ContextMenuContent>\n</ContextMenu>`;
+  }
+
+  if (page.title === "Feed") {
+    return `<Feed aria-label="Activity">\n  <FeedArticle id="build">Build passed</FeedArticle>\n  <FeedArticle id="deploy">Deploy started</FeedArticle>\n</Feed>`;
+  }
+
+  if (page.title === "AlertDialog") {
+    return `<AlertDialog defaultOpen aria-label="Delete project confirmation">\n  <Heading level={2}>Delete project?</Heading>\n  <Text>This action cannot be undone.</Text>\n  <Button>Cancel</Button>\n</AlertDialog>`;
+  }
+
+  if (page.title === "WindowSplitter") {
+    return `<div className="grid grid-cols-[1fr_auto_1fr]">\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />\n  <section id="preview-pane">Preview</section>\n</div>`;
+  }
+
+  if (page.title === "Carousel") {
+    return `<Carousel aria-label="Featured releases" defaultValue="one">\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>\n  <CarouselNext aria-label="Next slide">Next</CarouselNext>\n</Carousel>`;
+  }
 
   if (page.title === "DisclosureGroup") {
     return `<DisclosureGroup>\n  <Disclosure defaultOpen>\n    <DisclosureTrigger>Installation</DisclosureTrigger>\n    <DisclosurePanel>Install with pnpm.</DisclosurePanel>\n  </Disclosure>\n  <Disclosure>\n    <DisclosureTrigger>Styling</DisclosureTrigger>\n    <DisclosurePanel>Style from data attributes.</DisclosurePanel>\n  </Disclosure>\n</DisclosureGroup>`;
@@ -604,6 +657,216 @@ function Playground({ name }: { name: string }) {
   const [numberValue, setNumberValue] = useState(3);
   const [droppedFiles, setDroppedFiles] = useState<string[]>([]);
   const [tags, setTags] = useState(["Accessible", "Headless", "React 19"]);
+
+  if (name === "Accordion") {
+    return (
+      <Accordion
+        className="grid w-full max-w-md divide-y divide-zinc-950/10 rounded-md border border-zinc-950/10 dark:divide-white/10 dark:border-white/10"
+        defaultValue="install"
+      >
+        <AccordionItem className="p-4" value="install">
+          <AccordionHeader level={3}>
+            <AccordionTrigger className="flex w-full items-center justify-between text-left text-base/7 font-medium text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-white sm:text-sm/6">
+              Install
+            </AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+            Install the package with pnpm and import the slots you need.
+          </AccordionPanel>
+        </AccordionItem>
+        <AccordionItem className="p-4" value="style">
+          <AccordionHeader level={3}>
+            <AccordionTrigger className="flex w-full items-center justify-between text-left text-base/7 font-medium text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:text-white sm:text-sm/6">
+              Style
+            </AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+            Style triggers and panels from data-open and data-disabled.
+          </AccordionPanel>
+        </AccordionItem>
+      </Accordion>
+    );
+  }
+
+  if (name === "Menubar") {
+    return (
+      <Menubar
+        className="flex rounded-md border border-zinc-950/10 bg-white p-1 dark:border-white/10 dark:bg-neutral-900"
+        aria-label="Application"
+      >
+        <MenubarMenu id="file">
+          <MenubarTrigger className="rounded px-3 py-2 text-base/7 data-open:bg-cyan-50 data-open:text-cyan-950 focus-visible:outline-2 focus-visible:outline-sky-500 dark:text-zinc-200 dark:data-open:bg-cyan-500/10 dark:data-open:text-cyan-200 sm:text-sm/6">
+            File
+          </MenubarTrigger>
+          <MenubarContent className="mt-2 grid gap-1 rounded-md border border-zinc-950/10 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-neutral-950">
+            <MenuItem
+              className="rounded px-3 py-2 text-base/7 focus:bg-cyan-50 focus:outline-none dark:text-zinc-200 dark:focus:bg-cyan-500/10 sm:text-sm/6"
+              id="new"
+            >
+              New
+            </MenuItem>
+            <MenuItem
+              className="rounded px-3 py-2 text-base/7 focus:bg-cyan-50 focus:outline-none dark:text-zinc-200 dark:focus:bg-cyan-500/10 sm:text-sm/6"
+              id="open"
+            >
+              Open
+            </MenuItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarItem
+          className="rounded px-3 py-2 text-base/7 focus-visible:outline-2 focus-visible:outline-sky-500 dark:text-zinc-200 sm:text-sm/6"
+          id="help"
+        >
+          Help
+        </MenubarItem>
+      </Menubar>
+    );
+  }
+
+  if (name === "ContextMenu") {
+    return (
+      <ContextMenu className="relative">
+        <ContextMenuTrigger className="rounded-md border border-dashed border-zinc-950/20 px-4 py-3 text-base/7 text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-white/20 dark:text-zinc-300 sm:text-sm/6">
+          Right click or press Shift+F10
+        </ContextMenuTrigger>
+        <ContextMenuContent className="grid gap-1 rounded-md border border-zinc-950/10 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-neutral-950">
+          <MenuItem
+            className="rounded px-3 py-2 text-base/7 focus:bg-cyan-50 focus:outline-none dark:text-zinc-200 dark:focus:bg-cyan-500/10 sm:text-sm/6"
+            id="rename"
+          >
+            Rename
+          </MenuItem>
+          <MenuItem
+            className="rounded px-3 py-2 text-base/7 focus:bg-cyan-50 focus:outline-none dark:text-zinc-200 dark:focus:bg-cyan-500/10 sm:text-sm/6"
+            id="delete"
+          >
+            Delete
+          </MenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  }
+
+  if (name === "Feed") {
+    return (
+      <Feed className="grid max-w-md gap-3" aria-label="Activity">
+        <FeedArticle
+          className="rounded-md border border-zinc-950/10 bg-white p-4 text-base/7 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-white/10 dark:bg-neutral-950 sm:text-sm/6"
+          id="build"
+        >
+          <Heading className="font-medium text-zinc-950 dark:text-white" level={3}>
+            Build passed
+          </Heading>
+          <Text className="text-zinc-600 dark:text-zinc-400">
+            All accessibility checks completed.
+          </Text>
+        </FeedArticle>
+        <FeedArticle
+          className="rounded-md border border-zinc-950/10 bg-white p-4 text-base/7 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:border-white/10 dark:bg-neutral-950 sm:text-sm/6"
+          id="deploy"
+        >
+          <Heading className="font-medium text-zinc-950 dark:text-white" level={3}>
+            Deploy started
+          </Heading>
+          <Text className="text-zinc-600 dark:text-zinc-400">
+            Preview deployment is being prepared.
+          </Text>
+        </FeedArticle>
+      </Feed>
+    );
+  }
+
+  if (name === "AlertDialog") {
+    return (
+      <AlertDialog
+        className="max-w-sm rounded-md border border-zinc-950/10 bg-white p-5 text-zinc-950 shadow-xl dark:border-white/10 dark:bg-neutral-950 dark:text-white"
+        defaultOpen
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <Heading className="text-lg font-semibold" id="alert-dialog-title" level={2}>
+          Delete project?
+        </Heading>
+        <Text
+          className="mt-2 text-base/7 text-zinc-600 dark:text-zinc-400 sm:text-sm/6"
+          id="alert-dialog-description"
+        >
+          This action cannot be undone.
+        </Text>
+        <Button className="mt-4 rounded-md bg-cyan-700 px-3 py-2 text-base/7 text-white sm:text-sm/6">
+          Close
+        </Button>
+      </AlertDialog>
+    );
+  }
+
+  if (name === "WindowSplitter") {
+    return (
+      <div className="grid w-full max-w-md grid-cols-[1fr_auto_1fr] overflow-hidden rounded-md border border-zinc-950/10 dark:border-white/10">
+        <section className="p-4 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+          Navigation
+        </section>
+        <WindowSplitter
+          className="w-2 bg-cyan-700/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:bg-cyan-400/20"
+          controls="preview-pane"
+          aria-label="Resize preview"
+          defaultValue={40}
+        />
+        <section
+          className="p-4 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6"
+          id="preview-pane"
+        >
+          Preview
+        </section>
+      </div>
+    );
+  }
+
+  if (name === "Carousel") {
+    return (
+      <Carousel className="grid max-w-md gap-4" aria-label="Featured releases" defaultValue="one">
+        <CarouselViewport className="rounded-md border border-zinc-950/10 bg-white p-5 dark:border-white/10 dark:bg-neutral-950">
+          <CarouselSlide
+            className="text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6"
+            id="one"
+          >
+            Release 1 ships APG-backed primitives.
+          </CarouselSlide>
+          <CarouselSlide
+            className="text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6"
+            id="two"
+          >
+            Release 2 expands keyboard coverage.
+          </CarouselSlide>
+        </CarouselViewport>
+        <div className="flex flex-wrap items-center gap-2">
+          <CarouselPrevious className="rounded-md border border-zinc-950/10 px-3 py-2 text-base/7 dark:border-white/10 sm:text-sm/6">
+            Previous
+          </CarouselPrevious>
+          <CarouselNext className="rounded-md border border-zinc-950/10 px-3 py-2 text-base/7 dark:border-white/10 sm:text-sm/6">
+            Next
+          </CarouselNext>
+          <CarouselRotationControl className="rounded-md border border-zinc-950/10 px-3 py-2 text-base/7 data-rotating:bg-cyan-50 dark:border-white/10 sm:text-sm/6">
+            Rotate
+          </CarouselRotationControl>
+          <CarouselIndicatorGroup className="ml-auto flex gap-1" aria-label="Slides">
+            <CarouselIndicator
+              className="size-8 rounded-md border border-zinc-950/10 text-sm data-selected:bg-cyan-700 data-selected:text-white dark:border-white/10"
+              id="one"
+            >
+              1
+            </CarouselIndicator>
+            <CarouselIndicator
+              className="size-8 rounded-md border border-zinc-950/10 text-sm data-selected:bg-cyan-700 data-selected:text-white dark:border-white/10"
+              id="two"
+            >
+              2
+            </CarouselIndicator>
+          </CarouselIndicatorGroup>
+        </div>
+      </Carousel>
+    );
+  }
 
   if (name === "Button") {
     return (

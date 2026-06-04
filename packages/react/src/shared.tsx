@@ -39,6 +39,10 @@ export function disabledProps(disabled: boolean | undefined) {
   };
 }
 
+export function dataSlot(props: Record<string, unknown>, fallback: string) {
+  return (props["data-slot"] as string | undefined) ?? fallback;
+}
+
 export function useDataState(states: Record<string, boolean | undefined>) {
   const attrs: Record<string, string> = {};
   for (const [key, value] of Object.entries(states)) {

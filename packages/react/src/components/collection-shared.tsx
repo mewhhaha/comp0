@@ -9,6 +9,7 @@ export interface SelectableCollectionContextValue {
   selectedKey: string;
   setActiveKey: (key: string) => void;
   setSelectedKey: (key: string) => void;
+  close?: (() => void) | undefined;
   register: (
     key: string,
     textValue: string,
