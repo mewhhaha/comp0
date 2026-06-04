@@ -24,31 +24,21 @@ import {
   Autocomplete,
   AlertDialog,
   Calendar,
-  CalendarCell,
-  CalendarGrid,
-  CalendarGridBody,
-  CalendarGridHeader,
-  CalendarHeaderCell,
   BreadcrumbLink,
   Breadcrumbs,
   Button,
   Cell,
   Checkbox,
   CheckboxGroup,
-  ColorArea,
   ColorField,
   ColorSlider,
   ColorSwatch,
   ColorSwatchPicker,
   ColorSwatchPickerItem,
-  ColorThumb,
-  ColorWheel,
-  ColorWheelTrack,
   Collection,
   CollectionBuilder,
   Column,
   Combobox,
-  ComboBoxValue,
   ComboboxOption,
   ContextMenu,
   ContextMenuContent,
@@ -279,10 +269,12 @@ function CodeBlock({
 }
 
 function groupExampleCode(page: ComponentPage) {
-  if (page.docs.length === 1) return page.docs[0]!.examples.uncontrolled;
+  if (page.docs.length === 1 && page.title !== "WindowSplitter") {
+    return page.docs[0]!.examples.uncontrolled;
+  }
 
   if (page.title === "Accordion") {
-    return `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Install with pnpm.</AccordionPanel>\n  </AccordionItem>\n  <AccordionItem value="style">\n    <AccordionHeader>\n      <AccordionTrigger>Style</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>Style from data attributes.</AccordionPanel>\n  </AccordionItem>\n</Accordion>`;
+    return `<Accordion defaultValue="install">\n  <AccordionItem value="install">\n    <AccordionHeader>\n      <AccordionTrigger>Install</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel className="accordion-panel">\n      Install with pnpm.\n    </AccordionPanel>\n  </AccordionItem>\n  <AccordionItem value="style">\n    <AccordionHeader>\n      <AccordionTrigger>Style</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel className="accordion-panel">\n      Style from data attributes.\n    </AccordionPanel>\n  </AccordionItem>\n</Accordion>`;
   }
 
   if (page.title === "Menubar") {
@@ -302,15 +294,49 @@ function groupExampleCode(page: ComponentPage) {
   }
 
   if (page.title === "WindowSplitter") {
-    return `<div className="grid grid-cols-[1fr_auto_1fr]">\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />\n  <section id="preview-pane">Preview</section>\n</div>`;
+    return [
+      "const [splitterValue, setSplitterValue] = useState(40);",
+      "",
+      "<div",
+      '  className="grid overflow-hidden rounded-md border"',
+      "  style={{",
+      "    gridTemplateColumns:",
+      "      `calc(${splitterValue}% - 0.25rem) 0.5rem calc(${100 - splitterValue}% - 0.25rem)`,",
+      "  }}",
+      ">",
+      "  <section>Navigation</section>",
+      "  <WindowSplitter",
+      '    aria-label="Resize preview"',
+      '    controls="preview-pane"',
+      "    minValue={20}",
+      "    maxValue={80}",
+      "    step={10}",
+      "    value={splitterValue}",
+      "    onChange={setSplitterValue}",
+      "  />",
+      '  <section id="preview-pane">Preview</section>',
+      "</div>",
+    ].join("\n");
   }
 
   if (page.title === "Carousel") {
     return `<Carousel aria-label="Featured releases" defaultValue="one">\n  <CarouselViewport>\n    <CarouselSlide id="one">Release 1</CarouselSlide>\n    <CarouselSlide id="two">Release 2</CarouselSlide>\n  </CarouselViewport>\n  <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>\n  <CarouselNext aria-label="Next slide">Next</CarouselNext>\n</Carousel>`;
   }
 
+  if (page.title === "Calendar") {
+    return `<Calendar\n  defaultValue="2026-04-29"\n  focusedValue="2026-04-29"\n  isDateDisabled={(date) => date < "2026-04-01" || date > "2026-04-30"}\n/>\n`;
+  }
+
+  if (page.title === "RangeCalendar") {
+    return `<RangeCalendar\n  defaultValue={{ start: "2026-04-22", end: "2026-04-25" }}\n  focusedValue="2026-04-29"\n  isDateDisabled={(date) => date < "2026-04-01" || date > "2026-04-30"}\n/>\n`;
+  }
+
   if (page.title === "DisclosureGroup") {
-    return `<DisclosureGroup>\n  <Disclosure defaultOpen>\n    <DisclosureTrigger>Installation</DisclosureTrigger>\n    <DisclosurePanel>Install with pnpm.</DisclosurePanel>\n  </Disclosure>\n  <Disclosure>\n    <DisclosureTrigger>Styling</DisclosureTrigger>\n    <DisclosurePanel>Style from data attributes.</DisclosurePanel>\n  </Disclosure>\n</DisclosureGroup>`;
+    return `<DisclosureGroup>\n  <Disclosure defaultOpen>\n    <DisclosureTrigger>Installation</DisclosureTrigger>\n    <DisclosurePanel className="disclosure-panel">\n      Install with pnpm.\n    </DisclosurePanel>\n  </Disclosure>\n  <Disclosure>\n    <DisclosureTrigger>Styling</DisclosureTrigger>\n    <DisclosurePanel className="disclosure-panel">\n      Style from data attributes.\n    </DisclosurePanel>\n  </Disclosure>\n</DisclosureGroup>`;
+  }
+
+  if (page.title === "Disclosure") {
+    return `<Disclosure defaultOpen>\n  <DisclosureTrigger>Release details</DisclosureTrigger>\n  <DisclosurePanel className="disclosure-panel">\n    Built on details and summary.\n  </DisclosurePanel>\n</Disclosure>`;
   }
 
   if (page.title === "CheckboxGroup") {
@@ -323,6 +349,22 @@ function groupExampleCode(page: ComponentPage) {
 
   if (page.title === "Select") {
     return `<Select value={choice} onChange={setChoice}>\n  <Label>Plan</Label>\n  <Button><SelectValue placeholder="Choose a plan" /></Button>\n  <Popover>\n    <ListBox>\n      <ListBoxItem id="basic">Basic</ListBoxItem>\n      <ListBoxItem id="pro">Pro</ListBoxItem>\n    </ListBox>\n  </Popover>\n</Select>`;
+  }
+
+  if (page.title === "Combobox") {
+    return `<Combobox defaultValue="React" defaultSelectedValue="react">\n  <Label>Framework</Label>\n  <Group>\n    <Input />\n    <Button>Show</Button>\n  </Group>\n  <Popover>\n    <ListBox>\n      <ListBoxItem id="react">React</ListBoxItem>\n      <ListBoxItem id="preact">Preact</ListBoxItem>\n      <ListBoxItem id="solid">Solid</ListBoxItem>\n    </ListBox>\n  </Popover>\n</Combobox>`;
+  }
+
+  if (page.title === "Color") {
+    return `<ColorField value={colorValue} onChange={setColorValue} name="accent">\n  <Label>Accent color</Label>\n  <ColorSwatch />\n  <Input\n    value={colorValue}\n    onChange={(event) => setColorValue(event.currentTarget.value)}\n  />\n  <ColorSlider channel="hue" aria-label="Hue" />\n  <ColorSwatchPicker aria-label="Saved colors">\n    <ColorSwatchPickerItem color="#0891b2" />\n    <ColorSwatchPickerItem color="#16a34a" />\n    <ColorSwatchPickerItem color="#dc2626" />\n  </ColorSwatchPicker>\n</ColorField>`;
+  }
+
+  if (page.title === "DatePicker") {
+    return `<DatePicker value={date} onChange={setDate} name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover>\n    <Calendar focusedValue={date} />\n  </Popover>\n</DatePicker>`;
+  }
+
+  if (page.title === "DateRangePicker") {
+    return `<DateRangePicker value={range} onChange={setRange} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover>\n    <RangeCalendar focusedValue={range.start} />\n  </Popover>\n</DateRangePicker>`;
   }
 
   if (page.title === "TextField" || page.title === "Input" || page.title === "TextArea") {
@@ -351,28 +393,8 @@ function stylingExample(doc: ComponentDoc) {
   return `<${doc.name}\n  className={\`\n    rounded-md px-3 py-2 text-zinc-700\n    focus-visible:outline-2 focus-visible:outline-sky-500\n${selectors || "    data-disabled:opacity-50"}\n    dark:text-zinc-200 dark:data-selected:bg-cyan-500/10\n  \`}\n/>`;
 }
 
-function exampleTabsFor(page: ComponentPage) {
-  const primary = page.docs[0]!;
-  return [
-    {
-      name: "Basic",
-      code: groupExampleCode(page),
-    },
-    {
-      name: "Controlled",
-      code: primary.examples.controlled,
-    },
-    {
-      name: "Tailwind",
-      code: stylingExample(primary),
-    },
-  ];
-}
-
 function ExampleShowcase({ page, theme }: { page: ComponentPage; theme: Theme }) {
-  const tabs = exampleTabsFor(page);
-  const [selectedTab, setSelectedTab] = useState(tabs[0]!.name);
-  const currentTab = tabs.find((tab) => tab.name === selectedTab) ?? tabs[0]!;
+  const code = groupExampleCode(page);
 
   return (
     <section
@@ -381,36 +403,16 @@ function ExampleShowcase({ page, theme }: { page: ComponentPage; theme: Theme })
       id="examples"
     >
       <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {tabs.map((tab) => (
-            <button
-              className={cx(
-                `
-                  rounded-md px-3 py-1.5 text-base/7 text-zinc-400
-                  hover:bg-white/10 hover:text-white
-                  sm:text-sm/6
-                `,
-                selectedTab === tab.name && "bg-cyan-400/10 text-cyan-100 ring-1 ring-cyan-300/25",
-              )}
-              type="button"
-              onClick={() => setSelectedTab(tab.name)}
-              key={tab.name}
-            >
-              {tab.name}
-            </button>
-          ))}
-        </div>
-        <p className="hidden text-sm/6 text-zinc-400 sm:block">Live preview</p>
+        <Heading className="text-base/7 font-medium text-white sm:text-sm/6" level={2}>
+          Working example
+        </Heading>
+        <p className="hidden text-sm/6 text-zinc-400 sm:block">Interactive preview</p>
       </div>
       <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,4fr)_minmax(0,5fr)]">
         <div className="grid min-h-64 place-items-start rounded-md bg-white p-5 text-zinc-950 ring-1 ring-white/10 dark:bg-neutral-950 dark:text-white">
           <GroupPlayground page={page} />
         </div>
-        <CodeBlock
-          code={currentTab.code}
-          theme={theme === "light" ? "dark" : theme}
-          surface="inverted"
-        />
+        <CodeBlock code={code} theme={theme === "light" ? "dark" : theme} surface="inverted" />
       </div>
     </section>
   );
@@ -512,7 +514,7 @@ export function GroupPlayground({ page }: { page: ComponentPage }) {
             <DisclosureTrigger className="cursor-pointer text-base/7 font-medium text-zinc-950 marker:text-zinc-400 dark:text-white sm:text-sm/6">
               {title}
             </DisclosureTrigger>
-            <DisclosurePanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+            <DisclosurePanel className="disclosure-panel pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
               {body}
             </DisclosurePanel>
           </Disclosure>
@@ -655,6 +657,13 @@ function Playground({ name }: { name: string }) {
   const [volume, setVolume] = useState(42);
   const [searchValue, setSearchValue] = useState("");
   const [numberValue, setNumberValue] = useState(3);
+  const [colorValue, setColorValue] = useState("#0891b2");
+  const [splitterValue, setSplitterValue] = useState(40);
+  const [datePickerValue, setDatePickerValue] = useState("2026-04-29");
+  const [dateRangePickerValue, setDateRangePickerValue] = useState({
+    start: "2026-04-22",
+    end: "2026-04-25",
+  });
   const [droppedFiles, setDroppedFiles] = useState<string[]>([]);
   const [tags, setTags] = useState(["Accessible", "Headless", "React 19"]);
 
@@ -670,7 +679,7 @@ function Playground({ name }: { name: string }) {
               Install
             </AccordionTrigger>
           </AccordionHeader>
-          <AccordionPanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+          <AccordionPanel className="accordion-panel pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
             Install the package with pnpm and import the slots you need.
           </AccordionPanel>
         </AccordionItem>
@@ -680,7 +689,7 @@ function Playground({ name }: { name: string }) {
               Style
             </AccordionTrigger>
           </AccordionHeader>
-          <AccordionPanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+          <AccordionPanel className="accordion-panel pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
             Style triggers and panels from data-open and data-disabled.
           </AccordionPanel>
         </AccordionItem>
@@ -802,18 +811,30 @@ function Playground({ name }: { name: string }) {
 
   if (name === "WindowSplitter") {
     return (
-      <div className="grid w-full max-w-md grid-cols-[1fr_auto_1fr] overflow-hidden rounded-md border border-zinc-950/10 dark:border-white/10">
-        <section className="p-4 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+      <div
+        className="grid w-full max-w-md overflow-hidden rounded-md border border-zinc-950/10 dark:border-white/10"
+        data-testid="window-splitter-example"
+        style={{
+          gridTemplateColumns: `calc(${splitterValue}% - 0.25rem) 0.5rem calc(${
+            100 - splitterValue
+          }% - 0.25rem)`,
+        }}
+      >
+        <section className="min-w-0 p-4 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
           Navigation
         </section>
         <WindowSplitter
-          className="w-2 bg-cyan-700/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:bg-cyan-400/20"
+          className="w-2 bg-cyan-700/20 data-dragging:bg-cyan-700/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 dark:bg-cyan-400/20 dark:data-dragging:bg-cyan-400/50"
           controls="preview-pane"
           aria-label="Resize preview"
-          defaultValue={40}
+          minValue={20}
+          maxValue={80}
+          step={10}
+          value={splitterValue}
+          onChange={setSplitterValue}
         />
         <section
-          className="p-4 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6"
+          className="min-w-0 p-4 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6"
           id="preview-pane"
         >
           Preview
@@ -1357,71 +1378,67 @@ function Playground({ name }: { name: string }) {
 
   if (name === "Calendar") {
     return (
-      <Calendar className="grid max-w-sm gap-3 rounded-md border border-zinc-950/10 p-4 dark:border-white/10">
-        <Header className="flex items-center justify-between">
-          <Heading className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
-            April 2026
-          </Heading>
-          <Text className="text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6">Today</Text>
-        </Header>
-        <CalendarGrid className="w-full border-separate border-spacing-1 text-center text-base/7 sm:text-sm/6">
-          <CalendarGridHeader>
-            <tr>
-              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
-                <CalendarHeaderCell
-                  className="size-8 font-medium text-zinc-500 dark:text-zinc-400"
-                  key={day}
-                >
-                  {day}
-                </CalendarHeaderCell>
-              ))}
-            </tr>
-          </CalendarGridHeader>
-          <CalendarGridBody>
-            <tr>
-              {[20, 21, 22, 23, 24, 25, 26].map((day) => (
-                <CalendarCell
-                  className="size-8 rounded data-selected:bg-cyan-700 data-selected:text-white dark:text-zinc-200"
-                  selected={day === 23}
-                  key={day}
-                >
-                  {day}
-                </CalendarCell>
-              ))}
-            </tr>
-          </CalendarGridBody>
-        </CalendarGrid>
-      </Calendar>
+      <Calendar
+        className={`
+          grid w-full max-w-sm gap-3 rounded-md border border-zinc-950/10 bg-white p-4
+          text-center text-base/7 dark:border-white/10 dark:bg-neutral-950 sm:text-sm/6
+          [&_[data-slot=calendar-grid]]:w-full [&_[data-slot=calendar-grid]]:border-separate
+          [&_[data-slot=calendar-grid]]:border-spacing-1
+          [&_[data-slot=calendar-header-cell]]:size-8
+          [&_[data-slot=calendar-header-cell]]:font-medium
+          [&_[data-slot=calendar-header-cell]]:text-zinc-500
+          dark:[&_[data-slot=calendar-header-cell]]:text-zinc-400
+          [&_[data-slot=calendar-cell]]:size-8 [&_[data-slot=calendar-cell]]:rounded-md
+          [&_[data-slot=calendar-cell]]:text-zinc-700
+          [&_[data-slot=calendar-cell]]:outline-offset-2
+          [&_[data-slot=calendar-cell]]:focus-visible:outline-2
+          [&_[data-slot=calendar-cell]]:focus-visible:outline-sky-500
+          [&_[data-slot=calendar-cell]]:cursor-pointer
+          [&_[data-slot=calendar-cell]]:hover:bg-cyan-50
+          [&_[data-outside-month]]:text-zinc-400 [&_[data-disabled]]:cursor-not-allowed
+          [&_[data-disabled]]:opacity-40 [&_[data-selected]]:bg-cyan-700
+          [&_[data-selected]]:text-white dark:[&_[data-slot=calendar-cell]]:text-zinc-200
+          dark:[&_[data-slot=calendar-cell]]:hover:bg-cyan-500/10
+          dark:[&_[data-outside-month]]:text-zinc-500 dark:[&_[data-selected]]:bg-cyan-400
+          dark:[&_[data-selected]]:text-neutral-950
+        `}
+        defaultValue="2026-04-29"
+        focusedValue="2026-04-29"
+        isDateDisabled={(date) => date < "2026-04-01" || date > "2026-04-30"}
+      />
     );
   }
 
   if (name === "RangeCalendar") {
     return (
-      <RangeCalendar className="grid max-w-sm gap-3 rounded-md border border-zinc-950/10 p-4 dark:border-white/10">
-        <Header className="flex items-center justify-between">
-          <Heading className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
-            Sprint range
-          </Heading>
-          <Text className="text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6">
-            Apr 20-26
-          </Text>
-        </Header>
-        <CalendarGrid className="w-full border-separate border-spacing-1 text-center text-base/7 sm:text-sm/6">
-          <CalendarGridBody>
-            <tr>
-              {[20, 21, 22, 23, 24, 25, 26].map((day) => (
-                <CalendarCell
-                  className="size-8 rounded data-selected:bg-cyan-700 data-selected:text-white dark:text-zinc-200"
-                  selected={day >= 22 && day <= 25}
-                  key={day}
-                >
-                  {day}
-                </CalendarCell>
-              ))}
-            </tr>
-          </CalendarGridBody>
-        </CalendarGrid>
-      </RangeCalendar>
+      <RangeCalendar
+        className={`
+          grid w-full max-w-sm gap-3 rounded-md border border-zinc-950/10 bg-white p-4
+          text-center text-base/7 dark:border-white/10 dark:bg-neutral-950 sm:text-sm/6
+          [&_[data-slot=calendar-grid]]:w-full [&_[data-slot=calendar-grid]]:border-separate
+          [&_[data-slot=calendar-grid]]:border-spacing-1
+          [&_[data-slot=calendar-header-cell]]:size-8
+          [&_[data-slot=calendar-header-cell]]:font-medium
+          [&_[data-slot=calendar-header-cell]]:text-zinc-500
+          dark:[&_[data-slot=calendar-header-cell]]:text-zinc-400
+          [&_[data-slot=calendar-cell]]:size-8 [&_[data-slot=calendar-cell]]:rounded-md
+          [&_[data-slot=calendar-cell]]:text-zinc-700
+          [&_[data-slot=calendar-cell]]:outline-offset-2
+          [&_[data-slot=calendar-cell]]:focus-visible:outline-2
+          [&_[data-slot=calendar-cell]]:focus-visible:outline-sky-500
+          [&_[data-slot=calendar-cell]]:cursor-pointer
+          [&_[data-slot=calendar-cell]]:hover:bg-cyan-50
+          [&_[data-outside-month]]:text-zinc-400 [&_[data-disabled]]:cursor-not-allowed
+          [&_[data-disabled]]:opacity-40 [&_[data-selected]]:bg-cyan-700
+          [&_[data-selected]]:text-white dark:[&_[data-slot=calendar-cell]]:text-zinc-200
+          dark:[&_[data-slot=calendar-cell]]:hover:bg-cyan-500/10
+          dark:[&_[data-outside-month]]:text-zinc-500 dark:[&_[data-selected]]:bg-cyan-400
+          dark:[&_[data-selected]]:text-neutral-950
+        `}
+        defaultValue={{ start: "2026-04-22", end: "2026-04-25" }}
+        focusedValue="2026-04-29"
+        isDateDisabled={(date) => date < "2026-04-01" || date > "2026-04-30"}
+      />
     );
   }
 
@@ -1452,15 +1469,69 @@ function Playground({ name }: { name: string }) {
 
   if (name === "DatePicker") {
     return (
-      <DatePicker className="grid max-w-xs gap-2">
+      <DatePicker
+        className="grid max-w-sm gap-2"
+        value={datePickerValue}
+        onChange={setDatePickerValue}
+        name="release"
+      >
         <Label className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
           Release date
         </Label>
-        <Button className="rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-left text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6">
-          Apr 27, 2026
-        </Button>
+        <Group className="grid grid-cols-[1fr_auto] items-center overflow-hidden rounded-md border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-neutral-950">
+          <DateField>
+            <DateInput className="inline-flex min-w-0 px-2 py-1">
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="month"
+              />
+              <DateSegment
+                className="px-0.5 py-1 text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6"
+                part="literal"
+              >
+                /
+              </DateSegment>
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="day"
+              />
+              <DateSegment
+                className="px-0.5 py-1 text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6"
+                part="literal"
+              >
+                /
+              </DateSegment>
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="year"
+              />
+            </DateInput>
+          </DateField>
+          <Button className="border-l border-zinc-950/10 px-3 py-2 text-base/7 dark:border-white/10 dark:text-white sm:text-sm/6">
+            Open
+          </Button>
+        </Group>
         <Popover className="rounded-md border border-zinc-950/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-950">
-          <Playground name="Calendar" />
+          <Calendar
+            className={`
+              grid gap-3 text-center text-base/7 sm:text-sm/6
+              [&_[data-slot=calendar-grid]]:w-full [&_[data-slot=calendar-grid]]:border-separate
+              [&_[data-slot=calendar-grid]]:border-spacing-1
+              [&_[data-slot=calendar-header-cell]]:size-8
+              [&_[data-slot=calendar-header-cell]]:font-medium
+              [&_[data-slot=calendar-header-cell]]:text-zinc-500
+              [&_[data-slot=calendar-cell]]:size-8 [&_[data-slot=calendar-cell]]:rounded-md
+              [&_[data-slot=calendar-cell]]:cursor-pointer
+              [&_[data-slot=calendar-cell]]:hover:bg-cyan-50
+              [&_[data-outside-month]]:text-zinc-400 [&_[data-disabled]]:cursor-not-allowed
+              [&_[data-disabled]]:opacity-40 [&_[data-selected]]:bg-cyan-700
+              [&_[data-selected]]:text-white dark:[&_[data-slot=calendar-cell]]:text-zinc-200
+              dark:[&_[data-slot=calendar-cell]]:hover:bg-cyan-500/10
+              dark:[&_[data-outside-month]]:text-zinc-500 dark:[&_[data-selected]]:bg-cyan-400
+              dark:[&_[data-selected]]:text-neutral-950
+            `}
+            focusedValue={datePickerValue}
+          />
         </Popover>
       </DatePicker>
     );
@@ -1468,21 +1539,98 @@ function Playground({ name }: { name: string }) {
 
   if (name === "DateRangePicker") {
     return (
-      <DateRangePicker className="grid max-w-xs gap-2">
+      <DateRangePicker
+        className="grid max-w-md gap-2"
+        value={dateRangePickerValue}
+        onChange={setDateRangePickerValue}
+        name="sprint"
+      >
         <Label className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
           Sprint dates
         </Label>
-        <Group className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <Button className="rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-left text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6">
-            Apr 22
-          </Button>
+        <Group className="grid grid-cols-[1fr_auto_1fr_auto] items-center overflow-hidden rounded-md border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-neutral-950">
+          <DateField slot="start">
+            <DateInput className="inline-flex min-w-0 px-2 py-1">
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="month"
+              />
+              <DateSegment
+                className="px-0.5 py-1 text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6"
+                part="literal"
+              >
+                /
+              </DateSegment>
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="day"
+              />
+              <DateSegment
+                className="px-0.5 py-1 text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6"
+                part="literal"
+              >
+                /
+              </DateSegment>
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="year"
+              />
+            </DateInput>
+          </DateField>
           <span className="text-zinc-500 dark:text-zinc-400">to</span>
-          <Button className="rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-left text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6">
-            Apr 25
+          <DateField slot="end">
+            <DateInput className="inline-flex min-w-0 px-2 py-1">
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="month"
+              />
+              <DateSegment
+                className="px-0.5 py-1 text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6"
+                part="literal"
+              >
+                /
+              </DateSegment>
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="day"
+              />
+              <DateSegment
+                className="px-0.5 py-1 text-base/7 text-zinc-500 dark:text-zinc-400 sm:text-sm/6"
+                part="literal"
+              >
+                /
+              </DateSegment>
+              <DateSegment
+                className="rounded px-1 py-1 text-base/7 text-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-600 dark:text-zinc-200 sm:text-sm/6"
+                part="year"
+              />
+            </DateInput>
+          </DateField>
+          <Button className="border-l border-zinc-950/10 px-3 py-2 text-base/7 dark:border-white/10 dark:text-white sm:text-sm/6">
+            Open
           </Button>
         </Group>
         <Popover className="rounded-md border border-zinc-950/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-950">
-          <Playground name="RangeCalendar" />
+          <RangeCalendar
+            className={`
+              grid gap-3 text-center text-base/7 sm:text-sm/6
+              [&_[data-slot=calendar-grid]]:w-full [&_[data-slot=calendar-grid]]:border-separate
+              [&_[data-slot=calendar-grid]]:border-spacing-1
+              [&_[data-slot=calendar-header-cell]]:size-8
+              [&_[data-slot=calendar-header-cell]]:font-medium
+              [&_[data-slot=calendar-header-cell]]:text-zinc-500
+              [&_[data-slot=calendar-cell]]:size-8 [&_[data-slot=calendar-cell]]:rounded-md
+              [&_[data-slot=calendar-cell]]:cursor-pointer
+              [&_[data-slot=calendar-cell]]:hover:bg-cyan-50
+              [&_[data-outside-month]]:text-zinc-400 [&_[data-disabled]]:cursor-not-allowed
+              [&_[data-disabled]]:opacity-40 [&_[data-selected]]:bg-cyan-700
+              [&_[data-selected]]:text-white dark:[&_[data-slot=calendar-cell]]:text-zinc-200
+              dark:[&_[data-slot=calendar-cell]]:hover:bg-cyan-500/10
+              dark:[&_[data-outside-month]]:text-zinc-500 dark:[&_[data-selected]]:bg-cyan-400
+              dark:[&_[data-selected]]:text-neutral-950
+            `}
+            focusedValue={dateRangePickerValue.start}
+          />
         </Popover>
       </DateRangePicker>
     );
@@ -1497,7 +1645,7 @@ function Playground({ name }: { name: string }) {
         <DisclosureTrigger className="cursor-pointer text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
           Release details
         </DisclosureTrigger>
-        <DisclosurePanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+        <DisclosurePanel className="disclosure-panel pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
           Built on details and summary.
         </DisclosurePanel>
       </Disclosure>
@@ -1516,7 +1664,7 @@ function Playground({ name }: { name: string }) {
             <DisclosureTrigger className="cursor-pointer text-base/7 font-medium text-zinc-950 marker:text-zinc-400 dark:text-white sm:text-sm/6">
               {title}
             </DisclosureTrigger>
-            <DisclosurePanel className="pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
+            <DisclosurePanel className="disclosure-panel pt-3 text-base/7 text-zinc-700 dark:text-zinc-300 sm:text-sm/6">
               {body}
             </DisclosurePanel>
           </Disclosure>
@@ -1534,7 +1682,7 @@ function Playground({ name }: { name: string }) {
         <DisclosureTrigger className="cursor-pointer text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
           Release details
         </DisclosureTrigger>
-        <DisclosurePanel className="mt-3 rounded-md bg-neutral-50 p-3 text-base/7 text-zinc-700 data-open:border-zinc-950/10 dark:bg-white/5 dark:text-zinc-300 sm:text-sm/6">
+        <DisclosurePanel className="disclosure-panel mt-3 rounded-md bg-neutral-50 p-3 text-base/7 text-zinc-700 data-open:border-zinc-950/10 dark:bg-white/5 dark:text-zinc-300 sm:text-sm/6">
           The panel is just a headless content region. Style it directly or from parent disclosure
           state.
         </DisclosurePanel>
@@ -1811,10 +1959,10 @@ function Playground({ name }: { name: string }) {
         <Label className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
           Framework
         </Label>
-        <Group className="flex overflow-hidden rounded-md border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-neutral-950">
+        <Group className="combobox-field flex overflow-hidden rounded-md border border-zinc-950/10 bg-white transition-colors dark:border-white/10 dark:bg-neutral-950">
           <Autocomplete className="contents">
             <Input
-              className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-base/7 outline-none data-focus-visible:ring-2 data-focus-visible:ring-cyan-600 dark:text-white sm:text-sm/6"
+              className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-base/7 outline-none dark:text-white sm:text-sm/6"
               aria-label="Framework"
               list="framework-options"
             />
@@ -1828,12 +1976,6 @@ function Playground({ name }: { name: string }) {
             Show
           </Button>
         </Group>
-        <ComboBoxValue className="text-base/7 text-zinc-600 dark:text-zinc-400 sm:text-sm/6">
-          Selected value is mirrored into a hidden form field.
-        </ComboBoxValue>
-        <Description className="text-base/7 text-zinc-600 dark:text-zinc-400 sm:text-sm/6">
-          Type a value or choose from the list.
-        </Description>
         <Popover className="rounded-md border border-zinc-950/10 bg-white p-1 dark:border-white/10 dark:bg-neutral-950">
           <ListBox className="grid gap-1">
             <ListBoxItem
@@ -1868,33 +2010,33 @@ function Playground({ name }: { name: string }) {
     name === "ColorSwatchPicker"
   ) {
     return (
-      <ColorField className="grid max-w-sm gap-3" defaultValue="#0891b2" name="accent">
+      <ColorField
+        className="grid max-w-sm gap-3"
+        value={colorValue}
+        onChange={setColorValue}
+        name="accent"
+      >
         <Label className="text-base/7 font-medium text-zinc-950 dark:text-white sm:text-sm/6">
           Accent color
         </Label>
         <div className="flex items-center gap-3">
-          <ColorSwatch className="size-10 rounded-md border border-zinc-950/10 dark:border-white/10" />
+          <ColorSwatch
+            className="size-10 rounded-md border border-zinc-950/10 dark:border-white/10"
+            data-testid="color-swatch"
+            style={{ height: 40, width: 40 }}
+          />
           <Input
             className="min-w-0 rounded-md border border-zinc-950/10 bg-white px-3 py-2 text-base/7 dark:border-white/10 dark:bg-neutral-950 dark:text-white sm:text-sm/6"
             aria-label="Accent hex value"
-            defaultValue="#0891b2"
+            value={colorValue}
+            onChange={(event) => setColorValue(event.currentTarget.value)}
           />
         </div>
-        <ColorArea className="relative h-28 rounded-md bg-cyan-600" aria-label="Saturation">
-          <ColorThumb className="absolute left-1/2 top-1/2 size-4 rounded-full border-2 border-white shadow" />
-        </ColorArea>
         <ColorSlider
           className="h-3 rounded-full bg-[linear-gradient(to_right,red,yellow,lime,cyan,blue,magenta,red)]"
           aria-label="Hue"
           channel="hue"
         />
-        <ColorWheel
-          className="relative size-24 rounded-full bg-[conic-gradient(red,yellow,lime,cyan,blue,magenta,red)]"
-          aria-label="Hue wheel"
-        >
-          <ColorWheelTrack />
-          <ColorThumb className="absolute left-1/2 top-1 size-4 rounded-full border-2 border-white shadow" />
-        </ColorWheel>
         <ColorSwatchPicker className="flex gap-2" aria-label="Saved colors">
           {[
             ["#0891b2", "Cyan"],
@@ -1906,7 +2048,14 @@ function Playground({ name }: { name: string }) {
               aria-label={label}
               color={color}
               key={color}
-            />
+              style={{ height: 38, width: 38 }}
+            >
+              <ColorSwatch
+                className="size-full rounded"
+                color={color}
+                style={{ height: "100%", width: "100%" }}
+              />
+            </ColorSwatchPickerItem>
           ))}
         </ColorSwatchPicker>
       </ColorField>

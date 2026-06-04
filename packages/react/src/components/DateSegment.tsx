@@ -1,9 +1,24 @@
 import { useContext } from "react";
 import { dataAttr } from "@comp0/core";
 import { InteractiveDiv, type RefProp } from "../shared.js";
-import { DateFieldContext, segmentValue, partBounds } from "./date-time-shared.js";
+import {
+  DateFieldContext,
+  segmentValue,
+  partBounds,
+  type DateSegmentPart,
+} from "./date-time-shared.js";
 import { type DateSegmentProps } from "./date-time-shared.js";
 export type { DateSegmentProps } from "./date-time-shared.js";
+
+const segmentLabels: Record<Exclude<DateSegmentPart, "literal">, string> = {
+  year: "Year",
+  month: "Month",
+  day: "Day",
+  hour: "Hour",
+  minute: "Minute",
+  second: "Second",
+};
+
 export function DateSegment({
   part = "literal",
   children,
@@ -12,12 +27,11 @@ export function DateSegment({
   ...props
 }: DateSegmentProps & RefProp<HTMLDivElement>) {
   const field = useContext(DateFieldContext);
-  const numeric = part !== "literal";
   const value = field ? segmentValue(field.value, field.kind, part) : "";
   const numberValue = Number(value);
   const bounds = partBounds(part);
 
-  if (!numeric) {
+  if (part === "literal") {
     return (
       <div
         {...props}
@@ -31,6 +45,8 @@ export function DateSegment({
     );
   }
 
+  const ariaLabel = props["aria-label"] ?? segmentLabels[part];
+
   return (
     <InteractiveDiv
       {...props}
@@ -41,6 +57,7 @@ export function DateSegment({
       aria-valuemax={bounds?.max}
       aria-valuenow={numberValue}
       aria-valuetext={value}
+      aria-label={ariaLabel}
       data-placeholder={dataAttr(!field)}
       data-slot="date-segment"
       data-type={part}

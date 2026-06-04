@@ -115,10 +115,15 @@ async function waitForCondition(assertion: () => void) {
   throw lastError;
 }
 
-afterEach(() => {
-  root?.unmount();
+function cleanupRender() {
+  const currentRoot = root;
+  currentRoot?.unmount();
   root = undefined;
   document.body.replaceChildren();
+}
+
+afterEach(() => {
+  cleanupRender();
 });
 
 const pageTitles = pages.map((item) => [item.title] as const);
@@ -395,6 +400,357 @@ describe("docs playgrounds", () => {
     await waitForCondition(() => {
       expect(buttons.map((button) => button.tabIndex)).toEqual([0, -1, -1, -1]);
     });
+  });
+
+  test("docs examples expose pointer cursor and hover affordance for clickable controls", async () => {
+    renderDocsRoute("button");
+    await waitForPaint();
+
+    let button: HTMLElement | null = null;
+    await waitForCondition(() => {
+      button = document.querySelector<HTMLElement>("#examples button");
+      expect(button).not.toBeNull();
+    });
+    expect(getComputedStyle(button!).cursor).toBe("pointer");
+    const initialShadow = getComputedStyle(button!).boxShadow;
+
+    await page.getByRole("button", { name: "Save changes" }).hover();
+
+    await waitForCondition(() => {
+      expect(getComputedStyle(button!).boxShadow).not.toBe(initialShadow);
+    });
+
+    cleanupRender();
+
+    renderDocsRoute("listbox");
+    await waitForPaint();
+
+    const option = document.querySelector<HTMLElement>("#examples [role='option']");
+    expect(getComputedStyle(option!).cursor).toBe("pointer");
+
+    cleanupRender();
+
+    renderDocsRoute("windowsplitter");
+    await waitForPaint();
+
+    const splitter = document.querySelector<HTMLElement>("#examples [data-slot='window-splitter']");
+    expect(getComputedStyle(splitter!).cursor).toBe("col-resize");
+  });
+
+  test("Calendar playground changes the selected date on click", async () => {
+    renderPlayground("Calendar");
+    await waitForPaint();
+
+    const calendar = document.querySelector<HTMLElement>("[data-slot='calendar']");
+    const outsideDate = document.querySelector<HTMLElement>("[data-date='2026-03-29']");
+
+    expect(outsideDate?.hasAttribute("data-outside-month")).toBe(true);
+    expect(outsideDate?.getAttribute("aria-disabled")).toBe("true");
+
+    outsideDate?.click();
+    expect(calendar?.getAttribute("data-value")).toBe("2026-04-29");
+
+    document.querySelector<HTMLElement>("[data-date='2026-04-30']")?.click();
+
+    await waitForCondition(() => {
+      expect(calendar?.getAttribute("data-value")).toBe("2026-04-30");
+      expect(
+        document.querySelector("[data-date='2026-04-30']")?.hasAttribute("data-selected"),
+      ).toBe(true);
+    });
+  });
+
+  test("RangeCalendar playground changes the selected range on click", async () => {
+    renderPlayground("RangeCalendar");
+    await waitForPaint();
+
+    const rangeCalendar = document.querySelector<HTMLElement>("[data-slot='range-calendar']");
+    const outsideDate = document.querySelector<HTMLElement>("[data-date='2026-05-03']");
+
+    expect(outsideDate?.hasAttribute("data-outside-month")).toBe(true);
+    expect(outsideDate?.getAttribute("aria-disabled")).toBe("true");
+
+    outsideDate?.click();
+    expect(rangeCalendar?.getAttribute("data-start-value")).toBe("2026-04-22");
+    expect(rangeCalendar?.getAttribute("data-end-value")).toBe("2026-04-25");
+
+    document.querySelector<HTMLElement>("[data-date='2026-04-26']")?.click();
+
+    await waitForCondition(() => {
+      expect(rangeCalendar?.getAttribute("data-start-value")).toBe("2026-04-26");
+      expect(rangeCalendar?.hasAttribute("data-end-value")).toBe(false);
+    });
+
+    document.querySelector<HTMLElement>("[data-date='2026-04-30']")?.click();
+
+    await waitForCondition(() => {
+      expect(rangeCalendar?.getAttribute("data-start-value")).toBe("2026-04-26");
+      expect(rangeCalendar?.getAttribute("data-end-value")).toBe("2026-04-30");
+    });
+  });
+
+  test("WindowSplitter playground resizes panes and code shows the whole layout", async () => {
+    renderPlayground("WindowSplitter");
+    await waitForPaint();
+
+    const layout = document.querySelector<HTMLElement>("[data-testid='window-splitter-example']");
+    const splitter = document.querySelector<HTMLElement>("[data-slot='window-splitter']");
+    const initialColumns = getComputedStyle(layout!).gridTemplateColumns;
+
+    pressKey(splitter!, "ArrowRight");
+
+    await waitForCondition(() => {
+      expect(splitter?.getAttribute("aria-valuenow")).toBe("50");
+      expect(getComputedStyle(layout!).gridTemplateColumns).not.toBe(initialColumns);
+    });
+
+    const layoutRect = layout!.getBoundingClientRect();
+    const targetX = layoutRect.left + layoutRect.width * 0.62;
+    const startX =
+      splitter!.getBoundingClientRect().left + splitter!.getBoundingClientRect().width / 2;
+    splitter?.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: startX,
+        pointerId: 1,
+      }),
+    );
+    splitter?.dispatchEvent(
+      new PointerEvent("pointermove", {
+        bubbles: true,
+        cancelable: true,
+        clientX: targetX,
+        pointerId: 1,
+      }),
+    );
+    splitter?.dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, cancelable: true, pointerId: 1 }),
+    );
+
+    await waitForCondition(() => {
+      expect(Number(splitter?.getAttribute("aria-valuenow"))).toBeCloseTo(62, 1);
+      expect(layout?.style.gridTemplateColumns).toContain("62");
+    });
+
+    cleanupRender();
+
+    renderDocsRoute("windowsplitter");
+    await waitForPaint();
+
+    const code = document.querySelector("#examples .code-block, #examples pre")?.textContent ?? "";
+    expect(code).toContain("gridTemplateColumns");
+    expect(code).toContain("value={splitterValue}");
+    expect(code).toContain("onChange={setSplitterValue}");
+    expect(code).toContain('id="preview-pane"');
+  });
+
+  test("DatePicker playground supports manual segments and popover calendar selection", async () => {
+    renderPlayground("DatePicker");
+    await waitForPaint();
+
+    const picker = document.querySelector<HTMLElement>("[data-slot='date-picker']");
+    const day = document.querySelector<HTMLElement>("[data-slot='date-field'] [data-type='day']");
+
+    pressKey(day!, "ArrowUp");
+
+    await waitForCondition(() => {
+      expect(picker?.getAttribute("data-value")).toBe("2026-04-30");
+      expect(document.querySelector<HTMLInputElement>("input[name='release']")?.value).toBe(
+        "2026-04-30",
+      );
+    });
+
+    await page.getByRole("button", { name: "Open" }).click();
+
+    await waitForCondition(() => {
+      expect(
+        document.querySelector<HTMLElement>("[data-slot='date-picker'] [role='dialog']")?.hidden,
+      ).toBe(false);
+    });
+
+    document.querySelector<HTMLElement>("[data-date='2026-05-01']")?.click();
+
+    await waitForCondition(() => {
+      expect(picker?.getAttribute("data-value")).toBe("2026-05-01");
+      expect(document.querySelector<HTMLInputElement>("input[name='release']")?.value).toBe(
+        "2026-05-01",
+      );
+    });
+  });
+
+  test("DateRangePicker playground supports manual segments and popover range selection", async () => {
+    renderPlayground("DateRangePicker");
+    await waitForPaint();
+
+    const picker = document.querySelector<HTMLElement>("[data-slot='date-range-picker']");
+    const daySegments = document.querySelectorAll<HTMLElement>(
+      "[data-slot='date-field'] [data-type='day']",
+    );
+
+    pressKey(daySegments[0]!, "ArrowUp");
+
+    await waitForCondition(() => {
+      expect(picker?.getAttribute("data-start-value")).toBe("2026-04-23");
+      expect(document.querySelector<HTMLInputElement>("input[name='sprint-start']")?.value).toBe(
+        "2026-04-23",
+      );
+      expect(document.querySelector<HTMLInputElement>("input[name='sprint-end']")?.value).toBe(
+        "2026-04-25",
+      );
+    });
+
+    await page.getByRole("button", { name: "Open" }).click();
+    document.querySelector<HTMLElement>("[data-date='2026-04-26']")?.click();
+
+    await waitForCondition(() => {
+      expect(picker?.getAttribute("data-start-value")).toBe("2026-04-26");
+      expect(picker?.hasAttribute("data-end-value")).toBe(false);
+    });
+
+    document.querySelector<HTMLElement>("[data-date='2026-04-30']")?.click();
+
+    await waitForCondition(() => {
+      expect(picker?.getAttribute("data-start-value")).toBe("2026-04-26");
+      expect(picker?.getAttribute("data-end-value")).toBe("2026-04-30");
+      expect(document.querySelector<HTMLInputElement>("input[name='sprint-end']")?.value).toBe(
+        "2026-04-30",
+      );
+    });
+  });
+
+  test("Color playground updates the visible color controls", async () => {
+    renderPlayground("Color");
+    await waitForPaint();
+
+    await page.getByRole("option", { name: "Green" }).click();
+
+    await waitForCondition(() => {
+      expect(
+        document.querySelector<HTMLInputElement>("[aria-label='Accent hex value']")?.value,
+      ).toBe("#16a34a");
+      expect(document.querySelector("[data-slot='color-field']")?.getAttribute("data-value")).toBe(
+        "#16a34a",
+      );
+      expect(document.querySelector<HTMLInputElement>("input[name='accent']")?.value).toBe(
+        "#16a34a",
+      );
+      expect(
+        document.querySelector("[data-testid='color-swatch']")?.getAttribute("data-value"),
+      ).toBe("#16a34a");
+    });
+  });
+
+  test("ContextMenu playground dismisses from outside clicks and item activation", async () => {
+    renderPlayground("ContextMenu");
+    await waitForPaint();
+
+    const content = document.querySelector<HTMLElement>("[data-slot='context-menu-content']");
+    document.querySelector<HTMLElement>("[data-slot='context-menu-trigger']")?.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 24,
+        clientY: 24,
+      }),
+    );
+
+    await waitForCondition(() => {
+      expect(content?.hidden).toBe(false);
+    });
+
+    document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+
+    await waitForCondition(() => {
+      expect(content?.hidden).toBe(true);
+    });
+
+    document.querySelector<HTMLElement>("[data-slot='context-menu-trigger']")?.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 24,
+        clientY: 24,
+      }),
+    );
+
+    await waitForCondition(() => {
+      expect(content?.hidden).toBe(false);
+    });
+
+    await page.getByRole("menuitem", { name: "Rename" }).click();
+
+    await waitForCondition(() => {
+      expect(content?.hidden).toBe(true);
+    });
+  });
+
+  test("Disclosure and Accordion playground panels include motion styles", async () => {
+    renderPlayground("Accordion");
+    await waitForPaint();
+
+    const accordionPanel = document.querySelector<HTMLElement>("[data-slot='accordion-panel']");
+    const accordionStyle = getComputedStyle(accordionPanel!);
+    expect(accordionStyle.transitionDuration).not.toBe("0s");
+    expect(accordionStyle.transitionProperty).toContain("height");
+
+    cleanupRender();
+
+    renderPlayground("Disclosure");
+    await waitForPaint();
+
+    const disclosurePanel = document.querySelector<HTMLElement>(".disclosure-panel");
+    const disclosureStyle = getComputedStyle(disclosurePanel!);
+    expect(disclosureStyle.transitionDuration).not.toBe("0s");
+    expect(disclosureStyle.transitionProperty).toContain("height");
+  });
+
+  test("Combobox playground keeps focus state on the visible field and omits helper copy", async () => {
+    renderPlayground("Combobox");
+    await waitForPaint();
+
+    expect(document.body.textContent).not.toContain("Selected value is mirrored");
+    expect(document.body.textContent).not.toContain("Type a value or choose");
+
+    const input = document.querySelector<HTMLInputElement>("input[role='combobox']")!;
+    const field = input.closest("[role='group']") as HTMLElement;
+    const initialBorder = getComputedStyle(field).borderColor;
+
+    input.focus();
+
+    await waitForCondition(() => {
+      expect(input.hasAttribute("data-focused")).toBe(true);
+      expect(getComputedStyle(field).borderColor).not.toBe(initialBorder);
+    });
+  });
+
+  test("example code snippets match the simplified working examples", async () => {
+    const expectedBySlug = new Map([
+      ["accordion", "accordion-panel"],
+      ["disclosure", "disclosure-panel"],
+      ["calendar", "isDateDisabled"],
+      ["rangecalendar", "isDateDisabled"],
+      ["combobox", "<Combobox"],
+      ["color", "<ColorField"],
+      ["windowsplitter", "gridTemplateColumns"],
+      ["datepicker", "<DateField"],
+      ["daterangepicker", "<DateField"],
+    ]);
+
+    for (const [slug, expected] of expectedBySlug) {
+      renderDocsRoute(slug);
+      await waitForPaint();
+
+      const code =
+        document.querySelector("#examples .code-block, #examples pre")?.textContent ?? "";
+      expect(code).toContain(expected);
+      expect(code).not.toContain("Selected value is mirrored");
+      expect(code).not.toContain("Type a value or choose");
+      if (slug === "calendar") expect(code).not.toContain("value={date}");
+      if (slug === "rangecalendar") expect(code).not.toContain("value={range}");
+
+      cleanupRender();
+    }
   });
 
   test("Autocomplete selects a keyboard suggestion", async () => {

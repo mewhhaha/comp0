@@ -1189,6 +1189,12 @@ describe("date, time, and color inputs", () => {
     expect(container.querySelector("[data-date='2026-04-30']")?.getAttribute("aria-disabled")).toBe(
       "true",
     );
+    expect(
+      container.querySelector("[data-date='2026-03-29']")?.hasAttribute("data-outside-month"),
+    ).toBe(true);
+    expect(
+      container.querySelector("[data-date='2026-04-29']")?.hasAttribute("data-outside-month"),
+    ).toBe(false);
     expect(container.querySelectorAll("[role='gridcell'][tabindex='0']")).toHaveLength(1);
 
     fireKeyDown(calendar, "ArrowRight");
@@ -1277,6 +1283,7 @@ describe("date, time, and color inputs", () => {
     expect(month.getAttribute("aria-valuemax")).toBe("12");
     expect(month.getAttribute("aria-valuenow")).toBe("12");
     expect(month.getAttribute("aria-valuetext")).toBe("12");
+    expect(month.getAttribute("aria-label")).toBe("Month");
     expect(hour.getAttribute("aria-valuemin")).toBe("0");
     expect(hour.getAttribute("aria-valuemax")).toBe("23");
     expect(minute.getAttribute("aria-valuemax")).toBe("59");
@@ -1311,6 +1318,15 @@ describe("date, time, and color inputs", () => {
     const { container } = render(
       <>
         <DatePicker id="release" defaultValue="2026-04-29" name="release">
+          <DateField>
+            <DateInput>
+              <DateSegment part="month" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="day" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="year" />
+            </DateInput>
+          </DateField>
           <Button>Open date</Button>
           <Popover>
             <Calendar focusedValue="2026-04-29" />
@@ -1321,6 +1337,24 @@ describe("date, time, and color inputs", () => {
           defaultValue={{ start: "2026-04-27", end: "2026-04-29" }}
           name="sprint"
         >
+          <DateField slot="start">
+            <DateInput>
+              <DateSegment part="month" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="day" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="year" />
+            </DateInput>
+          </DateField>
+          <DateField slot="end">
+            <DateInput>
+              <DateSegment part="month" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="day" />
+              <DateSegment part="literal">/</DateSegment>
+              <DateSegment part="year" />
+            </DateInput>
+          </DateField>
           <Button>Open range</Button>
           <Popover>
             <RangeCalendar focusedValue="2026-04-27" />
@@ -1343,6 +1377,17 @@ describe("date, time, and color inputs", () => {
     expect(buttons[0]?.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelector<HTMLInputElement>("input[name='release']")?.value).toBe(
       "2026-04-30",
+    );
+    const daySegments = container.querySelectorAll<HTMLElement>(
+      "[data-slot='date-field'] [data-type='day']",
+    );
+    fireKeyDown(daySegments[0]!, "ArrowDown");
+    expect(container.querySelector<HTMLInputElement>("input[name='release']")?.value).toBe(
+      "2026-04-29",
+    );
+    fireKeyDown(daySegments[1]!, "ArrowUp");
+    expect(container.querySelector<HTMLInputElement>("input[name='sprint-start']")?.value).toBe(
+      "2026-04-28",
     );
 
     fireKeyDown(buttons[1]!, "Enter");

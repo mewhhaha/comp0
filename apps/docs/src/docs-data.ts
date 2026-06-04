@@ -893,10 +893,10 @@ const overrides: Record<string, DocOverride> = {
       "A focusable separator that resizes adjacent panes with ARIA value metadata and pointer dragging.",
     nativeMarkup:
       "div role=separator with aria-valuemin, aria-valuemax, aria-valuenow, and aria-controls.",
-    anatomyCode: `<WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />`,
+    anatomyCode: `<div style={{ gridTemplateColumns: \`calc(\${splitterValue}% - 0.25rem) 0.5rem calc(\${100 - splitterValue}% - 0.25rem)\` }}>\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" value={splitterValue} onChange={setSplitterValue} />\n  <section id="preview-pane">Preview</section>\n</div>`,
     examples: {
-      uncontrolled: `<WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />`,
-      controlled: `<WindowSplitter controls="preview-pane" aria-label="Resize preview" value={size} onChange={setSize} />`,
+      uncontrolled: `<div style={{ gridTemplateColumns: "calc(40% - 0.25rem) 0.5rem calc(60% - 0.25rem)" }}>\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" defaultValue={40} />\n  <section id="preview-pane">Preview</section>\n</div>`,
+      controlled: `<div style={{ gridTemplateColumns: \`calc(\${splitterValue}% - 0.25rem) 0.5rem calc(\${100 - splitterValue}% - 0.25rem)\` }}>\n  <section>Navigation</section>\n  <WindowSplitter controls="preview-pane" aria-label="Resize preview" value={splitterValue} onChange={setSplitterValue} />\n  <section id="preview-pane">Preview</section>\n</div>`,
     },
     keyboard: [
       ["Left / Up Arrow", "Decreases the splitter value by step."],
@@ -1225,17 +1225,17 @@ const overrides: Record<string, DocOverride> = {
     },
   },
   DatePicker: {
-    anatomyCode: `<DatePicker defaultValue="2026-04-29" name="release">\n  <DateField defaultValue="2026-04-29">\n    <DateInput><DateSegment part="month" /><DateSegment part="day" /><DateSegment part="year" /></DateInput>\n  </DateField>\n  <Button>Open calendar</Button>\n  <Popover><Calendar /></Popover>\n</DatePicker>`,
+    anatomyCode: `<DatePicker value={date} onChange={setDate} name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><Calendar focusedValue={date} /></Popover>\n</DatePicker>`,
     examples: {
-      uncontrolled: `<DatePicker defaultValue="2026-04-29" name="release">\n  <Button>Open calendar</Button>\n  <Popover><Calendar /></Popover>\n</DatePicker>`,
-      controlled: `<DatePicker value={date} onChange={setDate}>\n  <Button>Open calendar</Button>\n  <Popover><Calendar value={date} onChange={setDate} /></Popover>\n</DatePicker>`,
+      uncontrolled: `<DatePicker defaultValue="2026-04-29" name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><Calendar focusedValue="2026-04-29" /></Popover>\n</DatePicker>`,
+      controlled: `<DatePicker value={date} onChange={setDate} name="release">\n  <Label>Release date</Label>\n  <Group>\n    <DateField>\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><Calendar focusedValue={date} /></Popover>\n</DatePicker>`,
     },
   },
   DateRangePicker: {
-    anatomyCode: `<DateRangePicker defaultValue={{ start: "2026-04-22", end: "2026-04-25" }}>\n  <Button>Open range calendar</Button>\n  <Popover><RangeCalendar /></Popover>\n</DateRangePicker>`,
+    anatomyCode: `<DateRangePicker value={range} onChange={setRange} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><RangeCalendar focusedValue={range.start} /></Popover>\n</DateRangePicker>`,
     examples: {
-      uncontrolled: `<DateRangePicker defaultValue={{ start: "2026-04-22", end: "2026-04-25" }}>\n  <Button>Open range calendar</Button>\n  <Popover><RangeCalendar /></Popover>\n</DateRangePicker>`,
-      controlled: `<DateRangePicker value={range} onChange={setRange}>\n  <Button>Open range calendar</Button>\n  <Popover><RangeCalendar value={range} onChange={setRange} /></Popover>\n</DateRangePicker>`,
+      uncontrolled: `<DateRangePicker defaultValue={{ start: "2026-04-22", end: "2026-04-25" }} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><RangeCalendar focusedValue="2026-04-22" /></Popover>\n</DateRangePicker>`,
+      controlled: `<DateRangePicker value={range} onChange={setRange} name="sprint">\n  <Label>Sprint dates</Label>\n  <Group>\n    <DateField slot="start">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <DateField slot="end">\n      <DateInput>\n        <DateSegment part="month" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="day" />\n        <DateSegment part="literal">/</DateSegment>\n        <DateSegment part="year" />\n      </DateInput>\n    </DateField>\n    <Button>Open calendar</Button>\n  </Group>\n  <Popover><RangeCalendar focusedValue={range.start} /></Popover>\n</DateRangePicker>`,
     },
   },
   ColorField: {

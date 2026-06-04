@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useRef } from "react";
-import { findTypeaheadMatch, getRovingFocusTarget } from "@comp0/core";
+import { composeRefs, findTypeaheadMatch, getRovingFocusTarget } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import {
   MenuContext,
@@ -19,6 +19,7 @@ export function ContextMenuContent({
   ...props
 }: ContextMenuContentProps & RefProp<HTMLDivElement>) {
   const contextMenu = useContext(ContextMenuContext);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
   const selectedRef = useRef("");
   const open = Boolean(contextMenu?.open);
@@ -55,11 +56,25 @@ export function ContextMenuContent({
       ?.element?.focus();
   }, [menuContext, open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      const trigger = document.getElementById(contextMenu?.triggerId ?? "");
+      if (contentRef.current?.contains(event.target)) return;
+      if (trigger?.contains(event.target)) return;
+      contextMenu?.setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [contextMenu, open]);
+
   return (
     <MenuContext.Provider value={menuContext}>
       <div
         {...props}
-        ref={ref}
+        ref={composeRefs(contentRef, ref)}
         id={props.id ?? contextMenu?.contentId}
         role="menu"
         aria-labelledby={contextMenu?.triggerId}

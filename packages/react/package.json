@@ -32,8 +32,8 @@
     "@comp0/core": "workspace:*"
   },
   "devDependencies": {
-    "react": "19.2.5",
-    "react-dom": "19.2.5"
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "peerDependencies": {
     "react": ">=19.0.0",

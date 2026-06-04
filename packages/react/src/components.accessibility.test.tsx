@@ -129,6 +129,12 @@ function fireModifiedKeyDown(element: Element, key: string, init: KeyboardEventI
   });
 }
 
+function firePointerDown(element: Element) {
+  act(() => {
+    element.dispatchEvent(new Event("pointerdown", { bubbles: true, cancelable: true }));
+  });
+}
+
 function fireFileDragEvent(element: Element, type: string, files: File[] = []) {
   const event = new Event(type, { bubbles: true, cancelable: true }) as Event & {
     dataTransfer: Pick<DataTransfer, "dropEffect" | "files" | "types">;
@@ -462,29 +468,43 @@ describe("APG core composite accessibility", () => {
 
   it("opens context menus from keyboard invocation and restores focus on Escape", () => {
     const { container } = render(
-      <ContextMenu>
-        <ContextMenuTrigger>Repository row</ContextMenuTrigger>
-        <ContextMenuContent>
-          <MenuItem id="rename">Rename</MenuItem>
-          <MenuItem id="delete">Delete</MenuItem>
-        </ContextMenuContent>
-      </ContextMenu>,
+      <>
+        <ContextMenu>
+          <ContextMenuTrigger>Repository row</ContextMenuTrigger>
+          <ContextMenuContent>
+            <MenuItem id="rename">Rename</MenuItem>
+            <MenuItem id="delete">Delete</MenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+        <button type="button">Outside</button>
+      </>,
     );
     const trigger = container.querySelector<HTMLElement>("[data-slot='context-menu-trigger']")!;
     const content = container.querySelector<HTMLElement>("[data-slot='context-menu-content']")!;
+    const outside = container.querySelector<HTMLButtonElement>("button:not([data-slot])")!;
 
     trigger.focus();
     fireModifiedKeyDown(trigger, "F10", { shiftKey: true });
 
-    const item = content.querySelector<HTMLElement>("[role='menuitem']")!;
+    const items = content.querySelectorAll<HTMLElement>("[role='menuitem']");
 
     expect(content.hidden).toBe(false);
-    expect(document.activeElement).toBe(item);
+    expect(document.activeElement).toBe(items[0]);
 
-    fireKeyDown(item, "Escape");
+    fireKeyDown(items[0]!, "Escape");
 
     expect(content.hidden).toBe(true);
     expect(document.activeElement).toBe(trigger);
+
+    fireModifiedKeyDown(trigger, "F10", { shiftKey: true });
+    expect(content.hidden).toBe(false);
+    firePointerDown(outside);
+    expect(content.hidden).toBe(true);
+
+    fireModifiedKeyDown(trigger, "F10", { shiftKey: true });
+    expect(content.hidden).toBe(false);
+    fireClick(items[1]!);
+    expect(content.hidden).toBe(true);
   });
 
   it("moves carousel selection with controls and roving indicators", () => {
@@ -703,6 +723,7 @@ describe("date and color accessibility", () => {
     expect(month.getAttribute("aria-valuemin")).toBe("1");
     expect(month.getAttribute("aria-valuemax")).toBe("12");
     expect(month.getAttribute("aria-valuenow")).toBe("4");
+    expect(month.getAttribute("aria-label")).toBe("Month");
     expect(literal.hasAttribute("role")).toBe(false);
     expect(literal.hasAttribute("tabindex")).toBe(false);
   });

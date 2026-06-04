@@ -1,4 +1,10 @@
-import { useState, type CSSProperties, type HTMLAttributes, type PointerEvent } from "react";
+import {
+  useRef,
+  useState,
+  type CSSProperties,
+  type HTMLAttributes,
+  type PointerEvent,
+} from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 
@@ -41,9 +47,15 @@ export function WindowSplitter({
 }: WindowSplitterProps & RefProp<HTMLDivElement>) {
   const [currentValue, setCurrentValue] = useControllableState({ value, defaultValue, onChange });
   const [dragging, setDragging] = useState(false);
+  const draggingRef = useRef(false);
 
   function setClamped(nextValue: number) {
     setCurrentValue(clamp(nextValue, minValue, maxValue));
+  }
+
+  function setDraggingState(nextDragging: boolean) {
+    draggingRef.current = nextDragging;
+    setDragging(nextDragging);
   }
 
   function setFromPointer(event: PointerEvent<HTMLDivElement>) {
@@ -55,7 +67,7 @@ export function WindowSplitter({
     const offset =
       orientation === "vertical" ? event.clientX - rect.left : event.clientY - rect.top;
     const ratio = offset / size;
-    setClamped(minValue + ratio * (maxValue - minValue));
+    setClamped(ratio * 100);
   }
 
   return (
@@ -98,20 +110,20 @@ export function WindowSplitter({
       onPointerDown={(event) => {
         onPointerDown?.(event);
         if (event.defaultPrevented || disabled) return;
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setDragging(true);
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        setDraggingState(true);
         setFromPointer(event);
       }}
       onPointerMove={(event) => {
         onPointerMove?.(event);
-        if (event.defaultPrevented || disabled || !dragging) return;
+        if (event.defaultPrevented || disabled || !draggingRef.current) return;
         setFromPointer(event);
       }}
       onPointerUp={(event) => {
         onPointerUp?.(event);
-        setDragging(false);
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId);
+        setDraggingState(false);
+        if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+          event.currentTarget.releasePointerCapture?.(event.pointerId);
         }
       }}
     />

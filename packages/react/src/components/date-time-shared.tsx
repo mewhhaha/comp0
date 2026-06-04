@@ -1,4 +1,11 @@
-import { createContext, useMemo, type HTMLAttributes, type Ref } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  type HTMLAttributes,
+  type Ref,
+} from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 
 export type DateValue = string;
@@ -98,11 +105,32 @@ export function DateFieldRoot(
   { value, defaultValue, onChange, name, disabled, invalid, children, ...props }: DateFieldProps,
   ref: Ref<HTMLDivElement> | undefined,
 ) {
+  const datePicker = useContext(DateValueContext);
+  const dateRangePicker = useContext(DateRangeValueContext);
+  const rangeSlot = props.slot === "start" || props.slot === "end" ? props.slot : undefined;
+  let controlledValue = value;
+  if (kind === "date" && controlledValue === undefined) {
+    if (rangeSlot && dateRangePicker) controlledValue = dateRangePicker.value[rangeSlot];
+    else if (!rangeSlot && datePicker) controlledValue = datePicker.value;
+  }
+  const handleChange = useCallback(
+    (next: string) => {
+      if (kind === "date" && value === undefined) {
+        if (rangeSlot && dateRangePicker) {
+          dateRangePicker.setValue({ ...dateRangePicker.value, [rangeSlot]: next });
+        } else if (!rangeSlot && datePicker) {
+          datePicker.setValue(next);
+        }
+      }
+      onChange?.(next);
+    },
+    [datePicker, dateRangePicker, kind, onChange, rangeSlot, value],
+  );
   const fallback = kind === "date" ? isoDate(new Date()) : "00:00:00";
   const [current, setCurrent] = useControllableState({
-    value,
+    value: controlledValue,
     defaultValue: defaultValue ?? fallback,
-    onChange,
+    onChange: handleChange,
   });
   const context = useMemo(
     () => ({
@@ -182,6 +210,7 @@ export function CalendarGridView({
             {days.slice(row * 7, row * 7 + 7).map((date) => {
               const value = isoDate(date);
               const disabled = isDateDisabled?.(value) || isDateUnavailable?.(value);
+              const outsideMonth = date.getMonth() !== focused.getMonth();
               return (
                 <td
                   key={value}
@@ -190,6 +219,7 @@ export function CalendarGridView({
                   aria-disabled={disabled || undefined}
                   data-date={value}
                   data-disabled={dataAttr(disabled)}
+                  data-outside-month={dataAttr(outsideMonth)}
                   data-selected={dataAttr(isSelected(value))}
                   data-slot="calendar-cell"
                   tabIndex={isoDate(focused) === value ? 0 : -1}
