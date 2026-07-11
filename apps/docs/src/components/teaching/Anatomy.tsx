@@ -363,13 +363,12 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
               )}
             >
               {index === 0 && <Pin number={owner.number} />}
-              {index === 0 ? (
+              {index === 0 && (
                 <PartName className="text-teal-800/80 dark:text-teal-200/80">
                   {owner.part.name}
                 </PartName>
-              ) : (
-                <Skeleton className={index === 1 ? "w-10" : "w-14"} />
               )}
+              {index !== 0 && <Skeleton className={index === 1 ? "w-10" : "w-14"} />}
             </span>
           </span>
         ))}
