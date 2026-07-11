@@ -8,6 +8,12 @@ import { TableColumn } from "./components/TableColumn.js";
 import { TableHeader } from "./components/TableHeader.js";
 import { TableRow } from "./components/TableRow.js";
 
+function fireClickWith(element: Element, shiftKey: boolean) {
+  act(() => {
+    element.dispatchEvent(new MouseEvent("click", { shiftKey, bubbles: true, cancelable: true }));
+  });
+}
+
 function fireKey(element: Element, key: string, ctrlKey = false, shiftKey = false) {
   act(() => {
     element.dispatchEvent(
@@ -187,5 +193,51 @@ describe("table selection, sort, and resize", () => {
     expect(document.activeElement).toBe(headers[0]);
     fireKey(headers[0]!, "ArrowLeft", false, true);
     expect(onResize).toHaveBeenLastCalledWith(0);
+  });
+});
+
+describe("table range selection", () => {
+  function renderSelectable(onRangeSelect = vi.fn()) {
+    const result = render(
+      <Table aria-label="People" onRangeSelect={onRangeSelect}>
+        <TableBody>
+          <TableRow value="a">
+            <TableCell>Ada</TableCell>
+          </TableRow>
+          <TableRow value="b">
+            <TableCell>Grace</TableCell>
+          </TableRow>
+          <TableRow value="c">
+            <TableCell>Mary</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const cells = [...result.container.querySelectorAll<HTMLTableCellElement>("td")];
+    return { ...result, cells, onRangeSelect };
+  }
+
+  it("selects the range from the click anchor on shift-click", () => {
+    const { cells, onRangeSelect } = renderSelectable();
+    fireClickWith(cells[0]!, false);
+    fireClickWith(cells[2]!, true);
+    expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b", "c"]);
+    fireClickWith(cells[1]!, false);
+    fireClickWith(cells[0]!, true);
+    expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b"]);
+  });
+
+  it("extends the range while moving with Shift+ArrowDown and resets on plain movement", () => {
+    const { cells, onRangeSelect } = renderSelectable();
+    cells[0]!.focus();
+    fireClickWith(cells[0]!, false);
+    fireKey(cells[0]!, "ArrowDown", false, true);
+    expect(document.activeElement).toBe(cells[1]);
+    expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b"]);
+    fireKey(cells[1]!, "ArrowDown", false, true);
+    expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b", "c"]);
+    fireKey(cells[2]!, "ArrowUp", false, false);
+    fireKey(cells[1]!, "ArrowDown", false, true);
+    expect(onRangeSelect).toHaveBeenLastCalledWith(["b", "c"]);
   });
 });

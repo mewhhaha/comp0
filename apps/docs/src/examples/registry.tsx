@@ -710,6 +710,7 @@ function TableExample() {
       aria-label="People"
       aria-multiselectable="true"
       className="w-full max-w-md table-fixed border-collapse text-base sm:text-sm"
+      onRangeSelect={setSelected}
     >
       <TableHeader>
         <TableRow>
@@ -743,6 +744,7 @@ function TableExample() {
         {rows.map((person) => (
           <TableRow
             key={person.id}
+            value={person.id}
             selected={selected.includes(person.id)}
             className="data-selected:bg-teal-50 dark:data-selected:bg-teal-950/40"
           >

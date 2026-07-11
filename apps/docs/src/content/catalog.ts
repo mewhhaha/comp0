@@ -1168,7 +1168,13 @@ const navigation = [
     ],
     '<Table aria-label="People"><TableHeader><TableRow><TableColumn>Name</TableColumn></TableRow></TableHeader><TableBody><TableRow><TableCell>Ada</TableCell></TableRow></TableBody></Table>',
     [
-      p("Table", "root", "Native table with the grid role and one tab stop."),
+      p("Table", "root", "Native table with the grid role and one tab stop.", true, false, [
+        prop(
+          "onRangeSelect",
+          "(values: string[]) => void",
+          "Receives anchor-to-row values on Shift+Click and Shift+ArrowUp/Down.",
+        ),
+      ]),
       p("TableHeader", "root", "Native thead holding the column header row."),
       p("TableColumn", "item", "Native th column header and grid cell.", true, false, [
         prop(

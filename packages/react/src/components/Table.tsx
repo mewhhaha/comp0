@@ -3,10 +3,19 @@ import { composeRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { primaryStop, rowStops, TableContext, type TableContextValue } from "./table-shared.js";
 
-export type TableProps = TableHTMLAttributes<HTMLTableElement>;
+export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
+  /**
+   * Receives the row values from the selection anchor to the target row on
+   * Shift+Click and Shift+ArrowUp/ArrowDown; you apply them to your state.
+   */
+  onRangeSelect?: ((values: string[]) => void) | undefined;
+};
 
 export function Table({
+  onRangeSelect,
   onKeyDown,
+  onClick,
+  onMouseDown,
   children,
   ref,
   ...props
@@ -16,6 +25,21 @@ export function Table({
   const activeKeyRef = useRef(activeKey);
   activeKeyRef.current = activeKey;
   const cellMap = useRef(new Map<string, HTMLTableCellElement>());
+  const anchorRef = useRef<string | null>(null);
+
+  const valuedRows = () => {
+    const table = tableRef.current;
+    if (!table) return [] as HTMLTableRowElement[];
+    return [...table.querySelectorAll<HTMLTableRowElement>("tr[data-value]")];
+  };
+  const rangeBetween = (anchorValue: string, target: HTMLTableRowElement) => {
+    const rows = valuedRows();
+    const from = rows.findIndex((row) => row.dataset["value"] === anchorValue);
+    const to = rows.indexOf(target);
+    if (from === -1 || to === -1) return [];
+    const [low, high] = from < to ? [from, to] : [to, from];
+    return rows.slice(low, high + 1).flatMap((row) => row.dataset["value"] ?? []);
+  };
 
   const register = useCallback((key: string, element: HTMLTableCellElement | null) => {
     if (!element) {
@@ -45,11 +69,32 @@ export function Table({
         {...props}
         ref={composeRefs(tableRef, ref)}
         role="grid"
+        onMouseDown={(event) => {
+          onMouseDown?.(event);
+          // Keep shift-clicks from smearing a text selection over the range.
+          if (event.shiftKey && onRangeSelect) event.preventDefault();
+        }}
+        onClick={(event) => {
+          onClick?.(event);
+          if (event.defaultPrevented) return;
+          const target = event.target instanceof Element ? event.target : null;
+          const row = target?.closest<HTMLTableRowElement>("tr[data-value]");
+          const value = row?.dataset["value"];
+          if (!row || !value) return;
+          if (event.shiftKey && onRangeSelect && anchorRef.current) {
+            onRangeSelect(rangeBetween(anchorRef.current, row));
+            return;
+          }
+          anchorRef.current = value;
+        }}
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
-          // Shift+Arrow belongs to column resizing on the header cells.
-          if (event.shiftKey || event.altKey || event.metaKey) return;
+          const verticalKey = event.key === "ArrowDown" || event.key === "ArrowUp";
+          const extending = Boolean(event.shiftKey && verticalKey && onRangeSelect);
+          // Shift+ArrowLeft/Right belongs to column resizing on the headers;
+          // Shift+ArrowUp/Down extends the selection while moving.
+          if ((event.shiftKey && !extending) || event.altKey || event.metaKey) return;
           const table = tableRef.current;
           const target = event.target instanceof Element ? event.target.closest("td, th") : null;
           if (!table || !target || !table.contains(target)) return;
@@ -93,6 +138,18 @@ export function Table({
           const key = nextCell ? keyFor(nextCell) : undefined;
           if (key) setActiveKey(key);
           next.focus();
+          const landedValue = nextCell?.parentElement?.dataset["value"];
+          if (extending) {
+            anchorRef.current ??= row.dataset["value"] ?? landedValue ?? null;
+            const landedRow = nextCell?.parentElement;
+            if (anchorRef.current && landedRow instanceof HTMLTableRowElement && landedValue) {
+              onRangeSelect?.(rangeBetween(anchorRef.current, landedRow));
+            }
+            return;
+          }
+          if (verticalKey || event.key === "Home" || event.key === "End") {
+            if (landedValue) anchorRef.current = landedValue;
+          }
         }}
       >
         {children}

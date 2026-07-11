@@ -5,10 +5,13 @@ import { type RefProp } from "../shared.js";
 export type TableRowProps = HTMLAttributes<HTMLTableRowElement> & {
   /** Marks the row as selected for aria and styling; you own the state. */
   selected?: boolean | undefined;
+  /** Row identity used by the table's range selection. */
+  value?: string | undefined;
 };
 
 export function TableRow({
   selected,
+  value,
   ref,
   ...props
 }: TableRowProps & RefProp<HTMLTableRowElement>) {
@@ -18,6 +21,7 @@ export function TableRow({
       ref={ref}
       aria-selected={selected === undefined ? undefined : selected}
       data-selected={dataAttr(Boolean(selected))}
+      data-value={value}
     />
   );
 }
