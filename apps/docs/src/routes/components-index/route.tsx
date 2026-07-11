@@ -1,24 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
+import { ComponentPreview } from "../../components/teaching/index.js";
 import { componentGroups, components } from "../../content/index.js";
-import { getExample } from "../../examples/index.js";
-
-function CardPreview({ slug }: { slug: string }) {
-  const Example = getExample(slug);
-  if (!Example) return null;
-  return (
-    <div
-      aria-hidden="true"
-      // Inert makes the real component purely presentational, like an image.
-      inert
-      className="pointer-events-none mb-5 flex h-36 items-center overflow-hidden rounded-lg bg-zinc-50 px-6 ring-1 ring-zinc-950/5 select-none dark:bg-white/3 dark:ring-white/10"
-    >
-      <div className="max-h-32 w-full max-w-60 origin-left scale-90">
-        <Example />
-      </div>
-    </div>
-  );
-}
 
 export function meta() {
   return [
@@ -67,7 +50,7 @@ export default function ComponentsIndexRoute() {
                   key={component.slug}
                   className="group relative flex h-full min-w-0 flex-col rounded-xl border border-zinc-950/10 p-5 hover:border-teal-700/30 hover:bg-teal-50/50 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-teal-600 dark:border-white/10 dark:hover:border-teal-300/20 dark:hover:bg-teal-400/5 dark:has-[a:focus-visible]:outline-teal-400"
                 >
-                  <CardPreview slug={component.slug} />
+                  <ComponentPreview className="mb-5" slug={component.slug} />
                   <div className="flex min-w-0 items-start justify-between gap-4">
                     <h3 className="min-w-0 text-lg font-semibold text-zinc-950 group-hover:text-teal-900 dark:text-white dark:group-hover:text-teal-100">
                       <Link
