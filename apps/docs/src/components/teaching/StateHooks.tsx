@@ -15,7 +15,7 @@ export function StateHooks({ hooks, className }: StateHooksProps) {
       <div className="flex items-center gap-3">
         <Braces className="size-6 text-teal-700 dark:text-teal-300" aria-hidden="true" />
         <div>
-          <h3 id={titleId} className="font-semibold text-zinc-950 dark:text-zinc-50">
+          <h3 id={titleId} className="text-lg font-semibold text-zinc-950 dark:text-white">
             State hooks and selectors
           </h3>
           <p className="text-base text-zinc-600 sm:text-sm dark:text-zinc-300">

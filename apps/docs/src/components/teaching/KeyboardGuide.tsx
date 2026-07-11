@@ -51,7 +51,7 @@ export function KeyboardGuide({ actions, className }: KeyboardGuideProps) {
       )}
       aria-labelledby={titleId}
     >
-      <h3 id={titleId} className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+      <h3 id={titleId} className="text-lg font-semibold text-zinc-950 dark:text-white">
         Keyboard guide
       </h3>
       <dl className="mt-4 grid gap-4">
