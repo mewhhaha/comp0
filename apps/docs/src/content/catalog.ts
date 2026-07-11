@@ -177,9 +177,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like tabs in a paper binder.",
     "Use it for peer sections where only one needs to be visible.",
     "Start Tabs with a starting value.",
-    "Match every Tab tabKey to one TabPanel tabKey.",
+    "Give each Tab and its TabPanel the same tab id.",
     "Put the Tab elements together inside TabList.",
-    '<Tabs defaultValue="one"><TabList><Tab tabKey="one">One</Tab></TabList><TabPanel tabKey="one">Panel one</TabPanel></Tabs>',
+    '<Tabs defaultValue="one"><TabList><Tab tab="one">One</Tab></TabList><TabPanel tab="one">Panel one</TabPanel></Tabs>',
   ),
   breadcrumbs: lesson(
     "A trail of links showing where this page sits.",
@@ -776,12 +776,12 @@ const navigation = [
     "Tabs",
     "navigation",
     ["Tab", "TabList", "TabPanel", "Tabs"],
-    '<Tabs defaultValue="one"><TabList><Tab tabKey="one">One</Tab></TabList><TabPanel tabKey="one">Panel one</TabPanel></Tabs>',
+    '<Tabs defaultValue="one"><TabList><Tab tab="one">One</Tab></TabList><TabPanel tab="one">Panel one</TabPanel></Tabs>',
     [
       p("Tabs", "root", "Selected-tab provider.", false),
       p("TabList", "root", "Tab list element."),
       p("Tab", "item", "Native button with tab role."),
-      p("TabPanel", "content", "Panel for a matching tabKey."),
+      p("TabPanel", "content", "Panel for a matching tab."),
     ],
     [
       { keys: ["ArrowRight"], action: "Moves to next tab." },

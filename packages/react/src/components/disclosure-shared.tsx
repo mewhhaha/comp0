@@ -53,11 +53,11 @@ export type TabListProps = HTMLAttributes<HTMLDivElement> & {
 
 export type TabProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "value"> & {
   id?: string | undefined;
-  tabKey: string;
+  tab: string;
 };
 
 export type TabPanelProps = HTMLAttributes<HTMLDivElement> & {
-  tabKey: string;
+  tab: string;
 };
 
 export type BreadcrumbsProps = HTMLAttributes<HTMLElement> & {
