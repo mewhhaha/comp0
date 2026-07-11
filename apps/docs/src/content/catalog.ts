@@ -1,4 +1,4 @@
-import type { ComponentDoc, ComponentGroup } from "./types.js";
+import type { ComponentDoc, ComponentGroup, PartProp } from "./types.js";
 
 const imp = (names: string[]) => `import { ${names.join(", ")} } from "@comp0/react";`;
 const p = (
@@ -7,7 +7,13 @@ const p = (
   description: string,
   ownsDom = true,
   optional = false,
-) => ({ name, kind, description, ownsDom, optional: optional || undefined });
+  props?: PartProp[],
+) => ({ name, kind, description, ownsDom, optional: optional || undefined, props });
+const prop = (name: string, type: string, description: string): PartProp => ({
+  name,
+  type,
+  description,
+});
 type LessonCopy = Pick<ComponentDoc, "summary" | "analogy" | "whenToUse" | "steps">;
 const lesson = (
   summary: string,
@@ -190,6 +196,24 @@ const lessons: Record<string, LessonCopy> = {
     "Mark the current page as current instead of making it a misleading link.",
     '<Breadcrumbs><BreadcrumbLink href="/">Home</BreadcrumbLink></Breadcrumbs>',
   ),
+  "grid-list": lesson(
+    "A list of rows where each row can hold its own controls.",
+    "Like a file manager: pick a row, or use the tools sitting on it.",
+    "Use it when rows need buttons or fields inside them; use ListBox for plain options.",
+    "Start GridList with an aria-label.",
+    "Add a GridListItem with a value for each row.",
+    "Put row actions inside the row; ArrowRight reaches them without adding tab stops.",
+    '<GridList aria-label="Files"><GridListItem value="report">report.pdf<Button>Share</Button></GridListItem></GridList>',
+  ),
+  table: lesson(
+    "A native table you can walk cell by cell from the keyboard.",
+    "Like a spreadsheet: one focus that moves in two directions.",
+    "Use it for records where rows and columns both carry meaning.",
+    "Start Table with TableHeader and one TableColumn per column.",
+    "Add a TableRow of TableCell parts to TableBody for each record.",
+    "Arrow keys move one cell; Home and End travel the row; Ctrl jumps to the corners.",
+    '<Table aria-label="People"><TableHeader><TableRow><TableColumn>Name</TableColumn></TableRow></TableHeader><TableBody><TableRow><TableCell>Ada</TableCell></TableRow></TableBody></Table>',
+  ),
   "list-box": lesson(
     "A keyboard-friendly list for selecting an item.",
     "Like a tray of labelled choices with one highlighted card.",
@@ -204,27 +228,27 @@ const lessons: Record<string, LessonCopy> = {
     "Like a restaurant menu: choose an action, then the menu goes away.",
     "Use it for actions, not choosing a persistent form value.",
     "Start Menu with MenuTrigger.",
-    "Place MenuContent and MenuItem after the trigger.",
-    "Give MenuContent an aria-label when its purpose is not obvious.",
-    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuContent aria-label="Actions"><MenuItem>Archive</MenuItem></MenuContent></Menu>',
+    "Place MenuPopover and MenuItem after the trigger.",
+    "Give MenuPopover an aria-label when its purpose is not obvious.",
+    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover aria-label="Actions"><MenuItem>Archive</MenuItem></MenuPopover></Menu>',
   ),
   select: lesson(
     "A button that opens a list and keeps one chosen value.",
     "Like a closed box that shows the label of the thing inside.",
     "Use it for one form choice from a known list.",
     "Start Select with a value or defaultValue.",
-    "Put SelectValue inside SelectTrigger, then wrap the trigger and SelectContent in Popover.",
+    "Put SelectValue inside SelectTrigger, then wrap the trigger and SelectPopover in Popover.",
     "Select owns the value, field, and form serialization; Popover owns open state, top-layer popup lifecycle, Escape, and light dismissal.",
-    '<Select name="size" defaultValue="small"><Label>Size</Label><Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectOption value="small">Small</SelectOption></SelectContent></Popover></Select>',
+    '<Select name="size" defaultValue="small"><Label>Size</Label><Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover><SelectOption value="small">Small</SelectOption></SelectPopover></Popover></Select>',
   ),
   combobox: lesson(
     "A text box that can also offer matching choices.",
     "Like a librarian who listens while you type and suggests books.",
     "Use it when people may type to narrow a long set of choices.",
     "Start Combobox with a labelled ComboboxInput.",
-    "Wrap ComboboxInput and ComboboxContent in Popover; ComboboxContent remains the listbox of results.",
+    "Wrap ComboboxInput and ComboboxPopover in Popover; ComboboxPopover remains the listbox of results.",
     "Combobox owns the selected value, field, and form serialization; Popover owns open state, top-layer popup lifecycle, Escape, and light dismissal.",
-    '<Combobox name="city"><Label>City</Label><Popover><ComboboxInput /><ComboboxContent><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxContent></Popover></Combobox>',
+    '<Combobox name="city"><Label>City</Label><Popover><ComboboxInput /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Popover></Combobox>',
   ),
   dialog: lesson(
     "A modal layer that asks people to finish or dismiss a focused task.",
@@ -258,9 +282,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like a tiny sticky note that appears when you pause over an icon.",
     "Use it for brief help, never for essential instructions.",
     "Start Tooltip with the control people already use.",
-    "Add TooltipContent with one short explanation.",
+    "Add TooltipPopover with one short explanation.",
     "Give an icon-only trigger its own aria-label too.",
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipContent>Helpful detail</TooltipContent></Tooltip>',
+    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover>Helpful detail</TooltipPopover></Tooltip>',
   ),
 };
 const accessibility: Record<string, string[]> = {
@@ -354,13 +378,23 @@ const accessibility: Record<string, string[]> = {
     "Make the current page clear without a misleading link.",
     "Keep trail labels concise.",
   ],
+  "grid-list": [
+    "Give the grid an aria-label when it has no visible heading.",
+    "Keep row focus and row selection visibly distinct.",
+    "Reach row controls with ArrowRight; do not add extra tab stops.",
+  ],
+  table: [
+    "Give the table an aria-label or a visible caption.",
+    "Keep column headers in TableColumn so cells inherit their names.",
+    "Keep the focused cell visible while arrowing through the grid.",
+  ],
   "list-box": [
     "Give the list an aria-label when it has no visible heading.",
     "Keep the focused option visibly distinct from selected state.",
     "Do not put buttons or links inside an option.",
   ],
   menu: [
-    "Give MenuContent an aria-label when trigger text is vague.",
+    "Give MenuPopover an aria-label when trigger text is vague.",
     "Use MenuItem for actions, not a form selection.",
     "Return focus to the trigger when the menu closes.",
   ],
@@ -459,7 +493,7 @@ const action = [
       { keys: ["Enter"], action: "Presses the focused button." },
       { keys: ["Space"], action: "Presses the focused button." },
     ],
-    [{ attribute: "[data-disabled]", meaning: "The button is disabled." }],
+    [{ attribute: "[data-disabled]", on: "Button", meaning: "The button is disabled." }],
     'A native Button submits a form when type="submit".',
     ["toggle-button", "link", "file-trigger"],
   ),
@@ -477,15 +511,18 @@ const action = [
         true,
         true,
       ),
-      p("ToggleButton", "root", "Native button that owns the press target."),
+      p("ToggleButton", "root", "Native button that owns the press target.", true, false, [
+        prop("selected / defaultSelected", "boolean", "Controlled or initial on state."),
+        prop("onChange", "(selected: boolean) => void", "Receives the next on state."),
+      ]),
     ],
     [
       { keys: ["Enter"], action: "Toggles the button." },
       { keys: ["Space"], action: "Toggles the button." },
     ],
     [
-      { attribute: "[data-selected]", meaning: "The button is on." },
-      { attribute: "[data-disabled]", meaning: "It cannot change." },
+      { attribute: "[data-selected]", on: "ToggleButton", meaning: "The button is on." },
+      { attribute: "[data-disabled]", on: "ToggleButton", meaning: "It cannot change." },
     ],
     "Toggle buttons do not create native form values.",
     ["button", "checkbox"],
@@ -499,8 +536,8 @@ const action = [
     [p("Link", "root", "Native anchor element.")],
     [{ keys: ["Enter"], action: "Follows the link." }],
     [
-      { attribute: "[data-disabled]", meaning: "The link is unavailable." },
-      { attribute: "[data-focused]", meaning: "The link has focus." },
+      { attribute: "[data-disabled]", on: "Link", meaning: "The link is unavailable." },
+      { attribute: "[data-focused]", on: "Link", meaning: "The link has focus." },
     ],
     "Links do not submit forms.",
     ["button", "breadcrumbs"],
@@ -512,7 +549,13 @@ const action = [
     ["FileTrigger"],
     '<FileTrigger inputProps={{ name: "photo", hidden: false, className: "sr-only" }}>Upload photo</FileTrigger>',
     [
-      p("FileTrigger", "root", "Native label that owns the visible trigger words."),
+      p("FileTrigger", "root", "Native label that owns the visible trigger words.", true, false, [
+        prop(
+          "inputProps",
+          "InputHTMLAttributes",
+          "Props for the native file input, including name, accept, multiple, and onChange.",
+        ),
+      ]),
       p("file input", "input", "Native file input supplied through inputProps."),
     ],
     [
@@ -551,15 +594,27 @@ const field = [
     ["Description", "FieldError", "Label", "TextArea", "TextField"],
     '<TextField><Label>Notes</Label><TextArea name="notes" /></TextField>',
     [
-      p("TextField", "root", "Optional field provider; it owns no DOM by default.", false),
+      p("TextField", "root", "Optional field provider; it owns no DOM by default.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial field value."),
+        prop("onChange", "(value: string) => void", "Receives the next value."),
+        prop(
+          "disabled / invalid / required",
+          "boolean",
+          "Field-wide states shared with every part.",
+        ),
+      ]),
       p("Label", "label", "Native label for the text area."),
       p("TextArea", "input", "Native multi-line control that owns typing and submission."),
       p("Description / FieldError", "feedback", "Optional linked help or error text.", true, true),
     ],
     [{ keys: ["Tab"], action: "Moves to and from the native text area." }],
     [
-      { attribute: "[data-disabled]", meaning: "The surrounding field is disabled." },
-      { attribute: "[data-invalid]", meaning: "The surrounding field is invalid." },
+      {
+        attribute: "[data-disabled]",
+        on: "TextArea",
+        meaning: "The surrounding field is disabled.",
+      },
+      { attribute: "[data-invalid]", on: "TextArea", meaning: "The surrounding field is invalid." },
     ],
     "TextArea submits its native name and multi-line value.",
     ["text-field", "fieldset"],
@@ -576,9 +631,9 @@ const field = [
     ],
     [],
     [
-      { attribute: "[data-disabled]", meaning: "The whole group is disabled." },
-      { attribute: "[data-invalid]", meaning: "The group is invalid." },
-      { attribute: "[data-required]", meaning: "The group is required." },
+      { attribute: "[data-disabled]", on: "Fieldset", meaning: "The whole group is disabled." },
+      { attribute: "[data-invalid]", on: "Fieldset", meaning: "The group is invalid." },
+      { attribute: "[data-required]", on: "Fieldset", meaning: "The group is required." },
     ],
     "Fieldset itself has no value; its named child controls submit normally.",
     ["text-field", "checkbox", "radio"],
@@ -590,16 +645,31 @@ const field = [
     ["Description", "FieldError", "Input", "Label", "TextField"],
     '<TextField required><Label>Email</Label><Input name="email" type="email" /><Description>For receipts.</Description><FieldError>Enter an email.</FieldError></TextField>',
     [
-      p("TextField", "root", "Field provider; it owns no DOM unless as is supplied.", false),
+      p(
+        "TextField",
+        "root",
+        "Field provider; it owns no DOM unless as is supplied.",
+        false,
+        false,
+        [
+          prop("value / defaultValue", "string", "Controlled or initial field value."),
+          prop("onChange", "(value: string) => void", "Receives the next value."),
+          prop(
+            "disabled / invalid / required",
+            "boolean",
+            "Field-wide states shared with every part.",
+          ),
+        ],
+      ),
       p("Label", "label", "Native label linked to the control."),
       p("Input", "input", "Native single-line control that owns typing and submission."),
       p("Description / FieldError", "feedback", "Linked help or error text.", true, true),
     ],
     [{ keys: ["Tab"], action: "Moves to and from the native control." }],
     [
-      { attribute: "[data-invalid]", meaning: "The field is invalid." },
-      { attribute: "[data-required]", meaning: "The field is required." },
-      { attribute: "[data-disabled]", meaning: "The field is disabled." },
+      { attribute: "[data-invalid]", on: "Input", meaning: "The field is invalid." },
+      { attribute: "[data-required]", on: "Input", meaning: "The field is required." },
+      { attribute: "[data-disabled]", on: "Input", meaning: "The field is disabled." },
     ],
     "Input submits its native name and value.",
     ["text-area", "checkbox", "number-field"],
@@ -611,7 +681,17 @@ const field = [
     ["Label", "SearchField", "SearchFieldClear", "SearchFieldInput"],
     '<SearchField><Label>Search</Label><SearchFieldInput name="q" /><SearchFieldClear>Clear</SearchFieldClear></SearchField>',
     [
-      p("SearchField", "root", "Field provider with no DOM by default.", false),
+      p("SearchField", "root", "Field provider with no DOM by default.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial field value."),
+        prop("onChange", "(value: string) => void", "Receives the next value."),
+        prop(
+          "disabled / invalid / required",
+          "boolean",
+          "Field-wide states shared with every part.",
+        ),
+        prop("onSubmit", "(value: string) => void", "Receives the query when Enter submits."),
+        prop("onClear", "() => void", "Runs when the query is erased."),
+      ]),
       p("SearchFieldInput", "input", "Native search input."),
       p("SearchFieldClear", "trigger", "Optional native clear button.", true, true),
     ],
@@ -620,8 +700,8 @@ const field = [
       { keys: ["Tab"], action: "Moves between input and clear button." },
     ],
     [
-      { attribute: "[data-invalid]", meaning: "The field is invalid." },
-      { attribute: "[data-disabled]", meaning: "The field is disabled." },
+      { attribute: "[data-invalid]", on: "SearchFieldInput", meaning: "The field is invalid." },
+      { attribute: "[data-disabled]", on: "SearchFieldInput", meaning: "The field is disabled." },
     ],
     "SearchFieldInput submits its native name and query.",
     ["text-field", "combobox"],
@@ -633,17 +713,28 @@ const field = [
     ["Checkbox", "CheckboxGroup"],
     '<CheckboxGroup name="topics"><Checkbox value="news">News</Checkbox></CheckboxGroup>',
     [
-      p("CheckboxGroup", "root", "Optional shared name and value provider.", false, true),
-      p("Checkbox", "input", "Label with a hidden native checkbox."),
+      p("CheckboxGroup", "root", "Optional shared name and value provider.", false, true, [
+        prop("value / defaultValue", "string[]", "Controlled or initial selected values."),
+        prop("onChange", "(value: string[]) => void", "Receives the next selected values."),
+        prop("name", "string", "Shared submission name for the group."),
+      ]),
+      p("Checkbox", "input", "Label with a hidden native checkbox.", true, false, [
+        prop("value", "string", "Submitted value for this box."),
+        prop("selected / defaultSelected", "boolean", "Controlled or initial tick state."),
+        prop("onChange", "(selected: boolean) => void", "Receives the next tick state."),
+        prop("indeterminate", "boolean", "Shows the mixed state."),
+        prop("disabled", "boolean", "Disables the box."),
+        prop("inputProps", "InputHTMLAttributes", "Props for the hidden native input."),
+      ]),
     ],
     [
       { keys: ["Space"], action: "Checks or unchecks the focused box." },
       { keys: ["Tab"], action: "Moves between checkboxes." },
     ],
     [
-      { attribute: "[data-selected]", meaning: "The box is checked." },
-      { attribute: "[data-indeterminate]", meaning: "The box is mixed." },
-      { attribute: "[data-disabled]", meaning: "The box cannot change." },
+      { attribute: "[data-selected]", on: "Checkbox", meaning: "The box is checked." },
+      { attribute: "[data-indeterminate]", on: "Checkbox", meaning: "The box is mixed." },
+      { attribute: "[data-disabled]", on: "Checkbox", meaning: "The box cannot change." },
     ],
     "Each selected Checkbox submits its native name and value.",
     ["radio", "switch", "toggle-button"],
@@ -655,8 +746,15 @@ const field = [
     ["Radio", "RadioGroup"],
     '<RadioGroup name="plan" defaultValue="pro"><Radio value="pro">Pro</Radio></RadioGroup>',
     [
-      p("RadioGroup", "root", "Selected-value provider; no DOM by default.", false),
-      p("Radio", "item", "Labelled native radio option."),
+      p("RadioGroup", "root", "Selected-value provider; no DOM by default.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial choice."),
+        prop("onChange", "(value: string) => void", "Receives the next choice."),
+        prop("name", "string", "Shared submission name for the group."),
+      ]),
+      p("Radio", "item", "Labelled native radio option.", true, false, [
+        prop("value", "string", "This option\u2019s value."),
+        prop("disabled", "boolean", "Disables the option."),
+      ]),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves to the next radio." },
@@ -664,8 +762,8 @@ const field = [
       { keys: ["Space"], action: "Selects the focused radio." },
     ],
     [
-      { attribute: "[data-selected]", meaning: "This radio is selected." },
-      { attribute: "[data-disabled]", meaning: "This radio is disabled." },
+      { attribute: "[data-selected]", on: "Radio", meaning: "This radio is selected." },
+      { attribute: "[data-disabled]", on: "Radio", meaning: "This radio is disabled." },
     ],
     "The selected radio submits RadioGroup.name and its value.",
     ["checkbox", "select"],
@@ -676,11 +774,18 @@ const field = [
     "fields",
     ["Switch"],
     '<Switch name="alerts">Email alerts</Switch>',
-    [p("Switch", "input", "Label with a hidden native checkbox.")],
+    [
+      p("Switch", "input", "Label with a hidden native checkbox.", true, false, [
+        prop("name", "string", "Submission name for the setting."),
+        prop("selected / defaultSelected", "boolean", "Controlled or initial on state."),
+        prop("onChange", "(selected: boolean) => void", "Receives the next on state."),
+        prop("disabled", "boolean", "Disables the switch."),
+      ]),
+    ],
     [{ keys: ["Space"], action: "Changes the switch." }],
     [
-      { attribute: "[data-selected]", meaning: "The switch is on." },
-      { attribute: "[data-disabled]", meaning: "The switch is disabled." },
+      { attribute: "[data-selected]", on: "Switch", meaning: "The switch is on." },
+      { attribute: "[data-disabled]", on: "Switch", meaning: "The switch is disabled." },
     ],
     "A selected switch submits like a native checkbox.",
     ["checkbox", "toggle-button"],
@@ -692,7 +797,12 @@ const field = [
     ["NumberField"],
     '<NumberField name="guests" defaultValue={2} min={1} />',
     [
-      p("NumberField", "root", "Field provider and wrapper div."),
+      p("NumberField", "root", "Field provider and wrapper div.", true, false, [
+        prop("value / defaultValue", "number", "Controlled or initial number."),
+        prop("onChange", "(value: number) => void", "Receives the next number."),
+        prop("min / max / step", "number", "Range limits for the native input."),
+        prop("name", "string", "Submission name."),
+      ]),
       p("default Input", "input", "Native number input rendered when you do not pass children."),
     ],
     [
@@ -700,8 +810,8 @@ const field = [
       { keys: ["ArrowDown"], action: "Decreases by step." },
     ],
     [
-      { attribute: "[data-invalid]", meaning: "The value is invalid." },
-      { attribute: "[data-disabled]", meaning: "The control is disabled." },
+      { attribute: "[data-invalid]", on: "NumberField", meaning: "The value is invalid." },
+      { attribute: "[data-disabled]", on: "NumberField", meaning: "The control is disabled." },
     ],
     "Submits as a named native number input.",
     ["slider", "text-field"],
@@ -712,14 +822,20 @@ const field = [
     "fields",
     ["Slider"],
     '<Slider name="volume" defaultValue={30} min={0} max={100} />',
-    [p("Slider", "input", "Native range input.")],
+    [
+      p("Slider", "input", "Native range input.", true, false, [
+        prop("value / defaultValue", "number", "Controlled or initial position."),
+        prop("onChange", "(value: number) => void", "Receives the next position."),
+        prop("disabled", "boolean", "Disables the slider."),
+      ]),
+    ],
     [
       { keys: ["ArrowRight"], action: "Increases the value." },
       { keys: ["ArrowLeft"], action: "Decreases the value." },
       { keys: ["Home"], action: "Moves to minimum." },
       { keys: ["End"], action: "Moves to maximum." },
     ],
-    [{ attribute: "[data-disabled]", meaning: "The slider is disabled." }],
+    [{ attribute: "[data-disabled]", on: "Slider", meaning: "The slider is disabled." }],
     "Submits as a named native range input.",
     ["number-field", "switch"],
   ),
@@ -733,8 +849,16 @@ const navigation = [
     ["Accordion", "AccordionHeader", "AccordionItem", "AccordionPanel", "AccordionTrigger"],
     '<Accordion defaultValue="one"><AccordionItem value="one"><AccordionHeader><AccordionTrigger>Details</AccordionTrigger></AccordionHeader><AccordionPanel>More information.</AccordionPanel></AccordionItem></Accordion>',
     [
-      p("Accordion", "root", "Open-item state provider.", false),
-      p("AccordionItem", "item", "Owns an item wrapper."),
+      p("Accordion", "root", "Open-item state provider.", false, false, [
+        prop("type", '"single" | "multiple"', "How many items may stay open."),
+        prop("value / defaultValue", "string | string[]", "Controlled or initial open items."),
+        prop("onChange", "(value) => void", "Receives the next open items."),
+        prop("collapsible", "boolean", "Allows closing the last open item."),
+      ]),
+      p("AccordionItem", "item", "Owns an item wrapper.", true, false, [
+        prop("value", "string", "Identity used by the root\u2019s open state."),
+        prop("disabled", "boolean", "Disables the item."),
+      ]),
       p("AccordionHeader", "label", "Heading wrapper."),
       p("AccordionTrigger", "trigger", "Native button that opens its panel."),
       p("AccordionPanel", "content", "Revealed region."),
@@ -746,8 +870,16 @@ const navigation = [
       { keys: ["Space"], action: "Toggles the item." },
     ],
     [
-      { attribute: "[data-open]", meaning: "The item is expanded." },
-      { attribute: "[data-disabled]", meaning: "The trigger is disabled." },
+      {
+        attribute: "[data-open]",
+        on: "AccordionItem, AccordionTrigger, AccordionPanel",
+        meaning: "The item is expanded.",
+      },
+      {
+        attribute: "[data-disabled]",
+        on: "AccordionItem, AccordionTrigger",
+        meaning: "The trigger is disabled.",
+      },
     ],
     "No native form behavior.",
     ["disclosure", "tabs"],
@@ -759,7 +891,10 @@ const navigation = [
     ["Disclosure", "DisclosurePanel", "DisclosureTrigger"],
     "<Disclosure><DisclosureTrigger>Details</DisclosureTrigger><DisclosurePanel>More information.</DisclosurePanel></Disclosure>",
     [
-      p("Disclosure", "root", "Open-state provider.", false),
+      p("Disclosure", "root", "Open-state provider.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onChange", "(open: boolean) => void", "Receives the next open state."),
+      ]),
       p("DisclosureTrigger", "trigger", "Native button."),
       p("DisclosurePanel", "content", "Revealed content."),
     ],
@@ -767,7 +902,13 @@ const navigation = [
       { keys: ["Enter"], action: "Toggles the panel." },
       { keys: ["Space"], action: "Toggles the panel." },
     ],
-    [{ attribute: "[data-open]", meaning: "The disclosure is open." }],
+    [
+      {
+        attribute: "[data-open]",
+        on: "Disclosure, DisclosureTrigger, DisclosurePanel",
+        meaning: "The disclosure is open.",
+      },
+    ],
     "No native form behavior.",
     ["accordion", "popover"],
   ),
@@ -778,10 +919,17 @@ const navigation = [
     ["Tab", "TabList", "TabPanel", "Tabs"],
     '<Tabs defaultValue="one"><TabList><Tab tab="one">One</Tab></TabList><TabPanel tab="one">Panel one</TabPanel></Tabs>',
     [
-      p("Tabs", "root", "Selected-tab provider.", false),
+      p("Tabs", "root", "Selected-tab provider.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial selected tab."),
+        prop("onChange", "(value: string) => void", "Receives the next selected tab."),
+      ]),
       p("TabList", "root", "Tab list element."),
-      p("Tab", "item", "Native button with tab role."),
-      p("TabPanel", "content", "Panel for a matching tab."),
+      p("Tab", "item", "Native button with tab role.", true, false, [
+        prop("tab", "string", "Identity that pairs this tab with its panel."),
+      ]),
+      p("TabPanel", "content", "Panel for a matching tab.", true, false, [
+        prop("tab", "string", "The tab this panel belongs to."),
+      ]),
     ],
     [
       { keys: ["ArrowRight"], action: "Moves to next tab." },
@@ -789,7 +937,13 @@ const navigation = [
       { keys: ["Home"], action: "Moves to first tab." },
       { keys: ["End"], action: "Moves to last tab." },
     ],
-    [{ attribute: "[data-selected]", meaning: "This tab or panel is selected." }],
+    [
+      {
+        attribute: "[data-selected]",
+        on: "Tab, TabPanel",
+        meaning: "This tab or panel is selected.",
+      },
+    ],
     "No native form behavior.",
     ["accordion", "list-box"],
   ),
@@ -801,10 +955,12 @@ const navigation = [
     '<Breadcrumbs><BreadcrumbLink href="/">Home</BreadcrumbLink></Breadcrumbs>',
     [
       p("Breadcrumbs", "root", "Navigation landmark and list.", true),
-      p("BreadcrumbLink", "item", "Native anchor in the trail."),
+      p("BreadcrumbLink", "item", "Native anchor in the trail.", true, false, [
+        prop("current", "boolean", "Marks the page you are on."),
+      ]),
     ],
     [{ keys: ["Enter"], action: "Follows the focused breadcrumb." }],
-    [{ attribute: "[data-current]", meaning: "This is the current page." }],
+    [{ attribute: "[data-current]", on: "BreadcrumbLink", meaning: "This is the current page." }],
     "No native form behavior.",
     ["link", "tabs"],
   ),
@@ -815,9 +971,16 @@ const navigation = [
     ["ListBox", "ListBoxItem", "ListBoxSection"],
     '<ListBox aria-label="Color"><ListBoxItem value="red">Red</ListBoxItem></ListBox>',
     [
-      p("ListBox", "root", "Selectable list container."),
+      p("ListBox", "root", "Selectable list container.", true, false, [
+        prop("value / defaultValue", "string", "Controlled or initial selection."),
+        prop("onChange", "(value: string) => void", "Receives the next selection."),
+        prop("orientation", '"vertical" | "horizontal"', "Arrow-key axis."),
+      ]),
       p("ListBoxSection", "root", "Optional labelled section.", true, true),
-      p("ListBoxItem", "item", "Selectable option."),
+      p("ListBoxItem", "item", "Selectable option.", true, false, [
+        prop("value", "string", "This option\u2019s selection key."),
+        prop("disabled", "boolean", "Disables the option."),
+      ]),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves active item down." },
@@ -826,9 +989,13 @@ const navigation = [
       { keys: ["Space"], action: "Selects the active item." },
     ],
     [
-      { attribute: "[data-selected]", meaning: "The item is selected." },
-      { attribute: ":focus-visible", meaning: "The item has visible keyboard focus." },
-      { attribute: "[data-disabled]", meaning: "The item is disabled." },
+      { attribute: "[data-selected]", on: "ListBoxItem", meaning: "The item is selected." },
+      {
+        attribute: ":focus-visible",
+        on: "ListBoxItem",
+        meaning: "The item has visible keyboard focus.",
+      },
+      { attribute: "[data-disabled]", on: "ListBoxItem", meaning: "The item is disabled." },
     ],
     "No native form behavior by itself.",
     ["menu", "select"],
@@ -837,14 +1004,26 @@ const navigation = [
     "menu",
     "Menu",
     "navigation",
-    ["Menu", "MenuContent", "MenuItem", "MenuSection", "MenuTrigger"],
-    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuContent aria-label="Actions"><MenuItem>Archive</MenuItem></MenuContent></Menu>',
+    ["Menu", "MenuPopover", "MenuItem", "MenuSection", "MenuTrigger"],
+    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover aria-label="Actions"><MenuItem>Archive</MenuItem></MenuPopover></Menu>',
     [
-      p("Menu", "root", "Open-state provider.", false),
-      p("MenuTrigger", "trigger", "Button that opens the menu."),
-      p("MenuContent", "content", "Menu container."),
+      p("Menu", "root", "Open-state provider.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      ]),
+      p("MenuTrigger", "trigger", "Button that opens the menu.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p("MenuPopover", "content", "Menu container."),
       p("MenuSection", "root", "Optional labelled section.", true, true),
-      p("MenuItem", "item", "Action item."),
+      p("MenuItem", "item", "Action item.", true, false, [
+        prop("value", "string", "Optional identity for typeahead and data-value."),
+        prop("disabled", "boolean", "Disables the action."),
+      ]),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves to next item." },
@@ -853,12 +1032,88 @@ const navigation = [
       { keys: ["Escape"], action: "Closes and returns focus to trigger." },
     ],
     [
-      { attribute: "[data-open]", meaning: "The menu is open." },
-      { attribute: ":focus-visible", meaning: "The item has visible keyboard focus." },
-      { attribute: "[data-disabled]", meaning: "The item is disabled." },
+      { attribute: "[data-open]", on: "MenuTrigger, MenuPopover", meaning: "The menu is open." },
+      {
+        attribute: ":focus-visible",
+        on: "MenuItem",
+        meaning: "The item has visible keyboard focus.",
+      },
+      { attribute: "[data-disabled]", on: "MenuItem", meaning: "The item is disabled." },
     ],
     "No native form behavior.",
     ["list-box", "popover"],
+  ),
+  common(
+    "grid-list",
+    "Grid List",
+    "navigation",
+    ["Button", "GridList", "GridListItem"],
+    '<GridList aria-label="Files"><GridListItem value="report">report.pdf<Button>Share</Button></GridListItem></GridList>',
+    [
+      p("GridList", "root", "Grid container and the list's single tab stop.", true, false, [
+        prop("value / defaultValue", "string", "Controlled or initial selected row."),
+        prop("onChange", "(value: string) => void", "Receives the next selected row."),
+      ]),
+      p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
+        prop("value", "string", "This row\u2019s selection key."),
+        prop("disabled", "boolean", "Disables the row."),
+      ]),
+    ],
+    [
+      { keys: ["ArrowDown"], action: "Moves to the next row." },
+      { keys: ["ArrowUp"], action: "Moves to the previous row." },
+      { keys: ["ArrowRight"], action: "Moves into and through the row's controls." },
+      { keys: ["ArrowLeft"], action: "Moves back toward the row." },
+      { keys: ["Home"], action: "Moves to the first row." },
+      { keys: ["End"], action: "Moves to the last row." },
+      { keys: ["Enter"], action: "Selects the focused row." },
+      { keys: ["Space"], action: "Selects the focused row." },
+    ],
+    [
+      { attribute: "[data-selected]", on: "GridListItem", meaning: "The row is selected." },
+      { attribute: "[data-disabled]", on: "GridListItem", meaning: "The row is disabled." },
+      {
+        attribute: ":focus-visible",
+        on: "GridListItem and its controls",
+        meaning: "The row or a control in it has keyboard focus.",
+      },
+    ],
+    "Selection does not create a native form value; mirror it into a hidden input when a form needs it.",
+    ["list-box", "table"],
+  ),
+  common(
+    "table",
+    "Table",
+    "navigation",
+    ["Table", "TableBody", "TableCell", "TableColumn", "TableHeader", "TableRow"],
+    '<Table aria-label="People"><TableHeader><TableRow><TableColumn>Name</TableColumn></TableRow></TableHeader><TableBody><TableRow><TableCell>Ada</TableCell></TableRow></TableBody></Table>',
+    [
+      p("Table", "root", "Native table with the grid role and one tab stop."),
+      p("TableHeader", "root", "Native thead holding the column header row."),
+      p("TableColumn", "item", "Native th column header and grid cell."),
+      p("TableBody", "root", "Native tbody holding the data rows."),
+      p("TableRow", "item", "Native tr in either section."),
+      p("TableCell", "item", "Native td data cell and grid focus target."),
+    ],
+    [
+      { keys: ["ArrowRight"], action: "Moves one cell to the right." },
+      { keys: ["ArrowLeft"], action: "Moves one cell to the left." },
+      { keys: ["ArrowDown"], action: "Moves one cell down the column." },
+      { keys: ["ArrowUp"], action: "Moves one cell up the column." },
+      { keys: ["Home"], action: "Moves to the first cell in the row." },
+      { keys: ["End"], action: "Moves to the last cell in the row." },
+      { keys: ["Ctrl", "Home"], action: "Moves to the first cell of the table." },
+      { keys: ["Ctrl", "End"], action: "Moves to the last cell of the table." },
+    ],
+    [
+      {
+        attribute: ":focus-visible",
+        on: "TableColumn, TableCell",
+        meaning: "The cell has keyboard focus.",
+      },
+    ],
+    "No native form behavior; it presents data.",
+    ["grid-list", "list-box"],
   ),
 ];
 
@@ -867,21 +1122,31 @@ const picker = [
     "select",
     "Select",
     "pickers",
-    ["Label", "Popover", "Select", "SelectContent", "SelectOption", "SelectTrigger", "SelectValue"],
-    '<Select name="size" defaultValue="small"><Label>Size</Label><Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectOption value="small">Small</SelectOption></SelectContent></Popover></Select>',
+    ["Label", "Popover", "Select", "SelectPopover", "SelectOption", "SelectTrigger", "SelectValue"],
+    '<Select name="size" defaultValue="small"><Label>Size</Label><Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover><SelectOption value="small">Small</SelectOption></SelectPopover></Popover></Select>',
     [
       p(
         "Select",
         "root",
         "Selected value and optional visually hidden native select provider.",
         false,
+        false,
+        [
+          prop("value / defaultValue", "string", "Controlled or initial choice."),
+          prop("onChange", "(value: string) => void", "Receives the next choice."),
+          prop("name", "string", "Submission name for the hidden native select."),
+          prop("disabled / invalid / required", "boolean", "Field-wide states."),
+        ],
       ),
       p("Label", "label", "Visible name connected to the trigger."),
       p("Popover", "root", "Open-state and top-layer popup lifecycle provider.", false),
       p("SelectTrigger", "trigger", "Button that opens choices."),
       p("SelectValue", "value", "Selected option text."),
-      p("SelectContent", "content", "The listbox surface."),
-      p("SelectOption", "item", "Selectable option."),
+      p("SelectPopover", "content", "The listbox surface."),
+      p("SelectOption", "item", "Selectable option.", true, false, [
+        prop("value", "string", "This option\u2019s value."),
+        prop("disabled", "boolean", "Disables the option."),
+      ]),
     ],
     [
       { keys: ["Enter"], action: "Opens or chooses." },
@@ -890,9 +1155,13 @@ const picker = [
       { keys: ["Escape"], action: "Closes the list." },
     ],
     [
-      { attribute: "[data-open]", meaning: "Choices are open." },
-      { attribute: "[data-placeholder]", meaning: "No value is selected." },
-      { attribute: "[data-value]", meaning: "A value is selected." },
+      {
+        attribute: "[data-open]",
+        on: "SelectTrigger, SelectPopover",
+        meaning: "Choices are open.",
+      },
+      { attribute: "[data-placeholder]", on: "SelectValue", meaning: "No value is selected." },
+      { attribute: "[data-value]", on: "SelectValue", meaning: "A value is selected." },
     ],
     "When name or required is set, Select renders a visually hidden native select proxy for submission and validation; it is not an input type=hidden.",
     ["combobox", "list-box"],
@@ -901,15 +1170,25 @@ const picker = [
     "combobox",
     "Combobox",
     "pickers",
-    ["Combobox", "ComboboxContent", "ComboboxInput", "ComboboxOption", "Label", "Popover"],
-    '<Combobox name="city"><Label>City</Label><Popover><ComboboxInput /><ComboboxContent><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxContent></Popover></Combobox>',
+    ["Combobox", "ComboboxPopover", "ComboboxInput", "ComboboxOption", "Label", "Popover"],
+    '<Combobox name="city"><Label>City</Label><Popover><ComboboxInput /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Popover></Combobox>',
     [
-      p("Combobox", "root", "Selected-value and form-serialization provider.", false),
+      p("Combobox", "root", "Selected-value and form-serialization provider.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial committed option."),
+        prop("onChange", "(value: string) => void", "Receives the committed option."),
+        prop("inputValue / defaultInputValue", "string", "Controlled or initial editable text."),
+        prop("onInputChange", "(value: string) => void", "Receives the editable text."),
+        prop("filter", "(optionText, inputValue) => boolean", "Custom match rule for results."),
+        prop("name", "string", "Submission name."),
+      ]),
       p("Label", "label", "Visible name connected to the input."),
       p("Popover", "root", "Open-state and top-layer popup lifecycle provider.", false),
       p("ComboboxInput", "input", "Native text input that owns editing and required validity."),
-      p("ComboboxContent", "content", "The listbox results surface."),
-      p("ComboboxOption", "item", "Selectable result."),
+      p("ComboboxPopover", "content", "The listbox results surface."),
+      p("ComboboxOption", "item", "Selectable result.", true, false, [
+        prop("value", "string", "This result\u2019s value."),
+        prop("disabled", "boolean", "Disables the result."),
+      ]),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves through options." },
@@ -917,14 +1196,20 @@ const picker = [
       { keys: ["Escape"], action: "Closes results." },
     ],
     [
-      { attribute: "[data-open]", meaning: "Results are open." },
-      { attribute: "[data-selected]", meaning: "Option is selected." },
+      {
+        attribute: "[data-open]",
+        on: "ComboboxInput, ComboboxPopover",
+        meaning: "Results are open.",
+      },
+      { attribute: "[data-selected]", on: "ComboboxOption", meaning: "Option is selected." },
       {
         attribute: "[data-active]",
+        on: "ComboboxOption",
         meaning: "Option is active and receives the visible keyboard highlight.",
       },
       {
         attribute: "[aria-activedescendant]",
+        on: "ComboboxInput",
         meaning: "The input points to the keyboard-active option while focus stays in the input.",
       },
     ],
@@ -938,15 +1223,32 @@ const picker = [
     ["Dialog", "DialogContent", "DialogTrigger"],
     '<Dialog><DialogTrigger>Open details</DialogTrigger><DialogContent aria-label="Details">Details</DialogContent></Dialog>',
     [
-      p("Dialog", "root", "Modal open-state provider.", false),
-      p("DialogTrigger", "trigger", "Button that opens the dialog."),
-      p("DialogContent", "content", "Modal dialog element."),
+      p("Dialog", "root", "Modal open-state provider.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      ]),
+      p("DialogTrigger", "trigger", "Button that opens the dialog.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p("DialogContent", "content", "Modal dialog element.", true, false, [
+        prop("portal", "boolean", "Renders into document.body; on by default."),
+      ]),
     ],
     [
       { keys: ["Escape"], action: "Closes and restores trigger focus." },
       { keys: ["Tab"], action: "Cycles inside the modal." },
     ],
-    [{ attribute: "[data-open]", meaning: "The dialog is open." }],
+    [
+      {
+        attribute: "[data-open]",
+        on: "DialogTrigger, DialogContent",
+        meaning: "The dialog is open.",
+      },
+    ],
     "No native form behavior; forms may live inside DialogContent.",
     ["alert-dialog", "popover"],
   ),
@@ -957,15 +1259,32 @@ const picker = [
     ["AlertDialog", "AlertDialogContent", "DialogTrigger"],
     '<AlertDialog><DialogTrigger>Delete</DialogTrigger><AlertDialogContent aria-label="Delete item">This cannot be undone.</AlertDialogContent></AlertDialog>',
     [
-      p("AlertDialog", "root", "Modal open-state provider for an urgent decision.", false),
-      p("DialogTrigger", "trigger", "Button that opens the alert."),
-      p("AlertDialogContent", "content", "Modal alert dialog content."),
+      p("AlertDialog", "root", "Modal open-state provider for an urgent decision.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      ]),
+      p("DialogTrigger", "trigger", "Button that opens the alert.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p("AlertDialogContent", "content", "Modal alert dialog content.", true, false, [
+        prop("portal", "boolean", "Renders into document.body; on by default."),
+      ]),
     ],
     [
       { keys: ["Escape"], action: "Closes when dismissal is allowed." },
       { keys: ["Tab"], action: "Cycles inside the modal." },
     ],
-    [{ attribute: "[data-open]", meaning: "The alert is open." }],
+    [
+      {
+        attribute: "[data-open]",
+        on: "DialogTrigger, AlertDialogContent",
+        meaning: "The alert is open.",
+      },
+    ],
     "No native form behavior; put a confirmation form inside when needed.",
     ["dialog", "button"],
   ),
@@ -976,9 +1295,21 @@ const picker = [
     ["Popover", "PopoverArrow", "PopoverContent", "PopoverTrigger"],
     "<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent><PopoverArrow />Extra choices</PopoverContent></Popover>",
     [
-      p("Popover", "root", "Non-modal open-state provider.", false),
-      p("PopoverTrigger", "trigger", "Button that opens content."),
-      p("PopoverContent", "content", "Non-modal floating content."),
+      p("Popover", "root", "Non-modal open-state provider.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      ]),
+      p("PopoverTrigger", "trigger", "Button that opens content.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p("PopoverContent", "content", "Non-modal floating content.", true, false, [
+        prop("popover", '"auto" | "manual" | "none"', "Top-layer mode; auto by default."),
+        prop("anchor", "string", "Anchor element id for CSS anchor positioning."),
+      ]),
       p("PopoverArrow", "content", "Optional decorative arrow inside PopoverContent.", true, true),
     ],
     [
@@ -986,7 +1317,13 @@ const picker = [
       { keys: ["Space"], action: "Opens or closes from trigger." },
       { keys: ["Escape"], action: "Closes and restores trigger focus." },
     ],
-    [{ attribute: "[data-open]", meaning: "The popover is open." }],
+    [
+      {
+        attribute: "[data-open]",
+        on: "PopoverTrigger, PopoverContent",
+        meaning: "The popover is open.",
+      },
+    ],
     "No native form behavior.",
     ["dialog", "menu", "tooltip"],
   ),
@@ -994,18 +1331,33 @@ const picker = [
     "tooltip",
     "Tooltip",
     "pickers",
-    ["Tooltip", "TooltipContent", "TooltipTrigger"],
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipContent>Helpful detail</TooltipContent></Tooltip>',
+    ["Tooltip", "TooltipPopover", "TooltipTrigger"],
+    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover>Helpful detail</TooltipPopover></Tooltip>',
     [
-      p("Tooltip", "root", "Open-state provider.", false),
-      p("TooltipTrigger", "trigger", "Element that reveals help on focus or hover."),
-      p("TooltipContent", "content", "Short descriptive text."),
+      p("Tooltip", "root", "Open-state provider.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      ]),
+      p("TooltipTrigger", "trigger", "Element that reveals help on focus or hover.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p("TooltipPopover", "content", "Short descriptive text."),
     ],
     [
       { keys: ["Escape"], action: "Closes the tooltip." },
       { keys: ["Tab"], action: "Focus reveals the tooltip on its trigger." },
     ],
-    [{ attribute: "[data-open]", meaning: "The tooltip is visible." }],
+    [
+      {
+        attribute: "[data-open]",
+        on: "TooltipTrigger, TooltipPopover",
+        meaning: "The tooltip is visible.",
+      },
+    ],
     "No native form behavior.",
     ["popover", "visually-hidden"],
   ),

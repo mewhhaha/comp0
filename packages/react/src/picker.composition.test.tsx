@@ -2,7 +2,7 @@ import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Combobox,
-  ComboboxContent,
+  ComboboxPopover,
   ComboboxInput,
   ComboboxOption,
   Description,
@@ -12,7 +12,7 @@ import {
   ListBoxItem,
   Popover,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
 } from "./index.js";
@@ -60,9 +60,9 @@ describe("picker composition", () => {
           <FieldError>A plan is required.</FieldError>
           <Popover>
             <SelectTrigger>Choose</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="pro">Pro</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
         <Combobox id="described-combobox">
@@ -70,9 +70,9 @@ describe("picker composition", () => {
           <Description>Start typing a city.</Description>
           <Popover>
             <ComboboxInput />
-            <ComboboxContent>
+            <ComboboxPopover>
               <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxContent>
+            </ComboboxPopover>
           </Popover>
         </Combobox>
       </>,
@@ -95,17 +95,17 @@ describe("picker composition", () => {
         <Select disabled name="plan" onChange={selectChanged}>
           <Popover defaultOpen>
             <SelectTrigger disabled={false}>Choose</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="pro">Pro</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
         <Combobox disabled name="city" onChange={comboboxChanged}>
           <Popover defaultOpen>
             <ComboboxInput aria-label="City" disabled={false} />
-            <ComboboxContent>
+            <ComboboxPopover>
               <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxContent>
+            </ComboboxPopover>
           </Popover>
         </Combobox>
       </form>,
@@ -154,10 +154,10 @@ describe("picker composition", () => {
       <Select id="plan" defaultValue="free">
         <Popover onToggle={toggled}>
           <SelectTrigger>Plan</SelectTrigger>
-          <SelectContent>
+          <SelectPopover>
             <SelectOption value="free">Free</SelectOption>
             <SelectOption value="pro">Pro</SelectOption>
-          </SelectContent>
+          </SelectPopover>
         </Popover>
       </Select>,
     );
@@ -186,7 +186,7 @@ describe("picker composition", () => {
       <Combobox id="framework" onChange={changed} onInputChange={inputChanged}>
         <Popover>
           <ComboboxInput aria-label="Framework" onChange={nativeChanged} />
-          <ComboboxContent>
+          <ComboboxPopover>
             <ComboboxOption value="react" id="react-option">
               React
             </ComboboxOption>
@@ -196,7 +196,7 @@ describe("picker composition", () => {
             <ComboboxOption value="vue" id="vue-option">
               Vue
             </ComboboxOption>
-          </ComboboxContent>
+          </ComboboxPopover>
         </Popover>
       </Combobox>,
     );
@@ -226,11 +226,11 @@ describe("picker composition", () => {
       <Combobox id="city" defaultValue="logical-value" allowsEmptyCollection>
         <Popover>
           <ComboboxInput aria-label="City" />
-          <ComboboxContent>
+          <ComboboxPopover>
             <ComboboxOption value="paris" id="mounted-paris">
               Paris
             </ComboboxOption>
-          </ComboboxContent>
+          </ComboboxPopover>
         </Popover>
       </Combobox>,
     );
@@ -273,9 +273,9 @@ describe("picker composition", () => {
         <Select id="required-plan" name="plan" required>
           <Popover>
             <SelectTrigger aria-label="Choose plan">+</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="pro">Pro</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
         <Combobox id="required-city" name="city" required>
@@ -310,9 +310,9 @@ describe("picker composition", () => {
         <Combobox id="initial-city" name="city" defaultValue="paris" required>
           <Popover>
             <ComboboxInput aria-label="City" />
-            <ComboboxContent>
+            <ComboboxPopover>
               <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxContent>
+            </ComboboxPopover>
           </Popover>
         </Combobox>
       </form>,

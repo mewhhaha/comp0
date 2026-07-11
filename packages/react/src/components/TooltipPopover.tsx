@@ -6,15 +6,15 @@ import {
   useTooltipContext,
   type OverlayContentProps,
 } from "./overlay-shared.js";
-export type TooltipContentProps = OverlayContentProps;
+export type TooltipPopoverProps = OverlayContentProps;
 
-export function TooltipContent({
+export function TooltipPopover({
   as,
   hidden,
   onToggle,
   ref,
   ...props
-}: TooltipContentProps & RefProp<HTMLDivElement>) {
+}: TooltipPopoverProps & RefProp<HTMLDivElement>) {
   const tooltip = useTooltipContext();
   // Manual mode keeps the tooltip in the top layer without light dismiss;
   // the trigger's hover and focus handlers own the open state.

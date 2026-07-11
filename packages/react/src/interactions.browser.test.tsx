@@ -3,7 +3,7 @@ import { userEvent } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
 import {
   Combobox,
-  ComboboxContent,
+  ComboboxPopover,
   ComboboxInput,
   ComboboxOption,
   Dialog,
@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
 } from "./index.js";
@@ -27,9 +27,9 @@ describe("real-browser interaction contracts", () => {
         <Select id="light-dismiss-select">
           <Popover>
             <SelectTrigger>Choose</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="one">One</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
       </div>,
@@ -55,9 +55,9 @@ describe("real-browser interaction contracts", () => {
         <Select id="controlled-select">
           <Popover open onToggle={onToggle}>
             <SelectTrigger>Choose</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="one">One</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
       </div>,
@@ -91,17 +91,17 @@ describe("real-browser interaction contracts", () => {
         <Select id="first-controlled-select">
           <Popover open={firstOpen} onToggle={firstToggle}>
             <SelectTrigger>First choice</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="one">One</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
         <Select id="second-controlled-select">
           <Popover open={secondOpen} onToggle={secondToggle}>
             <SelectTrigger>Second choice</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="two">Two</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
       </div>
@@ -175,10 +175,10 @@ describe("real-browser interaction contracts", () => {
       <Select id="initially-open-select" defaultValue="two">
         <Popover defaultOpen>
           <SelectTrigger>Choose</SelectTrigger>
-          <SelectContent>
+          <SelectPopover>
             <SelectOption value="one">One</SelectOption>
             <SelectOption value="two">Two</SelectOption>
-          </SelectContent>
+          </SelectPopover>
         </Popover>
       </Select>,
     );
@@ -197,10 +197,10 @@ describe("real-browser interaction contracts", () => {
       <Select id="browser-select">
         <Popover>
           <SelectTrigger>Choose</SelectTrigger>
-          <SelectContent>
+          <SelectPopover>
             <SelectOption value="one">One</SelectOption>
             <SelectOption value="two">Two</SelectOption>
-          </SelectContent>
+          </SelectPopover>
         </Popover>
       </Select>,
     );
@@ -224,11 +224,11 @@ describe("real-browser interaction contracts", () => {
       <Combobox id="browser-combobox" allowsEmptyCollection>
         <Popover>
           <ComboboxInput aria-label="Framework" />
-          <ComboboxContent>
+          <ComboboxPopover>
             <ComboboxOption value="logical-react" id="dom-react">
               React
             </ComboboxOption>
-          </ComboboxContent>
+          </ComboboxPopover>
         </Popover>
       </Combobox>,
     );
@@ -249,17 +249,17 @@ describe("real-browser interaction contracts", () => {
         <Select id="browser-required-select" name="plan" required>
           <Popover>
             <SelectTrigger aria-label="Plan">Choose</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="pro">Pro</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
         <Combobox id="browser-required-combobox" name="city" defaultValue="paris" required>
           <Popover>
             <ComboboxInput aria-label="City" />
-            <ComboboxContent>
+            <ComboboxPopover>
               <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxContent>
+            </ComboboxPopover>
           </Popover>
         </Combobox>
       </form>,

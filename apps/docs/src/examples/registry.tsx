@@ -12,7 +12,7 @@ import {
   Button,
   Checkbox,
   Combobox,
-  ComboboxContent,
+  ComboboxPopover,
   ComboboxInput,
   ComboboxOption,
   Description,
@@ -24,6 +24,8 @@ import {
   DisclosureTrigger,
   Fieldset,
   FileTrigger,
+  GridList,
+  GridListItem,
   Input,
   Label,
   Legend,
@@ -31,7 +33,7 @@ import {
   ListBox,
   ListBoxItem,
   Menu,
-  MenuContent,
+  MenuPopover,
   MenuItem,
   MenuTrigger,
   NumberField,
@@ -44,13 +46,19 @@ import {
   SearchFieldClear,
   SearchFieldInput,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
   SelectValue,
   Slider,
   Switch,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
   TabList,
   TabPanel,
   Tabs,
@@ -58,7 +66,7 @@ import {
   TextField,
   ToggleButton,
   Tooltip,
-  TooltipContent,
+  TooltipPopover,
   TooltipTrigger,
   VisuallyHidden,
 } from "@comp0/react";
@@ -458,7 +466,7 @@ function MenuExample() {
       <MenuTrigger className="[anchor-name:--menu-example] rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
         Actions
       </MenuTrigger>
-      <MenuContent className="[position-anchor:--menu-example] inset-auto m-0 mt-2 w-40 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+      <MenuPopover className="[position-anchor:--menu-example] inset-auto m-0 mt-2 w-40 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
         <MenuItem
           className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
           value="rename"
@@ -471,7 +479,7 @@ function MenuExample() {
         >
           Duplicate
         </MenuItem>
-      </MenuContent>
+      </MenuPopover>
     </Menu>
   );
 }
@@ -486,7 +494,7 @@ function SelectExample() {
         <SelectTrigger className="[anchor-name:--select-example] w-full rounded border border-zinc-950/10 bg-white px-3 py-2.5 text-base text-zinc-950 outline-teal-600 focus-visible:outline-2 sm:py-2 sm:text-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:outline-teal-400">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="[position-anchor:--select-example] m-0 max-h-60 w-[anchor-size(width)] max-w-[anchor-size(width)] overflow-y-auto inset-auto rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+        <SelectPopover className="[position-anchor:--select-example] m-0 max-h-60 w-[anchor-size(width)] max-w-[anchor-size(width)] overflow-y-auto inset-auto rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
           <SelectOption
             className="rounded px-3 py-2.5 text-base text-zinc-800 data-active:bg-teal-100 data-active:text-zinc-950 data-selected:bg-teal-100 focus-visible:bg-teal-200 focus-visible:outline-2 focus-visible:outline-teal-600 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-active:bg-teal-950 dark:data-active:text-zinc-50 dark:data-selected:bg-teal-950 dark:focus-visible:bg-teal-800 dark:focus-visible:outline-teal-400"
             value="small"
@@ -505,7 +513,7 @@ function SelectExample() {
           >
             Large
           </SelectOption>
-        </SelectContent>
+        </SelectPopover>
       </Popover>
     </Select>
   );
@@ -522,7 +530,7 @@ function ComboboxExample() {
           className="[anchor-name:--combobox-example] w-full rounded border border-zinc-950/10 bg-white px-3 py-2.5 text-base text-zinc-950 outline-teal-600 focus-visible:outline-2 sm:py-2 sm:text-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:outline-teal-400"
           placeholder="Filter cities"
         />
-        <ComboboxContent className="[position-anchor:--combobox-example] m-0 max-h-60 w-[anchor-size(width)] max-w-[anchor-size(width)] overflow-y-auto inset-auto rounded border-0 bg-white p-1 ring-1 ring-zinc-950/10 [position-area:block-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:ring-white/10">
+        <ComboboxPopover className="[position-anchor:--combobox-example] m-0 max-h-60 w-[anchor-size(width)] max-w-[anchor-size(width)] overflow-y-auto inset-auto rounded border-0 bg-white p-1 ring-1 ring-zinc-950/10 [position-area:block-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:ring-white/10">
           <ComboboxOption
             className="rounded px-3 py-2.5 text-base text-zinc-800 data-active:bg-teal-100 data-active:text-zinc-950 data-selected:bg-teal-100 focus-visible:bg-teal-200 focus-visible:outline-2 focus-visible:outline-teal-600 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-active:bg-teal-950 dark:data-active:text-zinc-50 dark:data-selected:bg-teal-950 dark:focus-visible:bg-teal-800 dark:focus-visible:outline-teal-400"
             value="Warsaw"
@@ -541,7 +549,7 @@ function ComboboxExample() {
           >
             Lisbon
           </ComboboxOption>
-        </ComboboxContent>
+        </ComboboxPopover>
       </Popover>
     </Combobox>
   );
@@ -635,10 +643,81 @@ function TooltipExample() {
       <TooltipTrigger className="[anchor-name:--tooltip-example] rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
         Hover or focus
       </TooltipTrigger>
-      <TooltipContent className="[position-anchor:--tooltip-example] inset-auto m-0 mt-2 w-max rounded border-0 bg-zinc-900 px-2 py-1 text-base text-white [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] sm:text-sm dark:bg-zinc-100 dark:text-zinc-900">
+      <TooltipPopover className="[position-anchor:--tooltip-example] inset-auto m-0 mt-2 w-max rounded border-0 bg-zinc-900 px-2 py-1 text-base text-white [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] sm:text-sm dark:bg-zinc-100 dark:text-zinc-900">
         Helpful context
-      </TooltipContent>
+      </TooltipPopover>
     </Tooltip>
+  );
+}
+
+function GridListExample() {
+  const [selected, setSelected] = useState("report");
+
+  return (
+    <div className="flex max-w-sm flex-col gap-2">
+      <GridList
+        aria-label="Files"
+        className="rounded border border-zinc-950/10 p-1 dark:border-white/10"
+        value={selected}
+        onChange={setSelected}
+      >
+        {[
+          ["report", "report.pdf"],
+          ["photos", "photos.zip"],
+        ].map(([value, name]) => (
+          <GridListItem
+            key={value}
+            value={value}
+            className="cursor-pointer rounded px-2 py-1.5 outline-teal-600 focus-visible:outline-2 data-selected:bg-teal-100 dark:outline-teal-400 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:justify-between [&>[role=gridcell]]:gap-3"
+          >
+            <span className="text-base text-zinc-800 sm:text-sm dark:text-zinc-100">{name}</span>
+            <Button className="rounded border border-zinc-950/10 px-2 py-1 text-base text-zinc-700 outline-teal-600 focus-visible:outline-2 sm:text-sm dark:border-white/10 dark:text-zinc-200 dark:outline-teal-400">
+              Share
+            </Button>
+          </GridListItem>
+        ))}
+      </GridList>
+      <p className="text-base text-zinc-600 sm:text-sm dark:text-zinc-400">Selected: {selected}</p>
+    </div>
+  );
+}
+
+function TableExample() {
+  const rows = [
+    ["Ada Lovelace", "Engineer", "London"],
+    ["Grace Hopper", "Admiral", "New York"],
+    ["Mary Jackson", "Engineer", "Hampton"],
+  ];
+
+  return (
+    <Table aria-label="People" className="w-full max-w-md border-collapse text-base sm:text-sm">
+      <TableHeader>
+        <TableRow>
+          {["Name", "Role", "City"].map((column) => (
+            <TableColumn
+              key={column}
+              className="border-b border-zinc-950/10 px-2 py-1.5 text-left font-semibold text-zinc-950 outline-teal-600 focus-visible:outline-2 dark:border-white/10 dark:text-zinc-50 dark:outline-teal-400"
+            >
+              {column}
+            </TableColumn>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map(([name, role, city]) => (
+          <TableRow key={name}>
+            {[name, role, city].map((cell) => (
+              <TableCell
+                key={cell}
+                className="border-b border-zinc-950/5 px-2 py-1.5 text-zinc-700 outline-teal-600 focus-visible:outline-2 dark:border-white/5 dark:text-zinc-200 dark:outline-teal-400"
+              >
+                {cell}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -661,7 +740,9 @@ export const exampleRegistry: Record<string, ComponentType> = {
   disclosure: DisclosureExample,
   tabs: TabsExample,
   breadcrumbs: BreadcrumbsExample,
+  "grid-list": GridListExample,
   "list-box": ListBoxExample,
+  table: TableExample,
   menu: MenuExample,
   select: SelectExample,
   combobox: ComboboxExample,

@@ -12,12 +12,19 @@ export type AnatomyKind =
   | "input"
   | "feedback";
 
+export type PartProp = {
+  name: string;
+  type: string;
+  description: string;
+};
+
 export type ComponentPart = {
   name: string;
   kind: AnatomyKind;
   description: string;
   ownsDom: boolean;
   optional?: boolean | undefined;
+  props?: PartProp[] | undefined;
 };
 
 export type LessonStep = {
@@ -32,6 +39,7 @@ export type KeyboardToken =
   | "ArrowLeft"
   | "ArrowRight"
   | "ArrowUp"
+  | "Ctrl"
   | "End"
   | "Enter"
   | "Escape"
@@ -48,6 +56,8 @@ export type KeyboardAction = {
 
 export type StateHook = {
   attribute: `[data-${string}]` | `[aria-${string}]` | `:${string}`;
+  /** The part (or parts) the attribute appears on. */
+  on: string;
   meaning: string;
 };
 

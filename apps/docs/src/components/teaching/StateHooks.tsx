@@ -33,6 +33,9 @@ export function StateHooks({ hooks, className }: StateHooksProps) {
               <code className="text-base font-semibold text-teal-800 sm:text-sm dark:text-teal-200">
                 {hook.attribute}
               </code>
+              <p className="mt-0.5 font-mono text-xs/5 text-zinc-500 dark:text-zinc-400">
+                on {hook.on}
+              </p>
             </dt>
             <dd className="text-base/6 text-zinc-600 sm:text-sm dark:text-zinc-300">
               {hook.meaning}

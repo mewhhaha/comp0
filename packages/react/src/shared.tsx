@@ -1,5 +1,13 @@
-import { createContext, useContext, type HTMLAttributes, type ReactNode, type Ref } from "react";
-import { dataAttr } from "@comp0/core";
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  type HTMLAttributes,
+  type ReactNode,
+  type Ref,
+} from "react";
+import { composeRefs, dataAttr } from "@comp0/core";
 
 export type RefProp<TElement> = {
   ref?: Ref<TElement> | undefined;
@@ -143,4 +151,41 @@ export const PickerRootContext = createContext<PickerRootContextValue | null>(nu
 
 export function usePickerRootContext() {
   return useContext(PickerRootContext);
+}
+
+type SlotProps = Record<string, unknown> & { children?: ReactNode };
+
+/**
+ * Merges behavior props onto a single element child. Triggers render this
+ * when given as={Fragment}, so consumers supply their own element and the
+ * trigger contributes wiring instead of a wrapper button.
+ */
+export function Slot({ children, ...props }: SlotProps) {
+  if (!isValidElement<Record<string, unknown>>(children)) {
+    throw new Error("A Fragment trigger needs exactly one element child to attach behavior to.");
+  }
+  const childProps = children.props;
+  const merged: Record<string, unknown> = { ...props };
+  for (const key of Object.keys(childProps)) {
+    if (key === "children" || key === "ref") continue;
+    const ours = merged[key];
+    const theirs = childProps[key];
+    if (ours === undefined) {
+      merged[key] = theirs;
+    } else if (typeof ours === "function" && typeof theirs === "function") {
+      merged[key] = (...args: unknown[]) => {
+        (theirs as (...eventArgs: unknown[]) => void)(...args);
+        (ours as (...eventArgs: unknown[]) => void)(...args);
+      };
+    } else if (key === "className" && typeof ours === "string" && typeof theirs === "string") {
+      merged[key] = `${theirs} ${ours}`;
+    } else if (key === "style" && typeof ours === "object" && typeof theirs === "object") {
+      merged[key] = { ...theirs, ...ours };
+    }
+  }
+  merged["ref"] = composeRefs(
+    props["ref"] as Ref<unknown>,
+    childProps["ref"] as Ref<unknown> | undefined,
+  );
+  return cloneElement(children, merged);
 }

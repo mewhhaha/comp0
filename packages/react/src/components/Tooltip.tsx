@@ -35,7 +35,7 @@ export function Tooltip({
     }),
     [generatedId, open, props.id, setOpen],
   );
-  // Tooltips compose with the popover system internally so TooltipContent
+  // Tooltips compose with the popover system internally so TooltipPopover
   // can live in the top layer instead of expanding its container.
   const popoverContext = useMemo(
     () => ({

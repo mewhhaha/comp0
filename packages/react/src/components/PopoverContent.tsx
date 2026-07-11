@@ -13,7 +13,7 @@ export function PopoverContent({
   ref,
   ...props
 }: PopoverContentProps & RefProp<HTMLDivElement>) {
-  // Top layer by default, matching SelectContent; pass popover="none" to
+  // Top layer by default, matching SelectPopover; pass popover="none" to
   // render in normal flow instead.
   const popoverMode = popoverProp === "none" ? undefined : popoverProp;
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>(popoverMode);

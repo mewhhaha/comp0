@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
   Checkbox,
   Combobox,
-  ComboboxContent,
+  ComboboxPopover,
   ComboboxInput,
   ComboboxOption,
   Dialog,
@@ -18,7 +18,7 @@ import {
   Radio,
   RadioGroup,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
   Tabs,
@@ -49,19 +49,19 @@ describe("retained accessibility contracts", () => {
           <Label>Language</Label>
           <Popover>
             <SelectTrigger>Choose language</SelectTrigger>
-            <SelectContent>
+            <SelectPopover>
               <SelectOption value="typescript">TypeScript</SelectOption>
               <SelectOption value="rust">Rust</SelectOption>
-            </SelectContent>
+            </SelectPopover>
           </Popover>
         </Select>
         <Combobox id="framework" allowsEmptyCollection>
           <Label>Framework</Label>
           <Popover>
             <ComboboxInput />
-            <ComboboxContent>
+            <ComboboxPopover>
               <ComboboxOption value="react">React</ComboboxOption>
-            </ComboboxContent>
+            </ComboboxPopover>
           </Popover>
         </Combobox>
         <Accordion defaultValue="one">

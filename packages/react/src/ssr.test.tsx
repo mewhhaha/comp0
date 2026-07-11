@@ -10,7 +10,7 @@ import {
   Label,
   Popover,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
   TextField,
@@ -26,9 +26,9 @@ function HydrationFixture() {
       <Select id="hydrated-select" defaultValue="one">
         <Popover>
           <SelectTrigger>Choose</SelectTrigger>
-          <SelectContent>
+          <SelectPopover>
             <SelectOption value="one">One</SelectOption>
-          </SelectContent>
+          </SelectPopover>
         </Popover>
       </Select>
       <Dialog defaultOpen>

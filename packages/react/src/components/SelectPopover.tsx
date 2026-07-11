@@ -11,18 +11,18 @@ import { useSelectRootContext, type RefProp } from "../shared.js";
 import { SelectCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
 import { usePopoverSurface } from "./overlay-shared.js";
 
-export type SelectContentProps = HTMLAttributes<HTMLDivElement>;
+export type SelectPopoverProps = HTMLAttributes<HTMLDivElement>;
 
-export function SelectContent({
+export function SelectPopover({
   ref,
   onKeyDown,
   onToggle,
   ...props
-}: SelectContentProps & RefProp<HTMLDivElement>) {
+}: SelectPopoverProps & RefProp<HTMLDivElement>) {
   const select = useSelectRootContext();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   if (!select || !popover)
-    throw new Error("SelectContent must be rendered inside Select and Popover.");
+    throw new Error("SelectPopover must be rendered inside Select and Popover.");
   const options = useRef(new Map<string, PickerOptionRecord>());
   const wasOpen = useRef(false);
   const register = useCallback(

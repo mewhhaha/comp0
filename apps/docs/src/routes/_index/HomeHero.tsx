@@ -52,11 +52,11 @@ function GuidedAnatomy() {
             <PartTag className="absolute inset-x-0 top-[26px] -translate-y-1/2">
               SelectOption
             </PartTag>
-            <PartTag className="absolute inset-x-0 bottom-0 translate-y-1/2">SelectContent</PartTag>
+            <PartTag className="absolute inset-x-0 bottom-0 translate-y-1/2">SelectPopover</PartTag>
           </div>
         </div>
         <p className="font-mono text-xs/5 text-teal-700 @[22rem]:hidden dark:text-teal-300">
-          SelectTrigger · SelectContent · SelectOption
+          SelectTrigger · SelectPopover · SelectOption
         </p>
       </div>
     </div>

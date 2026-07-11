@@ -38,9 +38,6 @@ export function DocsHeader({ className }: DocsHeaderProps) {
           </NavLink>
         </nav>
         <div className="flex flex-1 items-center justify-end">
-          <p className="rounded-full bg-teal-50 px-2.5 py-1 font-mono text-sm/6 text-teal-800 ring-1 ring-teal-700/10 max-sm:hidden dark:bg-teal-400/10 dark:text-teal-200 dark:ring-teal-300/10">
-            alpha · React 19
-          </p>
           <MobileNavigation className="lg:hidden" />
         </div>
       </div>
