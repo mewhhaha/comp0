@@ -521,49 +521,42 @@ export function Anatomy({ parts, className }: AnatomyProps) {
   const numbered = parts.map((part, index) => ({ part, number: index + 1 }));
   const nodes = parseParts(numbered);
   return (
-    <section
-      className={cn(
-        "max-w-full min-w-0 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900",
-        className,
-      )}
-    >
-      <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Anatomy</h3>
+    <section className={cn("max-w-full min-w-0", className)}>
       <p className="sr-only">
         A wireframe sketch of the assembled component. Each numbered marker matches a part in the
         list that follows.
       </p>
       <div
         aria-hidden="true"
-        className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-3 rounded-lg bg-[radial-gradient(circle,var(--color-zinc-200)_1px,transparent_1px)] bg-size-[14px_14px] p-5 pt-4 dark:bg-[radial-gradient(circle,var(--color-zinc-700)_1px,transparent_1px)]"
+        className="grid grid-cols-[minmax(0,1fr)] gap-3 rounded-2xl bg-[radial-gradient(circle,var(--color-zinc-200)_1px,transparent_1px)] bg-size-[14px_14px] p-6 pt-5 ring-1 ring-zinc-950/5 dark:bg-[radial-gradient(circle,var(--color-zinc-700)_1px,transparent_1px)] dark:ring-white/10"
       >
         <DiagramNodes nodes={nodes} />
       </div>
-      <ol className="mt-5 grid gap-3 sm:grid-cols-2" role="list">
+      <ol className="mt-7 grid gap-x-10 gap-y-5 sm:grid-cols-2" role="list">
         {numbered.map(({ part, number }) => (
-          <li
-            key={part.name}
-            className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700"
-          >
-            <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-600 font-mono text-[0.6875rem] font-semibold text-white dark:bg-teal-400 dark:text-zinc-950"
-              >
-                {number}
-              </span>
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">{part.name}</span>
-              {part.optional && (
-                <span className="text-base text-zinc-500 sm:text-sm dark:text-zinc-400">
-                  Optional
+          <li key={part.name} className="flex items-start gap-3">
+            <span
+              aria-hidden="true"
+              className="mt-1 flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-600 font-mono text-[0.6875rem] font-semibold text-white dark:bg-teal-400 dark:text-zinc-950"
+            >
+              {number}
+            </span>
+            <div className="min-w-0">
+              <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                {part.name}
+                {part.optional && (
+                  <span className="ml-2 font-normal text-zinc-500 dark:text-zinc-400">
+                    Optional
+                  </span>
+                )}
+              </p>
+              <p className="mt-0.5 text-base/6 text-zinc-600 sm:text-sm dark:text-zinc-300">
+                {part.description}{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {part.ownsDom ? "Owns a DOM element." : "Does not add a DOM element."}
                 </span>
-              )}
+              </p>
             </div>
-            <p className="mt-1 text-base/6 text-zinc-600 sm:text-sm dark:text-zinc-300">
-              {part.description}
-            </p>
-            <p className="mt-1 text-base font-medium text-zinc-500 sm:text-sm dark:text-zinc-400">
-              {part.ownsDom ? "Owns a DOM element" : "Does not add a DOM element"}
-            </p>
           </li>
         ))}
       </ol>

@@ -21,6 +21,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <meta content="#fffaf2" media="(prefers-color-scheme: light)" name="theme-color" />
         <meta content="#080808" media="(prefers-color-scheme: dark)" name="theme-color" />
+        <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
         <link href="https://rsms.me/" rel="preconnect" />
         <link href="https://rsms.me/inter/inter.css" rel="stylesheet" />
         <Meta />

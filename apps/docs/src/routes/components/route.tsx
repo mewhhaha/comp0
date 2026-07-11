@@ -77,16 +77,13 @@ export default function ComponentRoute() {
           {doc.whenToUse}
         </p>
         <ComponentOutline className="mt-8 xl:hidden" compact doc={doc} />
-        <Callout className="mt-8" title="Picture it like this" tone="tip">
-          <p>{doc.analogy}</p>
-        </Callout>
 
         <div className="mt-14 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-14">
           <ComponentSection
-            description="Use the real component below. Then compare what you can see with the source that produced it."
+            description="The real component next to the source that produced it."
             id="example"
             number="01"
-            title="Try the finished component first."
+            title="Try it."
           >
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
               <LiveExample description="Click it, focus it, and use the keys from this page.">
@@ -97,37 +94,37 @@ export default function ComponentRoute() {
           </ComponentSection>
 
           <ComponentSection
-            description="A wireframe sketch of the assembled component. Dashed frames are invisible state providers; shaded shapes own real DOM. Each numbered pin matches a part in the list below."
+            description="Dashed frames are invisible state providers; shaded shapes own real DOM. Numbered pins match the list below."
             id="anatomy"
             number="02"
-            title="Open it up and name every part."
+            title="Anatomy."
           >
             <Anatomy parts={doc.parts} />
           </ComponentSection>
 
           <ComponentSection
-            description="Add one idea at a time. Every step tells you what changed and why the next part exists."
+            description="One part at a time, from the main element to the finished composition."
             id="build"
             number="03"
-            title="Build it one small step at a time."
+            title="Build it step by step."
           >
             <StepList steps={doc.steps} />
           </ComponentSection>
 
           <ComponentSection
-            description="A symbol shows the physical key. The sentence next to it explains the result in ordinary language."
+            description="What each key does while focus is inside."
             id="keyboard"
             number="04"
-            title="Use it without a mouse."
+            title="Keyboard support."
           >
             {keyboardLesson}
           </ComponentSection>
 
           <ComponentSection
-            description="The browser contract: what gets submitted, what must be labelled, and what assistive technology needs to understand."
+            description="What gets submitted, what must be labelled, and what assistive technology needs."
             id="contract"
             number="05"
-            title="Connect it to the rest of the page."
+            title="Forms and accessibility."
           >
             <div className="grid gap-8 rounded-xl bg-zinc-50 p-5 ring-1 ring-zinc-950/10 sm:p-6 dark:bg-white/3 dark:ring-white/10">
               <section>
@@ -161,10 +158,10 @@ export default function ComponentRoute() {
           </ComponentSection>
 
           <ComponentSection
-            description="Everything this page exports, what each part renders, and the state attributes your CSS can target. Boolean states appear only while they are true, so selectors read them like small flags."
+            description="Every exported part, what it renders, and the state attributes your CSS can target."
             id="api"
             number="06"
-            title="API reference and styling."
+            title="API and styling."
           >
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
               <ApiReference imports={doc.imports} parts={doc.parts} />

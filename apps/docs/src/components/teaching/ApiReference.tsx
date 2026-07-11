@@ -11,14 +11,8 @@ type ApiReferenceProps = {
 export function ApiReference({ imports, parts, className }: ApiReferenceProps) {
   const importStatement = `import { ${imports.join(", ")} } from "@comp0/react";`;
   return (
-    <section
-      className={cn(
-        "max-w-full min-w-0 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900",
-        className,
-      )}
-    >
-      <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">API reference</h3>
-      <CodeBlock className="mt-4" code={importStatement} title="Import" />
+    <section className={cn("max-w-full min-w-0", className)}>
+      <CodeBlock code={importStatement} title="Import" />
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-md border-collapse text-left">
           <thead>
