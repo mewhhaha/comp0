@@ -1,9 +1,31 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldIds } from "../field.js";
-import { SelectRootContext, type RefProp } from "../shared.js";
+import { PickerRootContext, SelectRootContext, type RefProp } from "../shared.js";
 import { type SelectProps } from "./pickers-shared.js";
 export type { SelectProps } from "./pickers-shared.js";
+
+const nativeSelectStyle: CSSProperties = {
+  border: 0,
+  clipPath: "inset(50%)",
+  height: 1,
+  margin: -1,
+  overflow: "hidden",
+  padding: 0,
+  position: "absolute",
+  whiteSpace: "nowrap",
+  width: 1,
+};
+
 export function Select({
   id,
   value,
@@ -13,12 +35,12 @@ export function Select({
   invalid,
   required,
   name,
+  as,
   children,
   ref,
   ...props
 }: SelectProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
-  const [open, setOpen] = useState(false);
   const itemTextRef = useRef(new Map<string, ReactNode>());
   const selectedRef = useRef("");
   const [selectedText, setSelectedText] = useState<ReactNode>();
@@ -69,15 +91,12 @@ export function Select({
   const context = useMemo(
     () => ({
       disabled: resolvedDisabled,
-      open,
       selectedKey: selected,
       triggerId: controlId,
       listBoxId: `${controlId}-listbox`,
-      popoverId: `${controlId}-popover`,
       labelId,
       descriptionId,
       selectedText,
-      setOpen,
       setSelectedKey: setSelected,
       registerItem,
       unregisterItem,
@@ -87,7 +106,6 @@ export function Select({
       descriptionId,
       labelId,
       resolvedDisabled,
-      open,
       registerItem,
       selected,
       selectedText,
@@ -96,25 +114,61 @@ export function Select({
     ],
   );
 
+  const content = (
+    <>
+      {(name || resolvedRequired) && (
+        <select
+          aria-hidden="true"
+          aria-labelledby={labelId}
+          disabled={resolvedDisabled}
+          name={name}
+          onChange={() => undefined}
+          onInvalid={(event) => {
+            event.preventDefault();
+            document.getElementById(controlId)?.focus();
+          }}
+          required={resolvedRequired}
+          style={nativeSelectStyle}
+          tabIndex={-1}
+          value={selected}
+        >
+          <option aria-label="No selection" value="" />
+          {selected && <option value={selected}>{selected}</option>}
+        </select>
+      )}
+      {children}
+    </>
+  );
+  const Root = as;
   return (
     <FieldProvider value={fieldContext}>
-      <SelectRootContext.Provider value={context}>
-        <div
-          {...props}
-          ref={ref}
-          id={id}
-          aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
-          data-disabled={dataAttr(resolvedDisabled)}
-          data-invalid={dataAttr(resolvedInvalid)}
-          data-open={dataAttr(open)}
-          data-placeholder={dataAttr(selected === "")}
-          data-required={dataAttr(resolvedRequired)}
-          data-value={selected || undefined}
-        >
-          {name && <input type="hidden" name={name} value={selected} disabled={resolvedDisabled} />}
-          {children}
-        </div>
-      </SelectRootContext.Provider>
+      <PickerRootContext.Provider
+        value={{
+          disabled: resolvedDisabled,
+          triggerId: controlId,
+          listBoxId: `${controlId}-listbox`,
+        }}
+      >
+        <SelectRootContext.Provider value={context}>
+          {Root && Root !== Fragment ? (
+            <Root
+              {...props}
+              ref={ref}
+              id={id}
+              aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
+              data-disabled={dataAttr(resolvedDisabled)}
+              data-invalid={dataAttr(resolvedInvalid)}
+              data-placeholder={dataAttr(selected === "")}
+              data-required={dataAttr(resolvedRequired)}
+              data-value={selected || undefined}
+            >
+              {content}
+            </Root>
+          ) : (
+            content
+          )}
+        </SelectRootContext.Provider>
+      </PickerRootContext.Provider>
     </FieldProvider>
   );
 }

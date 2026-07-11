@@ -1,6 +1,9 @@
 import { type RefProp } from "../shared.js";
-import { type DivProps } from "./parity-shared.js";
-export function VisuallyHidden(props: DivProps & RefProp<HTMLDivElement>) {
+import { type HTMLAttributes } from "react";
+
+export type VisuallyHiddenProps = HTMLAttributes<HTMLDivElement>;
+
+export function VisuallyHidden(props: VisuallyHiddenProps & RefProp<HTMLDivElement>) {
   const { ref } = props;
   return (
     <div

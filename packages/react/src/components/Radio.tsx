@@ -1,20 +1,29 @@
 import { type RefProp } from "../shared.js";
 import { useState, useContext, useId } from "react";
-import { dataAttr } from "@comp0/core";
+import { dataAttr, useControllableState } from "@comp0/core";
 import { visuallyHiddenInputStyle, RadioGroupContext } from "./choices-shared.js";
 import { type RadioProps } from "./choices-shared.js";
 export type { RadioProps } from "./choices-shared.js";
 export function Radio({
   children,
+  name,
   value,
+  selected: selectedProp,
+  defaultSelected = false,
   disabled: disabledProp,
+  onChange,
   inputProps,
   ref,
   ...props
 }: RadioProps & RefProp<HTMLLabelElement>) {
   const id = useId();
   const group = useContext(RadioGroupContext);
-  const selected = group?.value === value;
+  const selectedFromGroup = group ? group.value === value : undefined;
+  const [selected, setSelected] = useControllableState({
+    value: selectedProp ?? selectedFromGroup,
+    defaultValue: defaultSelected,
+    onChange,
+  });
   const disabled = Boolean(disabledProp ?? group?.disabled);
   const [focused, setFocused] = useState(false);
   const state = { selected, disabled, focused };
@@ -32,7 +41,7 @@ export function Radio({
         id={inputProps?.id ?? id}
         style={{ ...visuallyHiddenInputStyle, ...inputProps?.style }}
         type="radio"
-        name={group?.name}
+        name={name ?? group?.name}
         value={value}
         checked={selected}
         disabled={disabled}
@@ -42,7 +51,9 @@ export function Radio({
         }}
         onChange={(event) => {
           inputProps?.onChange?.(event);
-          if (!event.defaultPrevented && event.currentTarget.checked) group?.onChange(value);
+          if (event.defaultPrevented) return;
+          setSelected(event.currentTarget.checked);
+          if (event.currentTarget.checked) group?.onChange(value);
         }}
         onFocus={(event) => {
           inputProps?.onFocus?.(event);

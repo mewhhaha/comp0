@@ -1,11 +1,11 @@
 import { createContext, useContext, type HTMLAttributes, type ReactNode, type Ref } from "react";
-import { dataAttr, renderProp, type RenderProp } from "@comp0/core";
+import { dataAttr } from "@comp0/core";
 
 export type RefProp<TElement> = {
   ref?: Ref<TElement> | undefined;
 };
 
-export type StateChildren<TState> = RenderProp<TState>;
+export type StateChildren<TState> = ReactNode | ((state: TState) => ReactNode);
 export type StateClassName<TState> = string | ((state: TState) => string | undefined);
 
 export function InteractiveDiv(props: HTMLAttributes<HTMLDivElement> & RefProp<HTMLDivElement>) {
@@ -29,7 +29,7 @@ export function resolveChildren<TState>(
   children: StateChildren<TState> | undefined,
   state: TState,
 ) {
-  return renderProp(children, state);
+  return typeof children === "function" ? children(state) : children;
 }
 
 export function disabledProps(disabled: boolean | undefined) {
@@ -72,21 +72,18 @@ export type AnchorAttributeProps = {
   anchor?: string | undefined;
 };
 
-export interface SelectRootContextValue {
+export type SelectRootContextValue = {
   disabled: boolean;
-  open: boolean;
   selectedKey: string;
   triggerId: string;
   listBoxId: string;
-  popoverId: string;
   labelId: string;
   descriptionId: string;
   selectedText: ReactNode;
-  setOpen: (open: boolean) => void;
   setSelectedKey: (key: string) => void;
   registerItem: (key: string, textValue: ReactNode) => void;
   unregisterItem: (key: string) => void;
-}
+};
 
 export const SelectRootContext = createContext<SelectRootContextValue | null>(null);
 
@@ -94,24 +91,27 @@ export function useSelectRootContext() {
   return useContext(SelectRootContext);
 }
 
-export interface ComboBoxRootContextValue {
+export type ComboBoxRootContextValue = {
   activeKey: string;
+  activeId: string;
   disabled: boolean;
-  open: boolean;
+  invalid: boolean;
+  required: boolean;
+  displayValue: string;
   inputValue: string;
   selectedKey: string;
   inputId: string;
   listBoxId: string;
-  popoverId: string;
   labelId: string;
   descriptionId: string;
   setActiveKey: (key: string) => void;
-  setOpen: (open: boolean) => void;
+  setActiveId: (id: string) => void;
   setInputValue: (value: string) => void;
   setSelectedKey: (key: string) => void;
+  isItemVisible: (textValue: string) => boolean;
   registerItem: (key: string, textValue: ReactNode) => void;
   unregisterItem: (key: string) => void;
-}
+};
 
 export const ComboBoxRootContext = createContext<ComboBoxRootContextValue | null>(null);
 
@@ -122,7 +122,6 @@ export function useComboBoxRootContext() {
 export interface SearchFieldContextValue {
   value: string;
   disabled: boolean;
-  controlled: boolean;
   clear: () => void;
   submit: (value?: string) => void;
   setValue: (value: string) => void;
@@ -134,29 +133,14 @@ export function useSearchFieldContext() {
   return useContext(SearchFieldContext);
 }
 
-export interface PickerRootContextValue {
+export type PickerRootContextValue = {
   disabled: boolean;
-  open: boolean;
   triggerId: string;
-  popoverId: string;
-  setOpen: (open: boolean) => void;
-}
+  listBoxId: string;
+};
 
 export const PickerRootContext = createContext<PickerRootContextValue | null>(null);
 
 export function usePickerRootContext() {
   return useContext(PickerRootContext);
-}
-
-export interface AutocompleteContextValue {
-  inputValue: string;
-  allowsEmptyCollection: boolean;
-  isItemVisible: (textValue: string) => boolean;
-  selectItem: (key: string, textValue: string) => void;
-}
-
-export const AutocompleteContext = createContext<AutocompleteContextValue | null>(null);
-
-export function useAutocompleteContext() {
-  return useContext(AutocompleteContext);
 }

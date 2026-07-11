@@ -1,6 +1,9 @@
 import { type RefProp } from "../shared.js";
-import { type FileTriggerProps } from "./parity-shared.js";
-export type { FileTriggerProps } from "./parity-shared.js";
+import { type InputHTMLAttributes, type LabelHTMLAttributes } from "react";
+
+export type FileTriggerProps = LabelHTMLAttributes<HTMLLabelElement> & {
+  inputProps?: InputHTMLAttributes<HTMLInputElement> | undefined;
+};
 export function FileTrigger({
   children,
   inputProps,

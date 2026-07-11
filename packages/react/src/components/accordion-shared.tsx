@@ -1,16 +1,20 @@
 import {
   createContext,
+  Fragment,
   type ButtonHTMLAttributes,
+  type ElementType,
   type HTMLAttributes,
   type ReactNode,
 } from "react";
 
 export type AccordionValue = string | string[];
 
-export type AccordionProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> & {
+export type AccordionProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "onChange"> & {
+  as?: ElementType | typeof Fragment | undefined;
   type?: "single" | "multiple" | undefined;
   value?: AccordionValue | undefined;
   defaultValue?: AccordionValue | undefined;
+  /** Receives the next expanded item value rather than a DOM ChangeEvent. */
   onChange?: ((value: AccordionValue) => void) | undefined;
   collapsible?: boolean | undefined;
 };

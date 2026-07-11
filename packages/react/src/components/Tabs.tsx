@@ -1,16 +1,19 @@
-import { type RefProp } from "../shared.js";
+import { dataSlot, type RefProp } from "../shared.js";
 import { useRef } from "react";
 import { useControllableState } from "@comp0/core";
 import { TabsContext } from "./disclosure-shared.js";
 import { type TabsProps } from "./disclosure-shared.js";
+import { ProviderRoot } from "./provider-root.js";
 export type { TabsProps } from "./disclosure-shared.js";
 export function Tabs({
+  as,
+  children,
   value,
   defaultValue,
   onChange,
   ref,
   ...props
-}: TabsProps & RefProp<HTMLDivElement>) {
+}: TabsProps & RefProp<HTMLElement>) {
   const [selected, setSelected] = useControllableState({
     value,
     defaultValue: defaultValue ?? "",
@@ -42,7 +45,9 @@ export function Tabs({
         },
       }}
     >
-      <div {...props} ref={ref} />
+      <ProviderRoot as={as} {...props} ref={ref} data-slot={dataSlot(props, "tabs")}>
+        {children}
+      </ProviderRoot>
     </TabsContext.Provider>
   );
 }

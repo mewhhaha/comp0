@@ -1,230 +1,220 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  --font-sans:
+    InterVariable, Inter, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+  /* PH source palette: ~/.config/helix/themes/ph.toml */
+  --color-ph-ink: #080808;
+  --color-ph-panel: #111111;
+  --color-ph-surface: #1a1a1a;
+  --color-ph-surface-hi: #242424;
+  --color-ph-border: #303030;
+  --color-ph-border-hi: #404040;
+  --color-ph-muted: #6f6f6f;
+  --color-ph-subtle: #959595;
+  --color-ph-text: #f2f2f2;
+  --color-ph-text-dim: #a3a3a3;
+  --color-ph-white: #ffffff;
+  --color-ph-orange: #ff9000;
+  --color-ph-orange-soft: #d98200;
+  --color-ph-orange-dim: #c96f00;
+  --color-ph-orange-deep: #8a4700;
+  --color-ph-select: #4a2c08;
+  --color-ph-select-strong: #6a3a08;
+  --color-ph-amber: #ffb347;
+  --color-ph-gold: #ffd166;
+  --color-ph-sand: #ffe1b3;
+  --color-ph-sky: #6ecbff;
+  --color-ph-cyan: #7ce7ff;
+  --color-ph-blue: #72a7ff;
+  --color-ph-mint: #7ee787;
+  --color-ph-green: #4fd18b;
+  --color-ph-red: #ff6b6b;
+  --color-ph-rose: #ff86a8;
+  --color-ph-pink: #d96c9a;
+  --color-ph-plum: #8f5fbf;
+
+  /* Warm-paper companion used when the operating system requests light mode. */
+  --color-white: #fffaf2;
+  --color-black: var(--color-ph-ink);
+  --color-zinc-50: #fff6e9;
+  --color-zinc-100: #f8ede0;
+  --color-zinc-200: #e6d8c6;
+  --color-zinc-300: #d7c4ac;
+  --color-zinc-400: #b19b80;
+  --color-zinc-500: #856f5b;
+  --color-zinc-600: #735f4d;
+  --color-zinc-700: #5a4636;
+  --color-zinc-800: #443224;
+  --color-zinc-900: #302116;
+  --color-zinc-950: #241910;
+  --color-teal-50: #fff4e5;
+  --color-teal-100: var(--color-ph-sand);
+  --color-teal-200: #ffcc8a;
+  --color-teal-300: var(--color-ph-amber);
+  --color-teal-400: var(--color-ph-orange);
+  --color-teal-500: var(--color-ph-orange-soft);
+  --color-teal-600: var(--color-ph-orange-dim);
+  --color-teal-700: var(--color-ph-orange-deep);
+  --color-teal-800: var(--color-ph-select-strong);
+  --color-teal-900: var(--color-ph-select);
+  --color-teal-950: #2d1906;
+  --color-blue-50: #eef9ff;
+  --color-blue-200: #b9e8ff;
+  --color-blue-900: #174b64;
+  --color-blue-950: #0c2c3a;
+  --color-amber-50: #fff8e6;
+  --color-amber-200: #ffe09a;
+  --color-amber-900: #6a4700;
+  --color-amber-950: #402900;
+  --color-emerald-50: #eefbf3;
+  --color-emerald-200: #bceccd;
+  --color-emerald-900: #185c38;
+  --color-emerald-950: #0d3622;
+  --color-red-200: #f5bcbc;
+  --color-red-300: #ef8b8b;
+  --color-red-600: #c43d3d;
+  --color-red-700: #a92e2e;
+  --color-red-950: #431010;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-white: var(--color-ph-white);
+    --color-black: var(--color-ph-ink);
+    --color-zinc-50: var(--color-ph-white);
+    --color-zinc-100: var(--color-ph-text);
+    --color-zinc-200: var(--color-ph-text);
+    --color-zinc-300: var(--color-ph-text-dim);
+    --color-zinc-400: var(--color-ph-subtle);
+    --color-zinc-500: var(--color-ph-muted);
+    --color-zinc-600: var(--color-ph-border-hi);
+    --color-zinc-700: var(--color-ph-border);
+    --color-zinc-800: var(--color-ph-surface);
+    --color-zinc-900: var(--color-ph-panel);
+    --color-zinc-950: var(--color-ph-ink);
+    --color-teal-50: #fff4e5;
+    --color-teal-100: var(--color-ph-sand);
+    --color-teal-200: var(--color-ph-gold);
+    --color-teal-300: var(--color-ph-amber);
+    --color-teal-400: var(--color-ph-orange);
+    --color-teal-500: var(--color-ph-orange-soft);
+    --color-teal-600: var(--color-ph-orange-dim);
+    --color-teal-700: var(--color-ph-orange-deep);
+    --color-teal-800: var(--color-ph-orange-deep);
+    --color-teal-900: var(--color-ph-select-strong);
+    --color-teal-950: var(--color-ph-select);
+    --color-blue-50: #dff5ff;
+    --color-blue-200: var(--color-ph-sky);
+    --color-blue-900: #1b4155;
+    --color-blue-950: #102631;
+    --color-amber-50: #fff3cc;
+    --color-amber-200: var(--color-ph-gold);
+    --color-amber-900: #5a400d;
+    --color-amber-950: #2f220b;
+    --color-emerald-50: #e6fff0;
+    --color-emerald-200: var(--color-ph-mint);
+    --color-emerald-900: #24583b;
+    --color-emerald-950: #142f21;
+    --color-red-200: var(--color-ph-rose);
+    --color-red-300: var(--color-ph-red);
+    --color-red-600: #b83a3a;
+    --color-red-700: #9f3030;
+    --color-red-950: #3c1111;
+  }
+}
 
 :root {
-  color-scheme: light;
-  --background: #fafafa;
-  --foreground: #18181b;
-  --surface: #ffffff;
-  --surface-elevated: #f4f4f5;
-  --code-surface: #f4f4f5;
-  --border: #e4e4e7;
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  color-scheme: light dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01", "ss03";
+  font-synthesis: none;
+  --syntax-foreground: var(--color-ph-text);
+  --syntax-comment: var(--color-ph-subtle);
+  --syntax-keyword: var(--color-ph-red);
+  --syntax-control: var(--color-ph-pink);
+  --syntax-storage: var(--color-ph-pink);
+  --syntax-function: var(--color-ph-pink);
+  --syntax-function-call: var(--color-ph-orange);
+  --syntax-type: var(--color-ph-sky);
+  --syntax-type-builtin: var(--color-ph-cyan);
+  --syntax-string: var(--color-ph-mint);
+  --syntax-string-special: var(--color-ph-sky);
+  --syntax-number: var(--color-ph-orange);
+  --syntax-escape: var(--color-ph-cyan);
+  --syntax-tag: var(--color-ph-sky);
+  --syntax-attribute: var(--color-ph-orange-soft);
+  --syntax-property: var(--color-ph-white);
+  --syntax-variable: var(--color-ph-text);
+  --syntax-parameter: var(--color-ph-sand);
+  --syntax-punctuation: var(--color-ph-subtle);
+  --syntax-operator: var(--color-ph-subtle);
+  --syntax-invalid: var(--color-ph-red);
 }
 
-.dark {
-  color-scheme: dark;
-  --background: #0a0a0a;
-  --foreground: #f4f4f5;
-  --surface: #18181b;
-  --surface-elevated: #202024;
-  --code-surface: #111113;
-  --border: #27272a;
-}
-
-body {
-  margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-}
-
-.code-block :where(pre) {
-  margin: 0 !important;
-  background: transparent !important;
-}
-
-.code-block :where(pre, code) {
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-code,
-pre {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, ui-monospace, monospace;
-}
-
-.combobox-field:has(input[data-focused]) {
-  border-color: #0e7490;
-}
-
-.combobox-field:has(input[data-focus-visible]) {
-  outline: 2px solid #0ea5e9;
-  outline-offset: 2px;
-}
-
-.dark .combobox-field:has(input[data-focused]) {
-  border-color: #22d3ee;
-}
-
-.docs-shell
-  :where(
-    button,
-    summary,
-    a[href],
-    [role="button"],
-    [role="gridcell"],
-    [role="menuitem"],
-    [role="option"],
-    [role="slider"],
-    [role="tab"],
-    [role="treeitem"],
-    [data-slot="carousel-indicator"],
-    [data-slot="carousel-next"],
-    [data-slot="carousel-previous"],
-    [data-slot="carousel-rotation-control"],
-    [data-slot="checkbox"],
-    [data-slot="color-swatch-picker-item"],
-    [data-slot="file-trigger"],
-    [data-slot="pressable"],
-    [data-slot="radio"],
-    [data-slot="switch"],
-    [data-slot="tag"]
-  ):not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
-  cursor: pointer;
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease,
-    color 140ms ease,
-    filter 140ms ease;
-}
-
-.docs-shell [data-slot="window-splitter"] {
-  transition:
-    background-color 140ms ease,
-    box-shadow 140ms ease,
-    filter 140ms ease;
-}
-
-.docs-shell [data-slot="window-splitter"][data-orientation="vertical"] {
-  cursor: col-resize;
-}
-
-.docs-shell [data-slot="window-splitter"][data-orientation="horizontal"] {
-  cursor: row-resize;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .docs-shell
-    :where(
-      button,
-      summary,
-      a[href],
-      [role="button"],
-      [role="gridcell"],
-      [role="menuitem"],
-      [role="option"],
-      [role="slider"],
-      [role="tab"],
-      [role="treeitem"],
-      [data-slot="carousel-indicator"],
-      [data-slot="carousel-next"],
-      [data-slot="carousel-previous"],
-      [data-slot="carousel-rotation-control"],
-      [data-slot="checkbox"],
-      [data-slot="color-swatch-picker-item"],
-      [data-slot="file-trigger"],
-      [data-slot="pressable"],
-      [data-slot="radio"],
-      [data-slot="switch"],
-      [data-slot="tag"]
-    ):hover:not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
-    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #0891b2 8%, transparent);
-    filter: brightness(0.99);
-  }
-
-  .docs-shell.dark
-    :where(
-      button,
-      summary,
-      a[href],
-      [role="button"],
-      [role="gridcell"],
-      [role="menuitem"],
-      [role="option"],
-      [role="slider"],
-      [role="tab"],
-      [role="treeitem"],
-      [data-slot="carousel-indicator"],
-      [data-slot="carousel-next"],
-      [data-slot="carousel-previous"],
-      [data-slot="carousel-rotation-control"],
-      [data-slot="checkbox"],
-      [data-slot="color-swatch-picker-item"],
-      [data-slot="file-trigger"],
-      [data-slot="pressable"],
-      [data-slot="radio"],
-      [data-slot="switch"],
-      [data-slot="tag"]
-    ):hover:not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
-    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #22d3ee 10%, transparent);
-    filter: brightness(1.06);
-  }
-
-  .docs-shell [data-slot="window-splitter"]:hover:not([data-disabled]) {
-    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #0891b2 16%, transparent);
-    filter: brightness(0.98);
-  }
-
-  .docs-shell.dark [data-slot="window-splitter"]:hover:not([data-disabled]) {
-    box-shadow: inset 0 0 0 9999px color-mix(in srgb, #22d3ee 18%, transparent);
-    filter: brightness(1.08);
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, ui-sans-serif, system-ui, sans-serif;
   }
 }
 
-.accordion-panel,
-.disclosure-panel {
-  height: auto;
-  overflow: hidden;
-  opacity: 1;
-  transition:
-    display 180ms allow-discrete,
-    height 180ms ease,
-    opacity 180ms ease;
-  interpolate-size: allow-keywords;
-}
-
-.docs-shell details::details-content {
-  block-size: 0;
-  overflow: clip;
-  opacity: 0;
-  transition:
-    block-size 180ms ease,
-    content-visibility 180ms allow-discrete,
-    opacity 180ms ease;
-  interpolate-size: allow-keywords;
-}
-
-.docs-shell details[open]::details-content {
-  block-size: auto;
-  opacity: 1;
-}
-
-.accordion-panel[hidden],
-.disclosure-panel[hidden] {
-  display: none;
-  height: 0;
-  opacity: 0;
-}
-
-@starting-style {
-  .accordion-panel:not([hidden]),
-  .disclosure-panel:not([hidden]) {
-    height: 0;
-    opacity: 0;
+@layer base {
+  * {
+    box-sizing: border-box;
   }
 
-  .docs-shell details[open]::details-content {
-    block-size: 0;
-    opacity: 0;
+  html {
+    min-width: 20rem;
+    scroll-behavior: smooth;
+    scroll-padding-top: --spacing(24);
+    background: var(--color-white);
+  }
+
+  body {
+    margin: 0;
+    min-width: 20rem;
+    min-height: 100dvh;
+    background: var(--color-white);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  ::selection {
+    color: var(--color-teal-950);
+    background: var(--color-teal-200);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html,
+    body {
+      background: var(--color-zinc-950);
+    }
+
+    ::selection {
+      color: var(--color-teal-50);
+      background: color-mix(in oklab, var(--color-teal-500) 45%, transparent);
+    }
   }
 }

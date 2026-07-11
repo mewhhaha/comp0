@@ -1,5 +1,7 @@
+/** The arrow-key directions supported by a roving-focus collection. */
 export type RovingFocusOrientation = "horizontal" | "vertical" | "both";
 
+/** The identity and enabled state needed for roving focus navigation. */
 export interface RovingFocusItem {
   key: string;
   disabled?: boolean | undefined;
@@ -19,6 +21,7 @@ function isBackwardKey(key: string, orientation: RovingFocusOrientation, dir: "l
   return false;
 }
 
+/** Resolves the next enabled item for an APG-style roving-focus key press. */
 export function getRovingFocusTarget(
   items: RovingFocusItem[],
   currentKey: string | undefined,

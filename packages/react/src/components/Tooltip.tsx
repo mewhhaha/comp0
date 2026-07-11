@@ -1,25 +1,47 @@
-import { useId } from "react";
-import { dataAttr } from "@comp0/core";
-import { type RefProp } from "../shared.js";
-import { type TooltipProps } from "./overlay-shared.js";
+import { createElement, Fragment, useId, useMemo, useRef } from "react";
+import { dataAttr, useControllableState } from "@comp0/core";
+import { dataSlot, type RefProp } from "../shared.js";
+import { TooltipContext, type TooltipProps } from "./overlay-shared.js";
 export type { TooltipProps } from "./overlay-shared.js";
+
 export function Tooltip({
-  id,
-  role = "tooltip",
-  open = true,
-  hidden,
+  as,
+  children,
+  defaultOpen = false,
+  onToggle,
+  open: openProp,
   ref,
   ...props
-}: TooltipProps & RefProp<HTMLDivElement>) {
+}: TooltipProps & RefProp<HTMLElement>) {
   const generatedId = useId();
-  return (
-    <div
-      {...props}
-      ref={ref}
-      id={id ?? generatedId}
-      role={role}
-      hidden={hidden ?? !open}
-      data-open={dataAttr(open)}
-    />
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const [open, setOpen] = useControllableState({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onToggle,
+  });
+  const context = useMemo(
+    () => ({
+      open,
+      setOpen,
+      triggerId: `${props.id ?? generatedId}-trigger`,
+      contentId: `${props.id ?? generatedId}-content`,
+      focusTrigger() {
+        triggerRef.current?.focus();
+      },
+      setTriggerElement(element: HTMLElement | null) {
+        triggerRef.current = element;
+      },
+    }),
+    [generatedId, open, props.id, setOpen],
   );
+  let root = children;
+  if (as && as !== Fragment) {
+    root = createElement(
+      as,
+      { ...props, ref, "data-open": dataAttr(open), "data-slot": dataSlot(props, "tooltip") },
+      children,
+    );
+  }
+  return <TooltipContext.Provider value={context}>{root}</TooltipContext.Provider>;
 }

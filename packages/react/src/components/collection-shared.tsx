@@ -21,6 +21,7 @@ export interface SelectableCollectionContextValue {
 
 export interface CollectionItemRecord {
   key: string;
+  id?: string | undefined;
   textValue: string;
   disabled?: boolean | undefined;
   element: HTMLElement | null;
@@ -44,14 +45,16 @@ export type ListBoxProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" |
 };
 
 export type ListBoxItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
-  id: string;
+  value?: string | undefined;
+  id?: string | undefined;
   disabled?: boolean | undefined;
 };
 
 export type MenuProps = HTMLAttributes<HTMLDivElement>;
 
 export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
-  id: string;
+  value?: string | undefined;
+  id?: string | undefined;
   disabled?: boolean | undefined;
 };
 

@@ -1,49 +1,77 @@
-import { useId, type HTMLAttributes } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
 import {
-  useComboBoxRootContext,
-  usePickerRootContext,
-  useSelectRootContext,
-  type AnchorAttributeProps,
-  type RefProp,
-} from "../shared.js";
-import { type PopoverProps } from "./overlay-shared.js";
+  createElement,
+  Fragment,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
+import { dataAttr, useControllableState } from "@comp0/core";
+import { dataSlot, type RefProp } from "../shared.js";
+import { usePickerRootContext } from "../shared.js";
+import { PopoverContext, type PopoverProps } from "./overlay-shared.js";
 export type { PopoverProps } from "./overlay-shared.js";
+
 export function Popover({
-  open: openProp,
+  as,
+  children,
   defaultOpen = false,
-  onChange,
-  hidden,
-  popover,
+  onToggle,
+  open: openProp,
   ref,
   ...props
-}: PopoverProps & RefProp<HTMLDivElement>) {
-  const select = useSelectRootContext();
-  const comboBox = useComboBoxRootContext();
-  const datePicker = usePickerRootContext();
-  const picker = select ?? comboBox ?? datePicker;
-  const [open] = useControllableState({
+}: PopoverProps & RefProp<HTMLElement>) {
+  const generatedId = useId();
+  const picker = usePickerRootContext();
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const restoreFocus = useRef(false);
+  const wasOpen = useRef(false);
+  const [open, setOpenState] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange,
+    onChange: onToggle,
   });
-  const generatedId = useId();
-  const id = props.id ?? picker?.popoverId ?? generatedId;
-  const isOpenResolved = picker?.open ?? open;
-  const divProps = {
-    ...props,
-    anchor: props.anchor ?? select?.triggerId ?? comboBox?.inputId ?? datePicker?.triggerId,
-  } as HTMLAttributes<HTMLDivElement> & AnchorAttributeProps;
-
-  return (
-    <div
-      {...divProps}
-      ref={ref}
-      id={id}
-      role={props.role ?? (datePicker || !picker ? "dialog" : undefined)}
-      popover={popover}
-      hidden={hidden ?? (popover === undefined ? !isOpenResolved : undefined)}
-      data-open={dataAttr(isOpenResolved)}
-    />
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) restoreFocus.current = false;
+      setOpenState(nextOpen);
+    },
+    [setOpenState],
   );
+  const requestClose = useCallback(() => {
+    restoreFocus.current = true;
+    setOpenState(false);
+  }, [setOpenState]);
+  useLayoutEffect(() => {
+    if (wasOpen.current && !open && restoreFocus.current) triggerRef.current?.focus();
+    if (!open) restoreFocus.current = false;
+    wasOpen.current = open;
+  }, [open]);
+  const context = useMemo(
+    () => ({
+      open,
+      setOpen,
+      requestClose,
+      triggerId: picker?.triggerId ?? `${props.id ?? generatedId}-trigger`,
+      contentId: picker?.listBoxId ?? `${props.id ?? generatedId}-content`,
+      focusTrigger() {
+        triggerRef.current?.focus();
+      },
+      setTriggerElement(element: HTMLElement | null) {
+        triggerRef.current = element;
+      },
+    }),
+    [generatedId, open, picker?.listBoxId, picker?.triggerId, props.id, requestClose, setOpen],
+  );
+  let root = children;
+  if (as && as !== Fragment) {
+    root = createElement(
+      as,
+      { ...props, ref, "data-open": dataAttr(open), "data-slot": dataSlot(props, "popover") },
+      children,
+    );
+  }
+
+  return <PopoverContext.Provider value={context}>{root}</PopoverContext.Provider>;
 }

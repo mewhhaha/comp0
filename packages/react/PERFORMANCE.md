@@ -8,9 +8,8 @@ Manual memoization should stay limited to semantic identity, effect dependencies
 
 Known hot paths:
 
-- Picker item text registries in `Select`, `Combobox`, and `Autocomplete` are ref-backed so mounting many visible options does not cause one parent state update per item.
+- Picker item text registries in `Select` and `Combobox` are ref-backed so mounting many visible options does not cause one parent state update per item.
 - `ListBox` caches document-order sorting behind a registry version counter. Keyboard movement reuses the sorted order until an item registers, unregisters, or changes element metadata.
-- `Toolbar` roving focus remains DOM-local and does not use React state for arrow-key movement.
-- Calendar and date-picker paths still rely on React state for focused and selected dates because those values are visible component behavior.
+- Overlay roots keep their public state and native dialog/popover lifecycle reconciliation separate, avoiding render-time DOM reads.
 
 React Compiler improves update performance by memoizing React work. It does not reduce DOM event dispatch cost, browser layout or paint work, or the cost of rendering very large DOM trees by itself. Those scenarios still need component-level structure, virtualization, or DOM-specific optimization when measurements justify it.

@@ -1,58 +1,97 @@
-import { useEffect, useMemo, useState, type HTMLAttributes } from "react";
+import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from "react";
 import { chainHandlers } from "./utils.js";
 
-let hadKeyboardEvent = false;
-const subscribers = new Set<() => void>();
+type FocusVisibleDocumentState = {
+  hadKeyboardEvent: boolean;
+  subscribers: Set<() => void>;
+  onKeyDown: (event: KeyboardEvent) => void;
+  onPointerDown: () => void;
+};
 
-function notifyFocusVisibleSubscribers() {
-  for (const subscriber of subscribers) subscriber();
+const focusVisibleDocumentStates = new WeakMap<Document, FocusVisibleDocumentState>();
+
+function getFocusVisibleDocumentState(ownerDocument: Document) {
+  let state = focusVisibleDocumentStates.get(ownerDocument);
+  if (!state) {
+    const subscribers = new Set<() => void>();
+    const notify = () => {
+      for (const callback of subscribers) callback();
+    };
+    const nextState: FocusVisibleDocumentState = {
+      hadKeyboardEvent: false,
+      subscribers,
+      onKeyDown(event) {
+        if (event.metaKey || event.altKey || event.ctrlKey) return;
+        nextState.hadKeyboardEvent = true;
+        notify();
+      },
+      onPointerDown() {
+        nextState.hadKeyboardEvent = false;
+        notify();
+      },
+    };
+    state = nextState;
+    focusVisibleDocumentStates.set(ownerDocument, state);
+  }
+  return state;
 }
 
-if (typeof window !== "undefined") {
-  window.addEventListener(
-    "keydown",
-    (event) => {
-      if (event.metaKey || event.altKey || event.ctrlKey) return;
-      hadKeyboardEvent = true;
-      notifyFocusVisibleSubscribers();
-    },
-    true,
-  );
+function subscribeToFocusVisible(ownerDocument: Document, subscriber: () => void) {
+  const state = getFocusVisibleDocumentState(ownerDocument);
 
-  window.addEventListener(
-    "pointerdown",
-    () => {
-      hadKeyboardEvent = false;
-      notifyFocusVisibleSubscribers();
-    },
-    true,
-  );
+  if (state.subscribers.size === 0) {
+    ownerDocument.addEventListener("keydown", state.onKeyDown, true);
+    ownerDocument.addEventListener("pointerdown", state.onPointerDown, true);
+  }
+  state.subscribers.add(subscriber);
+
+  return () => {
+    state.subscribers.delete(subscriber);
+    if (state.subscribers.size !== 0) return;
+    ownerDocument.removeEventListener("keydown", state.onKeyDown, true);
+    ownerDocument.removeEventListener("pointerdown", state.onPointerDown, true);
+    focusVisibleDocumentStates.delete(ownerDocument);
+  };
 }
 
+/**
+ * Tracks focus and keyboard-visible focus for an element.
+ *
+ * Modality listeners are installed only after the element receives focus, on that
+ * element's `ownerDocument`, and are removed when no focus ring remains focused.
+ */
 export function useFocusRing<TElement extends HTMLElement = HTMLElement>(
   options: { disabled?: boolean } = {},
 ) {
   const [isFocused, setFocused] = useState(false);
   const [isFocusVisible, setFocusVisible] = useState(false);
+  const [ownerDocument, setOwnerDocument] = useState<Document>();
+  const isFocusedRef = useRef(false);
 
   useEffect(() => {
-    const subscriber = () => {
-      if (isFocused) setFocusVisible(hadKeyboardEvent);
-    };
-    subscribers.add(subscriber);
-    return () => {
-      subscribers.delete(subscriber);
-    };
-  }, [isFocused]);
+    if (!ownerDocument || !isFocused) return;
+    return subscribeToFocusVisible(ownerDocument, () => {
+      if (isFocusedRef.current) {
+        setFocusVisible(getFocusVisibleDocumentState(ownerDocument).hadKeyboardEvent);
+      }
+    });
+  }, [isFocused, ownerDocument]);
 
   const focusProps = useMemo<HTMLAttributes<TElement>>(
     () => ({
       onFocus(event) {
         if (options.disabled) return;
+        const document = event.currentTarget.ownerDocument;
+        isFocusedRef.current = true;
+        setOwnerDocument(document);
         setFocused(true);
-        setFocusVisible(hadKeyboardEvent || event.currentTarget.matches(":focus-visible"));
+        setFocusVisible(
+          getFocusVisibleDocumentState(document).hadKeyboardEvent ||
+            event.currentTarget.matches(":focus-visible"),
+        );
       },
       onBlur() {
+        isFocusedRef.current = false;
         setFocused(false);
         setFocusVisible(false);
       },
@@ -63,6 +102,7 @@ export function useFocusRing<TElement extends HTMLElement = HTMLElement>(
   return { focusProps, isFocused, isFocusVisible };
 }
 
+/** Tracks pointer hover while ignoring touch pointers and disabled elements. */
 export function useHover<TElement extends HTMLElement = HTMLElement>(
   options: { disabled?: boolean } = {},
 ) {
@@ -83,6 +123,7 @@ export function useHover<TElement extends HTMLElement = HTMLElement>(
   return { hoverProps, isHovered };
 }
 
+/** Tracks pointer and keyboard press state for an element. */
 export function usePress<TElement extends HTMLElement = HTMLElement>(
   options: { disabled?: boolean } = {},
 ) {
@@ -116,6 +157,7 @@ export function usePress<TElement extends HTMLElement = HTMLElement>(
   return { pressProps, isPressed };
 }
 
+/** Merges interaction props, chaining event handlers in declaration order. */
 export function mergeInteractionProps<T extends HTMLAttributes<HTMLElement>>(...propsList: T[]) {
   return propsList.reduce((acc, props) => {
     for (const [key, value] of Object.entries(props)) {

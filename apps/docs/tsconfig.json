@@ -9,10 +9,9 @@
     "noEmit": true,
     "paths": {
       "@comp0/react": ["../../packages/react/src/index.ts"],
-      "@comp0/react/*": ["../../packages/react/src/*.ts"],
       "@comp0/core": ["../../packages/core/src/index.ts"]
     }
   },
   "references": [{ "path": "../../packages/core" }, { "path": "../../packages/react" }],
-  "include": ["src", ".react-router/types/**/*"]
+  "include": ["src"]
 }

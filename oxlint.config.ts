@@ -27,6 +27,47 @@ export default defineConfig({
   },
   overrides: [
     {
+      files: [
+        "packages/react/src/components/ListBox.tsx",
+        "packages/react/src/components/ListBoxItem.tsx",
+        "packages/react/src/components/SelectOption.tsx",
+        "packages/react/src/components/ComboboxOption.tsx",
+      ],
+      rules: {
+        // These are custom APG composites; native select/option elements cannot provide their
+        // children-driven content, roving focus, or active-descendant contracts.
+        "jsx-a11y/prefer-tag-over-role": "off",
+      },
+    },
+    {
+      files: [
+        "packages/react/src/components/ListBox.tsx",
+        "packages/react/src/components/TabList.tsx",
+      ],
+      rules: {
+        // Focus is roved among owned options/tabs, not placed on the collection container.
+        "jsx-a11y/interactive-supports-focus": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/ComboboxOption.tsx"],
+      rules: {
+        // Combobox focus stays in the input; options are addressed with aria-activedescendant.
+        "jsx-a11y/click-events-have-key-events": "off",
+        "jsx-a11y/interactive-supports-focus": "off",
+      },
+    },
+    {
+      files: [
+        "packages/react/src/components/MenuContent.tsx",
+        "packages/react/src/components/SelectContent.tsx",
+      ],
+      rules: {
+        // The role is customizable in props but defaults to listbox at runtime.
+        "jsx-a11y/no-static-element-interactions": "off",
+      },
+    },
+    {
       files: ["apps/docs/src/*.ts", "apps/docs/src/*.tsx"],
       jsPlugins: ["eslint-plugin-better-tailwindcss"],
       rules: {

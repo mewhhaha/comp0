@@ -3,6 +3,7 @@ import { useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { AccordionContext } from "./accordion-shared.js";
 import { type AccordionProps, type AccordionTriggerRecord } from "./accordion-shared.js";
+import { ProviderRoot } from "./provider-root.js";
 export type { AccordionProps } from "./accordion-shared.js";
 
 function valueToSet(value: string | string[]) {
@@ -22,6 +23,8 @@ function sortTriggers(triggers: AccordionTriggerRecord[]) {
 }
 
 export function Accordion({
+  as,
+  children,
   type = "single",
   value,
   defaultValue,
@@ -29,7 +32,7 @@ export function Accordion({
   collapsible = type === "multiple",
   ref,
   ...props
-}: AccordionProps & RefProp<HTMLDivElement>) {
+}: AccordionProps & RefProp<HTMLElement>) {
   const triggerMap = useRef(new Map<string, AccordionTriggerRecord>());
   const [currentValue, setCurrentValue] = useControllableState({
     value,
@@ -72,7 +75,15 @@ export function Accordion({
 
   return (
     <AccordionContext.Provider value={context}>
-      <div {...props} ref={ref} data-slot={dataSlot(props, "accordion")} />
+      <ProviderRoot
+        as={as}
+        {...props}
+        ref={ref}
+        data-slot={dataSlot(props, "accordion")}
+        data-orientation="vertical"
+      >
+        {children}
+      </ProviderRoot>
     </AccordionContext.Provider>
   );
 }

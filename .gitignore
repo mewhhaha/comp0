@@ -3,6 +3,8 @@ apps/docs/.react-router
 apps/docs/build
 dist
 apps/docs/dist
+.agents
+.claude
 .vite
 .todo
 .vitest-attachments

@@ -10,18 +10,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./button": {
-      "types": "./dist/button.d.ts",
-      "default": "./dist/button.js"
-    },
-    "./dialog": {
-      "types": "./dist/dialog.d.ts",
-      "default": "./dist/dialog.js"
-    },
-    "./listbox": {
-      "types": "./dist/listbox.d.ts",
-      "default": "./dist/listbox.js"
     }
   },
   "scripts": {

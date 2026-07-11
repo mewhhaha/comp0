@@ -5,6 +5,7 @@ import { TextField } from "./TextField.js";
 import { type SearchFieldProps } from "./text-field-shared.js";
 export type { SearchFieldProps } from "./text-field-shared.js";
 export function SearchField({
+  as,
   children,
   value,
   defaultValue,
@@ -13,13 +14,12 @@ export function SearchField({
   onClear,
   ref,
   ...props
-}: SearchFieldProps & RefProp<HTMLDivElement>) {
+}: SearchFieldProps & RefProp<HTMLElement>) {
   const [searchValue, setSearchValue] = useControllableState({
     value,
     defaultValue: defaultValue ?? "",
     onChange,
   });
-  const controlsValue = value !== undefined || defaultValue !== undefined || onChange !== undefined;
   const clear = useCallback(() => {
     setSearchValue("");
     onClear?.();
@@ -34,20 +34,21 @@ export function SearchField({
     () => ({
       value: searchValue,
       disabled: Boolean(props.disabled),
-      controlled: controlsValue,
       clear,
       submit,
       setValue: setSearchValue,
     }),
-    [clear, controlsValue, props.disabled, searchValue, setSearchValue, submit],
+    [clear, props.disabled, searchValue, setSearchValue, submit],
   );
 
   return (
     <SearchFieldContext.Provider value={context}>
       <TextField
+        as={as}
         {...props}
         ref={ref}
-        {...(controlsValue ? { value: searchValue, onChange: setSearchValue } : {})}
+        value={searchValue}
+        onChange={setSearchValue}
         data-search=""
       >
         {children}

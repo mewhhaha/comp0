@@ -1,174 +1,124 @@
 # comp0
 
-Headless React 19 components with native-first DOM semantics, SSR-safe behavior, and no third-party runtime implementation dependencies beyond React and React DOM.
+Headless React 19 components and behavior hooks with native-first DOM semantics, SSR-safe behavior, and no runtime implementation dependencies beyond React and React DOM.
 
-comp0 is a greenfield component library for teams that want accessible interaction primitives without adopting a visual design system. Components render meaningful DOM, expose state through data attributes, and leave layout, animation, color, and typography to the application.
+comp0 is an internal alpha. Its API is intentionally small and breaking changes are preferred over compatibility aliases.
 
 ## Packages
 
-- `@comp0/react`: the public React component package.
-- `@comp0/core`: first-party interaction, collection, state, and rendering utilities used by `@comp0/react`.
-- `@comp0/docs`: the local documentation and playground app.
+- `@comp0/core` provides public React behavior hooks and DOM utilities without rendered components.
+- `@comp0/react` provides children-composed components built on core.
+- `@comp0/docs` is the local documentation and playground application.
 
-`@comp0/react` has peer dependencies on `react >=19.0.0` and `react-dom >=19.0.0`.
-
-## Install
+Both public packages expose one root entry point. Component subpath imports are not supported.
 
 ```sh
-pnpm add @comp0/react react react-dom
+pnpm add @comp0/core @comp0/react react react-dom
 ```
 
-For workspace development, depend on the local package:
+## Composition
 
-```json
-{
-  "dependencies": {
-    "@comp0/react": "workspace:*"
-  }
-}
-```
-
-## Usage
-
-Import components from the package root:
+Provider-only roots render their children directly. Explicit parts own DOM behavior and ARIA relationships:
 
 ```tsx
-import { Button, FieldError, Input, Label, TextField } from "@comp0/react";
-
-export function ProfileForm() {
-  return (
-    <form action="/api/profile">
-      <TextField>
-        <Label>Email</Label>
-        <Input name="email" type="email" required />
-        <FieldError>Enter a valid email address.</FieldError>
-      </TextField>
-
-      <Button type="submit">Save</Button>
-    </form>
-  );
-}
-```
-
-Compose larger widgets from explicit parts:
-
-```tsx
-import { Button, Label, ListBox, ListBoxItem, Popover, Select, SelectValue } from "@comp0/react";
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectOption,
+  SelectTrigger,
+  SelectValue,
+} from "@comp0/react";
 
 export function PlanSelect() {
   return (
     <Select name="plan" defaultValue="basic">
       <Label>Plan</Label>
-      <Button>
+      <SelectTrigger>
         <SelectValue placeholder="Choose a plan" />
-      </Button>
-      <Popover>
-        <ListBox>
-          <ListBoxItem id="basic">Basic</ListBoxItem>
-          <ListBoxItem id="pro">Pro</ListBoxItem>
-        </ListBox>
-      </Popover>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectOption value="basic">Basic</SelectOption>
+        <SelectOption value="pro">Pro</SelectOption>
+      </SelectContent>
     </Select>
   );
 }
 ```
 
-Use controlled state when the application owns the value:
+Use `as` when a provider root needs a real styling or layout wrapper:
 
 ```tsx
-import { Button } from "@comp0/react";
+<Select as="div" className="select">
+  {/* explicit parts */}
+</Select>
+```
 
-export function SaveButton({ isSaving }: { isSaving: boolean }) {
+Leaf inputs retain native React event handlers. Composite value owners use HTML-shaped `value`, `defaultValue`, `name`, and `onChange(nextValue)` props. Open-state roots use `open`, `defaultOpen`, and `onToggle(nextOpen)`. These state callbacks are documented as deliberate differences from native DOM event objects.
+
+## Core hooks
+
+`@comp0/core` includes controlled-state, collection registry, roving-focus, typeahead, focus-ring, hover, press, prop-merging, ref-composition, and presence-data-attribute utilities.
+
+```tsx
+import { dataAttr, usePress } from "@comp0/core";
+
+export function PressSurface() {
+  const { pressProps, isPressed } = usePress();
   return (
-    <Button disabled={isSaving} pending={isSaving}>
-      {({ pending }) => (pending ? "Saving..." : "Save changes")}
-    </Button>
+    <button {...pressProps} data-pressed={dataAttr(isPressed)}>
+      Press
+    </button>
   );
 }
 ```
 
+## React catalog
+
+The graduated alpha surface covers:
+
+- buttons, toggles, links, file triggers, and visually hidden content;
+- text fields, search fields, checkbox/radio groups, switches, number fields, and sliders;
+- accordion, disclosure, tabs, and breadcrumbs;
+- listbox and menu collections;
+- explicit Select and Combobox families;
+- explicit Dialog, Popover, and Tooltip families.
+
+Date/time, color, table/tree/grid, carousel, drag-and-drop, toast, transition, and parity-placeholder families were removed. They can return only after meeting the same behavior, accessibility, browser-test, documentation, and package-contract gates.
+
 ## Styling
 
-comp0 ships behavior, not CSS. Style components with your own classes, selectors, and data attributes.
-
-Boolean data attributes use presence semantics:
+comp0 ships behavior rather than CSS. Boolean data attributes use presence semantics:
 
 ```css
 .button[data-hovered] {
   background: color-mix(in oklab, CanvasText 8%, Canvas);
 }
 
-.checkbox[data-selected] .indicator {
+.option[data-selected] {
   background: Highlight;
 }
-
-.select[data-open] .chevron {
-  rotate: 180deg;
-}
 ```
-
-Many interactive components also accept state render props for `children` and `className`, so styles and content can react to state without duplicating event logic.
-
-## Component Surface
-
-The React package exports headless parts across these families:
-
-- Buttons: `Button`, `ToggleButton`, `ToggleButtonGroup`, `Pressable`, `FileTrigger`.
-- Forms: `Label`, `Description`, `FieldError`, `Fieldset`, `Legend`, `TextField`, `Input`, `TextArea`, `SearchField`, `Checkbox`, `CheckboxGroup`, `RadioGroup`, `Radio`, `Switch`, `NumberField`, `Slider`, `SliderOutput`, `SliderTrack`, `SliderThumb`.
-- Pickers: `Select`, `SelectValue`, `SelectOption`, `Combobox`, `ComboBoxValue`, `ComboboxOption`, `Autocomplete`.
-- Collections: `Collection`, `CollectionBuilder`, `ListBox`, `ListBoxItem`, `ListBoxSection`, `Menu`, `MenuItem`, `MenuSection`, `Feed`, `GridList`, `TagGroup`, `Tree`, and related item, header, section, and load-more parts.
-- Navigation: `Link`, `Accordion`, `Disclosure`, `Tabs`, `Breadcrumbs`, `Toolbar`, `Menubar`, and related trigger, item, panel, and content parts.
-- Date and time: `Calendar`, `RangeCalendar`, `DateField`, `DateInput`, `DateSegment`, `TimeField`, `DatePicker`, `DateRangePicker`, and calendar grid parts.
-- Color: `ColorPicker`, `ColorField`, `ColorArea`, `ColorSlider`, `ColorWheel`, `ColorSwatch`, `ColorSwatchPicker`, and related color parts.
-- Overlays: `DialogTrigger`, `Dialog`, `AlertDialog`, `Modal`, `ModalOverlay`, `Popover`, `OverlayArrow`, `TooltipTrigger`, `Tooltip`.
-- Tables: `Table`, `ResizableTableContainer`, `TableHeader`, `Column`, `ColumnResizer`, `TableBody`, `Row`, `Cell`, `TableLoadMoreItem`.
-- Text and layout: `Text`, `Heading`, `Header`, `Keyboard`, `Separator`, `Group`, `WindowSplitter`, `Focusable`, `VisuallyHidden`.
-- Status and motion: `ProgressBar`, `Meter`, `Carousel`, `SharedElementTransition`, `SharedElement`, and unstable toast parts.
-
-The package root exports the full surface. Dedicated package subpaths are also available for `@comp0/react/button`, `@comp0/react/dialog`, and `@comp0/react/listbox`.
-
-## Principles
-
-- Native-first: prefer native elements and browser behavior before custom ARIA patterns.
-- Children-driven: compose with explicit child parts instead of large configuration objects.
-- Data-driven styling: reflect state with data attributes that applications can target.
-- SSR-safe: avoid DOM reads during render and use React-generated ids for hydration-safe wiring.
-- Form-compatible: preserve native field names, values, disabled state, and submission behavior where the pattern supports it.
 
 ## Development
 
-Install dependencies:
-
 ```sh
 pnpm install
-```
-
-Run the docs app:
-
-```sh
+pnpm exec playwright install chromium
 pnpm dev
 ```
 
-Build all packages:
+Run the complete local verification set:
 
 ```sh
-pnpm build
-```
-
-Run checks:
-
-```sh
+pnpm format:check
+pnpm lint
+pnpm typecheck
 pnpm test
 pnpm test:browser
-pnpm typecheck
-pnpm lint
-pnpm format:check
-```
-
-Run the React Compiler smoke test:
-
-```sh
+pnpm build
+pnpm test:package
 pnpm test:compiler-smoke
 ```
 
-The docs app lives in `apps/docs`, the React package lives in `packages/react`, and shared primitives live in `packages/core`.
+`test:package` packs both public packages, installs them in a temporary consumer, typechecks a composition, executes both roots, and verifies that undeclared subpaths are rejected.

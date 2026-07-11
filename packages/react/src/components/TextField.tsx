@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldIds } from "../field.js";
-import { useComboBoxRootContext, type RefProp } from "../shared.js";
+import { type RefProp } from "../shared.js";
+import { ProviderRoot } from "./provider-root.js";
 import { type TextFieldProps } from "./text-field-shared.js";
 export type { TextFieldProps } from "./text-field-shared.js";
 export function TextField({
+  as,
   children,
   id,
   value,
@@ -15,18 +17,8 @@ export function TextField({
   required,
   ref,
   ...props
-}: TextFieldProps & RefProp<HTMLDivElement>) {
-  const comboBox = useComboBoxRootContext();
-  const fieldIds = useFieldIds(id);
-  let ids = fieldIds;
-  if (comboBox) {
-    ids = {
-      controlId: comboBox.inputId,
-      labelId: comboBox.labelId,
-      descriptionId: comboBox.descriptionId,
-      errorId: `${comboBox.inputId}-error`,
-    };
-  }
+}: TextFieldProps & RefProp<HTMLElement>) {
+  const ids = useFieldIds(id);
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
@@ -66,7 +58,8 @@ export function TextField({
 
   return (
     <FieldProvider value={providerValue}>
-      <div
+      <ProviderRoot
+        as={as}
         {...props}
         ref={ref}
         aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
@@ -75,7 +68,7 @@ export function TextField({
         data-required={dataAttr(resolvedRequired)}
       >
         {children}
-      </div>
+      </ProviderRoot>
     </FieldProvider>
   );
 }

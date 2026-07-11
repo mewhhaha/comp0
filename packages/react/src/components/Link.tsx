@@ -1,19 +1,10 @@
-import { type AnchorHTMLAttributes, type MouseEvent as ReactMouseEvent } from "react";
 import {
-  Slot,
-  dataAttr,
-  mergeInteractionProps,
-  mergeProps,
-  useFocusRing,
-  useHover,
-} from "@comp0/core";
-import {
-  resolveChildren,
-  resolveClassName,
-  type AsChildProps,
-  type SharedStateProps,
-  type RefProp,
-} from "../shared.js";
+  type ComponentPropsWithRef,
+  type ElementType,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
+import { dataAttr, mergeInteractionProps, mergeProps, useFocusRing, useHover } from "@comp0/core";
+import { resolveChildren, resolveClassName, type SharedStateProps } from "../shared.js";
 
 export type LinkState = {
   disabled: boolean;
@@ -22,17 +13,18 @@ export type LinkState = {
   hovered: boolean;
 };
 
-export type LinkProps = Omit<
-  AnchorHTMLAttributes<HTMLAnchorElement>,
-  "children" | "className" | "aria-disabled"
-> &
-  SharedStateProps<LinkState> &
-  AsChildProps & {
-    disabled?: boolean | undefined;
+type LinkOwnProps = SharedStateProps<LinkState> & {
+  disabled?: boolean | undefined;
+  href?: string | undefined;
+};
+
+export type LinkProps<TElement extends ElementType = "a"> = LinkOwnProps &
+  Omit<ComponentPropsWithRef<TElement>, keyof LinkOwnProps | "as" | "children" | "className"> & {
+    as?: TElement | undefined;
   };
 
-export function Link({
-  asChild,
+export function Link<TElement extends ElementType = "a">({
+  as,
   children,
   className,
   disabled: disabledProp,
@@ -41,7 +33,7 @@ export function Link({
   tabIndex,
   ref,
   ...props
-}: LinkProps & RefProp<HTMLAnchorElement>) {
+}: LinkProps<TElement>) {
   const disabled = Boolean(disabledProp);
   const { focusProps, isFocused, isFocusVisible } = useFocusRing<HTMLAnchorElement>({ disabled });
   const { hoverProps, isHovered } = useHover<HTMLAnchorElement>({ disabled });
@@ -51,7 +43,8 @@ export function Link({
     focusVisible: isFocusVisible,
     hovered: isHovered,
   };
-  const Component = asChild ? Slot : "a";
+  const Component = as ?? "a";
+  const isNativeAnchor = Component === "a";
   const mergedProps = mergeProps<Record<string, unknown>>(
     props as Record<string, unknown>,
     mergeInteractionProps(focusProps, hoverProps) as Record<string, unknown>,
@@ -59,6 +52,7 @@ export function Link({
       ref,
       href: disabled ? undefined : href,
       tabIndex: disabled ? -1 : tabIndex,
+      role: isNativeAnchor ? undefined : ((props as Record<string, unknown>).role ?? "link"),
       "aria-disabled": disabled || undefined,
       "data-disabled": dataAttr(disabled),
       "data-focused": dataAttr(isFocused),

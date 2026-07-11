@@ -3,14 +3,14 @@ import { createRef, type ReactElement, useEffect, useState } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Slot,
   composeRefs,
   dataAttr,
   dataAttributes,
   getRovingFocusTarget,
   mergeProps,
-  renderProp,
+  sortByDocumentPosition,
   useControllableState,
+  useFocusRing,
 } from "./index.js";
 import { findTypeaheadMatch } from "./typeahead.js";
 
@@ -21,7 +21,15 @@ function render(element: ReactElement) {
   act(() => {
     root.render(element);
   });
-  return { container };
+  return {
+    container,
+    unmount() {
+      act(() => {
+        root.unmount();
+      });
+      container.remove();
+    },
+  };
 }
 
 describe("shared utilities", () => {
@@ -53,33 +61,10 @@ describe("shared utilities", () => {
     expect(callbackRef).toHaveBeenCalledWith(element);
   });
 
-  it("renders render props and data attributes", () => {
-    expect(
-      renderProp<{ selected: boolean }>(({ selected }) => (selected ? "yes" : "no"), {
-        selected: true,
-      }),
-    ).toBe("yes");
+  it("creates presence-based data attributes", () => {
     expect(dataAttr(true)).toBe("");
     expect(dataAttr(false)).toBeUndefined();
     expect(dataAttributes({ selected: true, disabled: false })).toEqual({ "data-selected": "" });
-  });
-
-  it("merges props through Slot", () => {
-    const clicked = vi.fn();
-    const { container } = render(
-      <Slot className="from-slot" data-open="" onClick={clicked}>
-        <button type="button" className="from-child">
-          Save
-        </button>
-      </Slot>,
-    );
-
-    const button = container.querySelector("button");
-    button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-    expect(button?.className).toBe("from-child from-slot");
-    expect(button?.getAttribute("data-open")).toBe("");
-    expect(clicked).toHaveBeenCalledOnce();
   });
 });
 
@@ -140,6 +125,22 @@ describe("state utilities", () => {
 });
 
 describe("focus navigation primitives", () => {
+  it("keeps logical collection keys separate from DOM ids", () => {
+    const first = document.createElement("div");
+    const second = document.createElement("div");
+    document.body.append(first, second);
+
+    const items = sortByDocumentPosition([
+      { key: 2, id: "option-second", value: "second", textValue: "Second", element: second },
+      { key: 1, id: "option-first", value: "first", textValue: "First", element: first },
+    ]);
+
+    expect(items.map((item) => item.key)).toEqual([1, 2]);
+    expect(items.map((item) => item.id)).toEqual(["option-first", "option-second"]);
+    first.remove();
+    second.remove();
+  });
+
   it("finds roving focus targets by orientation", () => {
     const items = [{ key: "one" }, { key: "two", disabled: true }, { key: "three" }];
 
@@ -159,5 +160,46 @@ describe("focus navigation primitives", () => {
 
     expect(findTypeaheadMatch(items, "a", "alpha")).toBe("apricot");
     expect(findTypeaheadMatch(items, "ban", "alpha")).toBe("banana");
+  });
+});
+
+describe("useFocusRing", () => {
+  it("subscribes lazily to the focused element's document and cleans up listeners", () => {
+    function Focusable() {
+      const { focusProps, isFocusVisible } = useFocusRing<HTMLButtonElement>();
+      return (
+        <button type="button" {...focusProps} data-focus-visible={dataAttr(isFocusVisible)}>
+          Focus
+        </button>
+      );
+    }
+
+    const { container, unmount } = render(<Focusable />);
+    const button = container.querySelector("button");
+    const addListener = vi.spyOn(document, "addEventListener");
+    const removeListener = vi.spyOn(document, "removeEventListener");
+
+    expect(addListener).not.toHaveBeenCalledWith("keydown", expect.any(Function), true);
+
+    act(() => {
+      button?.focus();
+    });
+
+    expect(addListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+    expect(addListener).toHaveBeenCalledWith("pointerdown", expect.any(Function), true);
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Tab" }));
+    });
+
+    expect(button?.getAttribute("data-focus-visible")).toBe("");
+
+    act(() => {
+      button?.blur();
+    });
+
+    expect(removeListener).toHaveBeenCalledWith("keydown", expect.any(Function), true);
+    expect(removeListener).toHaveBeenCalledWith("pointerdown", expect.any(Function), true);
+    unmount();
   });
 });

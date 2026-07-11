@@ -1,8 +1,10 @@
 import {
   createContext,
+  Fragment,
   type AnchorHTMLAttributes,
   type ButtonHTMLAttributes,
   type DetailsHTMLAttributes,
+  type ElementType,
   type HTMLAttributes,
   type ReactNode,
 } from "react";
@@ -19,6 +21,7 @@ export type DisclosureProps = Omit<
 > & {
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
+  /** Receives the next open state; the native toggle event remains internal to details. */
   onChange?: (open: boolean) => void;
   children?: ReactNode;
 };
@@ -36,9 +39,11 @@ export interface TabsContextValue {
 
 export const TabsContext = createContext<TabsContextValue | null>(null);
 
-export type TabsProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> & {
+export type TabsProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "onChange"> & {
+  as?: ElementType | typeof Fragment | undefined;
   value?: string | undefined;
   defaultValue?: string | undefined;
+  /** Receives the selected tab value rather than a DOM ChangeEvent. */
   onChange?: (value: string) => void;
 };
 

@@ -19,8 +19,13 @@ export default defineConfig({
         },
         test: {
           environment: "jsdom",
+          exclude: ["**/*.browser.test.tsx"],
           globals: true,
-          include: ["packages/**/*.test.ts", "packages/**/*.test.tsx"],
+          include: [
+            "packages/**/*.test.ts",
+            "packages/**/*.test.tsx",
+            "apps/docs/src/**/*.test.ts",
+          ],
           name: "unit",
           setupFiles: ["./vitest.setup.ts"],
         },
@@ -36,8 +41,12 @@ export default defineConfig({
             instances: [{ browser: "chromium" }],
             provider: playwright(),
           },
-          include: ["apps/docs/src/**/*.browser.test.tsx"],
+          include: [
+            "packages/react/src/**/*.browser.test.tsx",
+            "apps/docs/src/**/*.browser.test.tsx",
+          ],
           name: "browser",
+          setupFiles: ["./vitest.browser.setup.ts"],
         },
       },
     ],

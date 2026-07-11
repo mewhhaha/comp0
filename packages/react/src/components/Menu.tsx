@@ -1,67 +1,47 @@
-import { useRef } from "react";
-import { findTypeaheadMatch, getRovingFocusTarget } from "@comp0/core";
-import {
-  InteractiveDiv,
-  useAutocompleteContext,
-  useComboBoxRootContext,
-  type RefProp,
-} from "../shared.js";
-import { MenuContext, sortItems } from "./collection-shared.js";
-import {
-  type SelectableCollectionContextValue,
-  type CollectionItemRecord,
-  type MenuProps,
-} from "./collection-shared.js";
-export type { MenuProps } from "./collection-shared.js";
-export function Menu({ onKeyDown, ref, ...props }: MenuProps & RefProp<HTMLDivElement>) {
-  const itemMap = useRef(new Map<string, CollectionItemRecord>());
-  const selectedRef = useRef("");
-  const comboBox = useComboBoxRootContext();
-  const autocomplete = useAutocompleteContext();
-  const context: SelectableCollectionContextValue = {
-    activeKey: selectedRef.current,
-    selectedKey: selectedRef.current,
-    setActiveKey(key) {
-      selectedRef.current = key;
-    },
-    setSelectedKey(key) {
-      selectedRef.current = key;
-    },
-    register(key, textValue, element, disabled) {
-      if (element) itemMap.current.set(key, { key, textValue, element, disabled });
-      else itemMap.current.delete(key);
-    },
-    items() {
-      return sortItems([...itemMap.current.values()]);
-    },
-  };
+import { createElement, Fragment, useId, useMemo, useRef } from "react";
+import { dataAttr, useControllableState } from "@comp0/core";
+import { type RefProp } from "../shared.js";
+import { MenuRootContext, type MenuProps } from "./menu-shared.js";
 
-  return (
-    <MenuContext.Provider value={context}>
-      <InteractiveDiv
-        {...props}
-        ref={ref}
-        id={props.id ?? comboBox?.listBoxId}
-        role={props.role ?? (autocomplete ? "listbox" : "menu")}
-        aria-labelledby={props["aria-labelledby"] ?? comboBox?.labelId}
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          if (event.defaultPrevented) return;
-          const items = context.items();
-          const current =
-            document.activeElement instanceof HTMLElement ? document.activeElement.id : undefined;
-          const key =
-            getRovingFocusTarget(items, current, event.key, {
-              orientation: "vertical",
-              loop: true,
-            }) ??
-            (event.key.length === 1 ? findTypeaheadMatch(items, event.key, current) : undefined);
-          if (!key) return;
-          event.preventDefault();
-          context.setActiveKey(key);
-          items.find((item) => item.key === key)?.element?.focus();
-        }}
-      />
-    </MenuContext.Provider>
+export type { MenuProps } from "./menu-shared.js";
+
+export function Menu({
+  as,
+  children,
+  defaultOpen = false,
+  id,
+  onToggle,
+  open: openProp,
+  ref,
+  ...props
+}: MenuProps & RefProp<HTMLElement>) {
+  const generatedId = useId().replace(/:/g, "");
+  const triggerElement = useRef<HTMLElement | null>(null);
+  const [open, setOpen] = useControllableState({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onToggle,
+  });
+  const menuId = id ?? `menu-${generatedId}`;
+  const context = useMemo(
+    () => ({
+      open,
+      triggerId: `${menuId}-trigger`,
+      contentId: `${menuId}-content`,
+      setOpen,
+      focusTrigger() {
+        triggerElement.current?.focus();
+      },
+      setTriggerElement(element: HTMLElement | null) {
+        triggerElement.current = element;
+      },
+    }),
+    [menuId, open, setOpen],
   );
+  let root = children;
+  if (as && as !== Fragment) {
+    root = createElement(as, { ...props, ref, id, "data-open": dataAttr(open) }, children);
+  }
+
+  return <MenuRootContext.Provider value={context}>{root}</MenuRootContext.Provider>;
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findTypeaheadMatch, getRovingFocusTarget, useControllableState } from "@comp0/core";
-import { useComboBoxRootContext, useSelectRootContext, type RefProp } from "../shared.js";
+import { type RefProp } from "../shared.js";
 import { ListBoxContext, sortItems } from "./collection-shared.js";
 import {
   type SelectableCollectionContextValue,
@@ -14,16 +14,14 @@ export function ListBox({
   onChange,
   orientation = "vertical",
   onKeyDown,
+  children,
   ref,
   ...props
 }: ListBoxProps & RefProp<HTMLDivElement>) {
-  const select = useSelectRootContext();
-  const comboBox = useComboBoxRootContext();
-  const picker = select ?? comboBox;
   const [selected, setSelected] = useControllableState({
-    value: picker?.selectedKey ?? value,
-    defaultValue: picker?.selectedKey ?? defaultValue ?? "",
-    onChange: picker?.setSelectedKey ?? onChange,
+    value,
+    defaultValue: defaultValue ?? "",
+    onChange,
   });
   const [activeKey, setActiveKey] = useState(selected);
   const activeKeyRef = useRef(activeKey);
@@ -56,11 +54,12 @@ export function ListBox({
 
       const current = itemMap.current.get(key);
       if (
+        current?.id !== element.id ||
         current?.textValue !== textValue ||
         current.element !== element ||
         current.disabled !== disabled
       ) {
-        itemMap.current.set(key, { key, textValue, element, disabled });
+        itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
         itemVersion.current += 1;
       }
 
@@ -99,20 +98,14 @@ export function ListBox({
       <div
         {...props}
         ref={ref}
-        id={props.id ?? picker?.listBoxId}
+        id={props.id}
         role="listbox"
-        aria-labelledby={props["aria-labelledby"] ?? picker?.labelId}
+        aria-labelledby={props["aria-labelledby"]}
         aria-orientation={orientation}
         data-orientation={orientation}
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
-          if (picker && event.key === "Escape") {
-            event.preventDefault();
-            picker.setOpen(false);
-            document.getElementById(select?.triggerId ?? comboBox?.inputId ?? "")?.focus();
-            return;
-          }
           const items = context.items();
           const key =
             getRovingFocusTarget(items, selected, event.key, { orientation, loop: true }) ??
@@ -120,12 +113,12 @@ export function ListBox({
           if (!key) return;
           event.preventDefault();
           setActiveKey(key);
-          comboBox?.setActiveKey(key);
           setSelected(key);
           items.find((item) => item.key === key)?.element?.focus();
-          if (picker && (event.key === "Enter" || event.key === " ")) picker.setOpen(false);
         }}
-      />
+      >
+        {children}
+      </div>
     </ListBoxContext.Provider>
   );
 }

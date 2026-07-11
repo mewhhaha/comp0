@@ -1,11 +1,13 @@
 import { useCallback, useRef } from "react";
 
+/** The search fields needed to match a collection item by typed text. */
 export interface TypeaheadItem {
   key: string;
   textValue: string;
   disabled?: boolean | undefined;
 }
 
+/** Finds the next enabled item whose text begins with the search string. */
 export function findTypeaheadMatch(items: TypeaheadItem[], search: string, currentKey?: string) {
   const enabled = items.filter((item) => !item.disabled);
   if (!search || !enabled.length) return undefined;
@@ -18,6 +20,7 @@ export function findTypeaheadMatch(items: TypeaheadItem[], search: string, curre
     ?.key;
 }
 
+/** Returns a keyboard handler that buffers printable characters for typeahead navigation. */
 export function useTypeahead(options: {
   items: TypeaheadItem[];
   currentKey?: string | undefined;

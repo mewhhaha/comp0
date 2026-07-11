@@ -5,7 +5,7 @@ const files = [
   "packages/core/dist/interactions.js",
   "packages/react/dist/components/Select.js",
   "packages/react/dist/components/ListBox.js",
-  "packages/react/dist/components/Calendar.js",
+  "packages/react/dist/components/DialogContent.js",
 ];
 
 const missing = [];

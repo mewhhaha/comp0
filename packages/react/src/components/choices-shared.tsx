@@ -35,6 +35,7 @@ export type CheckboxGroupProps = Omit<
 > & {
   value?: string[] | undefined;
   defaultValue?: string[] | undefined;
+  /** Receives the next selected-value array rather than a native ChangeEvent. */
   onChange?: (value: string[]) => void;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
@@ -80,17 +81,22 @@ export type RadioGroupProps = Omit<
 > & {
   value?: string | undefined;
   defaultValue?: string | undefined;
+  /** Receives the next selected radio value rather than a native ChangeEvent. */
   onChange?: (value: string) => void;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
 };
 
 export type RadioProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChange" | "children"> & {
+  name?: string | undefined;
   value: string;
+  selected?: boolean | undefined;
+  defaultSelected?: boolean | undefined;
   disabled?: boolean | undefined;
+  onChange?: ((selected: boolean) => void) | undefined;
   inputProps?: Omit<
     InputHTMLAttributes<HTMLInputElement>,
-    "type" | "checked" | "disabled" | "name" | "value"
+    "type" | "checked" | "defaultChecked" | "disabled" | "name" | "value"
   >;
   children?: ReactNode | ((state: Omit<ChoiceState, "indeterminate">) => ReactNode);
 };

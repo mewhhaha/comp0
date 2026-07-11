@@ -1,12 +1,16 @@
 import { useCallback, useState } from "react";
 import { useEventCallback } from "./utils.js";
 
+/** Options for a controlled or uncontrolled state value. */
 export interface ControllableStateOptions<T> {
   value?: T | undefined;
   defaultValue: T;
   onChange?: ((value: T) => void) | undefined;
 }
 
+/**
+ * Manages a value that may be controlled by the caller or initialized internally.
+ */
 export function useControllableState<T>({
   value,
   defaultValue,

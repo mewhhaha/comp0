@@ -12,6 +12,7 @@
   "dependencies": {
     "@comp0/react": "workspace:*",
     "@react-router/node": "7.17.0",
+    "@shikijs/langs": "4.2.0",
     "isbot": "^5.1.40",
     "lucide-react": "1.17.0",
     "react": "19.2.7",

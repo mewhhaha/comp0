@@ -1,45 +1,58 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldIds } from "../field.js";
-import { ComboBoxRootContext, type RefProp } from "../shared.js";
-import { type ComboboxProps } from "./pickers-shared.js";
+import { ComboBoxRootContext, PickerRootContext, type RefProp } from "../shared.js";
+import { defaultFilter, type ComboboxProps } from "./pickers-shared.js";
 export type { ComboboxProps } from "./pickers-shared.js";
 export function Combobox({
   value,
-  defaultValue = "",
+  defaultValue,
   onChange,
-  selectedValue,
-  defaultSelectedValue,
-  onSelectedValueChange,
+  inputValue: inputValueProp,
+  defaultInputValue = "",
+  onInputChange,
+  filter = defaultFilter,
+  allowsEmptyCollection = false,
   disabled,
   invalid,
   required,
   name,
+  as,
   id,
   children,
   ref,
   ...props
 }: ComboboxProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
-  const [open, setOpen] = useState(false);
   const [activeKey, setActiveKey] = useState("");
+  const [activeId, setActiveId] = useState("");
   const itemTextRef = useRef(new Map<string, ReactNode>());
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
     props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
   const [inputValue, setInputValue] = useControllableState({
-    value,
-    defaultValue,
-    onChange,
+    value: inputValueProp,
+    defaultValue: defaultInputValue,
+    onChange: onInputChange,
   });
   const [selected, setSelected] = useControllableState({
-    value: selectedValue,
-    defaultValue: defaultSelectedValue ?? "",
-    onChange: onSelectedValueChange,
+    value,
+    defaultValue: defaultValue ?? "",
+    onChange,
   });
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const [selectedText, setSelectedText] = useState(selected);
+  useEffect(() => {
+    const text = itemTextRef.current.get(selected);
+    setSelectedText(typeof text === "string" ? text : selected);
+  }, [selected]);
   const registerItem = useCallback((key: string, textValue: ReactNode) => {
     itemTextRef.current.set(key, textValue);
+    if (key === selectedRef.current) {
+      setSelectedText(typeof textValue === "string" ? textValue : key);
+    }
   }, []);
   const unregisterItem = useCallback((key: string) => {
     itemTextRef.current.delete(key);
@@ -48,10 +61,18 @@ export function Combobox({
     (key: string) => {
       setSelected(key);
       const text = itemTextRef.current.get(key);
+      setSelectedText(typeof text === "string" ? text : key);
       if (typeof text === "string") setInputValue(text);
     },
     [setInputValue, setSelected],
   );
+  const isItemVisible = useCallback(
+    (textValue: string) =>
+      allowsEmptyCollection || inputValue === "" || filter(textValue, inputValue),
+    [allowsEmptyCollection, filter, inputValue],
+  );
+  let displayValue = inputValue;
+  if (displayValue === "" && selected) displayValue = selectedText;
   const { controlId, descriptionId, errorId, labelId } = ids;
   const fieldContext = useMemo(
     () => ({
@@ -76,65 +97,89 @@ export function Combobox({
   const context = useMemo(
     () => ({
       activeKey,
+      activeId,
       disabled: resolvedDisabled,
-      open,
+      invalid: resolvedInvalid,
+      required: resolvedRequired,
+      displayValue,
       inputValue,
       selectedKey: selected,
       inputId: controlId,
       listBoxId: `${controlId}-listbox`,
-      popoverId: `${controlId}-popover`,
       labelId,
       descriptionId,
       setActiveKey,
-      setOpen,
+      setActiveId,
       setInputValue,
       setSelectedKey,
       registerItem,
       unregisterItem,
+      isItemVisible,
     }),
     [
       controlId,
       descriptionId,
       labelId,
       activeKey,
+      activeId,
+      displayValue,
       inputValue,
       resolvedDisabled,
-      open,
+      resolvedInvalid,
+      resolvedRequired,
       registerItem,
       selected,
       setInputValue,
       setSelectedKey,
       unregisterItem,
+      isItemVisible,
     ],
   );
 
+  const content = (
+    <>
+      {name && (
+        <input
+          type="hidden"
+          name={name}
+          value={selected || inputValue}
+          disabled={resolvedDisabled}
+        />
+      )}
+      {children}
+    </>
+  );
+  const Root = as;
   return (
     <FieldProvider value={fieldContext}>
-      <ComboBoxRootContext.Provider value={context}>
-        <div
-          {...props}
-          ref={ref}
-          id={id}
-          aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
-          data-disabled={dataAttr(resolvedDisabled)}
-          data-invalid={dataAttr(resolvedInvalid)}
-          data-open={dataAttr(open)}
-          data-placeholder={dataAttr(inputValue === "")}
-          data-required={dataAttr(resolvedRequired)}
-          data-selected-key={selected || undefined}
-          data-value={inputValue || undefined}
-        >
-          {name && (
-            <input
-              type="hidden"
-              name={name}
-              value={selected || inputValue}
-              disabled={resolvedDisabled}
-            />
+      <PickerRootContext.Provider
+        value={{
+          disabled: resolvedDisabled,
+          triggerId: controlId,
+          listBoxId: `${controlId}-listbox`,
+        }}
+      >
+        <ComboBoxRootContext.Provider value={context}>
+          {Root && Root !== Fragment ? (
+            <Root
+              {...props}
+              ref={ref}
+              id={id}
+              aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
+              data-disabled={dataAttr(resolvedDisabled)}
+              data-invalid={dataAttr(resolvedInvalid)}
+              data-placeholder={dataAttr(displayValue === "")}
+              data-required={dataAttr(resolvedRequired)}
+              data-selected-key={selected || undefined}
+              data-value={displayValue || undefined}
+            >
+              {content}
+            </Root>
+          ) : (
+            content
           )}
-          {children}
-        </div>
-      </ComboBoxRootContext.Provider>
+        </ComboBoxRootContext.Provider>
+      </PickerRootContext.Provider>
     </FieldProvider>
   );
 }

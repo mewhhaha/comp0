@@ -18,6 +18,7 @@
     "apps/docs/react-router.config.ts",
     "apps/docs/vite.config.ts",
     "vitest.config.ts",
+    "vitest.browser.setup.ts",
     "vitest.setup.ts"
   ]
 }

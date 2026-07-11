@@ -1,14 +1,19 @@
 import { useCallback, useRef } from "react";
 
-export interface CollectionNode<TValue = string> {
-  key: string;
+/** A logical collection entry, independent from the element used to render it. */
+export type CollectionNode<TValue = string, TKey = string> = {
+  /** Stable application identity used for selection, focus, and collection lookup. */
+  key: TKey;
+  /** The DOM id of the rendered element, when the collection participates in ARIA relationships. */
+  id: string;
   value: TValue;
   textValue: string;
   disabled?: boolean;
   element: HTMLElement | null;
-}
+};
 
-export function sortByDocumentPosition<TValue>(items: CollectionNode<TValue>[]) {
+/** Returns a copy of collection entries in their current DOM order. */
+export function sortByDocumentPosition<TValue, TKey>(items: CollectionNode<TValue, TKey>[]) {
   return [...items].sort((a, b) => {
     if (!a.element || !b.element || a.element === b.element) return 0;
     const position = a.element.compareDocumentPosition(b.element);
@@ -16,10 +21,15 @@ export function sortByDocumentPosition<TValue>(items: CollectionNode<TValue>[]) 
   });
 }
 
-export function useCollectionRegistry<TValue = string>() {
-  const itemsRef = useRef(new Map<string, CollectionNode<TValue>>());
+/**
+ * Registers collection entries and reads them in DOM order.
+ *
+ * `key` identifies the logical item; `id` remains available for DOM and ARIA references.
+ */
+export function useCollectionRegistry<TValue = string, TKey = string>() {
+  const itemsRef = useRef(new Map<TKey, CollectionNode<TValue, TKey>>());
 
-  const register = useCallback((node: CollectionNode<TValue>) => {
+  const register = useCallback((node: CollectionNode<TValue, TKey>) => {
     itemsRef.current.set(node.key, node);
     return () => {
       itemsRef.current.delete(node.key);
