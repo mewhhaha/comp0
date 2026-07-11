@@ -28,6 +28,8 @@ export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;
   id?: string | undefined;
   disabled?: boolean | undefined;
+  /** Overrides the text crawled from children for typeahead. */
+  textValue?: string | undefined;
 };
 
 export type MenuSectionProps = HTMLAttributes<HTMLDivElement>;

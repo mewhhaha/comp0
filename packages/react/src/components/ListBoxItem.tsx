@@ -1,13 +1,14 @@
-import { useCallback, useContext, useId } from "react";
+import { useCallback, useContext, useId, useLayoutEffect, useRef } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
-import { ListBoxContext } from "./collection-shared.js";
+import { ListBoxContext, resolveItemLabel } from "./collection-shared.js";
 import { type ListBoxItemProps } from "./collection-shared.js";
 export type { ListBoxItemProps } from "./collection-shared.js";
 export function ListBoxItem({
   id: idProp,
   value: valueProp,
   disabled,
+  textValue,
   children,
   onClick,
   onKeyDown,
@@ -27,15 +28,36 @@ export function ListBoxItem({
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
   else if (selected || active) tabIndex = 0;
-  const label = typeof children === "string" ? children : (props["aria-label"] ?? value);
+  const ariaLabel = props["aria-label"];
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   const itemRef = useCallback(
     (element: HTMLDivElement | null) => {
-      registerListBoxItem?.(value, label, element, resolvedDisabled);
+      elementRef.current = element;
+      registerListBoxItem?.(
+        value,
+        resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+        element,
+        resolvedDisabled,
+      );
       composeRefs(ref)(element);
     },
-    [label, ref, registerListBoxItem, resolvedDisabled, value],
+    // children stays out: the layout effect below re-reads rendered text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ariaLabel, ref, registerListBoxItem, resolvedDisabled, textValue, value],
   );
+
+  // Re-register after every render so crawled labels follow content changes.
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+    registerListBoxItem?.(
+      value,
+      resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+      element,
+      resolvedDisabled,
+    );
+  });
 
   return (
     <div
