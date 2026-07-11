@@ -1,7 +1,7 @@
 import { createElement, Fragment, useId, useMemo, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
-import { TooltipContext, type TooltipProps } from "./overlay-shared.js";
+import { PopoverContext, TooltipContext, type TooltipProps } from "./overlay-shared.js";
 export type { TooltipProps } from "./overlay-shared.js";
 
 export function Tooltip({
@@ -35,6 +35,17 @@ export function Tooltip({
     }),
     [generatedId, open, props.id, setOpen],
   );
+  // Tooltips compose with the popover system internally so TooltipContent
+  // can live in the top layer instead of expanding its container.
+  const popoverContext = useMemo(
+    () => ({
+      ...context,
+      requestClose() {
+        context.setOpen(false);
+      },
+    }),
+    [context],
+  );
   let root = children;
   if (as && as !== Fragment) {
     root = createElement(
@@ -43,5 +54,9 @@ export function Tooltip({
       children,
     );
   }
-  return <TooltipContext.Provider value={context}>{root}</TooltipContext.Provider>;
+  return (
+    <TooltipContext.Provider value={context}>
+      <PopoverContext.Provider value={popoverContext}>{root}</PopoverContext.Provider>
+    </TooltipContext.Provider>
+  );
 }
