@@ -752,7 +752,7 @@ const field = [
         prop("name", "string", "Shared submission name for the group."),
       ]),
       p("Radio", "item", "Labelled native radio option.", true, false, [
-        prop("value", "string", "This option\u2019s value."),
+        prop("value", "string", "This option’s value."),
         prop("disabled", "boolean", "Disables the option."),
       ]),
     ],
@@ -856,7 +856,7 @@ const navigation = [
         prop("collapsible", "boolean", "Allows closing the last open item."),
       ]),
       p("AccordionItem", "item", "Owns an item wrapper.", true, false, [
-        prop("value", "string", "Identity used by the root\u2019s open state."),
+        prop("value", "string", "Identity used by the root’s open state."),
         prop("disabled", "boolean", "Disables the item."),
       ]),
       p("AccordionHeader", "label", "Heading wrapper."),
@@ -978,8 +978,13 @@ const navigation = [
       ]),
       p("ListBoxSection", "root", "Optional labelled section.", true, true),
       p("ListBoxItem", "item", "Selectable option.", true, false, [
-        prop("value", "string", "This option\u2019s selection key."),
+        prop("value", "string", "This option’s selection key."),
         prop("disabled", "boolean", "Disables the option."),
+        prop(
+          "textValue",
+          "string",
+          "Overrides the text crawled from children when markup makes it ambiguous.",
+        ),
       ]),
     ],
     [
@@ -1023,6 +1028,11 @@ const navigation = [
       p("MenuItem", "item", "Action item.", true, false, [
         prop("value", "string", "Optional identity for typeahead and data-value."),
         prop("disabled", "boolean", "Disables the action."),
+        prop(
+          "textValue",
+          "string",
+          "Overrides the text crawled from children when markup makes it ambiguous.",
+        ),
       ]),
     ],
     [
@@ -1055,8 +1065,13 @@ const navigation = [
         prop("onChange", "(value: string) => void", "Receives the next selected row."),
       ]),
       p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
-        prop("value", "string", "This row\u2019s selection key."),
+        prop("value", "string", "This row’s selection key."),
         prop("disabled", "boolean", "Disables the row."),
+        prop(
+          "textValue",
+          "string",
+          "Overrides the text crawled from children when markup makes it ambiguous.",
+        ),
       ]),
     ],
     [
@@ -1144,8 +1159,13 @@ const picker = [
       p("SelectValue", "value", "Selected option text."),
       p("SelectPopover", "content", "The listbox surface."),
       p("SelectOption", "item", "Selectable option.", true, false, [
-        prop("value", "string", "This option\u2019s value."),
+        prop("value", "string", "This option’s value."),
         prop("disabled", "boolean", "Disables the option."),
+        prop(
+          "textValue",
+          "string",
+          "Overrides the text crawled from children when markup makes it ambiguous.",
+        ),
       ]),
     ],
     [
@@ -1178,7 +1198,7 @@ const picker = [
         prop("onChange", "(value: string) => void", "Receives the committed option."),
         prop("inputValue / defaultInputValue", "string", "Controlled or initial editable text."),
         prop("onInputChange", "(value: string) => void", "Receives the editable text."),
-        prop("filter", "(optionText, inputValue) => boolean", "Custom match rule for results."),
+        prop("filter", "(textValue, inputValue) => boolean", "Custom match rule for results."),
         prop("name", "string", "Submission name."),
       ]),
       p("Label", "label", "Visible name connected to the input."),
@@ -1186,8 +1206,13 @@ const picker = [
       p("ComboboxInput", "input", "Native text input that owns editing and required validity."),
       p("ComboboxPopover", "content", "The listbox results surface."),
       p("ComboboxOption", "item", "Selectable result.", true, false, [
-        prop("value", "string", "This result\u2019s value."),
+        prop("value", "string", "This result’s value."),
         prop("disabled", "boolean", "Disables the result."),
+        prop(
+          "textValue",
+          "string",
+          "Overrides the text crawled from children when markup makes it ambiguous.",
+        ),
       ]),
     ],
     [

@@ -66,26 +66,6 @@ describe("source conventions", () => {
     expect(aliasReferences).toEqual([]);
   });
 
-  it("keeps collection item textValue out of public React props and docs", () => {
-    const collectionsSource = readFileSync(
-      resolve(root, "packages/react/src/components/collection-shared.tsx"),
-      "utf8",
-    );
-    const docsSources = sources.filter(({ relativePath }) => relativePath.startsWith("apps/docs/"));
-    const docsTextValueReferences = docsSources.flatMap(({ relativePath, source }) =>
-      [...source.matchAll(/\btextValue\b/g)].map((match) => `${relativePath}: ${match[0]}`),
-    );
-    const collectionItemPropBlocks = [
-      ...collectionsSource.matchAll(
-        /export type (?:ListBoxItemProps|MenuItemProps)\b[\s\S]*?^};/gm,
-      ),
-    ].map((match) => match[0]);
-
-    expect(collectionItemPropBlocks).toHaveLength(2);
-    expect(collectionItemPropBlocks.join("\n")).not.toContain("textValue");
-    expect(docsTextValueReferences).toEqual([]);
-  });
-
   it("keeps React component props as exported type aliases", () => {
     const exportedPropInterfaces = conventionSources.flatMap(({ relativePath, source }) =>
       matchingLines(source, /\bexport\s+interface\s+\w+Props\b/).map(
