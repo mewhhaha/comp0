@@ -49,6 +49,23 @@ export function ApiReference({ imports, parts, className }: ApiReferenceProps) {
                 </td>
                 <td className="py-2.5 align-top text-sm/6 text-zinc-600 dark:text-zinc-300">
                   {part.description}
+                  {part.props && (
+                    <dl className="mt-2 grid gap-1.5 border-l-2 border-zinc-950/5 pl-3 dark:border-white/10">
+                      {part.props.map((partProp) => (
+                        <div key={partProp.name}>
+                          <dt className="inline">
+                            <code className="font-mono text-xs/5 font-medium text-teal-800 dark:text-teal-200">
+                              {partProp.name}
+                            </code>{" "}
+                            <span className="font-mono text-xs/5 text-zinc-400 dark:text-zinc-500">
+                              {partProp.type}
+                            </span>
+                          </dt>{" "}
+                          <dd className="inline">{partProp.description}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
                 </td>
               </tr>
             ))}

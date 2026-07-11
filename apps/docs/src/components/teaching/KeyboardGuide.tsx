@@ -7,6 +7,7 @@ const keyLabels: Record<KeyboardToken, { visual: string; spoken: string }> = {
   ArrowLeft: { visual: "←", spoken: "Arrow left" },
   ArrowRight: { visual: "→", spoken: "Arrow right" },
   ArrowUp: { visual: "↑", spoken: "Arrow up" },
+  Ctrl: { visual: "Ctrl", spoken: "Control" },
   End: { visual: "End", spoken: "End" },
   Enter: { visual: "↵", spoken: "Enter" },
   Escape: { visual: "Esc", spoken: "Escape" },
