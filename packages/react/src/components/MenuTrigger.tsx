@@ -1,7 +1,7 @@
-import { createElement, useCallback } from "react";
+import { createElement, Fragment, useCallback } from "react";
 import { dataAttr } from "@comp0/core";
 import { composeRefs } from "@comp0/core";
-import { type RefProp } from "../shared.js";
+import { Slot, type RefProp } from "../shared.js";
 import { useMenuRootContext, type MenuTriggerProps } from "./menu-shared.js";
 
 export type { MenuTriggerProps } from "./menu-shared.js";
@@ -22,7 +22,7 @@ export function MenuTrigger({
     },
     [menu, ref],
   );
-  const Trigger = as ?? "button";
+  const Trigger = as === Fragment ? Slot : (as ?? "button");
   const isNativeButton = Trigger === "button";
   return createElement(Trigger, {
     ...props,

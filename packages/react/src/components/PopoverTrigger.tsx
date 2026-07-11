@@ -1,6 +1,6 @@
-import { createElement, useCallback } from "react";
+import { createElement, Fragment, useCallback } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
-import { dataSlot, type RefProp } from "../shared.js";
+import { dataSlot, Slot, type RefProp } from "../shared.js";
 import { usePopoverContext, type OverlayTriggerProps } from "./overlay-shared.js";
 export type PopoverTriggerProps = OverlayTriggerProps;
 
@@ -18,7 +18,7 @@ export function PopoverTrigger({
     },
     [popover, ref],
   );
-  const Trigger = as ?? "button";
+  const Trigger = as === Fragment ? Slot : (as ?? "button");
   return createElement(Trigger, {
     ...props,
     ref: triggerRef,

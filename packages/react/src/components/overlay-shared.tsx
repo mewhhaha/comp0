@@ -30,7 +30,7 @@ export type TooltipProps = OverlayRootProps;
 
 export type OverlayTriggerProps = ButtonHTMLAttributes<HTMLButtonElement> &
   Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "download" | "href" | "rel" | "target"> & {
-    as?: ElementType | undefined;
+    as?: ElementType | typeof Fragment | undefined;
   };
 
 export type OverlayContentProps = HTMLAttributes<HTMLDivElement> & {

@@ -1,6 +1,6 @@
-import { createElement, useCallback } from "react";
+import { createElement, Fragment, useCallback } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
-import { dataSlot, type RefProp } from "../shared.js";
+import { dataSlot, Slot, type RefProp } from "../shared.js";
 import { useTooltipContext, type OverlayTriggerProps } from "./overlay-shared.js";
 export type TooltipTriggerProps = OverlayTriggerProps;
 
@@ -21,7 +21,7 @@ export function TooltipTrigger({
     },
     [tooltip, ref],
   );
-  const Trigger = as ?? "button";
+  const Trigger = as === Fragment ? Slot : (as ?? "button");
   let ariaDescribedBy = props["aria-describedby"];
   if (tooltip?.open) ariaDescribedBy ??= tooltip.contentId;
   return createElement(Trigger, {
