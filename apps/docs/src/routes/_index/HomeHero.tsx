@@ -1,50 +1,63 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 
 export type HomeHeroProps = {
   className?: string | undefined;
 };
 
+function PartTag({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={`hidden items-center @[22rem]:flex ${className ?? ""}`}>
+      <span
+        aria-hidden="true"
+        className="min-w-4 flex-1 border-t-2 border-dotted border-teal-600/50 dark:border-teal-400/40"
+      />
+      <span className="pl-2 font-mono text-xs/5 font-medium whitespace-nowrap text-teal-700 dark:text-teal-300">
+        {children}
+      </span>
+    </div>
+  );
+}
+
 function GuidedAnatomy() {
   return (
     <div
-      aria-label="A Select root passing behavior to its visible trigger and content parts"
-      className="rounded-[min(2vw,var(--radius-2xl))] bg-zinc-50 p-4 ring-1 ring-zinc-950/10 sm:p-6 dark:bg-white/3 dark:ring-white/10"
+      aria-label="An open select component with its trigger, content, and option parts labelled"
+      className="relative isolate overflow-hidden rounded-3xl bg-zinc-50 p-6 ring-1 ring-zinc-950/5 sm:p-8 dark:bg-white/3 dark:ring-white/10"
       role="img"
     >
-      <div className="rounded-xl border border-dashed border-teal-700/50 p-3 sm:p-4 dark:border-teal-300/40">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-mono text-sm/6 font-medium text-teal-800 dark:text-teal-200">
-            Select root
-          </p>
-          <p className="font-mono text-sm/6 text-zinc-500 dark:text-zinc-400">
-            context only · no wrapper
-          </p>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--color-zinc-200)_1px,transparent_1px)] bg-size-[16px_16px] dark:bg-[radial-gradient(circle,var(--color-zinc-700)_1px,transparent_1px)]"
+      />
+      <div className="grid gap-3">
+        <div className="flex items-center">
+          <div className="flex w-44 shrink-0 items-center justify-between rounded-xl bg-white px-4 py-2.5 text-base/7 font-medium text-zinc-950 shadow-sm ring-1 ring-zinc-950/10 @sm:w-52 dark:bg-zinc-800 dark:text-white dark:ring-white/10">
+            Small
+            <ChevronDown aria-hidden="true" className="size-4 text-zinc-400" />
+          </div>
+          <PartTag className="flex-1">SelectTrigger</PartTag>
         </div>
-        <div className="mt-4 grid gap-3 @sm:grid-cols-[5fr_6fr]">
-          <div className="rounded-lg bg-white p-3 ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:ring-white/10">
-            <p className="font-mono text-sm/6 text-zinc-500 dark:text-zinc-400">Trigger</p>
-            <div className="mt-2 flex min-w-0 items-center justify-between gap-3 rounded-md bg-zinc-950 px-3 py-2 text-base/7 text-white dark:bg-white dark:text-zinc-950">
-              <span className="truncate">Small</span>
-              <span aria-hidden="true" className="shrink-0 font-mono">
-                ↓
-              </span>
-            </div>
-            <p className="mt-2 font-mono text-sm/6 text-teal-700 dark:text-teal-300">
-              Value lives here
+        <div className="flex">
+          <div className="grid w-44 shrink-0 gap-0.5 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-950/10 @sm:w-52 dark:bg-zinc-800 dark:ring-white/10">
+            <p className="flex items-center justify-between rounded-lg bg-teal-600/10 px-3 py-1.5 text-base/7 font-medium text-teal-900 dark:bg-teal-400/10 dark:text-teal-100">
+              Small
+              <Check aria-hidden="true" className="size-4 text-teal-700 dark:text-teal-300" />
             </p>
+            <p className="px-3 py-1.5 text-base/7 text-zinc-600 dark:text-zinc-300">Medium</p>
+            <p className="px-3 py-1.5 text-base/7 text-zinc-600 dark:text-zinc-300">Large</p>
           </div>
-          <div className="rounded-lg bg-white p-3 ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:ring-white/10">
-            <p className="font-mono text-sm/6 text-zinc-500 dark:text-zinc-400">Content</p>
-            <div className="mt-2 grid gap-1">
-              <p className="rounded-md bg-teal-50 px-3 py-2 text-base/7 text-teal-950 dark:bg-teal-400/10 dark:text-teal-100">
-                Small <span className="float-right font-mono">selected</span>
-              </p>
-              <p className="px-3 py-2 text-base/7 text-zinc-600 dark:text-zinc-300">Medium</p>
-              <p className="px-3 py-2 text-base/7 text-zinc-600 dark:text-zinc-300">Large</p>
-            </div>
+          <div className="relative min-w-0 flex-1">
+            <PartTag className="absolute inset-x-0 top-[26px] -translate-y-1/2">
+              SelectOption
+            </PartTag>
+            <PartTag className="absolute inset-x-0 bottom-0 translate-y-1/2">SelectContent</PartTag>
           </div>
         </div>
+        <p className="font-mono text-xs/5 text-teal-700 @[22rem]:hidden dark:text-teal-300">
+          SelectTrigger · SelectContent · SelectOption
+        </p>
       </div>
     </div>
   );

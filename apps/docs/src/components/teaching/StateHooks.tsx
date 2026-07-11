@@ -11,13 +11,7 @@ type StateHooksProps = {
 export function StateHooks({ hooks, className }: StateHooksProps) {
   const titleId = `${useId().replaceAll(":", "")}-state-hooks-title`;
   return (
-    <section
-      className={cn(
-        "rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900",
-        className,
-      )}
-      aria-labelledby={titleId}
-    >
+    <section className={cn("max-w-full min-w-0", className)} aria-labelledby={titleId}>
       <div className="flex items-center gap-3">
         <Braces className="size-6 text-teal-700 dark:text-teal-300" aria-hidden="true" />
         <div>

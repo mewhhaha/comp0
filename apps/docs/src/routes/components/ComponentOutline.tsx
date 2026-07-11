@@ -2,11 +2,11 @@ import type { ComponentDoc } from "../../content/index.js";
 
 const sections = [
   ["example", "Try it"],
-  ["anatomy", "See the parts"],
+  ["anatomy", "Anatomy"],
   ["build", "Build it step by step"],
-  ["keyboard", "Use the keyboard"],
-  ["styling", "Style each state"],
+  ["keyboard", "Keyboard support"],
   ["contract", "Forms and accessibility"],
+  ["api", "API and styling"],
 ] as const;
 
 export type ComponentOutlineProps = {

@@ -436,6 +436,7 @@ const common = (
     title,
     group,
     ...copy,
+    imports: names,
     parts,
     exampleSource: `${imp(names)}\n\nexport function Example() {\n  return (\n${formatExample(source)}\n  );\n}`,
     keyboard,
