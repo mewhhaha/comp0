@@ -1,7 +1,7 @@
-import { useCallback, useContext, useId } from "react";
+import { useCallback, useContext, useId, useLayoutEffect, useRef } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { InteractiveDiv, type RefProp } from "../shared.js";
-import { MenuContext } from "./collection-shared.js";
+import { MenuContext, resolveItemLabel } from "./collection-shared.js";
 import { type MenuItemProps } from "./menu-shared.js";
 
 export type { MenuItemProps } from "./menu-shared.js";
@@ -10,6 +10,7 @@ export function MenuItem({
   id: idProp,
   value: valueProp,
   disabled,
+  textValue,
   children,
   onClick,
   onKeyDown,
@@ -23,14 +24,35 @@ export function MenuItem({
   const value = valueProp ?? generatedId;
   const id = idProp ?? `menu-item-${generatedId}`;
   const resolvedDisabled = Boolean(disabled);
-  const label = typeof children === "string" ? children : (props["aria-label"] ?? value);
+  const ariaLabel = props["aria-label"];
+  const elementRef = useRef<HTMLDivElement | null>(null);
   const itemRef = useCallback(
     (element: HTMLDivElement | null) => {
-      menu?.register(value, label, element, resolvedDisabled);
+      elementRef.current = element;
+      menu?.register(
+        value,
+        resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+        element,
+        resolvedDisabled,
+      );
       composeRefs(ref)(element);
     },
-    [label, menu, ref, resolvedDisabled, value],
+    // children stays out: the layout effect below re-reads rendered text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ariaLabel, menu, ref, resolvedDisabled, textValue, value],
   );
+
+  // Re-register after every render so crawled labels follow content changes.
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+    menu?.register(
+      value,
+      resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+      element,
+      resolvedDisabled,
+    );
+  });
 
   return (
     <InteractiveDiv

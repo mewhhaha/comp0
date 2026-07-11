@@ -8,18 +8,22 @@ import {
 } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
+import { resolveItemLabel } from "./collection-shared.js";
 import { GridListContext, rowFocusables } from "./grid-list-shared.js";
 
 export type GridListItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;
   id?: string | undefined;
   disabled?: boolean | undefined;
+  /** Overrides the text crawled from children for typeahead. */
+  textValue?: string | undefined;
 };
 
 export function GridListItem({
   id: idProp,
   value: valueProp,
   disabled,
+  textValue,
   children,
   onClick,
   ref,
@@ -36,15 +40,22 @@ export function GridListItem({
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
   else if (selected || active) tabIndex = 0;
-  const label = typeof children === "string" ? children : (props["aria-label"] ?? value);
+  const ariaLabel = props["aria-label"];
 
   const itemRef = useCallback(
     (element: HTMLDivElement | null) => {
       rowRef.current = element;
-      gridList?.register(value, label, element, resolvedDisabled);
+      gridList?.register(
+        value,
+        resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+        element,
+        resolvedDisabled,
+      );
       composeRefs(ref)(element);
     },
-    [gridList, label, ref, resolvedDisabled, value],
+    // children stays out: the layout effect below re-reads rendered text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ariaLabel, gridList, ref, resolvedDisabled, textValue, value],
   );
 
   // Interactive children are reachable with ArrowRight instead of Tab, so
@@ -53,6 +64,13 @@ export function GridListItem({
     const row = rowRef.current;
     if (!row) return;
     for (const element of rowFocusables(row)) element.tabIndex = -1;
+    // Re-register after every render so crawled labels follow content changes.
+    gridList?.register(
+      value,
+      resolveItemLabel({ textValue, children, element: row, ariaLabel, fallback: value }),
+      row,
+      resolvedDisabled,
+    );
   });
 
   return (
