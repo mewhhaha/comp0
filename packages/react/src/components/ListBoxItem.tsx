@@ -16,7 +16,9 @@ export function ListBoxItem({
 }: ListBoxItemProps & RefProp<HTMLDivElement>) {
   const listBox = useContext(ListBoxContext);
   const generatedId = useId().replace(/:/g, "");
-  const value = valueProp ?? idProp ?? generatedId;
+  // The id prop is only ever the DOM id; the selection key is value alone so
+  // the two concepts cannot silently stand in for each other.
+  const value = valueProp ?? generatedId;
   const id = idProp ?? `listbox-option-${generatedId}`;
   const registerListBoxItem = listBox?.register;
   const resolvedDisabled = Boolean(disabled);

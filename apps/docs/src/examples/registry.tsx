@@ -372,26 +372,26 @@ function TabsExample() {
       <TabList className="flex max-w-full gap-1 overflow-x-auto border-b border-zinc-950/10 dark:border-white/10">
         <Tab
           className="shrink-0 px-3 py-2.5 text-base text-zinc-700 data-selected:border-b-2 data-selected:border-teal-600 data-selected:text-teal-800 sm:py-2 sm:text-sm dark:text-zinc-300 dark:data-selected:border-teal-400 dark:data-selected:text-teal-200"
-          tabKey="preview"
+          tab="preview"
         >
           Preview
         </Tab>
         <Tab
           className="shrink-0 px-3 py-2.5 text-base text-zinc-700 data-selected:border-b-2 data-selected:border-teal-600 data-selected:text-teal-800 sm:py-2 sm:text-sm dark:text-zinc-300 dark:data-selected:border-teal-400 dark:data-selected:text-teal-200"
-          tabKey="code"
+          tab="code"
         >
           Code
         </Tab>
       </TabList>
       <TabPanel
         className="pt-3 text-base text-zinc-700 sm:text-sm dark:text-zinc-300"
-        tabKey="preview"
+        tab="preview"
       >
         A live component preview.
       </TabPanel>
       <TabPanel
         className="pt-3 font-mono text-base text-zinc-700 sm:text-sm dark:text-zinc-300"
-        tabKey="code"
+        tab="code"
       >
         import {"{ Button }"} from "@comp0/react"
       </TabPanel>
@@ -455,10 +455,10 @@ function ListBoxExample() {
 function MenuExample() {
   return (
     <Menu>
-      <MenuTrigger className="rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
+      <MenuTrigger className="[anchor-name:--menu-example] rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
         Actions
       </MenuTrigger>
-      <MenuContent className="mt-2 w-40 rounded bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+      <MenuContent className="[position-anchor:--menu-example] inset-auto m-0 mt-2 w-40 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
         <MenuItem
           className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
           value="rename"
@@ -555,7 +555,7 @@ function DialogExample() {
       </DialogTrigger>
       <DialogContent
         aria-label="Example dialog"
-        className="w-[min(24rem,calc(100vw-2rem))] rounded-[min(1vw,12px)] bg-white p-4 text-zinc-900 shadow-2xl ring-1 ring-zinc-950/10 backdrop:bg-zinc-950/40 dark:bg-zinc-900 dark:text-zinc-50 dark:shadow-none dark:ring-white/10"
+        className="m-auto w-[min(24rem,calc(100vw-2rem))] rounded-[min(1vw,12px)] bg-white p-4 text-zinc-900 shadow-2xl ring-1 ring-zinc-950/10 backdrop:bg-zinc-950/40 dark:bg-zinc-900 dark:text-zinc-50 dark:shadow-none dark:ring-white/10"
       >
         <div className="flex flex-col gap-2">
           <p className="text-base font-medium sm:text-sm">Ready to publish?</p>
@@ -584,7 +584,7 @@ function AlertDialogExample() {
       </DialogTrigger>
       <AlertDialogContent
         aria-label="Delete draft"
-        className="w-[min(24rem,calc(100vw-2rem))] rounded-[min(1vw,12px)] bg-white p-4 text-zinc-900 shadow-2xl ring-1 ring-red-950/10 backdrop:bg-zinc-950/40 dark:bg-zinc-900 dark:text-zinc-50 dark:shadow-none dark:ring-red-200/10"
+        className="m-auto w-[min(24rem,calc(100vw-2rem))] rounded-[min(1vw,12px)] bg-white p-4 text-zinc-900 shadow-2xl ring-1 ring-red-950/10 backdrop:bg-zinc-950/40 dark:bg-zinc-900 dark:text-zinc-50 dark:shadow-none dark:ring-red-200/10"
       >
         <div className="flex flex-col gap-2">
           <p className="text-base font-medium sm:text-sm">Delete this draft?</p>
@@ -614,10 +614,10 @@ function AlertDialogExample() {
 function PopoverExample() {
   return (
     <Popover>
-      <PopoverTrigger className="rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
+      <PopoverTrigger className="[anchor-name:--popover-example] rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
         Show details
       </PopoverTrigger>
-      <PopoverContent className="mt-2 flex w-56 flex-col gap-1 rounded bg-white p-3 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+      <PopoverContent className="[position-anchor:--popover-example] inset-auto m-0 mt-2 flex w-56 flex-col gap-1 rounded border-0 bg-white p-3 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
         <p className="text-base font-medium text-zinc-900 sm:text-sm dark:text-zinc-100">
           New release
         </p>
@@ -632,10 +632,10 @@ function PopoverExample() {
 function TooltipExample() {
   return (
     <Tooltip>
-      <TooltipTrigger className="rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
+      <TooltipTrigger className="[anchor-name:--tooltip-example] rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
         Hover or focus
       </TooltipTrigger>
-      <TooltipContent className="mt-2 rounded bg-zinc-900 px-2 py-1 text-base text-white sm:text-sm dark:bg-zinc-100 dark:text-zinc-900">
+      <TooltipContent className="[position-anchor:--tooltip-example] inset-auto m-0 mt-2 w-max rounded border-0 bg-zinc-900 px-2 py-1 text-base text-white [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] sm:text-sm dark:bg-zinc-100 dark:text-zinc-900">
         Helpful context
       </TooltipContent>
     </Tooltip>

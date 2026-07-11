@@ -18,12 +18,12 @@ export function LiveExample({
   return (
     <section
       className={cn(
-        "max-w-full min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900",
+        "max-w-full min-w-0 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900",
         className,
       )}
       aria-label={title}
     >
-      <div className="flex items-start gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
+      <div className="flex items-start gap-3 rounded-t-[calc(var(--radius-xl)-1px)] border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
         <PanelTopOpen
           className="size-6 shrink-0 text-teal-700 dark:text-teal-300"
           aria-hidden="true"

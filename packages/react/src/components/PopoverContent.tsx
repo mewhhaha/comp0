@@ -9,10 +9,13 @@ export function PopoverContent({
   hidden,
   onKeyDown,
   onToggle,
-  popover: popoverMode,
+  popover: popoverProp = "auto",
   ref,
   ...props
 }: PopoverContentProps & RefProp<HTMLDivElement>) {
+  // Top layer by default, matching SelectContent; pass popover="none" to
+  // render in normal flow instead.
+  const popoverMode = popoverProp === "none" ? undefined : popoverProp;
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>(popoverMode);
   const Content = as ?? "div";
 

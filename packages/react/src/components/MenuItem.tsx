@@ -18,7 +18,9 @@ export function MenuItem({
 }: MenuItemProps & RefProp<HTMLDivElement>) {
   const menu = useContext(MenuContext);
   const generatedId = useId().replace(/:/g, "");
-  const value = valueProp ?? idProp ?? generatedId;
+  // The id prop is only ever the DOM id; the item key is value alone so the
+  // two concepts cannot silently stand in for each other.
+  const value = valueProp ?? generatedId;
   const id = idProp ?? `menu-item-${generatedId}`;
   const resolvedDisabled = Boolean(disabled);
   const label = typeof children === "string" ? children : (props["aria-label"] ?? value);

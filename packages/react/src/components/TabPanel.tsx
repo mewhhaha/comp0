@@ -4,10 +4,10 @@ import { dataAttr } from "@comp0/core";
 import { TabsContext } from "./disclosure-shared.js";
 import { type TabPanelProps } from "./disclosure-shared.js";
 export type { TabPanelProps } from "./disclosure-shared.js";
-export function TabPanel({ tabKey, id, ref, ...props }: TabPanelProps & RefProp<HTMLDivElement>) {
+export function TabPanel({ tab, id, ref, ...props }: TabPanelProps & RefProp<HTMLDivElement>) {
   const tabs = useContext(TabsContext);
-  const selected = tabs?.selectedKey === tabKey;
-  const tabId = `tab-${tabKey}`;
+  const selected = tabs?.selectedKey === tab;
+  const tabId = `tab-${tab}`;
 
   return (
     <div

@@ -2,6 +2,7 @@ import { createElement, Fragment, useId, useMemo, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { MenuRootContext, type MenuProps } from "./menu-shared.js";
+import { PopoverContext } from "./overlay-shared.js";
 
 export type { MenuProps } from "./menu-shared.js";
 
@@ -38,10 +39,27 @@ export function Menu({
     }),
     [menuId, open, setOpen],
   );
+  // The menu composes with the popover system internally: providing
+  // PopoverContext lets MenuContent share the top-layer surface machinery
+  // with SelectContent instead of rendering in normal flow.
+  const popoverContext = useMemo(
+    () => ({
+      ...context,
+      requestClose() {
+        context.setOpen(false);
+        context.focusTrigger();
+      },
+    }),
+    [context],
+  );
   let root = children;
   if (as && as !== Fragment) {
     root = createElement(as, { ...props, ref, id, "data-open": dataAttr(open) }, children);
   }
 
-  return <MenuRootContext.Provider value={context}>{root}</MenuRootContext.Provider>;
+  return (
+    <MenuRootContext.Provider value={context}>
+      <PopoverContext.Provider value={popoverContext}>{root}</PopoverContext.Provider>
+    </MenuRootContext.Provider>
+  );
 }

@@ -41,9 +41,9 @@ export type DialogContentProps = Omit<React.DialogHTMLAttributes<HTMLDialogEleme
   portal?: boolean | undefined;
 };
 
-export type PopoverContentProps = OverlayContentProps & {
+export type PopoverContentProps = Omit<OverlayContentProps, "popover"> & {
   anchor?: string | undefined;
-  popover?: "auto" | "manual" | undefined;
+  popover?: "auto" | "manual" | "none" | undefined;
 };
 
 export type ModalContentProps = Omit<React.DialogHTMLAttributes<HTMLDialogElement>, "open"> & {

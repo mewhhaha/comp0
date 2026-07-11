@@ -74,9 +74,9 @@ describe("retained accessibility contracts", () => {
         </Accordion>
         <Tabs defaultValue="overview">
           <TabList aria-label="Project">
-            <Tab tabKey="overview">Overview</Tab>
+            <Tab tab="overview">Overview</Tab>
           </TabList>
-          <TabPanel tabKey="overview">Overview content</TabPanel>
+          <TabPanel tab="overview">Overview content</TabPanel>
         </Tabs>
         <Dialog>
           <DialogTrigger>Open settings</DialogTrigger>

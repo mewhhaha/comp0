@@ -5,7 +5,7 @@ import { TabsContext } from "./disclosure-shared.js";
 import { type TabProps } from "./disclosure-shared.js";
 export type { TabProps } from "./disclosure-shared.js";
 export function Tab({
-  tabKey,
+  tab,
   disabled,
   id,
   onClick,
@@ -14,15 +14,15 @@ export function Tab({
 }: TabProps & RefProp<HTMLButtonElement>) {
   const tabs = useContext(TabsContext);
   const resolvedDisabled = Boolean(disabled);
-  const selected = tabs?.selectedKey === tabKey;
-  const tabId = id ?? `tab-${tabKey}`;
+  const selected = tabs?.selectedKey === tab;
+  const tabId = id ?? `tab-${tab}`;
   const panelId = `${tabId}-panel`;
 
   return (
     <button
       {...props}
       ref={(element) => {
-        tabs?.registerTab(tabKey, element, resolvedDisabled);
+        tabs?.registerTab(tab, element, resolvedDisabled);
         composeRefs(ref)(element);
       }}
       id={tabId}
@@ -36,7 +36,7 @@ export function Tab({
       data-disabled={dataAttr(resolvedDisabled)}
       onClick={(event) => {
         onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) tabs?.setSelectedKey(tabKey);
+        if (!event.defaultPrevented && !resolvedDisabled) tabs?.setSelectedKey(tab);
       }}
     />
   );

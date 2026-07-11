@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
-import { findTypeaheadMatch, getRovingFocusTarget } from "@comp0/core";
+import { composeRefs, findTypeaheadMatch, getRovingFocusTarget } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import {
   MenuContext,
@@ -8,16 +8,19 @@ import {
   type SelectableCollectionContextValue,
 } from "./collection-shared.js";
 import { useMenuRootContext, type MenuContentProps } from "./menu-shared.js";
+import { usePopoverSurface } from "./overlay-shared.js";
 
 export type { MenuContentProps } from "./menu-shared.js";
 
 export function MenuContent({
   ref,
   onKeyDown,
+  onToggle,
   children,
   ...props
 }: MenuContentProps & RefProp<HTMLDivElement>) {
   const menu = useMenuRootContext();
+  const { onNativeToggle, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
   const activeKey = useRef("");
   const wasOpen = useRef(false);
@@ -65,12 +68,18 @@ export function MenuContent({
     <MenuContext.Provider value={context}>
       <div
         {...props}
-        ref={ref}
+        {...{ anchor: menu?.triggerId }}
+        ref={composeRefs(surfaceRef, ref)}
         id={props.id ?? menu?.contentId}
         role={props.role ?? "menu"}
+        popover="auto"
         hidden={!menu?.open}
         data-open={menu?.open || undefined}
         aria-labelledby={props["aria-labelledby"] ?? menu?.triggerId}
+        onToggle={(event) => {
+          onToggle?.(event);
+          if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
+        }}
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
