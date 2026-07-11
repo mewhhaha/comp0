@@ -16,6 +16,7 @@ export function MenuPopover({
   ref,
   onKeyDown,
   onToggle,
+  onBlur,
   children,
   ...props
 }: MenuPopoverProps & RefProp<HTMLDivElement>) {
@@ -33,7 +34,7 @@ export function MenuPopover({
       },
       setSelectedKey() {},
       close() {
-        menu?.setOpen(false);
+        menu?.closeAll();
       },
       register(key, textValue, element, disabled) {
         if (element)
@@ -78,7 +79,23 @@ export function MenuPopover({
         aria-labelledby={props["aria-labelledby"] ?? menu?.triggerId}
         onToggle={(event) => {
           onToggle?.(event);
+          // Toggle events from nested popovers bubble in the React tree;
+          // only this surface's own toggles drive its state.
+          if (event.target !== event.currentTarget) return;
           if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          // A submenu follows focus: leaving its surface and trigger, for
+          // example by hovering a different parent item, closes it.
+          if (!menu?.isSubmenu || !menu.open) return;
+          const next = event.relatedTarget;
+          if (next instanceof Node) {
+            if (event.currentTarget.contains(next)) return;
+            const trigger = event.currentTarget.ownerDocument.getElementById(menu.triggerId);
+            if (trigger?.contains(next)) return;
+          }
+          menu.setOpen(false);
         }}
         onKeyDown={(event) => {
           onKeyDown?.(event);

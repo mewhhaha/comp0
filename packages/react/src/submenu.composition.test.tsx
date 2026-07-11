@@ -1,3 +1,4 @@
+import { act } from "react";
 import { describe, expect, it } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Menu } from "./components/Menu.js";
@@ -81,5 +82,29 @@ describe("submenu composition", () => {
     expect(document.activeElement).toBe(link);
     // The parent menu did not also move its own focus.
     expect(menus[0]!.hidden).toBe(false);
+  });
+});
+
+describe("submenu coordination", () => {
+  it("closes the submenu when focus moves to a different parent item", () => {
+    const { container, menus, subTrigger } = renderNested();
+    fireKeyDown(subTrigger, "ArrowRight");
+    expect(menus[1]!.hidden).toBe(false);
+
+    const rename = container.querySelector<HTMLElement>("[data-value='rename']")!;
+    act(() => rename.focus());
+    expect(menus[1]!.hidden).toBe(true);
+    expect(menus[0]!.hidden).toBe(false);
+  });
+
+  it("closes the whole chain and refocuses the root trigger on activation", () => {
+    const { container, menus, subTrigger } = renderNested();
+    fireKeyDown(subTrigger, "ArrowRight");
+    const email = container.querySelector<HTMLElement>("[data-value='email']")!;
+    fireClick(email);
+    expect(menus[1]!.hidden).toBe(true);
+    expect(menus[0]!.hidden).toBe(true);
+    const rootTrigger = container.querySelector<HTMLButtonElement>("button")!;
+    expect(document.activeElement).toBe(rootTrigger);
   });
 });

@@ -40,6 +40,8 @@ export type MenuRootContextValue = {
   triggerId: string;
   contentId: string;
   setOpen: (open: boolean) => void;
+  /** Closes this menu and every ancestor, focusing the topmost trigger. */
+  closeAll: () => void;
   focusTrigger: () => void;
   setTriggerElement: (element: HTMLElement | null) => void;
 };

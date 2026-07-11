@@ -83,7 +83,9 @@ export function MenuTrigger({
       },
       onPointerEnter(event: React.PointerEvent<HTMLElement>) {
         (props.onPointerEnter as ((e: unknown) => void) | undefined)?.(event);
-        if (!disabled) menu?.setOpen(true);
+        if (disabled) return;
+        event.currentTarget.focus();
+        menu?.setOpen(true);
       },
       onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
         onKeyDown?.(event as never);

@@ -14,6 +14,7 @@ export function MenuItem({
   children,
   onClick,
   onKeyDown,
+  onPointerEnter,
   ref,
   ...props
 }: MenuItemProps & RefProp<HTMLDivElement>) {
@@ -63,6 +64,14 @@ export function MenuItem({
       tabIndex={resolvedDisabled ? undefined : -1}
       aria-disabled={resolvedDisabled || undefined}
       data-value={value}
+      onPointerEnter={(event) => {
+        onPointerEnter?.(event);
+        if (event.defaultPrevented || resolvedDisabled) return;
+        // Hover follows focus in menus, which also lets an open sibling
+        // submenu notice it lost focus and close.
+        menu?.setActiveKey(value);
+        event.currentTarget.focus();
+      }}
       data-disabled={dataAttr(resolvedDisabled)}
       onClick={(event) => {
         if (resolvedDisabled) {

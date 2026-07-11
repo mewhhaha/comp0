@@ -31,6 +31,7 @@ export function PopoverContent({
     "data-slot": dataSlot(props, "popover-content"),
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {
       onToggle?.(event);
+      if (event.target !== event.currentTarget) return;
       if (event.defaultPrevented) return;
       onNativeToggle(event.newState === "open");
     },

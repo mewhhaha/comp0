@@ -61,6 +61,9 @@ export function SelectPopover({
     "aria-labelledby": props["aria-labelledby"] ?? select.labelId,
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {
       onToggle?.(event);
+      // Toggle events from nested popovers bubble in the React tree; only
+      // this surface's own toggles drive its state.
+      if (event.target !== event.currentTarget) return;
       if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
     },
     onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {

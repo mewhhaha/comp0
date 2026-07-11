@@ -32,6 +32,11 @@ export function Menu({
       triggerId: `${menuId}-trigger`,
       contentId: `${menuId}-content`,
       setOpen,
+      closeAll() {
+        setOpen(false);
+        if (parentMenu) parentMenu.closeAll();
+        else triggerElement.current?.focus();
+      },
       focusTrigger() {
         triggerElement.current?.focus();
       },
