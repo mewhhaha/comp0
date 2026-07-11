@@ -5,8 +5,8 @@ const sections = [
   ["anatomy", "See the parts"],
   ["build", "Build it step by step"],
   ["keyboard", "Use the keyboard"],
-  ["styling", "Style each state"],
   ["contract", "Forms and accessibility"],
+  ["api", "API and styling"],
 ] as const;
 
 export type ComponentOutlineProps = {

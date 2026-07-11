@@ -58,6 +58,7 @@ export type ComponentDoc = {
   summary: string;
   analogy: string;
   whenToUse: string;
+  imports: string[];
   parts: ComponentPart[];
   steps: LessonStep[];
   exampleSource: string;

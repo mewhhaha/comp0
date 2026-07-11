@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router";
 import {
   Anatomy,
+  ApiReference,
   Callout,
   CodeBlock,
   KeyboardGuide,
@@ -96,7 +97,7 @@ export default function ComponentRoute() {
           </ComponentSection>
 
           <ComponentSection
-            description="The dashed map makes invisible context and visible DOM ownership concrete. The numbered list below it says the same thing without relying on the picture."
+            description="A wireframe sketch of the assembled component. Dashed frames are invisible state providers; shaded shapes own real DOM. Each numbered pin matches a part in the list below."
             id="anatomy"
             number="02"
             title="Open it up and name every part."
@@ -123,18 +124,9 @@ export default function ComponentRoute() {
           </ComponentSection>
 
           <ComponentSection
-            description="Boolean states appear only while they are true, so your CSS can read them like small flags."
-            id="styling"
-            number="05"
-            title="Style what the component is doing."
-          >
-            {stylingLesson}
-          </ComponentSection>
-
-          <ComponentSection
-            description="The last check is about the browser contract: what gets submitted, what must be labelled, and what assistive technology needs to understand."
+            description="The browser contract: what gets submitted, what must be labelled, and what assistive technology needs to understand."
             id="contract"
-            number="06"
+            number="05"
             title="Connect it to the rest of the page."
           >
             <div className="grid gap-8 rounded-xl bg-zinc-50 p-5 ring-1 ring-zinc-950/10 sm:p-6 dark:bg-white/3 dark:ring-white/10">
@@ -165,6 +157,18 @@ export default function ComponentRoute() {
                   ))}
                 </ul>
               </section>
+            </div>
+          </ComponentSection>
+
+          <ComponentSection
+            description="Everything this page exports, what each part renders, and the state attributes your CSS can target. Boolean states appear only while they are true, so selectors read them like small flags."
+            id="api"
+            number="06"
+            title="API reference and styling."
+          >
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
+              <ApiReference imports={doc.imports} parts={doc.parts} />
+              {stylingLesson}
             </div>
           </ComponentSection>
         </div>
