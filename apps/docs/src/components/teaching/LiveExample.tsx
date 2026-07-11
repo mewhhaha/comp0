@@ -29,7 +29,7 @@ export function LiveExample({
           aria-hidden="true"
         />
         <div>
-          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
+          <h3 className="font-semibold text-zinc-950 dark:text-white">{title}</h3>
           {description && (
             <p className="mt-1 text-base text-zinc-600 sm:text-sm dark:text-zinc-300">
               {description}
