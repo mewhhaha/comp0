@@ -11,20 +11,20 @@
   },
   "dependencies": {
     "@comp0/react": "workspace:*",
-    "@react-router/node": "7.17.0",
-    "@shikijs/langs": "4.2.0",
-    "isbot": "^5.1.40",
-    "lucide-react": "1.17.0",
+    "@react-router/node": "8.2.0",
+    "@shikijs/langs": "4.3.1",
+    "isbot": "^5.2.0",
+    "lucide-react": "1.24.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-router": "7.17.0",
-    "shiki": "4.2.0"
+    "react-router": "8.2.0",
+    "shiki": "4.3.1"
   },
   "devDependencies": {
-    "@react-router/dev": "7.17.0",
-    "@react-router/fs-routes": "7.17.0",
-    "@tailwindcss/vite": "4.3.0",
-    "tailwindcss": "4.3.0",
-    "vite": "8.0.16"
+    "@react-router/dev": "8.2.0",
+    "@react-router/fs-routes": "8.2.0",
+    "@tailwindcss/vite": "4.3.2",
+    "tailwindcss": "4.3.2",
+    "vite": "8.1.4"
   }
 }
