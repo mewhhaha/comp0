@@ -62,6 +62,7 @@ export function MenuItem({
       role={props.role ?? "menuitem"}
       tabIndex={resolvedDisabled ? undefined : -1}
       aria-disabled={resolvedDisabled || undefined}
+      data-value={value}
       data-disabled={dataAttr(resolvedDisabled)}
       onClick={(event) => {
         if (resolvedDisabled) {

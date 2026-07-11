@@ -196,6 +196,15 @@ const lessons: Record<string, LessonCopy> = {
     "Mark the current page as current instead of making it a misleading link.",
     '<Breadcrumbs><BreadcrumbLink href="/">Home</BreadcrumbLink></Breadcrumbs>',
   ),
+  "tag-group": lesson(
+    "A row of removable, selectable little labels.",
+    "Like luggage tags: keep the ones that apply, pull off the rest.",
+    "Use it for filters, keywords, and picked options.",
+    "Start TagGroup with an aria-label.",
+    "Add a Tag with a value for each label.",
+    "Wire onRemove for removal with Delete, and value/onChange for selection.",
+    '<TagGroup aria-label="Filters" onRemove={remove}><Tag value="news">News</Tag></TagGroup>',
+  ),
   resizer: lesson(
     "A separator you drag or arrow to resize the thing beside it.",
     "Like the divider bar between two window panes.",
@@ -386,6 +395,11 @@ const accessibility: Record<string, string[]> = {
     "Use a navigation label when your page needs one.",
     "Make the current page clear without a misleading link.",
     "Keep trail labels concise.",
+  ],
+  "tag-group": [
+    "Give the group an aria-label when it has no visible heading.",
+    "Keep remove controls reachable by pointer; Delete removes from the keyboard.",
+    "Show selection with more than color.",
   ],
   resizer: [
     "Keep the handle large enough to grab; style the drag state via data-dragging.",
@@ -982,7 +996,7 @@ const navigation = [
     "list-box",
     "List Box",
     "navigation",
-    ["ListBox", "ListBoxItem", "ListBoxSection"],
+    ["ListBox", "ListBoxItem", "ListBoxSection", "ListBoxSeparator"],
     '<ListBox aria-label="Color"><ListBoxItem value="red">Red</ListBoxItem></ListBox>',
     [
       p("ListBox", "root", "Selectable list container.", true, false, [
@@ -991,6 +1005,7 @@ const navigation = [
         prop("orientation", '"vertical" | "horizontal"', "Arrow-key axis."),
       ]),
       p("ListBoxSection", "root", "Optional labelled section.", true, true),
+      p("ListBoxSeparator", "label", "Rule between groups of options.", true, true),
       p("ListBoxItem", "item", "Selectable option.", true, false, [
         prop("value", "string", "This option’s selection key."),
         prop("disabled", "boolean", "Disables the option."),
@@ -1023,7 +1038,7 @@ const navigation = [
     "menu",
     "Menu",
     "navigation",
-    ["Menu", "MenuPopover", "MenuItem", "MenuSection", "MenuTrigger"],
+    ["Menu", "MenuPopover", "MenuItem", "MenuSection", "MenuSeparator", "MenuTrigger"],
     '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover aria-label="Actions"><MenuItem>Archive</MenuItem></MenuPopover></Menu>',
     [
       p("Menu", "root", "Open-state provider.", false, false, [
@@ -1039,6 +1054,7 @@ const navigation = [
       ]),
       p("MenuPopover", "content", "Menu container."),
       p("MenuSection", "root", "Optional labelled section.", true, true),
+      p("MenuSeparator", "label", "Rule between groups of items.", true, true),
       p("MenuItem", "item", "Action item.", true, false, [
         prop("value", "string", "Optional identity for typeahead and data-value."),
         prop("disabled", "boolean", "Disables the action."),
@@ -1066,6 +1082,48 @@ const navigation = [
     ],
     "No native form behavior.",
     ["list-box", "popover"],
+  ),
+  common(
+    "tag-group",
+    "Tag Group",
+    "navigation",
+    ["Button", "Tag", "TagGroup"],
+    '<TagGroup aria-label="Filters" onRemove={remove}><Tag value="news">News</Tag></TagGroup>',
+    [
+      p("TagGroup", "root", "Grid of tags and the group's single tab stop.", true, false, [
+        prop("value / defaultValue", "string[]", "Controlled or initial selected tags."),
+        prop("onChange", "(value: string[]) => void", "Receives the next selected tags."),
+        prop(
+          "onRemove",
+          "(value: string) => void",
+          "Receives a tag removed with Delete or Backspace.",
+        ),
+      ]),
+      p("Tag", "item", "Removable, selectable label that can hold a control.", true, false, [
+        prop("value", "string", "This tag’s identity."),
+        prop("disabled", "boolean", "Disables the tag."),
+        prop(
+          "textValue",
+          "string",
+          "Overrides the text crawled from children when markup makes it ambiguous.",
+        ),
+      ]),
+    ],
+    [
+      { keys: ["ArrowRight"], action: "Moves to the next tag." },
+      { keys: ["ArrowLeft"], action: "Moves to the previous tag." },
+      { keys: ["Home"], action: "Moves to the first tag." },
+      { keys: ["End"], action: "Moves to the last tag." },
+      { keys: ["Space"], action: "Toggles the focused tag's selection." },
+      { keys: ["Enter"], action: "Toggles the focused tag's selection." },
+    ],
+    [
+      { attribute: "[data-selected]", on: "Tag", meaning: "The tag is selected." },
+      { attribute: "[data-disabled]", on: "Tag", meaning: "The tag is disabled." },
+      { attribute: ":focus-visible", on: "Tag", meaning: "The tag has keyboard focus." },
+    ],
+    "Selection does not create a native form value; mirror it into hidden inputs when a form needs it.",
+    ["grid-list", "checkbox"],
   ),
   common(
     "resizer",

@@ -32,8 +32,12 @@ import {
   Link,
   ListBox,
   ListBoxItem,
+  ListBoxSection,
+  ListBoxSeparator,
   Menu,
   MenuPopover,
+  MenuSection,
+  MenuSeparator,
   MenuItem,
   MenuTrigger,
   NumberField,
@@ -63,6 +67,8 @@ import {
   TabList,
   TabPanel,
   Tabs,
+  Tag,
+  TagGroup,
   TextArea,
   TextField,
   ToggleButton,
@@ -443,18 +449,29 @@ function ListBoxExample() {
         value={value}
         onChange={setValue}
       >
-        <ListBoxItem
-          className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
-          value="mint"
-        >
-          Mint
-        </ListBoxItem>
-        <ListBoxItem
-          className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
-          value="plum"
-        >
-          Plum
-        </ListBoxItem>
+        <ListBoxSection aria-label="Fresh" className="grid">
+          <ListBoxItem
+            className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
+            value="mint"
+          >
+            Mint
+          </ListBoxItem>
+          <ListBoxItem
+            className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
+            value="basil"
+          >
+            Basil
+          </ListBoxItem>
+        </ListBoxSection>
+        <ListBoxSeparator className="my-1 h-px bg-zinc-950/10 dark:bg-white/10" />
+        <ListBoxSection aria-label="Sweet" className="grid">
+          <ListBoxItem
+            className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
+            value="plum"
+          >
+            Plum
+          </ListBoxItem>
+        </ListBoxSection>
       </ListBox>
       <p className="text-base text-zinc-600 sm:text-sm dark:text-zinc-400">Selected: {value}</p>
     </div>
@@ -467,19 +484,41 @@ function MenuExample() {
       <MenuTrigger className="[anchor-name:--menu-example] rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
         Actions
       </MenuTrigger>
-      <MenuPopover className="[position-anchor:--menu-example] inset-auto m-0 mt-2 w-40 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
-        <MenuItem
-          className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
-          value="rename"
-        >
-          Rename
-        </MenuItem>
-        <MenuItem
-          className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
-          value="duplicate"
-        >
-          Duplicate
-        </MenuItem>
+      <MenuPopover className="[position-anchor:--menu-example] inset-auto m-0 mt-2 w-44 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:block-end_span-inline-end] [position-try-fallbacks:flip-block] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+        <MenuSection aria-label="Document" className="grid">
+          <MenuItem
+            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+            value="rename"
+          >
+            Rename
+          </MenuItem>
+          <MenuItem
+            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+            value="duplicate"
+          >
+            Duplicate
+          </MenuItem>
+        </MenuSection>
+        <MenuSeparator className="my-1 h-px bg-zinc-950/10 dark:bg-white/10" />
+        <Menu>
+          <MenuTrigger className="[anchor-name:--menu-share] flex w-full items-center justify-between rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800">
+            Share to <span aria-hidden="true">\u203a</span>
+          </MenuTrigger>
+          <MenuPopover className="[position-anchor:--menu-share] inset-auto m-0 ml-1 w-40 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:inline-end_span-block-end] [position-try-fallbacks:flip-inline] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+            <MenuItem
+              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+              value="email"
+            >
+              Email
+            </MenuItem>
+            <MenuItem
+              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+              value="copy-link"
+            >
+              Copy link
+            </MenuItem>
+          </MenuPopover>
+        </Menu>
       </MenuPopover>
     </Menu>
   );
@@ -799,6 +838,42 @@ function ResizerExample() {
   );
 }
 
+function TagGroupExample() {
+  const [tags, setTags] = useState(["news", "sports", "arts", "travel"]);
+  const [selected, setSelected] = useState<string[]>(["news"]);
+  const remove = (value: string) => {
+    setTags((current) => current.filter((entry) => entry !== value));
+    setSelected((current) => current.filter((entry) => entry !== value));
+  };
+
+  return (
+    <TagGroup
+      aria-label="Topics"
+      className="flex max-w-sm flex-wrap gap-2"
+      value={selected}
+      onChange={setSelected}
+      onRemove={remove}
+    >
+      {tags.map((tag) => (
+        <Tag
+          key={tag}
+          value={tag}
+          className="group cursor-pointer rounded-full bg-zinc-100 outline-teal-600 focus-visible:outline-2 data-selected:bg-teal-100 dark:bg-zinc-800 dark:outline-teal-400 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-1.5 [&>[role=gridcell]]:px-3 [&>[role=gridcell]]:py-1.5"
+        >
+          <span className="text-base capitalize sm:text-sm">{tag}</span>
+          <Button
+            aria-label={`Remove ${tag}`}
+            className="rounded-full px-1 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+            onClick={() => remove(tag)}
+          >
+            \u00d7
+          </Button>
+        </Tag>
+      ))}
+    </TagGroup>
+  );
+}
+
 export const exampleRegistry: Record<string, ComponentType> = {
   button: ButtonExample,
   "toggle-button": ToggleButtonExample,
@@ -822,6 +897,7 @@ export const exampleRegistry: Record<string, ComponentType> = {
   resizer: ResizerExample,
   "list-box": ListBoxExample,
   table: TableExample,
+  "tag-group": TagGroupExample,
   menu: MenuExample,
   select: SelectExample,
   combobox: ComboboxExample,

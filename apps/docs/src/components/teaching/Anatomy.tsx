@@ -62,7 +62,7 @@ function loneRootShape(name: string): ControlShape {
 
 function itemShape(name: string): ItemShape {
   if (/radio/i.test(name)) return "radio";
-  if (/^tab(?![a-z])/i.test(name)) return "tab";
+  if (/^ta[bg](?![a-z])/i.test(name)) return "tab";
   if (/breadcrumb/i.test(name)) return "crumb";
   return "row";
 }

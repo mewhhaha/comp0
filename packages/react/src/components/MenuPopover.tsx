@@ -83,6 +83,16 @@ export function MenuPopover({
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
+          // Events inside a nested submenu belong to that submenu's popover.
+          const targetMenu =
+            event.target instanceof Element ? event.target.closest("[role='menu']") : null;
+          if (targetMenu !== event.currentTarget) return;
+          if (menu?.isSubmenu && event.key === "ArrowLeft") {
+            event.preventDefault();
+            menu.setOpen(false);
+            menu.focusTrigger();
+            return;
+          }
           if (event.key === "Escape") {
             event.preventDefault();
             menu?.setOpen(false);

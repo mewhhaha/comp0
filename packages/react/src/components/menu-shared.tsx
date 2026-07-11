@@ -36,6 +36,7 @@ export type MenuSectionProps = HTMLAttributes<HTMLDivElement>;
 
 export type MenuRootContextValue = {
   open: boolean;
+  isSubmenu: boolean;
   triggerId: string;
   contentId: string;
   setOpen: (open: boolean) => void;

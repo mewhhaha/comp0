@@ -15,3 +15,7 @@ export * from "./components/TableColumn.js";
 export * from "./components/TableHeader.js";
 export * from "./components/TableRow.js";
 export * from "./components/Resizer.js";
+export * from "./components/ListBoxSeparator.js";
+export * from "./components/MenuSeparator.js";
+export * from "./components/Tag.js";
+export * from "./components/TagGroup.js";

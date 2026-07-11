@@ -1,4 +1,4 @@
-import { createElement, Fragment, useId, useMemo, useRef } from "react";
+import { createElement, Fragment, useContext, useId, useMemo, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { MenuRootContext, type MenuProps } from "./menu-shared.js";
@@ -17,6 +17,7 @@ export function Menu({
   ...props
 }: MenuProps & RefProp<HTMLElement>) {
   const generatedId = useId().replace(/:/g, "");
+  const parentMenu = useContext(MenuRootContext);
   const triggerElement = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -27,6 +28,7 @@ export function Menu({
   const context = useMemo(
     () => ({
       open,
+      isSubmenu: parentMenu !== null,
       triggerId: `${menuId}-trigger`,
       contentId: `${menuId}-content`,
       setOpen,
@@ -37,7 +39,7 @@ export function Menu({
         triggerElement.current = element;
       },
     }),
-    [menuId, open, setOpen],
+    [menuId, open, parentMenu, setOpen],
   );
   // The menu composes with the popover system internally: providing
   // PopoverContext lets MenuPopover share the top-layer surface machinery
