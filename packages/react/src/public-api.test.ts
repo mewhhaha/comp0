@@ -66,6 +66,7 @@ const publicComponents = [
   "TableBody",
   "TableCell",
   "TableColumn",
+  "TableColumnResizer",
   "TableHeader",
   "TableRow",
   "Tabs",

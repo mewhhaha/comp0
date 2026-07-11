@@ -14,3 +14,4 @@ export * from "./components/TableCell.js";
 export * from "./components/TableColumn.js";
 export * from "./components/TableHeader.js";
 export * from "./components/TableRow.js";
+export * from "./components/TableColumnResizer.js";

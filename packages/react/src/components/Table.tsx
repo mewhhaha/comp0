@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type TableHTMLAttributes } from "react";
 import { composeRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
-import { TableContext, type TableContextValue } from "./table-shared.js";
+import { cellWidget, TableContext, type TableContextValue } from "./table-shared.js";
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement>;
 
@@ -48,6 +48,8 @@ export function Table({
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
+          // Shift+Arrow belongs to column resizing on the header cells.
+          if (event.shiftKey || event.altKey || event.metaKey) return;
           const table = tableRef.current;
           const target = event.target instanceof Element ? event.target.closest("td, th") : null;
           if (!table || !target || !table.contains(target)) return;
@@ -72,7 +74,7 @@ export function Table({
           event.preventDefault();
           const key = keyFor(next);
           if (key) setActiveKey(key);
-          next.focus();
+          (cellWidget(next) ?? next).focus();
         }}
       >
         {children}

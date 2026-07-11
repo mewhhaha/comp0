@@ -1,6 +1,6 @@
 import { act } from "react";
-import { describe, expect, it } from "vitest";
-import { render } from "../test/render.js";
+import { describe, expect, it, vi } from "vitest";
+import { fireClick, render } from "../test/render.js";
 import { Table } from "./components/Table.js";
 import { TableBody } from "./components/TableBody.js";
 import { TableCell } from "./components/TableCell.js";
@@ -8,10 +8,10 @@ import { TableColumn } from "./components/TableColumn.js";
 import { TableHeader } from "./components/TableHeader.js";
 import { TableRow } from "./components/TableRow.js";
 
-function fireKey(element: Element, key: string, ctrlKey = false) {
+function fireKey(element: Element, key: string, ctrlKey = false, shiftKey = false) {
   act(() => {
     element.dispatchEvent(
-      new KeyboardEvent("keydown", { key, ctrlKey, bubbles: true, cancelable: true }),
+      new KeyboardEvent("keydown", { key, ctrlKey, shiftKey, bubbles: true, cancelable: true }),
     );
   });
 }
@@ -80,5 +80,79 @@ describe("table composition", () => {
     expect(cells[0]!.tabIndex).toBe(-1);
     fireKey(cells[5]!, "Home", true);
     expect(document.activeElement).toBe(cells[0]);
+  });
+});
+
+describe("table selection, sort, and resize", () => {
+  it("focuses a cell's single widget instead of the cell and keeps one tab stop", () => {
+    const { container } = render(
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow selected>
+            <TableCell>
+              <input aria-label="Select report" type="checkbox" />
+            </TableCell>
+            <TableCell>report.pdf</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const row = container.querySelector("tr")!;
+    expect(row.getAttribute("aria-selected")).toBe("true");
+    expect(row.dataset["selected"]).toBe("");
+
+    const cells = [...container.querySelectorAll<HTMLTableCellElement>("td")];
+    const checkbox = container.querySelector<HTMLInputElement>("input")!;
+    expect(cells[0]!.tabIndex).toBe(-1);
+    expect(checkbox.tabIndex).toBe(0);
+
+    cells[1]!.tabIndex = 0;
+    cells[1]!.focus();
+    fireKey(cells[1]!, "ArrowLeft");
+    expect(document.activeElement).toBe(checkbox);
+  });
+
+  it("activates sort from click and keyboard and exposes aria-sort", () => {
+    const onSort = vi.fn();
+    const { container } = render(
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn sort="ascending" onSort={onSort}>
+              Name
+            </TableColumn>
+          </TableRow>
+        </TableHeader>
+      </Table>,
+    );
+    const header = container.querySelector("th")!;
+    expect(header.getAttribute("aria-sort")).toBe("ascending");
+    expect(header.dataset["sort"]).toBe("ascending");
+    expect(header.dataset["sortable"]).toBe("");
+    fireClick(header);
+    expect(onSort).toHaveBeenCalledTimes(1);
+    fireKey(header, "Enter");
+    expect(onSort).toHaveBeenCalledTimes(2);
+  });
+
+  it("resizes with Shift+Arrow on the header without moving grid focus", () => {
+    const onResize = vi.fn();
+    const { container } = render(
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn onResize={onResize}>Name</TableColumn>
+            <TableColumn>Role</TableColumn>
+          </TableRow>
+        </TableHeader>
+      </Table>,
+    );
+    const headers = [...container.querySelectorAll<HTMLTableCellElement>("th")];
+    headers[0]!.focus();
+    fireKey(headers[0]!, "ArrowRight", false, true);
+    expect(onResize).toHaveBeenLastCalledWith(16);
+    expect(document.activeElement).toBe(headers[0]);
+    fireKey(headers[0]!, "ArrowLeft", false, true);
+    expect(onResize).toHaveBeenLastCalledWith(0);
   });
 });

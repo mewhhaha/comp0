@@ -1100,14 +1100,48 @@ const navigation = [
     "table",
     "Table",
     "navigation",
-    ["Table", "TableBody", "TableCell", "TableColumn", "TableHeader", "TableRow"],
+    [
+      "Checkbox",
+      "Table",
+      "TableBody",
+      "TableCell",
+      "TableColumn",
+      "TableColumnResizer",
+      "TableHeader",
+      "TableRow",
+    ],
     '<Table aria-label="People"><TableHeader><TableRow><TableColumn>Name</TableColumn></TableRow></TableHeader><TableBody><TableRow><TableCell>Ada</TableCell></TableRow></TableBody></Table>',
     [
       p("Table", "root", "Native table with the grid role and one tab stop."),
       p("TableHeader", "root", "Native thead holding the column header row."),
-      p("TableColumn", "item", "Native th column header and grid cell."),
+      p("TableColumn", "item", "Native th column header and grid cell.", true, false, [
+        prop(
+          "sort",
+          '"ascending" | "descending" | "none"',
+          "Current sort, exposed as aria-sort; you sort the rows.",
+        ),
+        prop("onSort", "() => void", "Runs on click, Enter, or Space."),
+        prop(
+          "onResize",
+          "(width: number) => void",
+          "Receives the next width from Shift+Arrow or a resizer drag.",
+        ),
+      ]),
+      p(
+        "TableColumnResizer",
+        "trigger",
+        "Optional drag handle inside a resizable column.",
+        true,
+        true,
+      ),
       p("TableBody", "root", "Native tbody holding the data rows."),
-      p("TableRow", "item", "Native tr in either section."),
+      p("TableRow", "item", "Native tr in either section.", true, false, [
+        prop(
+          "selected",
+          "boolean",
+          "Marks the row selected for aria and styling; you own the state.",
+        ),
+      ]),
       p("TableCell", "item", "Native td data cell and grid focus target."),
     ],
     [

@@ -57,6 +57,7 @@ import {
   TableBody,
   TableCell,
   TableColumn,
+  TableColumnResizer,
   TableHeader,
   TableRow,
   TabList,
@@ -683,17 +684,43 @@ function GridListExample() {
 }
 
 function TableExample() {
-  const rows = [
-    ["Ada Lovelace", "Engineer", "London"],
-    ["Grace Hopper", "Admiral", "New York"],
-    ["Mary Jackson", "Engineer", "Hampton"],
+  const people = [
+    { id: "ada", name: "Ada Lovelace", role: "Engineer", city: "London" },
+    { id: "grace", name: "Grace Hopper", role: "Admiral", city: "New York" },
+    { id: "mary", name: "Mary Jackson", role: "Engineer", city: "Hampton" },
   ];
+  const [sort, setSort] = useState<"ascending" | "descending">("ascending");
+  const [selected, setSelected] = useState<string[]>(["ada"]);
+  const [nameWidth, setNameWidth] = useState(160);
+  const rows = [...people].sort((a, b) =>
+    sort === "ascending" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
+  );
+  const toggle = (id: string, on: boolean) =>
+    setSelected((current) => (on ? [...current, id] : current.filter((entry) => entry !== id)));
 
   return (
-    <Table aria-label="People" className="w-full max-w-md border-collapse text-base sm:text-sm">
+    <Table
+      aria-label="People"
+      aria-multiselectable="true"
+      className="w-full max-w-md border-collapse text-base sm:text-sm"
+    >
       <TableHeader>
         <TableRow>
-          {["Name", "Role", "City"].map((column) => (
+          <TableColumn
+            aria-label="Selection"
+            className="w-10 border-b border-zinc-950/10 px-2 py-1.5 outline-teal-600 focus-visible:outline-2 dark:border-white/10 dark:outline-teal-400"
+          />
+          <TableColumn
+            className="relative border-b border-zinc-950/10 px-2 py-1.5 text-left font-semibold text-zinc-950 outline-teal-600 focus-visible:outline-2 dark:border-white/10 dark:text-zinc-50 dark:outline-teal-400"
+            style={{ width: nameWidth }}
+            sort={sort}
+            onSort={() => setSort(sort === "ascending" ? "descending" : "ascending")}
+            onResize={setNameWidth}
+          >
+            Name {sort === "ascending" ? "\u2191" : "\u2193"}
+            <TableColumnResizer className="absolute inset-y-0 right-0 w-1 bg-zinc-950/10 dark:bg-white/10" />
+          </TableColumn>
+          {["Role", "City"].map((column) => (
             <TableColumn
               key={column}
               className="border-b border-zinc-950/10 px-2 py-1.5 text-left font-semibold text-zinc-950 outline-teal-600 focus-visible:outline-2 dark:border-white/10 dark:text-zinc-50 dark:outline-teal-400"
@@ -704,9 +731,23 @@ function TableExample() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map(([name, role, city]) => (
-          <TableRow key={name}>
-            {[name, role, city].map((cell) => (
+        {rows.map((person) => (
+          <TableRow
+            key={person.id}
+            selected={selected.includes(person.id)}
+            className="data-selected:bg-teal-50 dark:data-selected:bg-teal-950/40"
+          >
+            <TableCell className="border-b border-zinc-950/5 px-2 py-1.5 outline-teal-600 focus-visible:outline-2 dark:border-white/5 dark:outline-teal-400">
+              <Checkbox
+                aria-label={`Select ${person.name}`}
+                className="group"
+                selected={selected.includes(person.id)}
+                onChange={(on) => toggle(person.id, on)}
+              >
+                <span className="block size-4 rounded-sm border border-zinc-950/20 bg-white group-data-selected:border-teal-600 group-data-selected:bg-teal-600 dark:border-white/20 dark:bg-zinc-900" />
+              </Checkbox>
+            </TableCell>
+            {[person.name, person.role, person.city].map((cell) => (
               <TableCell
                 key={cell}
                 className="border-b border-zinc-950/5 px-2 py-1.5 text-zinc-700 outline-teal-600 focus-visible:outline-2 dark:border-white/5 dark:text-zinc-200 dark:outline-teal-400"

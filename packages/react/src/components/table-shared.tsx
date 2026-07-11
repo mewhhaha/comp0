@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useId, useRef } from "react";
+import { createContext, useCallback, useContext, useId, useLayoutEffect, useRef } from "react";
+import { FOCUSABLE_SELECTOR } from "./grid-list-shared.js";
 
 export interface TableContextValue {
   activeKey: string;
@@ -8,6 +9,22 @@ export interface TableContextValue {
 }
 
 export const TableContext = createContext<TableContextValue | null>(null);
+
+export interface TableColumnContextValue {
+  resize: (width: number) => void;
+  element: () => HTMLTableCellElement | null;
+}
+
+export const TableColumnContext = createContext<TableColumnContextValue | null>(null);
+
+/**
+ * The single interactive widget inside a cell, if that is all it holds. The
+ * grid pattern focuses such a widget instead of its cell.
+ */
+export function cellWidget(cell: HTMLTableCellElement) {
+  const widgets = cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+  return widgets.length === 1 ? widgets[0] : undefined;
+}
 
 /** Registration and roving tabindex shared by header and body cells. */
 export function useTableCell(ref: React.Ref<HTMLTableCellElement> | undefined) {
@@ -25,5 +42,17 @@ export function useTableCell(ref: React.Ref<HTMLTableCellElement> | undefined) {
     [key, ref, register],
   );
   const tabIndex = table?.activeKey === key ? 0 : -1;
-  return { cellRef, tabIndex };
+
+  // A cell whose only content is one widget hands its grid stop to the
+  // widget, so the table still exposes a single tab stop.
+  useLayoutEffect(() => {
+    const cell = elementRef.current;
+    if (!cell) return;
+    const widget = cellWidget(cell);
+    if (!widget) return;
+    cell.tabIndex = -1;
+    widget.tabIndex = tabIndex;
+  });
+
+  return { cellRef, elementRef, tabIndex };
 }
