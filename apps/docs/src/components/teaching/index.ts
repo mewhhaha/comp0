@@ -2,6 +2,7 @@ export { Anatomy } from "./Anatomy.js";
 export { ApiReference } from "./ApiReference.js";
 export { Callout } from "./Callout.js";
 export { CodeBlock } from "./CodeBlock.js";
+export { ComponentPreview } from "./ComponentPreview.js";
 export { Keycap, KeyboardGuide } from "./KeyboardGuide.js";
 export { LessonPager } from "./LessonPager.js";
 export { LiveExample } from "./LiveExample.js";

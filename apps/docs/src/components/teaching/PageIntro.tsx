@@ -11,7 +11,7 @@ export function PageIntro({ doc, eyebrow, className }: PageIntroProps) {
   return (
     <header className={cn("max-w-3xl", className)}>
       {eyebrow && (
-        <p className="text-base font-semibold tracking-[0.16em] text-teal-700 uppercase sm:text-sm dark:text-teal-300">
+        <p className="font-mono text-sm/6 font-medium tracking-wide text-teal-700 uppercase dark:text-teal-300">
           {eyebrow}
         </p>
       )}
