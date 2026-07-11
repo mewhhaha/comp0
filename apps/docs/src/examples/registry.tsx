@@ -502,7 +502,7 @@ function MenuExample() {
         <MenuSeparator className="my-1 h-px bg-zinc-950/10 dark:bg-white/10" />
         <Menu>
           <MenuTrigger className="[anchor-name:--menu-share] flex w-full items-center justify-between rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800">
-            Share to <span aria-hidden="true">\u203a</span>
+            Share to <span aria-hidden="true">›</span>
           </MenuTrigger>
           <MenuPopover className="[position-anchor:--menu-share] inset-auto m-0 ml-1 w-40 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 [position-area:inline-end_span-block-end] [position-try-fallbacks:flip-inline] dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
             <MenuItem
@@ -866,7 +866,7 @@ function TagGroupExample() {
             className="rounded-full px-1 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
             onClick={() => remove(tag)}
           >
-            \u00d7
+            ×
           </Button>
         </Tag>
       ))}
