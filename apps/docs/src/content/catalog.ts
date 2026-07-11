@@ -197,7 +197,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start ListBox with an aria-label.",
     "Add ListBoxItem for each selectable item.",
     "Use ListBoxSection when a long list needs labelled groups.",
-    '<ListBox aria-label="Color"><ListBoxItem id="red">Red</ListBoxItem></ListBox>',
+    '<ListBox aria-label="Color"><ListBoxItem value="red">Red</ListBoxItem></ListBox>',
   ),
   menu: lesson(
     "A compact list of actions opened by a button.",
@@ -813,7 +813,7 @@ const navigation = [
     "List Box",
     "navigation",
     ["ListBox", "ListBoxItem", "ListBoxSection"],
-    '<ListBox aria-label="Color"><ListBoxItem id="red">Red</ListBoxItem></ListBox>',
+    '<ListBox aria-label="Color"><ListBoxItem value="red">Red</ListBoxItem></ListBox>',
     [
       p("ListBox", "root", "Selectable list container."),
       p("ListBoxSection", "root", "Optional labelled section.", true, true),
