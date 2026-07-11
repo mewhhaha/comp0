@@ -22,7 +22,9 @@ export const TableColumnContext = createContext<TableColumnContextValue | null>(
  * grid pattern focuses such a widget instead of its cell.
  */
 export function cellWidget(cell: HTMLTableCellElement) {
-  const widgets = cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+  const widgets = [...cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
+    (element) => element.getAttribute("aria-hidden") !== "true",
+  );
   return widgets.length === 1 ? widgets[0] : undefined;
 }
 
