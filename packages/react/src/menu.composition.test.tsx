@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Menu } from "./components/Menu.js";
-import { MenuContent } from "./components/MenuContent.js";
+import { MenuPopover } from "./components/MenuPopover.js";
 import { MenuItem } from "./components/MenuItem.js";
 import { MenuTrigger } from "./components/MenuTrigger.js";
 
@@ -10,9 +10,9 @@ describe("menu composition", () => {
     const { container } = render(
       <Menu id="actions">
         <MenuTrigger>Actions</MenuTrigger>
-        <MenuContent>
+        <MenuPopover>
           <MenuItem>Copy</MenuItem>
-        </MenuContent>
+        </MenuPopover>
       </Menu>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
@@ -30,11 +30,11 @@ describe("menu composition", () => {
     const { container } = render(
       <Menu id="actions" onToggle={changed}>
         <MenuTrigger>Actions</MenuTrigger>
-        <MenuContent>
+        <MenuPopover>
           <MenuItem>Copy</MenuItem>
           <MenuItem disabled>Cut</MenuItem>
           <MenuItem>Paste</MenuItem>
-        </MenuContent>
+        </MenuPopover>
       </Menu>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
@@ -61,10 +61,10 @@ describe("menu composition", () => {
     const { container } = render(
       <Menu defaultOpen>
         <MenuTrigger>Actions</MenuTrigger>
-        <MenuContent>
+        <MenuPopover>
           <MenuItem onClick={prevented}>Keep open</MenuItem>
           <MenuItem>Close</MenuItem>
-        </MenuContent>
+        </MenuPopover>
       </Menu>,
     );
     const content = container.querySelector<HTMLElement>("[role='menu']")!;

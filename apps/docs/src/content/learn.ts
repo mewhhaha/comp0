@@ -112,7 +112,7 @@ export const learnDocs = [
         title: "Name values that a form should send",
         explanation:
           "A form only sends a control when it has a name. Put name on native inputs, checkboxes, and form-enabled picker roots. For example, Select uses its name to create a visually hidden native select proxy for submission.",
-        code: '<form>\n  <Input name="email" type="email" />\n  <Select name="size" defaultValue="small">\n    <Label>Size</Label>\n    <Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>...</SelectContent></Popover>\n  </Select>\n</form>',
+        code: '<form>\n  <Input name="email" type="email" />\n  <Select name="size" defaultValue="small">\n    <Label>Size</Label>\n    <Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover>...</SelectPopover></Popover>\n  </Select>\n</form>',
         language: "tsx",
         note: "A label tells a person what a control means; a name tells the browser what key to send.",
       },
@@ -154,7 +154,7 @@ export const learnDocs = [
         title: "Keep familiar key symbols",
         explanation:
           "Enter and Space activate buttons. Arrow keys move through menus, list boxes, radio groups, and tabs; Escape closes overlays. Let the component handle these familiar keys instead of giving them surprising new jobs.",
-        code: '<Menu>\n  <MenuTrigger>Actions</MenuTrigger>\n  <MenuContent aria-label="Actions">...</MenuContent>\n</Menu>',
+        code: '<Menu>\n  <MenuTrigger>Actions</MenuTrigger>\n  <MenuPopover aria-label="Actions">...</MenuPopover>\n</Menu>',
         language: "tsx",
       },
       {

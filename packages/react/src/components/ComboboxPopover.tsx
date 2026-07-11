@@ -11,17 +11,17 @@ import { useComboBoxRootContext, type RefProp } from "../shared.js";
 import { ComboboxCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
 import { usePopoverSurface } from "./overlay-shared.js";
 
-export type ComboboxContentProps = HTMLAttributes<HTMLDivElement>;
+export type ComboboxPopoverProps = HTMLAttributes<HTMLDivElement>;
 
-export function ComboboxContent({
+export function ComboboxPopover({
   ref,
   onToggle,
   ...props
-}: ComboboxContentProps & RefProp<HTMLDivElement>) {
+}: ComboboxPopoverProps & RefProp<HTMLDivElement>) {
   const combo = useComboBoxRootContext();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   if (!combo || !popover)
-    throw new Error("ComboboxContent must be rendered inside Combobox and Popover.");
+    throw new Error("ComboboxPopover must be rendered inside Combobox and Popover.");
   const options = useRef(new Map<string, PickerOptionRecord>());
   const register = useCallback(
     (option: PickerOptionRecord) => options.current.set(option.value, option),

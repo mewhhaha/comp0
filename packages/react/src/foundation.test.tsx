@@ -8,7 +8,7 @@ import {
   Popover,
   Radio,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
   TextField,
@@ -25,9 +25,9 @@ describe("foundation components", () => {
         <Button onClick={clicked}>Generic action</Button>
         <Popover>
           <SelectTrigger>Open</SelectTrigger>
-          <SelectContent>
+          <SelectPopover>
             <SelectOption value="alpha">Alpha</SelectOption>
-          </SelectContent>
+          </SelectPopover>
         </Popover>
       </Select>,
     );

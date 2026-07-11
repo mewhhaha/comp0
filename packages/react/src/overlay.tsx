@@ -9,4 +9,4 @@ export * from "./components/PopoverContent.js";
 export * from "./components/PopoverArrow.js";
 export * from "./components/Tooltip.js";
 export * from "./components/TooltipTrigger.js";
-export * from "./components/TooltipContent.js";
+export * from "./components/TooltipPopover.js";

@@ -7,18 +7,18 @@ import {
   type CollectionItemRecord,
   type SelectableCollectionContextValue,
 } from "./collection-shared.js";
-import { useMenuRootContext, type MenuContentProps } from "./menu-shared.js";
+import { useMenuRootContext, type MenuPopoverProps } from "./menu-shared.js";
 import { usePopoverSurface } from "./overlay-shared.js";
 
-export type { MenuContentProps } from "./menu-shared.js";
+export type { MenuPopoverProps } from "./menu-shared.js";
 
-export function MenuContent({
+export function MenuPopover({
   ref,
   onKeyDown,
   onToggle,
   children,
   ...props
-}: MenuContentProps & RefProp<HTMLDivElement>) {
+}: MenuPopoverProps & RefProp<HTMLDivElement>) {
   const menu = useMenuRootContext();
   const { onNativeToggle, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   const itemMap = useRef(new Map<string, CollectionItemRecord>());

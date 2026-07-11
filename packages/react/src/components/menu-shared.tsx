@@ -22,7 +22,7 @@ export type MenuTriggerProps = Omit<
   as?: ElementType | undefined;
 } & Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "download" | "href" | "rel" | "target">;
 
-export type MenuContentProps = HTMLAttributes<HTMLDivElement>;
+export type MenuPopoverProps = HTMLAttributes<HTMLDivElement>;
 
 export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;

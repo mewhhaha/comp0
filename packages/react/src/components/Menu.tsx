@@ -40,8 +40,8 @@ export function Menu({
     [menuId, open, setOpen],
   );
   // The menu composes with the popover system internally: providing
-  // PopoverContext lets MenuContent share the top-layer surface machinery
-  // with SelectContent instead of rendering in normal flow.
+  // PopoverContext lets MenuPopover share the top-layer surface machinery
+  // with SelectPopover instead of rendering in normal flow.
   const popoverContext = useMemo(
     () => ({
       ...context,
