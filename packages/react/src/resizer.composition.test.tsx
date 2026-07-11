@@ -38,7 +38,7 @@ describe("resizer composition", () => {
     expect(onResize).toHaveBeenLastCalledWith(320);
   });
 
-  it("becomes a hidden drag-only handle inside a resizable column", () => {
+  it("joins the arrow-key path inside a resizable column without a tab stop", () => {
     const onResize = vi.fn();
     const { container } = render(
       <Table aria-label="People">
@@ -46,17 +46,37 @@ describe("resizer composition", () => {
           <TableRow>
             <TableColumn onResize={onResize}>
               Name
-              <Resizer />
+              <Resizer aria-label="Resize name" />
             </TableColumn>
+            <TableColumn>Role</TableColumn>
           </TableRow>
         </TableHeader>
       </Table>,
     );
     const separator = container.querySelector<HTMLElement>("[role='separator']")!;
-    expect(separator.getAttribute("aria-hidden")).toBe("true");
+    const headers = [...container.querySelectorAll<HTMLTableCellElement>("th")];
+    // The header keeps the tab stop; the handle is reachable by arrow only.
+    expect(headers[0]!.tabIndex).toBe(0);
     expect(separator.tabIndex).toBe(-1);
-    // The header keeps the grid stop; the handle does not become the cell widget.
-    const header = container.querySelector<HTMLTableCellElement>("th")!;
-    expect(header.tabIndex).toBe(0);
+    expect(separator.getAttribute("aria-hidden")).toBeNull();
+
+    headers[0]!.focus();
+    fireKey(headers[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(separator);
+    // Shift+Arrow on the focused handle resizes through the column header.
+    act(() => {
+      separator.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    expect(onResize).toHaveBeenLastCalledWith(16);
+    // Plain ArrowRight keeps navigating to the next column.
+    fireKey(separator, "ArrowRight");
+    expect(document.activeElement).toBe(headers[1]);
   });
 });

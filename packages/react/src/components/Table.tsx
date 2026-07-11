@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type TableHTMLAttributes } from "react";
 import { composeRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
-import { cellWidget, TableContext, type TableContextValue } from "./table-shared.js";
+import { primaryStop, rowStops, TableContext, type TableContextValue } from "./table-shared.js";
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement>;
 
@@ -57,24 +57,42 @@ export function Table({
           const row = cell.parentElement as HTMLTableRowElement;
           const rows = [...table.rows];
           const rowIndex = rows.indexOf(row);
-          // APG grid pattern: arrows move one cell, Home/End travel the row,
-          // and Ctrl+Home/End jump to the grid's corners.
-          let next: HTMLTableCellElement | undefined;
-          if (event.key === "ArrowRight") next = row.cells[cell.cellIndex + 1];
-          else if (event.key === "ArrowLeft") next = row.cells[cell.cellIndex - 1];
-          else if (event.key === "ArrowDown") next = rows[rowIndex + 1]?.cells[cell.cellIndex];
-          else if (event.key === "ArrowUp") next = rows[rowIndex - 1]?.cells[cell.cellIndex];
-          else if (event.key === "Home" && event.ctrlKey) next = rows[0]?.cells[0];
-          else if (event.key === "Home") next = row.cells[0];
-          else if (event.key === "End" && event.ctrlKey) {
+          const focused = event.target instanceof HTMLElement ? event.target : cell;
+          // APG grid pattern: Left/Right walk each cell and the widgets
+          // inside it, Up/Down move by column, Home/End travel the row, and
+          // Ctrl+Home/End jump to the grid's corners.
+          let next: HTMLElement | undefined;
+          if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+            const stops = rowStops(row);
+            const index = stops.indexOf(focused);
+            if (index === -1) return;
+            next = stops[index + (event.key === "ArrowRight" ? 1 : -1)];
+          } else if (event.key === "ArrowDown") {
+            const below = rows[rowIndex + 1]?.cells[cell.cellIndex];
+            if (below) next = primaryStop(below);
+          } else if (event.key === "ArrowUp") {
+            const above = rows[rowIndex - 1]?.cells[cell.cellIndex];
+            if (above) next = primaryStop(above);
+          } else if (event.key === "Home" && event.ctrlKey) {
+            const first = rows[0]?.cells[0];
+            if (first) next = primaryStop(first);
+          } else if (event.key === "Home") {
+            const first = row.cells[0];
+            if (first) next = primaryStop(first);
+          } else if (event.key === "End" && event.ctrlKey) {
             const lastRow = rows.at(-1);
-            next = lastRow?.cells[lastRow.cells.length - 1];
-          } else if (event.key === "End") next = row.cells[row.cells.length - 1];
-          if (!next || next === cell) return;
+            const last = lastRow?.cells[lastRow.cells.length - 1];
+            if (last) next = primaryStop(last);
+          } else if (event.key === "End") {
+            const last = row.cells[row.cells.length - 1];
+            if (last) next = primaryStop(last);
+          }
+          if (!next || next === focused) return;
           event.preventDefault();
-          const key = keyFor(next);
+          const nextCell = next.closest<HTMLTableCellElement>("td, th");
+          const key = nextCell ? keyFor(nextCell) : undefined;
           if (key) setActiveKey(key);
-          (cellWidget(next) ?? next).focus();
+          next.focus();
         }}
       >
         {children}

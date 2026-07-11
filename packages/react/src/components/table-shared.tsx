@@ -17,15 +17,44 @@ export interface TableColumnContextValue {
 
 export const TableColumnContext = createContext<TableColumnContextValue | null>(null);
 
-/**
- * The single interactive widget inside a cell, if that is all it holds. The
- * grid pattern focuses such a widget instead of its cell.
- */
-export function cellWidget(cell: HTMLTableCellElement) {
-  const widgets = [...cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
+/** The interactive elements inside a cell, in document order. */
+export function cellWidgets(cell: HTMLTableCellElement) {
+  return [...cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
     (element) => element.getAttribute("aria-hidden") !== "true",
   );
+}
+
+/**
+ * A body cell holding exactly one widget hands its grid stop to the widget
+ * (the checkbox-column case). Header cells always stay stops themselves so
+ * sorting and resizing remain reachable.
+ */
+export function delegatedWidget(cell: HTMLTableCellElement) {
+  if (cell.tagName !== "TD") return undefined;
+  const widgets = cellWidgets(cell);
   return widgets.length === 1 ? widgets[0] : undefined;
+}
+
+/** Where vertical navigation and the roving tab stop land for a cell. */
+export function primaryStop(cell: HTMLTableCellElement) {
+  return delegatedWidget(cell) ?? cell;
+}
+
+/**
+ * The ArrowLeft/ArrowRight stops of a row: each cell, then the widgets
+ * inside it, with delegated single-widget cells collapsing to the widget.
+ */
+export function rowStops(row: HTMLTableRowElement) {
+  const stops: HTMLElement[] = [];
+  for (const cell of row.cells) {
+    const delegated = delegatedWidget(cell);
+    if (delegated) {
+      stops.push(delegated);
+      continue;
+    }
+    stops.push(cell, ...cellWidgets(cell));
+  }
+  return stops;
 }
 
 /** Registration and roving tabindex shared by header and body cells. */
@@ -45,15 +74,15 @@ export function useTableCell(ref: React.Ref<HTMLTableCellElement> | undefined) {
   );
   const tabIndex = table?.activeKey === key ? 0 : -1;
 
-  // A cell whose only content is one widget hands its grid stop to the
-  // widget, so the table still exposes a single tab stop.
+  // Widgets inside cells are reachable with the arrow keys, never with Tab,
+  // so the table exposes exactly one tab stop. A delegated single-widget
+  // body cell hands its roving stop to the widget.
   useLayoutEffect(() => {
     const cell = elementRef.current;
     if (!cell) return;
-    const widget = cellWidget(cell);
-    if (!widget) return;
-    cell.tabIndex = -1;
-    widget.tabIndex = tabIndex;
+    const delegated = delegatedWidget(cell);
+    for (const widget of cellWidgets(cell)) widget.tabIndex = widget === delegated ? tabIndex : -1;
+    if (delegated) cell.tabIndex = -1;
   });
 
   return { cellRef, elementRef, tabIndex };

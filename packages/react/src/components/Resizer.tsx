@@ -21,8 +21,8 @@ const RESIZE_STEP = 16;
 /**
  * An APG window splitter: a separator that resizes its neighbor with drag,
  * arrows, Home, and End. Standalone it is its own tab stop; inside a
- * resizable TableColumn it becomes a drag-only handle because the column
- * header already owns keyboard resizing.
+ * resizable TableColumn the grid's ArrowLeft/ArrowRight reach it instead,
+ * plain arrows keep navigating, and Shift+Arrow resizes via the header.
  */
 export function Resizer({
   orientation = "vertical",
@@ -67,10 +67,9 @@ export function Resizer({
       }}
       role="separator"
       aria-orientation={orientation}
-      aria-hidden={inColumn || undefined}
-      aria-valuemin={inColumn ? undefined : min}
-      aria-valuemax={inColumn ? undefined : max}
-      aria-valuenow={inColumn ? undefined : size}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={size}
       tabIndex={props.tabIndex ?? (inColumn ? -1 : 0)}
       data-dragging={dataAttr(dragging)}
       data-slot={dataSlot(props, "resizer")}

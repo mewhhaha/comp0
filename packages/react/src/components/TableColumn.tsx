@@ -47,7 +47,11 @@ export function TableColumn({
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
-        if (onSort && (event.key === "Enter" || event.key === " ")) {
+        if (
+          onSort &&
+          event.target === event.currentTarget &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
           event.preventDefault();
           onSort();
           return;

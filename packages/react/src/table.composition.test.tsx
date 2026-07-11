@@ -84,6 +84,39 @@ describe("table composition", () => {
 });
 
 describe("table selection, sort, and resize", () => {
+  it("walks through every interactive item in a cell before moving on", () => {
+    const { container } = render(
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell>report.pdf</TableCell>
+            <TableCell>
+              a file
+              <button type="button">Share</button>
+              <button type="button">Delete</button>
+            </TableCell>
+            <TableCell>done</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const cells = [...container.querySelectorAll<HTMLTableCellElement>("td")];
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>("button")];
+    expect(buttons.every((button) => button.tabIndex === -1)).toBe(true);
+
+    cells[0]!.focus();
+    fireKey(cells[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(cells[1]);
+    fireKey(cells[1]!, "ArrowRight");
+    expect(document.activeElement).toBe(buttons[0]);
+    fireKey(buttons[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(buttons[1]);
+    fireKey(buttons[1]!, "ArrowRight");
+    expect(document.activeElement).toBe(cells[2]);
+    fireKey(cells[2]!, "ArrowLeft");
+    expect(document.activeElement).toBe(buttons[1]);
+  });
+
   it("focuses a cell's single widget instead of the cell and keeps one tab stop", () => {
     const { container } = render(
       <Table aria-label="Files">

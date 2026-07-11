@@ -1195,8 +1195,8 @@ const navigation = [
       p("TableCell", "item", "Native td data cell and grid focus target."),
     ],
     [
-      { keys: ["ArrowRight"], action: "Moves one cell to the right." },
-      { keys: ["ArrowLeft"], action: "Moves one cell to the left." },
+      { keys: ["ArrowRight"], action: "Moves right through each cell and the controls inside it." },
+      { keys: ["ArrowLeft"], action: "Moves left through each cell and the controls inside it." },
       { keys: ["ArrowDown"], action: "Moves one cell down the column." },
       { keys: ["ArrowUp"], action: "Moves one cell up the column." },
       { keys: ["Home"], action: "Moves to the first cell in the row." },
