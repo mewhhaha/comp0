@@ -118,6 +118,15 @@ export const learnDocs = [
         note: "A label tells a person what a control means; a name tells the browser what key to send.",
       },
       {
+        id: "submit-on-enter",
+        title: "Add a value by pressing Enter",
+        explanation:
+          'An input beside a submit button is just a form. A text input and a Button with type="submit" share one form, so pressing Enter in the field and pressing the button both fire the form\'s onSubmit — you never write a key handler for it. Give the Input a name, read that value from the submit event, then reset the form for the next entry. This is the whole “add item” field, composed from pieces you already have.',
+        code: '<form\n  onSubmit={(event) => {\n    event.preventDefault();\n    const form = event.currentTarget;\n    onAdd(String(new FormData(form).get("item")));\n    form.reset();\n  }}\n>\n  <TextField>\n    <Label>New item</Label>\n    <Input name="item" placeholder="Add an item" />\n  </TextField>\n  <Button type="submit">Add</Button>\n</form>',
+        language: "tsx",
+        note: "The platform does the work: Enter in a text input submits its form, and comp0's Button submits when its type is submit. SearchField is this same shape, specialized for search with an onSubmit value and a clear button.",
+      },
+      {
         id: "controlled",
         title: "Control state when your app needs to know now",
         explanation:
