@@ -704,6 +704,7 @@ const accessibility: Record<string, string[]> = {
     "Keep the DateField: typing a date must stay possible without opening the calendar.",
     'The trigger and surface default to English aria-labels ("Choose date", "Calendar"); translate them for localized apps.',
     "Opening moves focus to the focused day and closing returns it to the trigger; Escape always closes without changing the value.",
+    "The native date input adds its own calendar button; hide it with [&::-webkit-calendar-picker-indicator]:hidden so only the DatePickerTrigger opens the calendar (Chromium and WebKit).",
   ],
   feed: [
     "Give the feed an aria-label naming the stream, such as Recipe stories.",
