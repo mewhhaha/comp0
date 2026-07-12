@@ -1,11 +1,16 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
+import { reactCompiler } from "./react-compiler-vite.js";
 
 const aliases = {
   "@comp0/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
   "@comp0/react": fileURLToPath(new URL("./packages/react/src/index.ts", import.meta.url)),
 };
+
+// Tests run the same React Compiler output that ships in dist; source code
+// assumes the compiler and does not hand-memoize.
+const compiler = () => reactCompiler(/packages\/(core|react)\/src\/.*\.tsx?$/);
 
 export default defineConfig({
   resolve: {
@@ -14,6 +19,7 @@ export default defineConfig({
   test: {
     projects: [
       {
+        plugins: [compiler()],
         resolve: {
           alias: aliases,
         },
@@ -31,6 +37,7 @@ export default defineConfig({
         },
       },
       {
+        plugins: [compiler()],
         resolve: {
           alias: aliases,
         },

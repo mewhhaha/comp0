@@ -1,4 +1,4 @@
-import { useCallback, useContext, useId, useLayoutEffect, useRef } from "react";
+import { useContext, useId, useLayoutEffect, useRef } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { InteractiveDiv, type RefProp } from "../shared.js";
 import { MenuContext, resolveItemLabel } from "./collection-shared.js";
@@ -27,21 +27,16 @@ export function MenuItem({
   const resolvedDisabled = Boolean(disabled);
   const ariaLabel = props["aria-label"];
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const itemRef = useCallback(
-    (element: HTMLDivElement | null) => {
-      elementRef.current = element;
-      menu?.register(
-        value,
-        resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
-        element,
-        resolvedDisabled,
-      );
-      composeRefs(ref)(element);
-    },
-    // children stays out: the layout effect below re-reads rendered text.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ariaLabel, menu, ref, resolvedDisabled, textValue, value],
-  );
+  const itemRef = (element: HTMLDivElement | null) => {
+    elementRef.current = element;
+    menu?.register(
+      value,
+      resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+      element,
+      resolvedDisabled,
+    );
+    composeRefs(ref)(element);
+  };
 
   // Re-register after every render so crawled labels follow content changes.
   useLayoutEffect(() => {

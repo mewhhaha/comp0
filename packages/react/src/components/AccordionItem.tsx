@@ -18,7 +18,7 @@ export function AccordionItem({
   const open = accordion?.selectedKeys.has(value) ?? false;
 
   return (
-    <AccordionItemContext.Provider
+    <AccordionItemContext
       value={{
         value,
         open,
@@ -35,6 +35,6 @@ export function AccordionItem({
         data-open={dataAttr(open)}
         data-disabled={dataAttr(disabled)}
       />
-    </AccordionItemContext.Provider>
+    </AccordionItemContext>
   );
 }

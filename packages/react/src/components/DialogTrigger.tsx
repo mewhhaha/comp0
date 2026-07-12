@@ -1,4 +1,4 @@
-import { createElement, Fragment, useCallback } from "react";
+import { createElement, Fragment } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { dataSlot, Slot, type RefProp } from "../shared.js";
 import { useDialogContext, type OverlayTriggerProps } from "./overlay-shared.js";
@@ -11,13 +11,10 @@ export function DialogTrigger({
   ...props
 }: DialogTriggerProps & RefProp<HTMLButtonElement>) {
   const dialog = useDialogContext();
-  const triggerRef = useCallback(
-    (element: HTMLButtonElement | null) => {
-      dialog?.setTriggerElement(element);
-      composeRefs(ref)(element);
-    },
-    [dialog, ref],
-  );
+  const triggerRef = (element: HTMLButtonElement | null) => {
+    dialog?.setTriggerElement(element);
+    composeRefs(ref)(element);
+  };
   const Trigger = as === Fragment ? Slot : (as ?? "button");
 
   return createElement(Trigger, {

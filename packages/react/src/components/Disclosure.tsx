@@ -22,7 +22,7 @@ export function Disclosure({
   });
 
   return (
-    <DisclosureContext.Provider value={{ open, panelId }}>
+    <DisclosureContext value={{ open, panelId }}>
       <details
         {...props}
         ref={ref}
@@ -33,6 +33,6 @@ export function Disclosure({
       >
         {children}
       </details>
-    </DisclosureContext.Provider>
+    </DisclosureContext>
   );
 }

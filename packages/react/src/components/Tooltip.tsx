@@ -1,4 +1,4 @@
-import { createElement, Fragment, useEffect, useId, useMemo, useRef } from "react";
+import { createElement, Fragment, useEffect, useId, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { PopoverContext, TooltipContext, type TooltipProps } from "./overlay-shared.js";
@@ -21,33 +21,30 @@ export function Tooltip({
     defaultValue: defaultOpen,
     onChange: onToggle,
   });
-  const context = useMemo(
-    () => ({
-      open,
-      setOpen(next: boolean) {
-        window.clearTimeout(closeTimer.current);
-        setOpen(next);
-      },
-      // A short close delay keeps the tooltip hoverable: the pointer can
-      // travel from the trigger onto the tooltip content (WCAG 1.4.13).
-      cancelClose() {
-        window.clearTimeout(closeTimer.current);
-      },
-      scheduleClose() {
-        window.clearTimeout(closeTimer.current);
-        closeTimer.current = window.setTimeout(() => setOpen(false), 150);
-      },
-      triggerId: `${props.id ?? generatedId}-trigger`,
-      contentId: `${props.id ?? generatedId}-content`,
-      focusTrigger() {
-        triggerRef.current?.focus();
-      },
-      setTriggerElement(element: HTMLElement | null) {
-        triggerRef.current = element;
-      },
-    }),
-    [generatedId, open, props.id, setOpen],
-  );
+  const context = {
+    open,
+    setOpen(next: boolean) {
+      window.clearTimeout(closeTimer.current);
+      setOpen(next);
+    },
+    // A short close delay keeps the tooltip hoverable: the pointer can
+    // travel from the trigger onto the tooltip content (WCAG 1.4.13).
+    cancelClose() {
+      window.clearTimeout(closeTimer.current);
+    },
+    scheduleClose() {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = window.setTimeout(() => setOpen(false), 150);
+    },
+    triggerId: `${props.id ?? generatedId}-trigger`,
+    contentId: `${props.id ?? generatedId}-content`,
+    focusTrigger() {
+      triggerRef.current?.focus();
+    },
+    setTriggerElement(element: HTMLElement | null) {
+      triggerRef.current = element;
+    },
+  };
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);
   // Escape dismisses an open tooltip no matter where focus is (WCAG 1.4.13).
   useEffect(() => {
@@ -60,15 +57,12 @@ export function Tooltip({
   }, [open, setOpen]);
   // Tooltips compose with the popover system internally so TooltipPopover
   // can live in the top layer instead of expanding its container.
-  const popoverContext = useMemo(
-    () => ({
-      ...context,
-      requestClose() {
-        context.setOpen(false);
-      },
-    }),
-    [context],
-  );
+  const popoverContext = {
+    ...context,
+    requestClose() {
+      context.setOpen(false);
+    },
+  };
   let root = children;
   if (as && as !== Fragment) {
     root = createElement(
@@ -78,8 +72,8 @@ export function Tooltip({
     );
   }
   return (
-    <TooltipContext.Provider value={context}>
-      <PopoverContext.Provider value={popoverContext}>{root}</PopoverContext.Provider>
-    </TooltipContext.Provider>
+    <TooltipContext value={context}>
+      <PopoverContext value={popoverContext}>{root}</PopoverContext>
+    </TooltipContext>
   );
 }

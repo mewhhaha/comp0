@@ -1,5 +1,4 @@
 import { type RefProp } from "../shared.js";
-import { useMemo } from "react";
 import { dataAttr } from "@comp0/core";
 import { FieldProvider } from "./FieldProvider.js";
 import { useFieldFeedback, useFieldIds, describedBy } from "./field-shared.js";
@@ -20,28 +19,16 @@ export function Fieldset({
   const fieldInvalid = Boolean(invalid);
   const fieldRequired = Boolean(required);
   const { controlId, descriptionId, errorId, labelId } = ids;
-  const fieldContext = useMemo(
-    () => ({
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-      disabled: fieldDisabled,
-      invalid: fieldInvalid,
-      required: fieldRequired,
-      ...feedback,
-    }),
-    [
-      feedback,
-      fieldDisabled,
-      fieldInvalid,
-      fieldRequired,
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-    ],
-  );
+  const fieldContext = {
+    controlId,
+    descriptionId,
+    errorId,
+    labelId,
+    disabled: fieldDisabled,
+    invalid: fieldInvalid,
+    required: fieldRequired,
+    ...feedback,
+  };
   return (
     <FieldProvider value={fieldContext}>
       <fieldset

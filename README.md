@@ -23,8 +23,9 @@ Provider-only roots render their children directly. Explicit parts own DOM behav
 ```tsx
 import {
   Label,
+  Popover,
   Select,
-  SelectContent,
+  SelectPopover,
   SelectOption,
   SelectTrigger,
   SelectValue,
@@ -34,13 +35,15 @@ export function PlanSelect() {
   return (
     <Select name="plan" defaultValue="basic">
       <Label>Plan</Label>
-      <SelectTrigger>
-        <SelectValue placeholder="Choose a plan" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectOption value="basic">Basic</SelectOption>
-        <SelectOption value="pro">Pro</SelectOption>
-      </SelectContent>
+      <Popover>
+        <SelectTrigger>
+          <SelectValue placeholder="Choose a plan" />
+        </SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="basic">Basic</SelectOption>
+          <SelectOption value="pro">Pro</SelectOption>
+        </SelectPopover>
+      </Popover>
     </Select>
   );
 }
@@ -85,6 +88,23 @@ The graduated alpha surface covers:
 - explicit Dialog, Popover, and Tooltip families.
 
 Date/time, color, table/tree/grid, carousel, drag-and-drop, toast, transition, and parity-placeholder families were removed. They can return only after meeting the same behavior, accessibility, browser-test, documentation, and package-contract gates.
+
+## React Compiler
+
+comp0 assumes the [React Compiler](https://react.dev/learn/react-compiler). Component source contains no hand-written `useMemo`/`useCallback` memoization; the compiler inserts it at build time. The published `dist` output is already compiled, so apps consuming the packages from npm need nothing extra.
+
+If you consume the package source directly (workspace alias, vendoring, or a monorepo), you must run the compiler yourself:
+
+```sh
+pnpm add -D babel-plugin-react-compiler
+```
+
+```ts
+// babel: add to plugins
+["babel-plugin-react-compiler", { target: "19" }];
+```
+
+In a Vite app, this repository's `react-compiler-vite.ts` shows the transform wiring the docs app and test suites use. Installing the compiler in your own app is recommended regardless — your components get the same automatic memoization.
 
 ## Styling
 

@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import { useControllableState } from "@comp0/core";
 import { SearchFieldContext, type RefProp } from "../shared.js";
 import { TextField } from "./TextField.js";
@@ -20,29 +19,23 @@ export function SearchField({
     defaultValue: defaultValue ?? "",
     onChange,
   });
-  const clear = useCallback(() => {
+  const clear = () => {
     setSearchValue("");
     onClear?.();
-  }, [onClear, setSearchValue]);
-  const submit = useCallback(
-    (value = searchValue) => {
-      onSubmit?.(value);
-    },
-    [onSubmit, searchValue],
-  );
-  const context = useMemo(
-    () => ({
-      value: searchValue,
-      disabled: Boolean(props.disabled),
-      clear,
-      submit,
-      setValue: setSearchValue,
-    }),
-    [clear, props.disabled, searchValue, setSearchValue, submit],
-  );
+  };
+  const submit = (value = searchValue) => {
+    onSubmit?.(value);
+  };
+  const context = {
+    value: searchValue,
+    disabled: Boolean(props.disabled),
+    clear,
+    submit,
+    setValue: setSearchValue,
+  };
 
   return (
-    <SearchFieldContext.Provider value={context}>
+    <SearchFieldContext value={context}>
       <TextField
         as={as}
         {...props}
@@ -53,6 +46,6 @@ export function SearchField({
       >
         {children}
       </TextField>
-    </SearchFieldContext.Provider>
+    </SearchFieldContext>
   );
 }

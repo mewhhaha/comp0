@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useContext,
-  useId,
-  useLayoutEffect,
-  useRef,
-  type HTMLAttributes,
-} from "react";
+import { useContext, useId, useLayoutEffect, useRef, type HTMLAttributes } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { resolveItemLabel } from "./collection-shared.js";
@@ -43,21 +36,16 @@ export function Tag({
   if (resolvedDisabled) tabIndex = undefined;
   else if (active) tabIndex = 0;
 
-  const itemRef = useCallback(
-    (element: HTMLDivElement | null) => {
-      rowRef.current = element;
-      group?.register(
-        value,
-        resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
-        element,
-        resolvedDisabled,
-      );
-      composeRefs(ref)(element);
-    },
-    // children stays out: the layout effect below re-reads rendered text.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ariaLabel, group, ref, resolvedDisabled, textValue, value],
-  );
+  const itemRef = (element: HTMLDivElement | null) => {
+    rowRef.current = element;
+    group?.register(
+      value,
+      resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+      element,
+      resolvedDisabled,
+    );
+    composeRefs(ref)(element);
+  };
 
   // Controls inside a tag (like a remove button) are reachable by pointer
   // and by Delete on the tag, never by Tab, so the group stays one tab stop.

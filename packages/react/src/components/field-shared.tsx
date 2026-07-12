@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useId,
-  useMemo,
   useState,
   type FieldsetHTMLAttributes,
   type HTMLAttributes,
@@ -51,6 +50,8 @@ export function useFieldIds(id: string | undefined) {
 export function useFieldFeedback() {
   const [descriptionMounted, setDescriptionMounted] = useState(false);
   const [errorMounted, setErrorMounted] = useState(false);
+  // These identities feed effect dependencies in Description and FieldError;
+  // useCallback keeps them stable even where the React Compiler bails out.
   const registerDescription = useCallback(() => {
     setDescriptionMounted(true);
     return () => setDescriptionMounted(false);
@@ -59,10 +60,7 @@ export function useFieldFeedback() {
     setErrorMounted(true);
     return () => setErrorMounted(false);
   }, []);
-  return useMemo(
-    () => ({ descriptionMounted, errorMounted, registerDescription, registerError }),
-    [descriptionMounted, errorMounted, registerDescription, registerError],
-  );
+  return { descriptionMounted, errorMounted, registerDescription, registerError };
 }
 
 export function describedBy(

@@ -28,7 +28,7 @@ export function Tabs({
   );
 
   return (
-    <TabsContext.Provider
+    <TabsContext
       value={{
         baseId,
         selectedKey: selected,
@@ -54,6 +54,6 @@ export function Tabs({
       <ProviderRoot as={as} {...props} ref={ref} data-slot={dataSlot(props, "tabs")}>
         {children}
       </ProviderRoot>
-    </TabsContext.Provider>
+    </TabsContext>
   );
 }

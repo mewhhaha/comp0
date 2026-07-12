@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type TableHTMLAttributes } from "react";
+import { useRef, useState, type TableHTMLAttributes } from "react";
 import { composeRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { primaryStop, rowStops, TableContext, type TableContextValue } from "./table-shared.js";
@@ -41,7 +41,7 @@ export function Table({
     return rows.slice(low, high + 1).flatMap((row) => row.dataset["value"] ?? []);
   };
 
-  const register = useCallback((key: string, element: HTMLTableCellElement | null) => {
+  const register = (key: string, element: HTMLTableCellElement | null) => {
     if (!element) {
       cellMap.current.delete(key);
       return;
@@ -51,20 +51,17 @@ export function Table({
       activeKeyRef.current = key;
       setActiveKey(key);
     }
-  }, []);
+  };
 
-  const keyFor = useCallback((element: Element) => {
+  const keyFor = (element: Element) => {
     for (const [key, cell] of cellMap.current) if (cell === element) return key;
     return undefined;
-  }, []);
+  };
 
-  const context: TableContextValue = useMemo(
-    () => ({ activeKey, setActiveKey, register, keyFor }),
-    [activeKey, keyFor, register],
-  );
+  const context: TableContextValue = { activeKey, setActiveKey, register, keyFor };
 
   return (
-    <TableContext.Provider value={context}>
+    <TableContext value={context}>
       <table
         {...props}
         ref={composeRefs(tableRef, ref)}
@@ -140,7 +137,7 @@ export function Table({
           next.focus();
           const landedValue = nextCell?.parentElement?.dataset["value"];
           if (extending) {
-            anchorRef.current ??= row.dataset["value"] ?? landedValue ?? null;
+            anchorRef.current = anchorRef.current ?? row.dataset["value"] ?? landedValue ?? null;
             const landedRow = nextCell?.parentElement;
             if (anchorRef.current && landedRow instanceof HTMLTableRowElement && landedValue) {
               onRangeSelect?.(rangeBetween(anchorRef.current, landedRow));
@@ -154,6 +151,6 @@ export function Table({
       >
         {children}
       </table>
-    </TableContext.Provider>
+    </TableContext>
   );
 }
