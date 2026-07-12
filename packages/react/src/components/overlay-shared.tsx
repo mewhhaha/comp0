@@ -62,7 +62,7 @@ export type PopoverPlacementProps = {
   offset?: number | undefined;
 };
 
-export type PopoverContentProps = Omit<OverlayContentProps, "popover"> &
+export type PopoverOverlayProps = Omit<OverlayContentProps, "popover"> &
   PopoverPlacementProps & {
     popover?: "auto" | "manual" | "none" | undefined;
   };

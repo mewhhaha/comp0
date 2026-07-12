@@ -5,7 +5,7 @@ import { Dialog } from "./components/Dialog.js";
 import { DialogContent } from "./components/DialogContent.js";
 import { DialogTrigger } from "./components/DialogTrigger.js";
 import { Popover } from "./components/Popover.js";
-import { PopoverContent } from "./components/PopoverContent.js";
+import { PopoverOverlay } from "./components/PopoverOverlay.js";
 import { PopoverTrigger } from "./components/PopoverTrigger.js";
 import { placementSurfaceStyle, popoverAnchorName } from "./components/overlay-shared.js";
 
@@ -64,7 +64,7 @@ describe("overlay composition", () => {
         <PopoverTrigger as="a" href="#content">
           Open
         </PopoverTrigger>
-        <PopoverContent id="content">Details</PopoverContent>
+        <PopoverOverlay id="content">Details</PopoverOverlay>
       </Popover>,
     );
 

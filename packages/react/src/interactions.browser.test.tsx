@@ -10,7 +10,7 @@ import {
   DialogContent,
   DialogTrigger,
   Popover,
-  PopoverContent,
+  PopoverOverlay,
   PopoverTrigger,
   Select,
   SelectPopover,
@@ -130,21 +130,21 @@ describe("real-browser interaction contracts", () => {
       <div>
         <Popover open>
           <PopoverTrigger>Parent trigger</PopoverTrigger>
-          <PopoverContent data-testid="parent-popover" popover="auto">
+          <PopoverOverlay data-testid="parent-popover" popover="auto">
             Parent content
             <Popover open>
               <PopoverTrigger>Child trigger</PopoverTrigger>
-              <PopoverContent data-testid="child-popover" popover="auto">
+              <PopoverOverlay data-testid="child-popover" popover="auto">
                 Child content
-              </PopoverContent>
+              </PopoverOverlay>
             </Popover>
-          </PopoverContent>
+          </PopoverOverlay>
         </Popover>
         <Popover open={unrelatedOpen}>
           <PopoverTrigger>Unrelated trigger</PopoverTrigger>
-          <PopoverContent data-testid="unrelated-popover" popover="auto">
+          <PopoverOverlay data-testid="unrelated-popover" popover="auto">
             Unrelated content
-          </PopoverContent>
+          </PopoverOverlay>
         </Popover>
       </div>
     );

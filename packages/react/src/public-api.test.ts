@@ -73,7 +73,7 @@ const publicComponents = [
   "PinInputField",
   "Popover",
   "PopoverArrow",
-  "PopoverContent",
+  "PopoverOverlay",
   "PopoverTrigger",
   "ProgressBar",
   "Radio",

@@ -5,7 +5,7 @@ export * from "./components/AlertDialog.js";
 export * from "./components/AlertDialogContent.js";
 export * from "./components/Popover.js";
 export * from "./components/PopoverTrigger.js";
-export * from "./components/PopoverContent.js";
+export * from "./components/PopoverOverlay.js";
 export * from "./components/PopoverArrow.js";
 export * from "./components/Tooltip.js";
 export * from "./components/TooltipTrigger.js";
