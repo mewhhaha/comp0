@@ -41,14 +41,15 @@ export function composeRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T> {
 }
 
 /** Returns a stable callback ref that always writes to the latest supplied refs. */
-export function useComposedRefs<T>(...refs: PossibleRef<T>[]) {
+export function useComposedRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T>;
+export function useComposedRefs(...refs: PossibleRef<unknown>[]): RefCallback<unknown> {
   const refsRef = useRef(refs);
 
   useIsoLayoutEffect(() => {
     refsRef.current = refs;
   });
 
-  return useCallback((value: T | null) => {
+  return useCallback((value: unknown | null) => {
     for (const ref of refsRef.current) {
       assignRef(ref, value);
     }
@@ -56,14 +57,19 @@ export function useComposedRefs<T>(...refs: PossibleRef<T>[]) {
 }
 
 /** Returns a stable callback that invokes the latest supplied implementation. */
-export function useEventCallback<T extends (...args: never[]) => unknown>(callback: T | undefined) {
+export function useEventCallback<T extends (...args: never[]) => unknown>(
+  callback: T | undefined,
+): (...args: Parameters<T>) => ReturnType<T> | undefined;
+export function useEventCallback(
+  callback: ((...args: unknown[]) => unknown) | undefined,
+): (...args: unknown[]) => unknown {
   const callbackRef = useRef(callback);
 
   useIsoLayoutEffect(() => {
     callbackRef.current = callback;
   });
 
-  return useCallback((...args: Parameters<T>) => callbackRef.current?.(...args), []);
+  return useCallback((...args: unknown[]) => callbackRef.current?.(...args), []);
 }
 
 function isEventHandler(key: string, value: unknown) {

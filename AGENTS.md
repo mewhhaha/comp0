@@ -8,7 +8,7 @@ Do not preserve old prop names as compatibility aliases unless the user explicit
 
 ## React Compiler
 
-Assume the React Compiler everywhere: the package build, the docs app, and both vitest projects run it. Do not hand-memoize with `useMemo`/`useCallback`; write plain objects and functions and let the compiler insert memoization. The one exception is a callback identity consumed by an effect dependency where a compiler bail-out would cause a state loop (see `useFieldFeedback`) — keep an explicit `useCallback` there with a comment.
+Assume the React Compiler everywhere: the package build, the docs app, and both vitest projects run the Rust port through the exactly pinned `oxc-transform@0.135.0`. Version 0.136.0 stopped emitting fallback code for this repo's expected compiler bailouts, and the Node API was removed after that release. Do not bump it without rerunning the Babel-versus-oxc conformance comparison and updating the compiled-file smoke baseline. Do not hand-memoize with `useMemo`/`useCallback`; write plain objects and functions and let the compiler insert memoization. The one exception is a callback identity consumed by an effect dependency where a compiler bail-out would cause a state loop (see `useFieldFeedback`) — keep an explicit `useCallback` there with a comment.
 
 ## Component API and Styling
 

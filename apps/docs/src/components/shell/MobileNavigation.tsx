@@ -1,13 +1,17 @@
+"use client";
+
 import { useState } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Dialog, DialogContent, DialogTrigger } from "@comp0/react";
 import { DocsNavigation } from "./DocsNavigation.js";
+import type { DocsNavigationData } from "./types.js";
 
 export type MobileNavigationProps = {
   className?: string | undefined;
+  navigation: DocsNavigationData;
 };
 
-export function MobileNavigation({ className }: MobileNavigationProps) {
+export function MobileNavigation({ className, navigation }: MobileNavigationProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -45,6 +49,7 @@ export function MobileNavigation({ className }: MobileNavigationProps) {
           </div>
           <DocsNavigation
             className="min-w-0 flex-1 overflow-y-auto px-5 py-6"
+            navigation={navigation}
             onNavigate={() => setOpen(false)}
           />
         </div>

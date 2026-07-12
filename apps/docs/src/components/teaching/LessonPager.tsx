@@ -1,3 +1,5 @@
+"use client";
+
 import { Link } from "@comp0/react";
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import { Link as RouterLink } from "react-router";

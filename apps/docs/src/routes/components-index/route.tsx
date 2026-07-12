@@ -13,7 +13,7 @@ export function meta() {
   ];
 }
 
-export default function ComponentsIndexRoute() {
+export function ServerComponent() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-10">
       <header>

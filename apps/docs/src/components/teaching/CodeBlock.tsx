@@ -1,21 +1,15 @@
-import { Button, useToast } from "@comp0/react";
-import { ClipboardDocumentIcon } from "@heroicons/react/16/solid";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import type { ThemedToken } from "shiki/types";
 import type { CodeLanguage } from "../../content/types.js";
+import { CodeBlockCopyButton } from "./CodeBlockCopyButton.js";
 import { cn } from "./cn.js";
-import { getCachedHighlight, getHighlightKey, highlightCode } from "./syntax-highlighter.js";
+import { highlightCode } from "./syntax-highlighter.js";
 
 type CodeBlockProps = {
   code: string;
   language?: CodeLanguage | undefined;
   title?: string | undefined;
   className?: string | undefined;
-};
-
-type HighlightState = {
-  key: string;
-  lines: ThemedToken[][];
 };
 
 function getTokenStyle(token: ThemedToken): CSSProperties {
@@ -32,52 +26,8 @@ function getTokenStyle(token: ThemedToken): CSSProperties {
   };
 }
 
-function CopyButton({ code }: { code: string }) {
-  const { notify } = useToast();
-  return (
-    <Button
-      aria-label="Copy code"
-      className="flex items-center rounded-md p-1.5 text-zinc-500 outline-none data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-focus-visible:outline-teal-400 data-hovered:bg-white/10 data-hovered:text-zinc-200 data-pressed:bg-white/15"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(code);
-        } catch {
-          return;
-        }
-        notify("Copied to clipboard");
-      }}
-    >
-      <ClipboardDocumentIcon className="size-5 sm:size-4" aria-hidden="true" />
-    </Button>
-  );
-}
-
-export function CodeBlock({ code, language = "tsx", title, className }: CodeBlockProps) {
-  const highlightKey = getHighlightKey(code, language);
-  const [highlight, setHighlight] = useState<HighlightState | undefined>(() => {
-    const lines = getCachedHighlight(code, language);
-    return lines ? { key: highlightKey, lines } : undefined;
-  });
-  useEffect(() => {
-    let active = true;
-    const cached = getCachedHighlight(code, language);
-    if (cached) {
-      setHighlight({ key: highlightKey, lines: cached });
-      return;
-    }
-    highlightCode(code, language).then(
-      (lines) => {
-        if (active) setHighlight({ key: highlightKey, lines });
-      },
-      () => {
-        if (active) setHighlight(undefined);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [code, highlightKey, language]);
-  const lines = highlight?.key === highlightKey ? highlight.lines : undefined;
+export async function CodeBlock({ code, language = "tsx", title, className }: CodeBlockProps) {
+  const lines = await highlightCode(code, language).catch(() => undefined);
   let codeContent: ReactNode = code;
   if (lines) {
     codeContent = lines.map((tokens, lineIndex) => (
@@ -103,18 +53,14 @@ export function CodeBlock({ code, language = "tsx", title, className }: CodeBloc
         <span>{title ?? "Example"}</span>
         <span className="flex items-center gap-2">
           <span className="font-mono tracking-wide text-zinc-500 uppercase">{language}</span>
-          <CopyButton code={code} />
+          <CodeBlockCopyButton code={code} />
         </span>
       </figcaption>
       <pre
         className="max-h-[30rem] max-w-full overflow-auto p-4 font-mono text-base/6 text-zinc-100 [tab-size:2] sm:text-sm"
         tabIndex={0}
       >
-        <code
-          data-highlighted={Boolean(lines) || undefined}
-          data-language={language}
-          spellCheck={false}
-        >
+        <code data-highlighted={lines ? "" : undefined} data-language={language} spellCheck={false}>
           {codeContent}
         </code>
       </pre>

@@ -1,17 +1,21 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "composite": true,
     "rootDir": ".",
+    "rootDirs": [".", "./.react-router/types"],
     "outDir": "dist-types",
     "declaration": true,
     "declarationMap": true,
     "noEmit": true,
+    "types": ["vite/client", "@vitejs/plugin-rsc/types"],
     "paths": {
       "@comp0/react": ["../../packages/react/src/index.ts"],
       "@comp0/core": ["../../packages/core/src/index.ts"]
     }
   },
   "references": [{ "path": "../../packages/core" }, { "path": "../../packages/react" }],
-  "include": ["src"]
+  "include": ["src", ".react-router/types"]
 }

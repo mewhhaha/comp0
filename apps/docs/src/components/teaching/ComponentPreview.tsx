@@ -1,4 +1,6 @@
-import { getExample } from "../../examples/index.js";
+"use client";
+
+import { getExample } from "../../examples/registry.js";
 import { cn } from "./cn.js";
 
 type ComponentPreviewProps = {

@@ -1,13 +1,17 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { getExample } from "../../examples/registry.js";
 import { cn } from "./cn.js";
 
 type LiveExampleProps = {
-  children: ReactNode;
+  slug: string;
   title?: string | undefined;
   className?: string | undefined;
 };
 
-export function LiveExample({ children, title = "Live example", className }: LiveExampleProps) {
+export function LiveExample({ slug, title = "Live example", className }: LiveExampleProps) {
+  const Example = getExample(slug);
+
   return (
     <section
       className={cn(
@@ -16,7 +20,7 @@ export function LiveExample({ children, title = "Live example", className }: Liv
       )}
       aria-label={title}
     >
-      {children}
+      {Example ? <Example /> : <p>Example unavailable.</p>}
     </section>
   );
 }

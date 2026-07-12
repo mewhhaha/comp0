@@ -96,15 +96,20 @@ comp0 assumes the [React Compiler](https://react.dev/learn/react-compiler). Comp
 If you consume the package source directly (workspace alias, vendoring, or a monorepo), you must run the compiler yourself:
 
 ```sh
-pnpm add -D babel-plugin-react-compiler
+pnpm add -D oxc-transform@0.135.0
 ```
 
 ```ts
-// babel: add to plugins
-["babel-plugin-react-compiler", { target: "19" }];
+import { transform } from "oxc-transform";
+
+const result = await transform(filename, source, {
+  reactCompiler: { target: "19", panicThreshold: "none" },
+  typescript: { onlyRemoveTypeImports: true },
+  jsx: { runtime: "automatic", development: false },
+});
 ```
 
-In a Vite app, this repository's `react-compiler-vite.ts` shows the transform wiring the docs app and test suites use. Installing the compiler in your own app is recommended regardless — your components get the same automatic memoization.
+The Rust compiler integration is experimental. Version 0.136.0 stopped emitting fallback code for expected compiler bailouts, and the Node API was removed after that release, so this repository pins 0.135.0 exactly and guards its Babel-era compiled-file count. Rerun the conformance comparison before changing the pin. In a Vite app, this repository's `react-compiler-vite.ts` shows the pre-transform wiring the docs app and test suites use. Installing the compiler in your own app is recommended regardless — your components get the same automatic memoization.
 
 ## Styling
 
@@ -142,3 +147,18 @@ pnpm test:compiler-smoke
 ```
 
 `test:package` packs both public packages, installs them in a temporary consumer, typechecks a composition, executes both roots, and verifies that undeclared subpaths are rejected.
+
+### Docs RSC Worker
+
+The docs app runs React Router RSC Framework Mode on Cloudflare Workers. Route content and Shiki highlighting are server components; the shell, live examples, copy button, previews, and lesson pager are client islands. The server passes only a slim navigation/search index into the shell.
+
+The preview stack is pinned exactly in `apps/docs/package.json`: React Router 8.2.0, `@vitejs/plugin-react` 6.0.3, `@vitejs/plugin-rsc` 0.5.27, `@cloudflare/vite-plugin` 1.44.0, and Wrangler 4.110.0. These APIs are experimental, so upgrade them as one tested set and repeat the cold-cache, bundle-boundary, Worker preview, and browser checks.
+
+```sh
+pnpm dev
+pnpm --filter @comp0/docs build
+pnpm --filter @comp0/docs run preview
+pnpm --filter @comp0/docs run deploy
+```
+
+The build checks that the catalog and Shiki do not enter client assets. Client JavaScript fell from the SPA baseline of 1,064,729 bytes to 600,577 bytes in the RSC build, a 43.6% reduction. The deployed Worker is [comp0-docs.horrible.workers.dev](https://comp0-docs.horrible.workers.dev).

@@ -4,27 +4,31 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "react-router build && node ../../scripts/verify-docs-client-bundle.mjs",
     "dev": "react-router dev --host 0.0.0.0",
-    "preview": "vite preview build/client --host 0.0.0.0",
-    "typecheck": "tsgo -p tsconfig.json"
+    "preview": "pnpm run build && vite preview --host 0.0.0.0",
+    "deploy": "pnpm run build && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "typecheck": "react-router typegen && tsgo -p tsconfig.json"
   },
   "dependencies": {
     "@comp0/react": "workspace:*",
     "@heroicons/react": "^2.2.0",
-    "@react-router/node": "8.2.0",
     "@shikijs/langs": "4.3.1",
-    "isbot": "^5.2.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-router": "8.2.0",
     "shiki": "4.3.1"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "1.44.0",
     "@react-router/dev": "8.2.0",
     "@react-router/fs-routes": "8.2.0",
     "@tailwindcss/vite": "4.3.2",
+    "@vitejs/plugin-react": "6.0.3",
+    "@vitejs/plugin-rsc": "0.5.27",
     "tailwindcss": "4.3.2",
-    "vite": "8.1.4"
+    "vite": "8.1.4",
+    "wrangler": "4.110.0"
   }
 }

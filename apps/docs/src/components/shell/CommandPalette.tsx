@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
@@ -9,7 +11,7 @@ import {
   DialogContent,
   Popover,
 } from "@comp0/react";
-import { componentGroups, components, learnDocs } from "../../content/index.js";
+import type { PaletteEntry } from "./types.js";
 
 /**
  * Case-insensitive subsequence match: every character of the query appears in
@@ -27,33 +29,13 @@ export function fuzzyMatch(textValue: string, inputValue: string): boolean {
   return true;
 }
 
-type PaletteEntry = {
-  route: string;
-  title: string;
-  group: string;
-};
-
-const groupTitleById = new Map(componentGroups.map((group) => [group.id, group.title]));
-
-const paletteEntries: PaletteEntry[] = [
-  ...components.map((component) => ({
-    route: `/components/${component.slug}`,
-    title: component.title,
-    group: groupTitleById.get(component.group) ?? "Components",
-  })),
-  ...learnDocs.map((doc) => ({
-    route: `/learn/${doc.slug}`,
-    title: doc.title,
-    group: "Learn",
-  })),
-];
-
 export type CommandPaletteProps = {
+  entries: PaletteEntry[];
   open: boolean;
   onToggle: (open: boolean) => void;
 };
 
-export function CommandPalette({ open, onToggle }: CommandPaletteProps) {
+export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
@@ -70,7 +52,7 @@ export function CommandPalette({ open, onToggle }: CommandPaletteProps) {
     void navigate(route);
   };
 
-  const results = paletteEntries.filter((entry) => query === "" || fuzzyMatch(entry.title, query));
+  const results = entries.filter((entry) => query === "" || fuzzyMatch(entry.title, query));
 
   const keepResultsOpen = () => {
     // The results panel stays open for the palette's whole lifetime. Escape
@@ -123,7 +105,7 @@ export function CommandPalette({ open, onToggle }: CommandPaletteProps) {
               offset={8}
               placement="bottom"
             >
-              {paletteEntries.map((entry) => (
+              {entries.map((entry) => (
                 <ComboboxOption
                   className="flex cursor-default items-center justify-between gap-4 rounded-lg px-3 py-2 text-base/7 text-zinc-700 data-active:bg-teal-600/10 data-active:text-teal-800 sm:text-sm/6 dark:text-zinc-300 dark:data-active:bg-teal-400/10 dark:data-active:text-teal-200"
                   key={entry.route}

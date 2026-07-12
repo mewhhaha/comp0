@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { userEvent } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
+import { docsNavigation, paletteEntries } from "../../content/navigation.js";
 import { DocsShell } from "./DocsShell.js";
 import { fuzzyMatch } from "./CommandPalette.js";
 
@@ -13,7 +14,7 @@ function LocationProbe() {
 
 function Harness() {
   return (
-    <DocsShell>
+    <DocsShell navigation={docsNavigation} paletteEntries={paletteEntries}>
       <LocationProbe />
     </DocsShell>
   );

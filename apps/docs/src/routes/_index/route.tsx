@@ -14,7 +14,7 @@ export function meta() {
   ];
 }
 
-export default function IndexRoute() {
+export function ServerComponent() {
   return (
     <div>
       <HomeHero className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" />

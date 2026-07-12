@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import {
   Anatomy,
   ApiReference,
@@ -12,21 +12,34 @@ import {
   StepList,
 } from "../../components/teaching/index.js";
 import { componentBySlug, componentGroups, components } from "../../content/index.js";
-import { getExample, getExampleSource } from "../../examples/index.js";
+import { getExampleSource } from "../../examples/sources.js";
 import { ComponentOutline } from "./ComponentOutline.js";
 import { ComponentSection } from "./ComponentSection.js";
 
-export function meta({ params }: { params: { slug?: string | undefined } }) {
+type ComponentRouteProps = {
+  params: { slug?: string | undefined };
+};
+
+type ComponentRouteLoaderData = {
+  description: string | undefined;
+  title: string;
+};
+
+export function loader({ params }: ComponentRouteProps): ComponentRouteLoaderData {
   const doc = params.slug ? componentBySlug.get(params.slug) : undefined;
-  if (!doc) return [{ title: "Component not found · comp0" }];
+  if (!doc) return { description: undefined, title: "Component not found" };
+  return { description: doc.summary, title: doc.title };
+}
+
+export function meta({ loaderData }: { loaderData: ComponentRouteLoaderData }) {
   return [
-    { title: `${doc.title} · comp0 component guide` },
-    { name: "description", content: doc.summary },
+    { title: `${loaderData.title} · comp0 component guide` },
+    { name: "description", content: loaderData.description },
   ];
 }
 
-export default function ComponentRoute() {
-  const { slug } = useParams();
+export function ServerComponent({ params }: ComponentRouteProps) {
+  const { slug } = params;
   const doc = slug ? componentBySlug.get(slug) : undefined;
 
   if (!doc) {
@@ -51,7 +64,6 @@ export default function ComponentRoute() {
     );
   }
 
-  const Example = getExample(doc.slug);
   const group = componentGroups.find((candidate) => candidate.id === doc.group);
   const index = components.indexOf(doc);
   const previous = components[index - 1];
@@ -82,16 +94,15 @@ export default function ComponentRoute() {
         <div className="mt-16 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-16">
           <ComponentSection id="example" title="Example">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
-              <LiveExample>{Example ? <Example /> : <p>Example unavailable.</p>}</LiveExample>
+              <LiveExample slug={doc.slug} />
               <CodeBlock
                 code={getExampleSource(doc.slug) ?? doc.exampleSource}
                 title={`${doc.title}.tsx`}
               />
             </div>
             {doc.moreExamples?.map((variant) => {
-              const VariantExample = getExample(`${doc.slug}.${variant.id}`);
               const variantSource = getExampleSource(`${doc.slug}.${variant.id}`);
-              if (!VariantExample || !variantSource) return null;
+              if (!variantSource) return null;
               return (
                 <section className="mt-10" key={variant.id}>
                   <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
@@ -101,9 +112,7 @@ export default function ComponentRoute() {
                     {variant.description}
                   </p>
                   <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
-                    <LiveExample title={variant.title}>
-                      <VariantExample />
-                    </LiveExample>
+                    <LiveExample slug={`${doc.slug}.${variant.id}`} title={variant.title} />
                     <CodeBlock code={variantSource} title={`${doc.slug}.${variant.id}.tsx`} />
                   </div>
                 </section>

@@ -116,12 +116,8 @@ const highlighterPromise = createHighlighterCore({
 const pendingHighlights = new Map<string, Promise<ThemedToken[][]>>();
 const resolvedHighlights = new Map<string, ThemedToken[][]>();
 
-export function getHighlightKey(code: string, language: CodeLanguage) {
+function getHighlightKey(code: string, language: CodeLanguage) {
   return `${language}\u0000${code}`;
-}
-
-export function getCachedHighlight(code: string, language: CodeLanguage) {
-  return resolvedHighlights.get(getHighlightKey(code, language));
 }
 
 export function highlightCode(code: string, language: CodeLanguage) {

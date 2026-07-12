@@ -1,16 +1,21 @@
+"use client";
+
 import { useEffect, useState, type ReactNode } from "react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { SkipLink, Toast, ToastDismiss, ToastProvider, ToastRegion } from "@comp0/react";
 import { CommandPalette } from "./CommandPalette.js";
 import { DocsHeader } from "./DocsHeader.js";
 import { DocsNavigation } from "./DocsNavigation.js";
+import type { DocsNavigationData, PaletteEntry } from "./types.js";
 
 export type DocsShellProps = {
   children: ReactNode;
   className?: string | undefined;
+  navigation: DocsNavigationData;
+  paletteEntries: PaletteEntry[];
 };
 
-export function DocsShell({ children, className }: DocsShellProps) {
+export function DocsShell({ children, className, navigation, paletteEntries }: DocsShellProps) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -36,11 +41,11 @@ export function DocsShell({ children, className }: DocsShellProps) {
         >
           Skip to content
         </SkipLink>
-        <DocsHeader onOpenSearch={() => setPaletteOpen(true)} />
+        <DocsHeader navigation={navigation} onOpenSearch={() => setPaletteOpen(true)} />
         <div className="mx-auto grid max-w-360 lg:grid-cols-[16rem_minmax(0,1fr)]">
           <aside className="border-r border-zinc-950/10 max-lg:hidden dark:border-white/10">
             <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto px-6 py-8">
-              <DocsNavigation />
+              <DocsNavigation navigation={navigation} />
             </div>
           </aside>
           <div className="min-w-0">
@@ -54,7 +59,7 @@ export function DocsShell({ children, className }: DocsShellProps) {
           </div>
         </div>
       </div>
-      <CommandPalette open={paletteOpen} onToggle={setPaletteOpen} />
+      <CommandPalette entries={paletteEntries} open={paletteOpen} onToggle={setPaletteOpen} />
       <ToastRegion className="inset-auto right-4 bottom-4 m-0 flex w-80 flex-col gap-2 border-0 bg-transparent p-0">
         {(toast) => (
           <Toast

@@ -1,21 +1,46 @@
 import { fileURLToPath } from "node:url";
-import { reactRouter } from "@react-router/dev/vite";
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { unstable_reactRouterRSC } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import rsc from "@vitejs/plugin-rsc";
 import { defineConfig } from "vite";
 import { reactCompiler } from "../../react-compiler-vite.js";
 
 export default defineConfig({
   plugins: [
-    reactRouter(),
+    cloudflare({
+      viteEnvironment: {
+        name: "rsc",
+        childEnvironments: ["ssr"],
+      },
+    }),
     tailwindcss(),
-    // The docs app runs the same React Compiler output the packages ship;
-    // component source assumes the compiler and does not hand-memoize.
-    reactCompiler(/\/(packages|apps)\/[^]*\.tsx?$/),
+    // The docs app compiles only its client graph; server components stay
+    // outside this transform while workspace package aliases remain compiled.
+    reactCompiler(
+      /\/(?:packages\/(?:core|react)\/src\/.*|apps\/docs\/src\/(?:components\/shell\/.*|components\/teaching\/(?:CodeBlockCopyButton|ComponentPreview|LessonPager|LiveExample)|examples\/(?:registry|cases\/.*)))\.[tj]sx?$/,
+    ),
+    unstable_reactRouterRSC(),
+    react(),
+    rsc({ serverHandler: false }),
   ],
   // Compiled modules import react/compiler-runtime; declare it so a cold cache
   // does not discover it mid-run and reload with a second React copy.
   optimizeDeps: {
     include: ["react/compiler-runtime"],
+  },
+  environments: {
+    rsc: {
+      optimizeDeps: {
+        exclude: ["react-router"],
+      },
+    },
+    ssr: {
+      optimizeDeps: {
+        exclude: ["react-router"],
+      },
+    },
   },
   resolve: {
     alias: {

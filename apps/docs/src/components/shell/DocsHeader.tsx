@@ -1,10 +1,14 @@
+"use client";
+
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { Link as RouterLink, NavLink } from "react-router";
 import { Button, Link } from "@comp0/react";
 import { MobileNavigation } from "./MobileNavigation.js";
+import type { DocsNavigationData } from "./types.js";
 
 export type DocsHeaderProps = {
   className?: string | undefined;
+  navigation: DocsNavigationData;
   onOpenSearch?: (() => void) | undefined;
 };
 
@@ -17,7 +21,7 @@ function headerLinkClass({ isActive }: { isActive: boolean }) {
     .join(" ");
 }
 
-export function DocsHeader({ className, onOpenSearch }: DocsHeaderProps) {
+export function DocsHeader({ className, navigation, onOpenSearch }: DocsHeaderProps) {
   return (
     <header
       className={`sticky top-0 z-40 border-b border-zinc-950/10 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-zinc-950/90 ${className ?? ""}`}
@@ -55,7 +59,7 @@ export function DocsHeader({ className, onOpenSearch }: DocsHeaderProps) {
               ⌘K
             </kbd>
           </Button>
-          <MobileNavigation className="lg:hidden" />
+          <MobileNavigation className="lg:hidden" navigation={navigation} />
         </div>
       </div>
     </header>

@@ -21,12 +21,21 @@ export const visuallyHiddenStyle: CSSProperties = {
  * focus-revealed primitives (SkipLink, focusable VisuallyHidden) can drop
  * their hiding styles while focused.
  */
-export function useFocusWithinReveal<TElement extends HTMLElement>() {
+export function useFocusWithinReveal<TElement extends HTMLElement>(): {
+  revealed: boolean;
+  reveal: () => void;
+  conceal: (event: FocusEvent<TElement>) => void;
+};
+export function useFocusWithinReveal(): {
+  revealed: boolean;
+  reveal: () => void;
+  conceal: (event: FocusEvent<HTMLElement>) => void;
+} {
   const [revealed, setRevealed] = useState(false);
   return {
     revealed,
     reveal: () => setRevealed(true),
-    conceal: (event: FocusEvent<TElement>) => {
+    conceal: (event: FocusEvent<HTMLElement>) => {
       // Focus moving to a descendant keeps the content revealed.
       if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
       setRevealed(false);

@@ -11,20 +11,26 @@ export interface ControllableStateOptions<T> {
 /**
  * Manages a value that may be controlled by the caller or initialized internally.
  */
-export function useControllableState<T>({
+export function useControllableState<T>(
+  options: ControllableStateOptions<T>,
+): readonly [T, (next: T | ((current: T) => T)) => void];
+export function useControllableState({
   value,
   defaultValue,
   onChange,
-}: ControllableStateOptions<T>) {
+}: ControllableStateOptions<unknown>): readonly [
+  unknown,
+  (next: unknown | ((current: unknown) => unknown)) => void,
+] {
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const isControlled = value !== undefined;
   const currentValue = isControlled ? value : uncontrolledValue;
   const onChangeStable = useEventCallback(onChange);
 
   const setValue = useCallback(
-    (next: T | ((current: T) => T)) => {
+    (next: unknown | ((current: unknown) => unknown)) => {
       const resolvedValue =
-        typeof next === "function" ? (next as (current: T) => T)(currentValue) : next;
+        typeof next === "function" ? (next as (current: unknown) => unknown)(currentValue) : next;
 
       if (!Object.is(resolvedValue, currentValue)) {
         if (!isControlled) setUncontrolledValue(resolvedValue);

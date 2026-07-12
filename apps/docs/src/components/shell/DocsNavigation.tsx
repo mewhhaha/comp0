@@ -1,8 +1,11 @@
+"use client";
+
 import { NavLink } from "react-router";
-import { componentGroups, learnDocs } from "../../content/index.js";
+import type { DocsNavigationData } from "./types.js";
 
 export type DocsNavigationProps = {
   className?: string | undefined;
+  navigation: DocsNavigationData;
   onNavigate?: (() => void) | undefined;
 };
 
@@ -15,7 +18,7 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
     .join(" ");
 }
 
-export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
+export function DocsNavigation({ className, navigation, onNavigate }: DocsNavigationProps) {
   return (
     <nav aria-label="Documentation" className={className}>
       <div>
@@ -26,7 +29,7 @@ export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
               Welcome
             </NavLink>
           </li>
-          {learnDocs.map((lesson) => (
+          {navigation.lessons.map((lesson) => (
             <li key={lesson.slug}>
               <NavLink className={navLinkClass} onClick={onNavigate} to={`/learn/${lesson.slug}`}>
                 {lesson.title}
@@ -46,7 +49,7 @@ export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
           </li>
         </ul>
         <div className="mt-5 grid gap-6">
-          {componentGroups.map((group) => (
+          {navigation.componentGroups.map((group) => (
             <section key={group.id}>
               <h2 className="px-3 text-base/7 font-medium text-zinc-950 sm:text-sm/6 dark:text-white">
                 {group.title}

@@ -1,4 +1,4 @@
-import { transformAsync } from "@babel/core";
+import { transform } from "oxc-transform";
 import type { Plugin, Rollup } from "vite";
 
 /**
@@ -12,16 +12,21 @@ export function reactCompiler(filter: RegExp): Plugin {
     enforce: "pre",
     async transform(code, id) {
       if (!filter.test(id)) return null;
-      const result = await transformAsync(code, {
-        filename: id,
-        babelrc: false,
-        configFile: false,
-        presets: ["@babel/preset-typescript", ["@babel/preset-react", { runtime: "automatic" }]],
-        plugins: [["babel-plugin-react-compiler", { target: "19" }]],
-        sourceMaps: true,
+      const result = await transform(id, code, {
+        reactCompiler: { target: "19", panicThreshold: "none" },
+        typescript: { onlyRemoveTypeImports: true },
+        jsx: { runtime: "automatic", development: false },
+        sourcemap: true,
       });
-      if (!result?.code) return null;
-      // Babel 8 and rolldown-vite disagree on the encoded source map type.
+
+      const fatalErrors = result.errors.filter(
+        (error) => error.severity === "Error" && !error.message.startsWith("[ReactCompiler]"),
+      );
+      if (fatalErrors.length > 0) {
+        throw new Error(fatalErrors.map((error) => error.message).join("\n"));
+      }
+      if (!result.code) return null;
+
       return { code: result.code, map: (result.map ?? undefined) as Rollup.SourceMapInput };
     },
   };

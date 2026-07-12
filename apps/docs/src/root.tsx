@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Links, Meta, Outlet, ScrollRestoration } from "react-router";
 import { DocsShell } from "./components/shell/index.js";
+import { docsNavigation, paletteEntries } from "./content/navigation.js";
 import "./styles.css";
 
 export function meta() {
@@ -13,7 +14,7 @@ export function meta() {
   ];
 }
 
-export function Layout({ children }: { children: ReactNode }) {
+export function ServerLayout({ children }: { children: ReactNode }) {
   return (
     <html className="antialiased" lang="en">
       <head>
@@ -30,21 +31,16 @@ export function Layout({ children }: { children: ReactNode }) {
       <body>
         {children}
         <ScrollRestoration />
-        <Scripts />
         {import.meta.env.DEV ? <script src="https://ui.sh/ui-picker.js" /> : null}
       </body>
     </html>
   );
 }
 
-export default function Root() {
+export function ServerComponent() {
   return (
-    <DocsShell>
+    <DocsShell navigation={docsNavigation} paletteEntries={paletteEntries}>
       <Outlet />
     </DocsShell>
   );
-}
-
-export function HydrateFallback() {
-  return null;
 }

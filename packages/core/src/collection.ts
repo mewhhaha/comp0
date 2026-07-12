@@ -26,10 +26,20 @@ export function sortByDocumentPosition<TValue, TKey>(items: CollectionNode<TValu
  *
  * `key` identifies the logical item; `id` remains available for DOM and ARIA references.
  */
-export function useCollectionRegistry<TValue = string, TKey = string>() {
-  const itemsRef = useRef(new Map<TKey, CollectionNode<TValue, TKey>>());
+type CollectionRegistry<TValue, TKey> = {
+  register: (node: CollectionNode<TValue, TKey>) => () => void;
+  getItems: () => CollectionNode<TValue, TKey>[];
+  getEnabledItems: () => CollectionNode<TValue, TKey>[];
+};
 
-  const register = useCallback((node: CollectionNode<TValue, TKey>) => {
+export function useCollectionRegistry<TValue = string, TKey = string>(): CollectionRegistry<
+  TValue,
+  TKey
+>;
+export function useCollectionRegistry(): CollectionRegistry<unknown, unknown> {
+  const itemsRef = useRef(new Map<unknown, CollectionNode<unknown, unknown>>());
+
+  const register = useCallback((node: CollectionNode<unknown, unknown>) => {
     itemsRef.current.set(node.key, node);
     return () => {
       itemsRef.current.delete(node.key);

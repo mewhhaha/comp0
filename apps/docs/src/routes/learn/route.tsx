@@ -1,11 +1,27 @@
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import { Callout, CodeBlock, LessonPager, PageIntro } from "../../components/teaching/index.js";
 import { learnBySlug, learnDocs } from "../../content/index.js";
 
-export function meta({ params }: { params: { slug?: string | undefined } }) {
+type LearnRouteProps = {
+  params: { slug?: string | undefined };
+};
+
+type LearnRouteLoaderData = {
+  description: string | undefined;
+  title: string;
+};
+
+export function loader({ params }: LearnRouteProps): LearnRouteLoaderData {
   const page = params.slug ? learnBySlug.get(params.slug) : undefined;
-  if (!page) return [{ title: "Lesson not found · comp0" }];
-  return [{ title: `${page.title} · Learn comp0` }, { name: "description", content: page.summary }];
+  if (!page) return { description: undefined, title: "Lesson not found" };
+  return { description: page.summary, title: page.title };
+}
+
+export function meta({ loaderData }: { loaderData: LearnRouteLoaderData }) {
+  return [
+    { title: `${loaderData.title} · Learn comp0` },
+    { name: "description", content: loaderData.description },
+  ];
 }
 
 function InlineOutline({ page }: { page: (typeof learnDocs)[number] }) {
@@ -58,8 +74,8 @@ function DesktopOutline({ page }: { page: (typeof learnDocs)[number] }) {
   );
 }
 
-export default function LearnRoute() {
-  const { slug } = useParams();
+export function ServerComponent({ params }: LearnRouteProps) {
+  const { slug } = params;
   const page = slug ? learnBySlug.get(slug) : undefined;
 
   if (!page) {
