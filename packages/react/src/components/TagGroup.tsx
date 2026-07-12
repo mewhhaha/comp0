@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type HTMLAttributes } from "react";
+import { useRef, useState, type HTMLAttributes } from "react";
 import {
   findTypeaheadMatch,
   getRovingFocusTarget,
@@ -41,47 +41,43 @@ export function TagGroup({
   activeKeyRef.current = activeKey;
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
 
-  const register = useCallback(
-    (key: string, textValue: string, element: HTMLElement | null, disabled?: boolean) => {
-      if (!element) {
-        itemMap.current.delete(key);
-        return;
-      }
-      itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
-      if (!activeKeyRef.current && !disabled) {
-        activeKeyRef.current = key;
-        setActiveKey(key);
-      }
-    },
-    [],
-  );
-  const items = useCallback(() => sortItems([...itemMap.current.values()]), []);
-  const toggle = useCallback(
-    (tagValue: string) => {
-      setSelected((current) => {
-        if (current.includes(tagValue)) return current.filter((entry) => entry !== tagValue);
-        return [...current, tagValue];
-      });
-    },
-    [setSelected],
-  );
+  const register = (
+    key: string,
+    textValue: string,
+    element: HTMLElement | null,
+    disabled?: boolean,
+  ) => {
+    if (!element) {
+      itemMap.current.delete(key);
+      return;
+    }
+    itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
+    if (!activeKeyRef.current && !disabled) {
+      activeKeyRef.current = key;
+      setActiveKey(key);
+    }
+  };
+  const items = () => sortItems([...itemMap.current.values()]);
+  const toggle = (tagValue: string) => {
+    setSelected((current) => {
+      if (current.includes(tagValue)) return current.filter((entry) => entry !== tagValue);
+      return [...current, tagValue];
+    });
+  };
 
-  const context: TagGroupContextValue = useMemo(
-    () => ({
-      selectionEnabled,
-      selected,
-      activeKey,
-      setActiveKey,
-      toggle,
-      remove: onRemove,
-      register,
-      items,
-    }),
-    [activeKey, items, onRemove, register, selected, selectionEnabled, toggle],
-  );
+  const context: TagGroupContextValue = {
+    selectionEnabled,
+    selected,
+    activeKey,
+    setActiveKey,
+    toggle,
+    remove: onRemove,
+    register,
+    items,
+  };
 
   return (
-    <TagGroupContext.Provider value={context}>
+    <TagGroupContext value={context}>
       <div
         {...props}
         ref={ref}
@@ -128,6 +124,6 @@ export function TagGroup({
       >
         {children}
       </div>
-    </TagGroupContext.Provider>
+    </TagGroupContext>
   );
 }

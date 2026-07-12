@@ -1,12 +1,5 @@
 import { composeRefs, dataAttr, findTypeaheadMatch, useTypeaheadSearch } from "@comp0/core";
-import {
-  createElement,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  type HTMLAttributes,
-} from "react";
+import { createElement, useLayoutEffect, useMemo, useRef, type HTMLAttributes } from "react";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { SelectCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
 import { usePopoverSurface } from "./overlay-shared.js";
@@ -26,12 +19,14 @@ export function SelectPopover({
     throw new Error("SelectPopover must be rendered inside Select and Popover.");
   const options = useRef(new Map<string, PickerOptionRecord>());
   const wasOpen = useRef(false);
-  const register = useCallback(
-    (option: PickerOptionRecord) => options.current.set(option.value, option),
-    [],
-  );
-  const unregister = useCallback((value: string) => options.current.delete(value), []);
-  const context = useMemo(() => ({ register, unregister }), [register, unregister]);
+  // This identity feeds each option's cleanup effect; useMemo keeps it stable
+  // even where the React Compiler bails out, or every popover re-render would
+  // unregister the options mid-life.
+  const context = useMemo(() => {
+    const register = (option: PickerOptionRecord) => options.current.set(option.value, option);
+    const unregister = (value: string) => options.current.delete(value);
+    return { register, unregister };
+  }, []);
   useLayoutEffect(() => {
     if (popover.open && !wasOpen.current) {
       const items = [...options.current.values()].filter((item) => !item.disabled);
@@ -53,14 +48,13 @@ export function SelectPopover({
   // A consumer aria-label wins; falling back to the label id would point at
   // nothing when no Label is rendered.
   let labelledBy = props["aria-labelledby"];
-  if (!props["aria-label"]) labelledBy ??= select.labelId;
+  if (!props["aria-label"]) labelledBy = labelledBy ?? select.labelId;
   const surface = createElement("div", {
     ...props,
     ref: composeRefs(surfaceRef, ref),
     id: props.id ?? select.listBoxId,
     role: props.role ?? "listbox",
     popover: "auto",
-    anchor: select.triggerId,
     hidden: !popover.open,
     "data-open": dataAttr(popover.open),
     "aria-labelledby": labelledBy,
@@ -106,7 +100,5 @@ export function SelectPopover({
       }
     },
   } as never);
-  return (
-    <SelectCollectionContext.Provider value={context}>{surface}</SelectCollectionContext.Provider>
-  );
+  return <SelectCollectionContext value={context}>{surface}</SelectCollectionContext>;
 }

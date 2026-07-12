@@ -8,5 +8,5 @@ export function FieldProvider({
   children: ReactNode;
   value: FieldContextValue;
 }) {
-  return <FieldContext.Provider value={value}>{children}</FieldContext.Provider>;
+  return <FieldContext value={value}>{children}</FieldContext>;
 }

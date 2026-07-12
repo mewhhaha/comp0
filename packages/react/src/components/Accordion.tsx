@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { AccordionContext } from "./accordion-shared.js";
@@ -41,40 +41,37 @@ export function Accordion({
   });
   const selectedKeys = valueToSet(currentValue);
 
-  const context = useMemo(
-    () => ({
-      type,
-      selectedKeys,
-      collapsible,
-      setItemOpen(key: string, open: boolean) {
-        if (type === "multiple") {
-          const nextKeys = valueToSet(currentValue);
-          if (open) nextKeys.add(key);
-          else nextKeys.delete(key);
-          setCurrentValue([...nextKeys]);
-          return;
-        }
+  const context = {
+    type,
+    selectedKeys,
+    collapsible,
+    setItemOpen(key: string, open: boolean) {
+      if (type === "multiple") {
+        const nextKeys = valueToSet(currentValue);
+        if (open) nextKeys.add(key);
+        else nextKeys.delete(key);
+        setCurrentValue([...nextKeys]);
+        return;
+      }
 
-        if (open) {
-          setCurrentValue(key);
-          return;
-        }
+      if (open) {
+        setCurrentValue(key);
+        return;
+      }
 
-        if (collapsible) setCurrentValue("");
-      },
-      registerTrigger(key: string, element: HTMLButtonElement | null, disabled?: boolean) {
-        if (element) triggerMap.current.set(key, { key, element, disabled });
-        else triggerMap.current.delete(key);
-      },
-      triggers() {
-        return sortTriggers([...triggerMap.current.values()]);
-      },
-    }),
-    [collapsible, currentValue, selectedKeys, setCurrentValue, type],
-  );
+      if (collapsible) setCurrentValue("");
+    },
+    registerTrigger(key: string, element: HTMLButtonElement | null, disabled?: boolean) {
+      if (element) triggerMap.current.set(key, { key, element, disabled });
+      else triggerMap.current.delete(key);
+    },
+    triggers() {
+      return sortTriggers([...triggerMap.current.values()]);
+    },
+  };
 
   return (
-    <AccordionContext.Provider value={context}>
+    <AccordionContext value={context}>
       <ProviderRoot
         as={as}
         {...props}
@@ -84,6 +81,6 @@ export function Accordion({
       >
         {children}
       </ProviderRoot>
-    </AccordionContext.Provider>
+    </AccordionContext>
   );
 }

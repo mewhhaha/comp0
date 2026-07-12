@@ -2,7 +2,6 @@ import {
   Fragment,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -58,64 +57,39 @@ export function Select({
     selectedRef.current = selected;
     setSelectedText(itemTextRef.current.get(selected));
   }, [selected]);
-  const registerItem = useCallback((key: string, textValue: ReactNode) => {
+  const registerItem = (key: string, textValue: ReactNode) => {
     const current = itemTextRef.current.get(key);
     if (Object.is(current, textValue)) return;
     itemTextRef.current.set(key, textValue);
     if (key === selectedRef.current) setSelectedText(textValue);
-  }, []);
+  };
   const unregisterItem = useCallback((key: string) => {
     if (!itemTextRef.current.delete(key)) return;
     setSelectedText((current) => (key === selectedRef.current ? undefined : current));
   }, []);
   const { controlId, descriptionId, errorId, labelId } = ids;
-  const fieldContext = useMemo(
-    () => ({
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-      disabled: resolvedDisabled,
-      invalid: resolvedInvalid,
-      required: resolvedRequired,
-      ...feedback,
-    }),
-    [
-      controlId,
-      descriptionId,
-      errorId,
-      feedback,
-      labelId,
-      resolvedDisabled,
-      resolvedInvalid,
-      resolvedRequired,
-    ],
-  );
-  const context = useMemo(
-    () => ({
-      disabled: resolvedDisabled,
-      selectedKey: selected,
-      triggerId: controlId,
-      listBoxId: `${controlId}-listbox`,
-      labelId,
-      descriptionId,
-      selectedText,
-      setSelectedKey: setSelected,
-      registerItem,
-      unregisterItem,
-    }),
-    [
-      controlId,
-      descriptionId,
-      labelId,
-      resolvedDisabled,
-      registerItem,
-      selected,
-      selectedText,
-      setSelected,
-      unregisterItem,
-    ],
-  );
+  const fieldContext = {
+    controlId,
+    descriptionId,
+    errorId,
+    labelId,
+    disabled: resolvedDisabled,
+    invalid: resolvedInvalid,
+    required: resolvedRequired,
+    ...feedback,
+  };
+  const context = {
+    disabled: resolvedDisabled,
+    selectedKey: selected,
+    triggerId: controlId,
+    listBoxId: `${controlId}-listbox`,
+    labelId,
+    descriptionId,
+    selectedText,
+    setSelectedKey: setSelected,
+    registerItem,
+    unregisterItem,
+  };
 
   const content = (
     <>
@@ -145,14 +119,14 @@ export function Select({
   const Root = as;
   return (
     <FieldProvider value={fieldContext}>
-      <PickerRootContext.Provider
+      <PickerRootContext
         value={{
           disabled: resolvedDisabled,
           triggerId: controlId,
           listBoxId: `${controlId}-listbox`,
         }}
       >
-        <SelectRootContext.Provider value={context}>
+        <SelectRootContext value={context}>
           {Root && Root !== Fragment ? (
             <Root
               {...props}
@@ -170,8 +144,8 @@ export function Select({
           ) : (
             content
           )}
-        </SelectRootContext.Provider>
-      </PickerRootContext.Provider>
+        </SelectRootContext>
+      </PickerRootContext>
     </FieldProvider>
   );
 }

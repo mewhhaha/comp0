@@ -1,12 +1,4 @@
-import {
-  createElement,
-  Fragment,
-  useCallback,
-  useContext,
-  useId,
-  useLayoutEffect,
-  useRef,
-} from "react";
+import { createElement, Fragment, useContext, useId, useLayoutEffect, useRef } from "react";
 import { dataAttr } from "@comp0/core";
 import { composeRefs } from "@comp0/core";
 import { Slot, type RefProp } from "../shared.js";
@@ -32,22 +24,19 @@ export function MenuTrigger({
   const submenuKey = useId().replace(/:/g, "");
   const elementRef = useRef<HTMLElement | null>(null);
   const disabled = Boolean(disabledProp);
-  const setElement = useCallback(
-    (element: HTMLElement | null) => {
-      elementRef.current = element;
-      menu?.setTriggerElement(element);
-      if (submenu) {
-        parentCollection?.register(
-          submenuKey,
-          element?.textContent?.trim() ?? submenuKey,
-          element,
-          disabled,
-        );
-      }
-      composeRefs(ref)(element);
-    },
-    [disabled, menu, parentCollection, ref, submenu, submenuKey],
-  );
+  const setElement = (element: HTMLElement | null) => {
+    elementRef.current = element;
+    menu?.setTriggerElement(element);
+    if (submenu) {
+      parentCollection?.register(
+        submenuKey,
+        element?.textContent?.trim() ?? submenuKey,
+        element,
+        disabled,
+      );
+    }
+    composeRefs(ref)(element);
+  };
   useLayoutEffect(() => {
     const element = elementRef.current;
     if (!submenu || !element) return;

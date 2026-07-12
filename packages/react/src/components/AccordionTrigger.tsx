@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useContext } from "react";
 import { composeRefs, dataAttr, getRovingFocusTarget } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { AccordionContext, AccordionItemContext } from "./accordion-shared.js";
@@ -18,13 +18,10 @@ export function AccordionTrigger({
   const open = item?.open ?? false;
   const itemValue = item?.value ?? props.id ?? "";
 
-  const triggerRef = useCallback(
-    (element: HTMLButtonElement | null) => {
-      if (item) accordion?.registerTrigger(item.value, element, resolvedDisabled);
-      composeRefs(ref)(element);
-    },
-    [accordion, item, ref, resolvedDisabled],
-  );
+  const triggerRef = (element: HTMLButtonElement | null) => {
+    if (item) accordion?.registerTrigger(item.value, element, resolvedDisabled);
+    composeRefs(ref)(element);
+  };
 
   return (
     <button

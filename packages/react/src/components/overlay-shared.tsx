@@ -1,7 +1,6 @@
 import {
   createContext,
   Fragment,
-  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -42,7 +41,6 @@ export type DialogContentProps = Omit<React.DialogHTMLAttributes<HTMLDialogEleme
 };
 
 export type PopoverContentProps = Omit<OverlayContentProps, "popover"> & {
-  anchor?: string | undefined;
   popover?: "auto" | "manual" | "none" | undefined;
 };
 
@@ -275,7 +273,7 @@ export function usePopoverSurface<TElement extends PopoverSurfaceElement>(
     [],
   );
 
-  const restoreControlledSurface = useCallback(() => {
+  const restoreControlledSurface = () => {
     if (autoPopover.current) {
       autoPopover.current.pending = true;
       scheduleAutoPopoverFlush(autoPopover.current.coordinator);
@@ -292,7 +290,7 @@ export function usePopoverSurface<TElement extends PopoverSurfaceElement>(
         // A detached or hidden native popover will synchronize on the next render.
       }
     });
-  }, []);
+  };
 
   useLayoutEffect(() => {
     const element = surfaceRef.current;
@@ -321,14 +319,11 @@ export function usePopoverSurface<TElement extends PopoverSurfaceElement>(
     [],
   );
 
-  const onNativeToggle = useCallback(
-    (open: boolean) => {
-      if (autoPopover.current) noteAutoPopoverToggle(autoPopover.current, open);
-      if (open !== popover?.open) popover?.setOpen(open);
-      if (!open && popover?.open) restoreControlledSurface();
-    },
-    [popover, restoreControlledSurface],
-  );
+  const onNativeToggle = (open: boolean) => {
+    if (autoPopover.current) noteAutoPopoverToggle(autoPopover.current, open);
+    if (open !== popover?.open) popover?.setOpen(open);
+    if (!open && popover?.open) restoreControlledSurface();
+  };
 
   return { onNativeToggle, popover, surfaceRef };
 }

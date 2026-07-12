@@ -1,4 +1,4 @@
-import { useMemo, type ThHTMLAttributes } from "react";
+import { type ThHTMLAttributes } from "react";
 import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { TableColumnContext, useTableCell } from "./table-shared.js";
@@ -24,13 +24,10 @@ export function TableColumn({
   ...props
 }: TableColumnProps & RefProp<HTMLTableCellElement>) {
   const { cellRef, elementRef, tabIndex } = useTableCell(ref);
-  const columnContext = useMemo(
-    () => ({
-      resize: (width: number) => onResize?.(width),
-      element: () => elementRef.current,
-    }),
-    [elementRef, onResize],
-  );
+  const columnContext = {
+    resize: (width: number) => onResize?.(width),
+    element: () => elementRef.current,
+  };
   const header = (
     <th
       scope={props.scope ?? "col"}
@@ -66,5 +63,5 @@ export function TableColumn({
     />
   );
   if (!onResize) return header;
-  return <TableColumnContext.Provider value={columnContext}>{header}</TableColumnContext.Provider>;
+  return <TableColumnContext value={columnContext}>{header}</TableColumnContext>;
 }

@@ -1627,7 +1627,6 @@ const picker = [
           "Accessible name; the content is a dialog with no default name.",
         ),
         prop("popover", '"auto" | "manual" | "none"', "Top-layer mode; auto by default."),
-        prop("anchor", "string", "Anchor element id for CSS anchor positioning."),
       ]),
       p("PopoverArrow", "content", "Optional decorative arrow inside PopoverContent.", true, true),
     ],

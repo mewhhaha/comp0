@@ -6,6 +6,10 @@ This is a greenfield headless React component library. Prefer the cleanest nativ
 
 Do not preserve old prop names as compatibility aliases unless the user explicitly asks for backwards compatibility.
 
+## React Compiler
+
+Assume the React Compiler everywhere: the package build, the docs app, and both vitest projects run it. Do not hand-memoize with `useMemo`/`useCallback`; write plain objects and functions and let the compiler insert memoization. The one exception is a callback identity consumed by an effect dependency where a compiler bail-out would cause a state loop (see `useFieldFeedback`) — keep an explicit `useCallback` there with a comment.
+
 ## Component API and Styling
 
 Prefer children-driven composition for components. Expose DOM-similar props and behavior wherever possible, and keep custom component contracts close to the native element or ARIA pattern they model.

@@ -1,5 +1,5 @@
 import { type RefProp } from "../shared.js";
-import { useId, useMemo } from "react";
+import { useId } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { describedBy, FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { RadioGroupContext } from "./choices-shared.js";
@@ -29,32 +29,20 @@ export function RadioGroup({
   const resolvedInvalid = Boolean(invalid);
   const resolvedRequired = Boolean(required);
   const { controlId, descriptionId, errorId, labelId } = ids;
-  const fieldContext = useMemo(
-    () => ({
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-      disabled,
-      invalid: resolvedInvalid,
-      required: resolvedRequired,
-      ...feedback,
-    }),
-    [
-      disabled,
-      controlId,
-      descriptionId,
-      errorId,
-      feedback,
-      labelId,
-      resolvedInvalid,
-      resolvedRequired,
-    ],
-  );
+  const fieldContext = {
+    controlId,
+    descriptionId,
+    errorId,
+    labelId,
+    disabled,
+    invalid: resolvedInvalid,
+    required: resolvedRequired,
+    ...feedback,
+  };
 
   return (
     <FieldProvider value={fieldContext}>
-      <RadioGroupContext.Provider
+      <RadioGroupContext
         value={{ name: name ?? generatedName, value: selected, disabled, onChange: setSelected }}
       >
         <fieldset
@@ -73,7 +61,7 @@ export function RadioGroup({
         >
           {children}
         </fieldset>
-      </RadioGroupContext.Provider>
+      </RadioGroupContext>
     </FieldProvider>
   );
 }

@@ -1,12 +1,5 @@
 import { composeRefs, dataAttr } from "@comp0/core";
-import {
-  createElement,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  type HTMLAttributes,
-} from "react";
+import { createElement, useLayoutEffect, useMemo, useRef, type HTMLAttributes } from "react";
 import { useComboBoxRootContext, type RefProp } from "../shared.js";
 import { ComboboxCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
 import { usePopoverSurface } from "./overlay-shared.js";
@@ -23,12 +16,14 @@ export function ComboboxPopover({
   if (!combo || !popover)
     throw new Error("ComboboxPopover must be rendered inside Combobox and Popover.");
   const options = useRef(new Map<string, PickerOptionRecord>());
-  const register = useCallback(
-    (option: PickerOptionRecord) => options.current.set(option.value, option),
-    [],
-  );
-  const unregister = useCallback((value: string) => options.current.delete(value), []);
-  const context = useMemo(() => ({ register, unregister }), [register, unregister]);
+  // This identity feeds each option's cleanup effect; useMemo keeps it stable
+  // even where the React Compiler bails out, or every popover re-render would
+  // unregister the options mid-life.
+  const context = useMemo(() => {
+    const register = (option: PickerOptionRecord) => options.current.set(option.value, option);
+    const unregister = (value: string) => options.current.delete(value);
+    return { register, unregister };
+  }, []);
   useLayoutEffect(() => {
     if (!popover.open) {
       combo.setActiveId("");
@@ -38,14 +33,13 @@ export function ComboboxPopover({
   // A consumer aria-label wins; falling back to the label id would point at
   // nothing when no Label is rendered.
   let labelledBy = props["aria-labelledby"];
-  if (!props["aria-label"]) labelledBy ??= combo.labelId;
+  if (!props["aria-label"]) labelledBy = labelledBy ?? combo.labelId;
   const surface = createElement("div", {
     ...props,
     ref: composeRefs(surfaceRef, ref),
     id: props.id ?? combo.listBoxId,
     role: props.role ?? "listbox",
     popover: "auto",
-    anchor: combo.inputId,
     hidden: !popover.open,
     "data-open": dataAttr(popover.open),
     "aria-labelledby": labelledBy,
@@ -57,9 +51,5 @@ export function ComboboxPopover({
       if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
     },
   } as never);
-  return (
-    <ComboboxCollectionContext.Provider value={context}>
-      {surface}
-    </ComboboxCollectionContext.Provider>
-  );
+  return <ComboboxCollectionContext value={context}>{surface}</ComboboxCollectionContext>;
 }

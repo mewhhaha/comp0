@@ -25,7 +25,6 @@ export function PopoverContent({
     id: props.id ?? popover?.contentId,
     role: props.role ?? "dialog",
     popover: popoverMode,
-    anchor: props.anchor ?? popover?.triggerId,
     hidden: hidden ?? !popover?.open,
     "data-open": dataAttr(popover?.open),
     "data-slot": dataSlot(props, "popover-content"),
