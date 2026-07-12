@@ -113,7 +113,7 @@ export const learnDocs = [
         title: "Name values that a form should send",
         explanation:
           "A form only sends a control when it has a name. Put name on native inputs, checkboxes, and form-enabled picker roots. For example, Select uses its name to create a visually hidden native select proxy for submission.",
-        code: '<form>\n  <Input name="email" type="email" />\n  <Select name="size" defaultValue="small">\n    <Label>Size</Label>\n    <Popover><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover>...</SelectPopover></Popover>\n  </Select>\n</form>',
+        code: '<form>\n  <Input name="email" type="email" />\n  <Select name="size" defaultValue="small">\n    <Label>Size</Label>\n    <SelectTrigger><SelectValue /></SelectTrigger>\n    <SelectPopover>...</SelectPopover>\n  </Select>\n</form>',
         language: "tsx",
         note: "A label tells a person what a control means; a name tells the browser what key to send.",
       },

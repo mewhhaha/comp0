@@ -21,8 +21,7 @@ export function ComboboxInput({
   const combobox = useComboBoxRootContext();
   const popover = usePopoverContext();
   const field = useFieldContext();
-  if (!combobox || !popover)
-    throw new Error("ComboboxInput must be rendered inside Combobox and Popover.");
+  if (!combobox || !popover) throw new Error("ComboboxInput must be rendered inside Combobox.");
   const disabled = Boolean(props.disabled || combobox.disabled);
   const required = Boolean(props.required || combobox.required);
   const invalid =

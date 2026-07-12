@@ -1,13 +1,17 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
-import { ComboBoxRootContext, PickerRootContext, type RefProp } from "../shared.js";
+import { ComboBoxRootContext, type RefProp } from "../shared.js";
+import { PopoverContext, usePopoverState } from "./overlay-shared.js";
 import { defaultFilter, type ComboboxProps } from "./pickers-shared.js";
 export type { ComboboxProps } from "./pickers-shared.js";
 export function Combobox({
   value,
   defaultValue,
   onChange,
+  open,
+  defaultOpen,
+  onToggle,
   inputValue: inputValueProp,
   defaultInputValue = "",
   onInputChange,
@@ -25,6 +29,13 @@ export function Combobox({
 }: ComboboxProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
   const feedback = useFieldFeedback();
+  const popover = usePopoverState({
+    open,
+    defaultOpen,
+    onToggle,
+    triggerId: ids.controlId,
+    contentId: `${ids.controlId}-listbox`,
+  });
   const [activeKey, setActiveKey] = useState("");
   const [activeId, setActiveId] = useState("");
   const itemTextRef = useRef(new Map<string, ReactNode>());
@@ -117,13 +128,7 @@ export function Combobox({
   const Root = as;
   return (
     <FieldProvider value={fieldContext}>
-      <PickerRootContext
-        value={{
-          disabled: resolvedDisabled,
-          triggerId: controlId,
-          listBoxId: `${controlId}-listbox`,
-        }}
-      >
+      <PopoverContext value={popover}>
         <ComboBoxRootContext value={context}>
           {Root && Root !== Fragment ? (
             <Root
@@ -144,7 +149,7 @@ export function Combobox({
             content
           )}
         </ComboBoxRootContext>
-      </PickerRootContext>
+      </PopoverContext>
     </FieldProvider>
   );
 }

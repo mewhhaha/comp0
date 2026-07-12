@@ -10,7 +10,6 @@ import {
   Label,
   ListBox,
   ListBoxItem,
-  Popover,
   Select,
   SelectPopover,
   SelectOption,
@@ -28,27 +27,30 @@ function fireInput(element: HTMLInputElement, value: string) {
 }
 
 describe("picker composition", () => {
-  it("requires an explicit Popover around picker interaction parts", () => {
+  it("wires picker parts without a Popover wrapper and still requires the root", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     try {
-      expect(() =>
-        render(
-          <Select>
-            <SelectTrigger>Choose</SelectTrigger>
-          </Select>,
-        ),
-      ).toThrow("SelectTrigger must be rendered inside Select and Popover.");
-      expect(() =>
-        render(
-          <Combobox>
-            <ComboboxInput aria-label="Search" />
-          </Combobox>,
-        ),
-      ).toThrow("ComboboxInput must be rendered inside Combobox and Popover.");
+      expect(() => render(<SelectTrigger>Choose</SelectTrigger>)).toThrow(
+        "SelectTrigger must be rendered inside Select.",
+      );
+      expect(() => render(<ComboboxInput aria-label="Search" />)).toThrow(
+        "ComboboxInput must be rendered inside Combobox.",
+      );
     } finally {
       consoleError.mockRestore();
     }
+
+    const { container } = render(
+      <Select id="plain-select">
+        <SelectTrigger>Choose</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="pro">Pro</SelectOption>
+        </SelectPopover>
+      </Select>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    expect(trigger.getAttribute("aria-controls")).toBe("plain-select-listbox");
+    expect(container.querySelector("[role='listbox']")?.id).toBe("plain-select-listbox");
   });
 
   it("connects picker controls to descriptions and invalid errors", () => {
@@ -58,22 +60,18 @@ describe("picker composition", () => {
           <Label>Plan</Label>
           <Description>Choose one plan.</Description>
           <FieldError>A plan is required.</FieldError>
-          <Popover>
-            <SelectTrigger>Choose</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="pro">Pro</SelectOption>
-            </SelectPopover>
-          </Popover>
+          <SelectTrigger>Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="pro">Pro</SelectOption>
+          </SelectPopover>
         </Select>
         <Combobox id="described-combobox">
           <Label>City</Label>
           <Description>Start typing a city.</Description>
-          <Popover>
-            <ComboboxInput />
-            <ComboboxPopover>
-              <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxPopover>
-          </Popover>
+          <ComboboxInput />
+          <ComboboxPopover>
+            <ComboboxOption value="paris">Paris</ComboboxOption>
+          </ComboboxPopover>
         </Combobox>
       </>,
     );
@@ -92,21 +90,17 @@ describe("picker composition", () => {
     const comboboxChanged = vi.fn();
     const { container } = render(
       <form>
-        <Select disabled name="plan" onChange={selectChanged}>
-          <Popover defaultOpen>
-            <SelectTrigger disabled={false}>Choose</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="pro">Pro</SelectOption>
-            </SelectPopover>
-          </Popover>
+        <Select disabled name="plan" onChange={selectChanged} defaultOpen>
+          <SelectTrigger disabled={false}>Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="pro">Pro</SelectOption>
+          </SelectPopover>
         </Select>
-        <Combobox disabled name="city" onChange={comboboxChanged}>
-          <Popover defaultOpen>
-            <ComboboxInput aria-label="City" disabled={false} />
-            <ComboboxPopover>
-              <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxPopover>
-          </Popover>
+        <Combobox disabled name="city" onChange={comboboxChanged} defaultOpen>
+          <ComboboxInput aria-label="City" disabled={false} />
+          <ComboboxPopover>
+            <ComboboxOption value="paris">Paris</ComboboxOption>
+          </ComboboxPopover>
         </Combobox>
       </form>,
     );
@@ -131,14 +125,10 @@ describe("picker composition", () => {
     const { container } = render(
       <>
         <Select id="plain-select">
-          <Popover>
-            <SelectTrigger>Choose</SelectTrigger>
-          </Popover>
+          <SelectTrigger>Choose</SelectTrigger>
         </Select>
         <Combobox as="section" id="wrapped-combobox">
-          <Popover>
-            <ComboboxInput aria-label="Search" />
-          </Popover>
+          <ComboboxInput aria-label="Search" />
         </Combobox>
       </>,
     );
@@ -151,14 +141,12 @@ describe("picker composition", () => {
   it("toggles select content and commits a keyboard selection", () => {
     const toggled = vi.fn();
     const { container } = render(
-      <Select id="plan" defaultValue="free">
-        <Popover onToggle={toggled}>
-          <SelectTrigger>Plan</SelectTrigger>
-          <SelectPopover>
-            <SelectOption value="free">Free</SelectOption>
-            <SelectOption value="pro">Pro</SelectOption>
-          </SelectPopover>
-        </Popover>
+      <Select id="plan" defaultValue="free" onToggle={toggled}>
+        <SelectTrigger>Plan</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="free">Free</SelectOption>
+          <SelectOption value="pro">Pro</SelectOption>
+        </SelectPopover>
       </Select>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
@@ -184,20 +172,18 @@ describe("picker composition", () => {
     const nativeChanged = vi.fn();
     const { container } = render(
       <Combobox id="framework" onChange={changed} onInputChange={inputChanged}>
-        <Popover>
-          <ComboboxInput aria-label="Framework" onChange={nativeChanged} />
-          <ComboboxPopover>
-            <ComboboxOption value="react" id="react-option">
-              React
-            </ComboboxOption>
-            <ComboboxOption value="svelte" id="svelte-option">
-              Svelte
-            </ComboboxOption>
-            <ComboboxOption value="vue" id="vue-option">
-              Vue
-            </ComboboxOption>
-          </ComboboxPopover>
-        </Popover>
+        <ComboboxInput aria-label="Framework" onChange={nativeChanged} />
+        <ComboboxPopover>
+          <ComboboxOption value="react" id="react-option">
+            React
+          </ComboboxOption>
+          <ComboboxOption value="svelte" id="svelte-option">
+            Svelte
+          </ComboboxOption>
+          <ComboboxOption value="vue" id="vue-option">
+            Vue
+          </ComboboxOption>
+        </ComboboxPopover>
       </Combobox>,
     );
     const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
@@ -224,14 +210,12 @@ describe("picker composition", () => {
   it("points aria-activedescendant at a mounted option despite a different logical value", () => {
     const { container } = render(
       <Combobox id="city" defaultValue="logical-value" allowsEmptyCollection>
-        <Popover>
-          <ComboboxInput aria-label="City" />
-          <ComboboxPopover>
-            <ComboboxOption value="paris" id="mounted-paris">
-              Paris
-            </ComboboxOption>
-          </ComboboxPopover>
-        </Popover>
+        <ComboboxInput aria-label="City" />
+        <ComboboxPopover>
+          <ComboboxOption value="paris" id="mounted-paris">
+            Paris
+          </ComboboxOption>
+        </ComboboxPopover>
       </Combobox>,
     );
     const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
@@ -271,17 +255,13 @@ describe("picker composition", () => {
     const { container } = render(
       <form>
         <Select id="required-plan" name="plan" required>
-          <Popover>
-            <SelectTrigger aria-label="Choose plan">+</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="pro">Pro</SelectOption>
-            </SelectPopover>
-          </Popover>
+          <SelectTrigger aria-label="Choose plan">+</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="pro">Pro</SelectOption>
+          </SelectPopover>
         </Select>
         <Combobox id="required-city" name="city" required>
-          <Popover>
-            <ComboboxInput aria-label="City" />
-          </Popover>
+          <ComboboxInput aria-label="City" />
         </Combobox>
       </form>,
     );
@@ -308,12 +288,10 @@ describe("picker composition", () => {
     const { container } = render(
       <form>
         <Combobox id="initial-city" name="city" defaultValue="paris" required>
-          <Popover>
-            <ComboboxInput aria-label="City" />
-            <ComboboxPopover>
-              <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxPopover>
-          </Popover>
+          <ComboboxInput aria-label="City" />
+          <ComboboxPopover>
+            <ComboboxOption value="paris">Paris</ComboboxOption>
+          </ComboboxPopover>
         </Combobox>
       </form>,
     );

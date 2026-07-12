@@ -23,7 +23,6 @@ Provider-only roots render their children directly. Explicit parts own DOM behav
 ```tsx
 import {
   Label,
-  Popover,
   Select,
   SelectPopover,
   SelectOption,
@@ -35,15 +34,13 @@ export function PlanSelect() {
   return (
     <Select name="plan" defaultValue="basic">
       <Label>Plan</Label>
-      <Popover>
-        <SelectTrigger>
-          <SelectValue placeholder="Choose a plan" />
-        </SelectTrigger>
-        <SelectPopover>
-          <SelectOption value="basic">Basic</SelectOption>
-          <SelectOption value="pro">Pro</SelectOption>
-        </SelectPopover>
-      </Popover>
+      <SelectTrigger>
+        <SelectValue placeholder="Choose a plan" />
+      </SelectTrigger>
+      <SelectPopover>
+        <SelectOption value="basic">Basic</SelectOption>
+        <SelectOption value="pro">Pro</SelectOption>
+      </SelectPopover>
     </Select>
   );
 }

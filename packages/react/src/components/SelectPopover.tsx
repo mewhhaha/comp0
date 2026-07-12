@@ -22,8 +22,7 @@ export function SelectPopover({
   const select = useSelectRootContext();
   const typeaheadSearch = useTypeaheadSearch();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
-  if (!select || !popover)
-    throw new Error("SelectPopover must be rendered inside Select and Popover.");
+  if (!select || !popover) throw new Error("SelectPopover must be rendered inside Select.");
   const options = useRef(new Map<string, PickerOptionRecord>());
   const wasOpen = useRef(false);
   // This identity feeds each option's cleanup effect; useMemo keeps it stable

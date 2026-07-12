@@ -20,12 +20,20 @@ export type PickerCollectionContextValue = {
 export const SelectCollectionContext = createContext<PickerCollectionContextValue | null>(null);
 export const ComboboxCollectionContext = createContext<PickerCollectionContextValue | null>(null);
 
-export type SelectProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> & {
+export type SelectProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "defaultValue" | "onChange" | "onToggle"
+> & {
   as?: ElementType | typeof Fragment | undefined;
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the selected option value; native input change events stay on leaf controls. */
   onChange?: (value: string) => void;
+  /** Controlled or initial open state of the listbox; Select owns its own popover. */
+  open?: boolean | undefined;
+  defaultOpen?: boolean | undefined;
+  /** Receives the next open state rather than a native ToggleEvent. */
+  onToggle?: ((open: boolean) => void) | undefined;
   disabled?: boolean | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
@@ -37,13 +45,21 @@ export type SelectValueProps = HTMLAttributes<HTMLSpanElement> & {
   placeholder?: ReactNode;
 };
 
-export type ComboboxProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> & {
+export type ComboboxProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "defaultValue" | "onChange" | "onToggle"
+> & {
   as?: ElementType | typeof Fragment | undefined;
   /** The committed logical option value. */
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the committed logical option value rather than a native ChangeEvent. */
   onChange?: (value: string) => void;
+  /** Controlled or initial open state of the results; Combobox owns its own popover. */
+  open?: boolean | undefined;
+  defaultOpen?: boolean | undefined;
+  /** Receives the next open state rather than a native ToggleEvent. */
+  onToggle?: ((open: boolean) => void) | undefined;
   inputValue?: string | undefined;
   defaultInputValue?: string | undefined;
   /** Receives editable text; ComboboxInput.onChange still receives the native ChangeEvent. */

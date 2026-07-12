@@ -28,8 +28,7 @@ export function SelectTrigger({
   const select = useSelectRootContext();
   const popover = usePopoverContext();
   const field = useFieldContext();
-  if (!select || !popover)
-    throw new Error("SelectTrigger must be rendered inside Select and Popover.");
+  if (!select || !popover) throw new Error("SelectTrigger must be rendered inside Select.");
   const resolvedDisabled = Boolean(disabled || select.disabled);
   const description = describedBy(field, props["aria-describedby"]);
   let ariaLabelledBy = props["aria-labelledby"];

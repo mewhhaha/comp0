@@ -27,7 +27,6 @@ import {
   TabPanel,
   TextField,
   Input,
-  Popover,
 } from "./index.js";
 import { render } from "../test/render.js";
 
@@ -47,22 +46,18 @@ describe("retained accessibility contracts", () => {
         </RadioGroup>
         <Select id="language" defaultValue="typescript">
           <Label>Language</Label>
-          <Popover>
-            <SelectTrigger>Choose language</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="typescript">TypeScript</SelectOption>
-              <SelectOption value="rust">Rust</SelectOption>
-            </SelectPopover>
-          </Popover>
+          <SelectTrigger>Choose language</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="typescript">TypeScript</SelectOption>
+            <SelectOption value="rust">Rust</SelectOption>
+          </SelectPopover>
         </Select>
         <Combobox id="framework" allowsEmptyCollection>
           <Label>Framework</Label>
-          <Popover>
-            <ComboboxInput />
-            <ComboboxPopover>
-              <ComboboxOption value="react">React</ComboboxOption>
-            </ComboboxPopover>
-          </Popover>
+          <ComboboxInput />
+          <ComboboxPopover>
+            <ComboboxOption value="react">React</ComboboxOption>
+          </ComboboxPopover>
         </Combobox>
         <Accordion defaultValue="one">
           <AccordionItem value="one">

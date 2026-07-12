@@ -9,7 +9,8 @@ import {
 } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
-import { PickerRootContext, SelectRootContext, type RefProp } from "../shared.js";
+import { SelectRootContext, type RefProp } from "../shared.js";
+import { PopoverContext, usePopoverState } from "./overlay-shared.js";
 import { type SelectProps } from "./pickers-shared.js";
 export type { SelectProps } from "./pickers-shared.js";
 
@@ -30,6 +31,9 @@ export function Select({
   value,
   defaultValue,
   onChange,
+  open,
+  defaultOpen,
+  onToggle,
   disabled,
   invalid,
   required,
@@ -41,6 +45,13 @@ export function Select({
 }: SelectProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
   const feedback = useFieldFeedback();
+  const popover = usePopoverState({
+    open,
+    defaultOpen,
+    onToggle,
+    triggerId: ids.controlId,
+    contentId: `${ids.controlId}-listbox`,
+  });
   const itemTextRef = useRef(new Map<string, ReactNode>());
   const selectedRef = useRef("");
   const [selectedText, setSelectedText] = useState<ReactNode>();
@@ -119,13 +130,7 @@ export function Select({
   const Root = as;
   return (
     <FieldProvider value={fieldContext}>
-      <PickerRootContext
-        value={{
-          disabled: resolvedDisabled,
-          triggerId: controlId,
-          listBoxId: `${controlId}-listbox`,
-        }}
-      >
+      <PopoverContext value={popover}>
         <SelectRootContext value={context}>
           {Root && Root !== Fragment ? (
             <Root
@@ -145,7 +150,7 @@ export function Select({
             content
           )}
         </SelectRootContext>
-      </PickerRootContext>
+      </PopoverContext>
     </FieldProvider>
   );
 }

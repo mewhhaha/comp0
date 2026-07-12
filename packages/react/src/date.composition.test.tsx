@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { Description, FieldError, Label, Popover, TextField } from "./index.js";
+import { Description, FieldError, Label, TextField } from "./index.js";
 import {
   Calendar,
   CalendarGrid,
@@ -251,16 +251,14 @@ describe("date picker composition", () => {
     const result = render(
       <DatePicker id="trip" defaultValue="2024-02-15" onChange={onChange}>
         <Label>Trip date</Label>
-        <Popover>
-          <DateField />
-          <DatePickerTrigger />
-          <DatePickerPopover>
-            <Calendar locale="en-GB">
-              <CalendarHeader />
-              <CalendarGrid />
-            </Calendar>
-          </DatePickerPopover>
-        </Popover>
+        <DateField />
+        <DatePickerTrigger />
+        <DatePickerPopover>
+          <Calendar locale="en-GB">
+            <CalendarHeader />
+            <CalendarGrid />
+          </Calendar>
+        </DatePickerPopover>
       </DatePicker>,
     );
     const input = result.container.querySelector<HTMLInputElement>("input")!;

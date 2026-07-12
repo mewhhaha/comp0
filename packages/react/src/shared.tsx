@@ -141,18 +141,6 @@ export function useSearchFieldContext() {
   return useContext(SearchFieldContext);
 }
 
-export type PickerRootContextValue = {
-  disabled: boolean;
-  triggerId: string;
-  listBoxId: string;
-};
-
-export const PickerRootContext = createContext<PickerRootContextValue | null>(null);
-
-export function usePickerRootContext() {
-  return useContext(PickerRootContext);
-}
-
 type SlotProps = Record<string, unknown> & { children?: ReactNode };
 
 /**
