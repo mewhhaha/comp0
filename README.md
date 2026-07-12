@@ -110,15 +110,25 @@ The Rust compiler integration is experimental. Version 0.136.0 stopped emitting 
 
 ## Styling
 
-comp0 ships behavior rather than CSS. Boolean data attributes use presence semantics:
+comp0 ships behavior and semantics, not looks — you bring the styles. **Tailwind CSS is the primary way to style comp0**, and every example in the docs uses it: pass utility classes through `className` to the part that renders the element. comp0 emits no classes of its own, so there is nothing to configure — your Tailwind setup just scans the files where you write the classes.
+
+Components expose their state as presence-based data attributes (`data-hovered`, `data-selected`, `data-open`, …) that are present only while the state is true, so Tailwind's data variants switch on and off with them:
+
+```tsx
+<Button className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white data-hovered:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 data-disabled:opacity-50">
+  Save
+</Button>
+
+<SelectOption className="px-3 py-2 text-sm data-selected:bg-teal-100 data-selected:font-medium" value="small">
+  Small
+</SelectOption>
+```
+
+Nothing binds comp0 to Tailwind, though — the same presence attributes work with plain CSS if you prefer:
 
 ```css
 .button[data-hovered] {
   background: color-mix(in oklab, CanvasText 8%, Canvas);
-}
-
-.option[data-selected] {
-  background: Highlight;
 }
 ```
 
