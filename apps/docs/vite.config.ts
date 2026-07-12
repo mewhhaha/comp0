@@ -12,6 +12,11 @@ export default defineConfig({
     // component source assumes the compiler and does not hand-memoize.
     reactCompiler(/\/(packages|apps)\/[^]*\.tsx?$/),
   ],
+  // Compiled modules import react/compiler-runtime; declare it so a cold cache
+  // does not discover it mid-run and reload with a second React copy.
+  optimizeDeps: {
+    include: ["react/compiler-runtime"],
+  },
   resolve: {
     alias: {
       "@comp0/core": fileURLToPath(new URL("../../packages/core/src/index.ts", import.meta.url)),

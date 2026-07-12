@@ -59,6 +59,12 @@ importers:
       playwright:
         specifier: 1.61.1
         version: 1.61.1
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
       vite:
         specifier: 8.1.4
         version: 8.1.4(@types/node@26.1.1)(esbuild@0.27.7)(jiti@2.7.0)

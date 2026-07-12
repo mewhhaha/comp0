@@ -32,10 +32,14 @@ export default defineConfig({
         "packages/react/src/components/ListBoxItem.tsx",
         "packages/react/src/components/SelectOption.tsx",
         "packages/react/src/components/ComboboxOption.tsx",
+        "packages/react/src/components/GridListItem.tsx",
+        "packages/react/src/components/Tag.tsx",
+        "packages/react/src/components/Resizer.tsx",
       ],
       rules: {
-        // These are custom APG composites; native select/option elements cannot provide their
-        // children-driven content, roving focus, or active-descendant contracts.
+        // These are custom APG composites; native select/option, table row/cell,
+        // and hr elements cannot provide their children-driven content, roving
+        // focus, or resize behavior.
         "jsx-a11y/prefer-tag-over-role": "off",
       },
     },
@@ -43,9 +47,12 @@ export default defineConfig({
       files: [
         "packages/react/src/components/ListBox.tsx",
         "packages/react/src/components/TabList.tsx",
+        "packages/react/src/components/GridList.tsx",
+        "packages/react/src/components/TagGroup.tsx",
       ],
       rules: {
-        // Focus is roved among owned options/tabs, not placed on the collection container.
+        // Focus is roved among owned options/tabs/rows, not placed on the
+        // collection container.
         "jsx-a11y/interactive-supports-focus": "off",
       },
     },
@@ -55,16 +62,40 @@ export default defineConfig({
         // Combobox focus stays in the input; options are addressed with aria-activedescendant.
         "jsx-a11y/click-events-have-key-events": "off",
         "jsx-a11y/interactive-supports-focus": "off",
+        // Labels are re-crawled from rendered children every render on purpose;
+        // registration bails out when the crawled text is unchanged.
+        "react-hooks/exhaustive-deps": "off",
       },
     },
     {
       files: [
-        "packages/react/src/components/MenuContent.tsx",
-        "packages/react/src/components/SelectContent.tsx",
+        "packages/react/src/components/GridListItem.tsx",
+        "packages/react/src/components/Tag.tsx",
       ],
       rules: {
-        // The role is customizable in props but defaults to listbox at runtime.
+        // Rows receive roving focus and keyboard handling from their grid container.
+        "jsx-a11y/click-events-have-key-events": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/MenuPopover.tsx"],
+      rules: {
+        // The role is customizable in props but defaults to menu at runtime.
         "jsx-a11y/no-static-element-interactions": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/Table.tsx"],
+      rules: {
+        // Promoting a native table to role=grid is the point of the component.
+        "jsx-a11y/no-noninteractive-element-to-interactive-role": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/Resizer.tsx"],
+      rules: {
+        // An APG window splitter is an interactive separator by definition.
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
       },
     },
     {
