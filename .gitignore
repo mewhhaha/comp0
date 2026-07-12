@@ -1,4 +1,5 @@
 node_modules
+.agents
 apps/docs/.react-router
 apps/docs/.wrangler
 apps/docs/build
