@@ -6,6 +6,7 @@ import {
   CarouselSlide,
   CarouselViewport,
 } from "@comp0/react";
+import { ChevronLeftIcon, ChevronRightIcon, PlayPauseIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
   return (
@@ -16,14 +17,14 @@ export function Example() {
       className="w-full max-w-sm rounded border border-zinc-950/10 p-3 dark:border-white/10"
     >
       <div className="mb-2 flex items-center gap-1">
-        <CarouselAutoplayToggle className="rounded px-3 py-2.5 text-base text-zinc-700 hover:bg-zinc-100 data-stopped:text-teal-700 sm:py-2 sm:text-sm dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-stopped:text-teal-300">
-          ⏯
+        <CarouselAutoplayToggle className="rounded px-3 py-2.5 text-zinc-700 hover:bg-zinc-100 data-stopped:text-teal-700 sm:py-2 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-stopped:text-teal-300">
+          <PlayPauseIcon className="size-4" aria-hidden="true" />
         </CarouselAutoplayToggle>
-        <CarouselPrevious className="ml-auto rounded px-3 py-2.5 text-base text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 sm:py-2 sm:text-sm dark:text-zinc-300 dark:hover:bg-zinc-800">
-          ‹
+        <CarouselPrevious className="ml-auto rounded px-3 py-2.5 text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 sm:py-2 dark:text-zinc-300 dark:hover:bg-zinc-800">
+          <ChevronLeftIcon className="size-4" aria-hidden="true" />
         </CarouselPrevious>
-        <CarouselNext className="rounded px-3 py-2.5 text-base text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 sm:py-2 sm:text-sm dark:text-zinc-300 dark:hover:bg-zinc-800">
-          ›
+        <CarouselNext className="rounded px-3 py-2.5 text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 sm:py-2 dark:text-zinc-300 dark:hover:bg-zinc-800">
+          <ChevronRightIcon className="size-4" aria-hidden="true" />
         </CarouselNext>
       </div>
       <CarouselViewport className="overflow-hidden rounded">

@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "@heroicons/react/16/solid";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
@@ -35,7 +35,7 @@ function GuidedAnatomy() {
         <div className="flex items-center">
           <div className="flex w-44 shrink-0 items-center justify-between rounded-xl bg-white px-4 py-2.5 text-base/7 font-medium text-zinc-950 shadow-sm ring-1 ring-zinc-950/10 @sm:w-52 dark:bg-zinc-800 dark:text-white dark:shadow-none dark:ring-white/10">
             Small
-            <ChevronDown aria-hidden="true" className="size-4 text-zinc-400" />
+            <ChevronDownIcon aria-hidden="true" className="size-4 text-zinc-400" />
           </div>
           <PartTag className="flex-1">SelectTrigger</PartTag>
         </div>
@@ -43,7 +43,7 @@ function GuidedAnatomy() {
           <div className="grid w-44 shrink-0 gap-0.5 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-950/10 @sm:w-52 dark:bg-zinc-800 dark:shadow-none dark:ring-white/10">
             <p className="flex items-center justify-between rounded-lg bg-teal-600/10 px-3 py-1.5 text-base/7 font-medium text-teal-900 dark:bg-teal-400/10 dark:text-teal-100">
               Small
-              <Check aria-hidden="true" className="size-4 text-teal-700 dark:text-teal-300" />
+              <CheckIcon aria-hidden="true" className="size-4 text-teal-700 dark:text-teal-300" />
             </p>
             <p className="px-3 py-1.5 text-base/7 text-zinc-600 dark:text-zinc-300">Medium</p>
             <p className="px-3 py-1.5 text-base/7 text-zinc-600 dark:text-zinc-300">Large</p>
@@ -84,7 +84,7 @@ export function HomeHero({ className }: HomeHeroProps) {
               to="/learn/installation"
             >
               Start the guided tour
-              <ArrowRight aria-hidden="true" className="size-5 shrink-0 sm:size-4" />
+              <ArrowRightIcon aria-hidden="true" className="size-5 shrink-0 sm:size-4" />
             </Link>
             <Link
               className="rounded-lg px-3 py-2.5 text-base/7 font-medium text-zinc-700 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 sm:text-sm/6 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400"

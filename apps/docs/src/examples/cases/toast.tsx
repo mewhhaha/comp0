@@ -1,5 +1,6 @@
 import { Button } from "@comp0/react";
 import { Toast, ToastDismiss, ToastProvider, ToastRegion, useToast } from "@comp0/react";
+import { XMarkIcon } from "@heroicons/react/16/solid";
 
 function Triggers() {
   const { notify } = useToast();
@@ -34,8 +35,8 @@ export function Example() {
             className="flex items-start justify-between gap-3 rounded border border-zinc-950/10 bg-white p-3 text-base text-zinc-900 shadow-lg sm:text-sm data-[kind=alert]:border-red-600/30 data-[kind=alert]:text-red-700 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:data-[kind=alert]:border-red-400/30 dark:data-[kind=alert]:text-red-300"
           >
             <span>{toast.content}</span>
-            <ToastDismiss className="rounded px-1 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100">
-              ×
+            <ToastDismiss className="rounded p-0.5 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100">
+              <XMarkIcon className="size-4" aria-hidden="true" />
             </ToastDismiss>
           </Toast>
         )}

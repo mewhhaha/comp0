@@ -1,4 +1,12 @@
-import { Check, ChevronDown, ChevronRight, Minus, Plus, Search, X } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  MinusIcon,
+  PlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/16/solid";
 import type { ReactNode } from "react";
 import type { ComponentPart } from "../../content/types.js";
 import { cn } from "./cn.js";
@@ -218,7 +226,7 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
       <div className="relative inline-flex items-center gap-2.5 self-start justify-self-start pt-1">
         <Pin number={owner.number} />
         <span className="flex size-5 items-center justify-center rounded border-2 border-teal-600 bg-teal-600 dark:border-teal-400 dark:bg-teal-400">
-          <Check className="size-3.5 text-white dark:text-zinc-950" aria-hidden="true" />
+          <CheckIcon className="size-3.5 text-white dark:text-zinc-950" aria-hidden="true" />
         </span>
         <PartName>{owner.part.name}</PartName>
       </div>
@@ -251,7 +259,7 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
     return (
       <div className="relative inline-flex size-10 shrink-0 items-center justify-center self-start justify-self-start rounded-lg bg-zinc-200 dark:bg-zinc-700">
         <Pin number={owner.number} />
-        <X className="size-4 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+        <XMarkIcon className="size-4 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
       </div>
     );
   }
@@ -283,7 +291,7 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
       >
         <Pin number={owner.number} />
         {shape === "search" && (
-          <Search className="size-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
+          <MagnifyingGlassIcon className="size-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
         )}
         <span
           className={cn(
@@ -295,8 +303,8 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
         <PartName>{owner.part.name}</PartName>
         {shape === "stepper" && (
           <span className="ml-auto flex shrink-0 flex-col gap-0.5" aria-hidden="true">
-            <Plus className="size-3 text-zinc-400 dark:text-zinc-500" />
-            <Minus className="size-3 text-zinc-400 dark:text-zinc-500" />
+            <PlusIcon className="size-3 text-zinc-400 dark:text-zinc-500" />
+            <MinusIcon className="size-3 text-zinc-400 dark:text-zinc-500" />
           </span>
         )}
       </div>
@@ -330,7 +338,7 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
         </span>
       )}
       {chevron && (
-        <ChevronDown
+        <ChevronDownIcon
           className={cn(
             "size-3.5 text-zinc-400",
             wide && "ml-auto",
@@ -351,7 +359,7 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
         {[0, 1, 2].map((index) => (
           <span key={index} className="contents">
             {shape === "crumb" && index > 0 && (
-              <ChevronRight className="size-3.5 text-zinc-400" aria-hidden="true" />
+              <ChevronRightIcon className="size-3.5 text-zinc-400" aria-hidden="true" />
             )}
             <span
               className={cn(
@@ -407,7 +415,7 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
             />
           )}
           {shape !== "radio" && index === 1 && (
-            <Check
+            <CheckIcon
               className="ml-auto size-3.5 text-teal-700 dark:text-teal-300"
               aria-hidden="true"
             />

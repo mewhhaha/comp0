@@ -7,6 +7,7 @@ import {
   CalendarNextButton,
   CalendarPreviousButton,
 } from "@comp0/react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
   const [date, setDate] = useState("2026-07-14");
@@ -20,9 +21,13 @@ export function Example() {
       max="2026-12-31"
     >
       <div className="flex items-center justify-between gap-2 pb-2">
-        <CalendarPreviousButton className="size-8 rounded text-zinc-700 outline-teal-600 hover:bg-zinc-100 focus-visible:outline-2 disabled:opacity-40 dark:text-zinc-300 dark:outline-teal-400 dark:hover:bg-zinc-800" />
+        <CalendarPreviousButton className="inline-flex size-8 items-center justify-center rounded text-zinc-700 outline-teal-600 hover:bg-zinc-100 focus-visible:outline-2 disabled:opacity-40 dark:text-zinc-300 dark:outline-teal-400 dark:hover:bg-zinc-800">
+          <ChevronLeftIcon className="size-4" aria-hidden="true" />
+        </CalendarPreviousButton>
         <CalendarHeader className="text-base font-medium text-zinc-900 sm:text-sm dark:text-zinc-100" />
-        <CalendarNextButton className="size-8 rounded text-zinc-700 outline-teal-600 hover:bg-zinc-100 focus-visible:outline-2 disabled:opacity-40 dark:text-zinc-300 dark:outline-teal-400 dark:hover:bg-zinc-800" />
+        <CalendarNextButton className="inline-flex size-8 items-center justify-center rounded text-zinc-700 outline-teal-600 hover:bg-zinc-100 focus-visible:outline-2 disabled:opacity-40 dark:text-zinc-300 dark:outline-teal-400 dark:hover:bg-zinc-800">
+          <ChevronRightIcon className="size-4" aria-hidden="true" />
+        </CalendarNextButton>
       </div>
       <CalendarGrid className="w-full border-separate border-spacing-0.5 [&_th]:pb-1 [&_th]:text-sm [&_th]:font-normal [&_th]:text-zinc-500 dark:[&_th]:text-zinc-400">
         {(cell) => (
