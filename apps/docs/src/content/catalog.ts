@@ -291,9 +291,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like a note that pops out beside the thing it explains.",
     "Use it for extra controls or detail that should not block the page.",
     "Start Popover with PopoverTrigger.",
-    "Put PopoverContent after it and pick a placement such as bottom start.",
+    "Put PopoverOverlay after it and pick a placement such as bottom start.",
     "Use a visible label for the trigger.",
-    '<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent placement="bottom start" offset={8}><PopoverArrow />Extra choices</PopoverContent></Popover>',
+    '<Popover><PopoverTrigger>More</PopoverTrigger><PopoverOverlay placement="bottom start" offset={8}><PopoverArrow />Extra choices</PopoverOverlay></Popover>',
   ),
   tooltip: lesson(
     "A short description revealed from an existing control.",
@@ -3029,8 +3029,8 @@ const picker = [
     "popover",
     "Popover",
     "pickers",
-    ["Popover", "PopoverArrow", "PopoverContent", "PopoverTrigger"],
-    "<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent><PopoverArrow />Extra choices</PopoverContent></Popover>",
+    ["Popover", "PopoverArrow", "PopoverOverlay", "PopoverTrigger"],
+    "<Popover><PopoverTrigger>More</PopoverTrigger><PopoverOverlay><PopoverArrow />Extra choices</PopoverOverlay></Popover>",
     [
       p("Popover", "root", "Non-modal open-state provider.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -3043,7 +3043,7 @@ const picker = [
           "Fragment merges the trigger onto your own element child.",
         ),
       ]),
-      p("PopoverContent", "content", "Non-modal floating content.", true, false, [
+      p("PopoverOverlay", "content", "Non-modal floating content.", true, false, [
         prop(
           "aria-label",
           "string",
@@ -3057,7 +3057,7 @@ const picker = [
         ),
         prop("offset", "number", "Pixel gap between the trigger and the surface."),
       ]),
-      p("PopoverArrow", "content", "Optional decorative arrow inside PopoverContent.", true, true),
+      p("PopoverArrow", "content", "Optional decorative arrow inside PopoverOverlay.", true, true),
     ],
     [
       { keys: ["Enter"], action: "Opens or closes from trigger." },
@@ -3067,12 +3067,12 @@ const picker = [
     [
       {
         attribute: "[data-open]",
-        on: "PopoverTrigger, PopoverContent",
+        on: "PopoverTrigger, PopoverOverlay",
         meaning: "The popover is open.",
       },
       {
         attribute: ":popover-open",
-        on: "PopoverContent",
+        on: "PopoverOverlay",
         meaning: "Native pseudo-class equivalent.",
       },
     ],

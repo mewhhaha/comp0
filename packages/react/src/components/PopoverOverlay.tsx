@@ -4,15 +4,15 @@ import { dataSlot, type RefProp } from "../shared.js";
 import {
   placementSurfaceStyle,
   usePopoverSurface,
-  type PopoverContentProps,
+  type PopoverOverlayProps,
 } from "./overlay-shared.js";
 export type {
-  PopoverContentProps,
+  PopoverOverlayProps,
   PopoverPlacement,
   PopoverPlacementProps,
 } from "./overlay-shared.js";
 
-export function PopoverContent({
+export function PopoverOverlay({
   as,
   hidden,
   offset,
@@ -23,7 +23,7 @@ export function PopoverContent({
   ref,
   style,
   ...props
-}: PopoverContentProps & RefProp<HTMLDivElement>) {
+}: PopoverOverlayProps & RefProp<HTMLDivElement>) {
   // Top layer by default, matching SelectPopover; pass popover="none" to
   // render in normal flow instead.
   const popoverMode = popoverProp === "none" ? undefined : popoverProp;

@@ -62,7 +62,7 @@ export const learnDocs = [
         title: "Keep named parts in their jobs",
         explanation:
           "Triggers open things, content holds what appears, and items are the choices inside a collection. Put each part where its parent pattern expects it. This gives comp0 enough information to connect IDs, focus, and keyboard behavior for you.",
-        code: "<Popover>\n  <PopoverTrigger>More</PopoverTrigger>\n  <PopoverContent>Extra choices</PopoverContent>\n</Popover>",
+        code: "<Popover>\n  <PopoverTrigger>More</PopoverTrigger>\n  <PopoverOverlay>Extra choices</PopoverOverlay>\n</Popover>",
         language: "tsx",
       },
     ],
