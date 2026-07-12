@@ -52,3 +52,18 @@ export const MenuRootContext = createContext<MenuRootContextValue | null>(null);
 export function useMenuRootContext() {
   return useContext(MenuRootContext);
 }
+
+export type ContextMenuContextValue = {
+  /** The content id of the context menu's own popover, so nested submenu popovers stay untouched. */
+  contentId: string;
+  /** The pointer position recorded when the menu opened, in viewport pixels. */
+  position: { x: number; y: number };
+  /** Records the position, remembers the focus to restore, and opens. */
+  openAt: (x: number, y: number) => void;
+};
+
+export const ContextMenuContext = createContext<ContextMenuContextValue | null>(null);
+
+export function useContextMenuContext() {
+  return useContext(ContextMenuContext);
+}

@@ -40,11 +40,16 @@ export type KeyboardToken =
   | "ArrowLeft"
   | "ArrowRight"
   | "ArrowUp"
+  | "Backspace"
+  | "ContextMenu"
   | "Ctrl"
   | "End"
   | "Enter"
   | "Escape"
+  | "F10"
   | "Home"
+  | "PageDown"
+  | "PageUp"
   | "Shift"
   | "Space"
   | "Tab";
@@ -56,7 +61,7 @@ export type KeyboardAction = {
 };
 
 export type StateHook = {
-  attribute: `[data-${string}]` | `[aria-${string}]` | `:${string}`;
+  attribute: `[data-${string}]` | `[aria-${string}]` | `:${string}` | `--${string}`;
   /** The part (or parts) the attribute appears on. */
   on: string;
   meaning: string;

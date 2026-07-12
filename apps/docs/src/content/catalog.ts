@@ -358,6 +358,51 @@ const lessons: Record<string, LessonCopy> = {
     "Pick orientation to match the layout; arrow keys follow it automatically.",
     '<Toolbar aria-label="Text formatting"><ToggleButtonGroup type="multiple" aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton></ToggleButtonGroup></Toolbar>',
   ),
+  "context-menu": lesson(
+    "A menu opened from a right click instead of a button.",
+    "Like flipping something over at a workbench: the tools for that exact spot appear under your hand.",
+    "Use it for secondary actions on an object that already has a primary interaction.",
+    "Wrap the right-clickable area in ContextMenuTrigger inside a ContextMenu.",
+    "Put the items in a MenuPopover with an aria-label; no button labels it for you.",
+    "Anchor the popover at the pointer yourself: position: fixed with left/top from the exposed --comp0-context-menu-x/y variables.",
+    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger><MenuPopover aria-label="Attachment actions" style={{ position: "fixed", inset: "auto", margin: 0, left: "var(--comp0-context-menu-x)", top: "var(--comp0-context-menu-y)" }}><MenuItem>Download</MenuItem></MenuPopover></ContextMenu>',
+  ),
+  menubar: lesson(
+    "A horizontal bar of menus that behaves like one desktop-style menu strip.",
+    "Like the File / Edit / View strip at the top of a desktop app: one reach, many drawers.",
+    "Use it when an application area offers several persistent groups of commands.",
+    "Wrap your Menu components in Menubar and give the bar an aria-label.",
+    "Each Menu keeps its usual MenuTrigger and MenuPopover; the trigger becomes the bar's menuitem automatically.",
+    "Arrow keys rove the bar with one tab stop, and once a menu is open the openness follows focus to its neighbors.",
+    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover><MenuItem>New note</MenuItem></MenuPopover></Menu></Menubar>',
+  ),
+  "pin-input": lesson(
+    "A row of one-character fields for entering a short code.",
+    "Like the digit boxes on a paper form: one square per character.",
+    "Use it for one-time passcodes, PINs, and confirmation codes.",
+    "Wrap one PinInputField per character in PinInput with an aria-label.",
+    "Give each field its own aria-label; typing fills and advances, and pasting distributes the whole code.",
+    "Wire onComplete to submit or verify as soon as the last field fills; pass name for form posts and mask for secret PINs.",
+    '<PinInput name="otp" onComplete={verify} aria-label="Verification code"><PinInputField aria-label="Digit 1" /><PinInputField aria-label="Digit 2" /><PinInputField aria-label="Digit 3" /><PinInputField aria-label="Digit 4" /></PinInput>',
+  ),
+  "range-slider": lesson(
+    "A two-thumb slider for choosing a range between bounds.",
+    "Like setting both ends of a thermostat schedule: a lowest and a highest point.",
+    "Use it for price bands, date spans, or any from–to pair on one scale.",
+    'Wrap a RangeSliderTrack and two RangeSliderThumbs (thumb="start" and thumb="end") in RangeSlider with an aria-label.',
+    "Give each thumb its own aria-label; the thumbs clamp at each other so the range cannot cross.",
+    "Position the parts with the --comp0-range-slider-start and --comp0-range-slider-end fractions; pass name to submit both ends.",
+    '<RangeSlider name="price" defaultValue={[20, 60]} aria-label="Price range"><RangeSliderTrack /><RangeSliderThumb thumb="start" aria-label="Minimum price" /><RangeSliderThumb thumb="end" aria-label="Maximum price" /></RangeSlider>',
+  ),
+  tree: lesson(
+    "A nested list where branches expand and collapse behind one tab stop.",
+    "Like a filing cabinet: open a drawer to reveal the folders inside it.",
+    "Use it for hierarchies such as file explorers, categories, or document outlines.",
+    "Wrap top-level TreeItems in Tree and give it an aria-label.",
+    "Nest a TreeGroup of child TreeItems inside an item to make it an expandable branch.",
+    "Read the selection from onChange; pass defaultExpanded, or expanded with onExpandedChange, to manage the open branches. Clicking an expandable row selects it and toggles its branch.",
+    '<Tree aria-label="Files" defaultExpanded={["src"]}><TreeItem value="src">src<TreeGroup><TreeItem value="index">index.ts</TreeItem></TreeGroup></TreeItem></Tree>',
+  ),
 };
 const accessibility: Record<string, string[]> = {
   button: [
@@ -512,12 +557,61 @@ const accessibility: Record<string, string[]> = {
     "Keep tooltip text brief and descriptive.",
     "Do not put required interactive content inside a tooltip.",
   ],
-  meter: ["meter"],
-  "progress-bar": ["progress-bar"],
-  separator: ["separator"],
-  "skip-link": ["skip-link"],
-  toast: ["toast"],
-  toolbar: ["toolbar"],
+  meter: [
+    "Always name the gauge with a Label or an aria-label.",
+    "Show the measurement as visible text, not only as a colored bar.",
+    "Use ProgressBar instead when the value represents task completion.",
+  ],
+  "progress-bar": [
+    "Always name the bar with a Label or an aria-label.",
+    "Show the percentage as visible text when precision matters.",
+    "Use Meter instead for a measurement that is not task progress.",
+  ],
+  separator: [
+    "Keep it non-focusable; a separator conveys grouping, not interaction.",
+    'Use role="presentation" for lines that are only decoration.',
+    "Do not rely on the line alone to explain a relationship; name groups when it matters.",
+  ],
+  "skip-link": [
+    "Make it the first focusable element on the page.",
+    "Style the revealed state clearly; it appears exactly when a keyboard user needs it.",
+    "Point href at a real element with a matching id, and give that target tabIndex={-1}.",
+  ],
+  toast: [
+    "Keep messages short and self-contained; role=status announces politely and role=alert interrupts, so reserve alert for urgent problems.",
+    "Auto-dismiss timers pause while the region is hovered or contains focus, and sticky toasts (timeout null) stay for anything people must act on.",
+    "The toast renders its live-region role and content in the same commit, which browsers announce for items appended one at a time; keep updates as new toasts instead of mutating an existing one.",
+  ],
+  toolbar: [
+    "Give the toolbar an aria-label that names the task, such as Text formatting.",
+    "Keep controls in a visual order that matches the arrow-key order.",
+    "Nested composites like a listbox or menu keep their own arrow keys; do not double-handle them.",
+  ],
+  "context-menu": [
+    "Give the MenuPopover an aria-label; a context menu has no trigger button to borrow a name from.",
+    "Keep the trigger area keyboard-reachable (tabIndex={0}) so Shift+F10 can open the menu without a mouse.",
+    "Offer the same actions somewhere visible; right-click alone is not discoverable.",
+  ],
+  menubar: [
+    "Give the menubar an aria-label naming the area it commands, such as Notes.",
+    "Keep the bar for persistent application commands; a row of unrelated buttons should be a toolbar instead.",
+    "Keep bar items in a visual order that matches the arrow-key order.",
+  ],
+  "pin-input": [
+    "Name the group and every field: an aria-label on PinInput and one per PinInputField, such as Digit 1.",
+    "The first field advertises autocomplete=one-time-code so platforms can offer the received code.",
+    "Keep a visible way to submit as well; do not rely on onComplete alone to move people forward.",
+  ],
+  "range-slider": [
+    "Name the group and both thumbs: an aria-label on RangeSlider and one per RangeSliderThumb.",
+    "Each thumb announces interlocked bounds, so screen readers hear how far it can move right now.",
+    "Show the selected values as visible text; the colored track alone is not enough.",
+  ],
+  tree: [
+    "Give the tree an aria-label that names the hierarchy, such as Project files.",
+    "Levels, positions, and expansion state are announced automatically; keep each row's visible text meaningful on its own and pass textValue when markup obscures it.",
+    "Clicking an expandable row both selects it and toggles its branch, while ArrowRight and ArrowLeft expand and collapse for keyboard users; avoid extra click targets inside rows.",
+  ],
 };
 
 const formatExample = (source: string) => {
@@ -1297,6 +1391,181 @@ const field = [
     "Submits as a named native range input.",
     ["number-field", "switch"],
   ),
+  common(
+    "pin-input",
+    "Pin Input",
+    "fields",
+    ["PinInput", "PinInputField"],
+    '<PinInput name="otp" onComplete={verify} aria-label="Verification code"><PinInputField aria-label="Digit 1" /><PinInputField aria-label="Digit 2" /><PinInputField aria-label="Digit 3" /><PinInputField aria-label="Digit 4" /></PinInput>',
+    [
+      p(
+        "PinInput",
+        "root",
+        "Group that owns the joined code and moves focus between the fields.",
+        true,
+        false,
+        [
+          prop("value / defaultValue", "string", "Controlled or initial joined code."),
+          prop("onChange", "(value: string) => void", "Receives the next joined code."),
+          prop(
+            "onComplete",
+            "(value: string) => void",
+            "Fires once each time typing or pasting fills every field.",
+          ),
+          prop(
+            "type",
+            '"numeric" | "alphanumeric"',
+            'Accepted characters; "numeric" filters to digits and is the default.',
+          ),
+          prop("mask", "boolean", "Renders the fields as password inputs."),
+          prop("name", "string", "Submits one hidden input carrying the joined code."),
+          prop("disabled", "boolean", "Disables every field."),
+          prop("aria-label", "string", "Names the group for assistive technology; required."),
+        ],
+      ),
+      p(
+        "PinInputField",
+        "input",
+        'Native single-character input; its index follows the order the fields mount in. The first field advertises autocomplete="one-time-code".',
+        true,
+        false,
+        [
+          prop("aria-label", "string", 'Names this field, such as "Digit 1"; required per field.'),
+          prop("className", "string", "Style each cell of the code."),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Backspace"], action: "Clears the field, or moves back when it is already empty." },
+      { keys: ["ArrowLeft"], action: "Moves to the previous field." },
+      { keys: ["ArrowRight"], action: "Moves to the next field." },
+      { keys: ["Tab"], action: "Leaves the code; typing a character already advances." },
+    ],
+    [
+      {
+        attribute: "[data-disabled]",
+        on: "PinInput, PinInputField",
+        meaning: "Entry is disabled.",
+      },
+      {
+        attribute: ":focus-visible",
+        on: "PinInputField",
+        meaning: "The field has keyboard focus.",
+      },
+      {
+        attribute: ":placeholder-shown",
+        on: "PinInputField",
+        meaning: "The field is still empty when a placeholder is set.",
+      },
+    ],
+    "Submits one hidden input named `name` carrying the joined code.",
+    ["text-field", "number-field"],
+  ),
+  common(
+    "range-slider",
+    "Range Slider",
+    "fields",
+    ["RangeSlider", "RangeSliderThumb", "RangeSliderTrack"],
+    '<RangeSlider name="price" defaultValue={[20, 60]} aria-label="Price range"><RangeSliderTrack /><RangeSliderThumb thumb="start" aria-label="Minimum price" /><RangeSliderThumb thumb="end" aria-label="Maximum price" /></RangeSlider>',
+    [
+      p(
+        "RangeSlider",
+        "root",
+        "Group that owns the [start, end] pair and exposes the thumb positions as --comp0-range-slider-start/--comp0-range-slider-end 0..1 fractions for styling.",
+        true,
+        false,
+        [
+          prop(
+            "value / defaultValue",
+            "[number, number]",
+            "Controlled or initial [start, end] pair.",
+          ),
+          prop(
+            "onChange",
+            "(value: [number, number]) => void",
+            "Receives the next [start, end] pair.",
+          ),
+          prop("min / max / step", "number", "Range bounds and step grid; default 0, 100, and 1."),
+          prop(
+            "name",
+            "string",
+            "Submits two hidden inputs named `${name}-start` and `${name}-end`.",
+          ),
+          prop(
+            "orientation",
+            '"horizontal" | "vertical"',
+            'Announced direction; defaults to "horizontal".',
+          ),
+          prop("disabled", "boolean", "Disables both thumbs and the track."),
+          prop("aria-label", "string", "Names the group for assistive technology; required."),
+        ],
+      ),
+      p(
+        "RangeSliderTrack",
+        "content",
+        "The rail the thumbs travel along; pressing it moves and focuses the nearest thumb.",
+        true,
+        false,
+        [prop("className", "string", "Style the rail; position it relative to the root.")],
+      ),
+      p(
+        "RangeSliderThumb",
+        "input",
+        "Focusable slider for one end of the range; its announced bounds interlock with the sibling so the thumbs never cross.",
+        true,
+        false,
+        [
+          prop("thumb", '"start" | "end"', "Which end of the range this thumb controls."),
+          prop(
+            "aria-label",
+            "string",
+            'Names this thumb, such as "Minimum price"; required per thumb.',
+          ),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves between the two thumbs." },
+      { keys: ["ArrowRight"], action: "Increases the focused thumb by one step." },
+      { keys: ["ArrowUp"], action: "Increases the focused thumb by one step." },
+      { keys: ["ArrowLeft"], action: "Decreases the focused thumb by one step." },
+      { keys: ["ArrowDown"], action: "Decreases the focused thumb by one step." },
+      { keys: ["PageUp"], action: "Increases the focused thumb by ten steps." },
+      { keys: ["PageDown"], action: "Decreases the focused thumb by ten steps." },
+      {
+        keys: ["Home"],
+        action: "Moves the thumb to its own minimum: min for start, the start value for end.",
+      },
+      {
+        keys: ["End"],
+        action: "Moves the thumb to its own maximum: the end value for start, max for end.",
+      },
+    ],
+    [
+      {
+        attribute: "[data-dragging]",
+        on: "RangeSliderThumb",
+        meaning: "The thumb is being dragged with a captured pointer.",
+      },
+      {
+        attribute: "[data-disabled]",
+        on: "RangeSlider, RangeSliderThumb",
+        meaning: "The range slider is disabled.",
+      },
+      {
+        attribute: "[data-orientation]",
+        on: "RangeSlider, RangeSliderTrack",
+        meaning: "The travel direction, horizontal or vertical.",
+      },
+      {
+        attribute: ":focus-visible",
+        on: "RangeSliderThumb",
+        meaning: "The thumb has keyboard focus.",
+      },
+    ],
+    "Submits two hidden inputs, `${name}-start` and `${name}-end`, carrying the pair.",
+    ["slider", "number-field"],
+  ),
 ];
 
 const navigation = [
@@ -1842,6 +2111,294 @@ const navigation = [
     ],
     "No form behavior.",
     ["link", "visually-hidden"],
+  ),
+  common(
+    "context-menu",
+    "Context Menu",
+    "navigation",
+    ["ContextMenu", "ContextMenuTrigger", "MenuItem", "MenuPopover"],
+    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Right-click here</ContextMenuTrigger><MenuPopover aria-label="Attachment actions" className="context-menu"><MenuItem>Download</MenuItem></MenuPopover></ContextMenu>',
+    [
+      p(
+        "ContextMenu",
+        "root",
+        "Open-state provider without a trigger button; it records the pointer position and restores focus on close.",
+        false,
+        false,
+        [
+          prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+          prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        ],
+      ),
+      p(
+        "ContextMenuTrigger",
+        "trigger",
+        "The right-clickable area: a plain div that opens the menu at the pointer on contextmenu, or from the keyboard with Shift+F10.",
+        true,
+        false,
+        [
+          prop(
+            "tabIndex",
+            "number",
+            "Give the area (or something inside it) a tab stop so keyboard users can reach the menu.",
+          ),
+        ],
+      ),
+      p(
+        "MenuPopover",
+        "content",
+        "Menu container. The recorded position arrives as --comp0-context-menu-x/y px values on this element; anchor it yourself with position: fixed; left: var(--comp0-context-menu-x); top: var(--comp0-context-menu-y).",
+        true,
+        false,
+        [
+          prop(
+            "aria-label",
+            "string",
+            "Names the menu; required because no trigger button labels it.",
+          ),
+          prop(
+            "className / style",
+            "string | CSSProperties",
+            "Position the popover from the exposed CSS variables; no placement is applied for you.",
+          ),
+        ],
+      ),
+      p("MenuItem", "item", "Action item.", true, false, [
+        prop("onClick", "(event) => void", "Runs the action; preventDefault keeps the menu open."),
+        prop("value", "string", "Optional identity for typeahead and data-value."),
+        prop("disabled", "boolean", "Disables the action."),
+      ]),
+    ],
+    [
+      {
+        keys: ["Shift", "F10"],
+        action: "Opens the menu at the focused element.",
+        scope: "trigger area",
+      },
+      {
+        keys: ["ContextMenu"],
+        action: "Opens the menu at the focused element.",
+        scope: "trigger area",
+      },
+      { keys: ["ArrowDown"], action: "Moves to the next item." },
+      { keys: ["ArrowUp"], action: "Moves to the previous item." },
+      { keys: ["Enter"], action: "Activates the focused item." },
+      { keys: ["Escape"], action: "Closes and restores focus to where it was." },
+      { keys: ["Tab"], action: "Closes the menu and moves on." },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "ContextMenuTrigger, MenuPopover",
+        meaning: "The menu is open.",
+      },
+      {
+        attribute: ":popover-open",
+        on: "MenuPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
+      {
+        attribute: "--comp0-context-menu-x/y",
+        on: "MenuPopover",
+        meaning: "The recorded pointer position in px, for your positioning CSS.",
+      },
+      {
+        attribute: ":focus-visible",
+        on: "MenuItem",
+        meaning: "The item has visible keyboard focus.",
+      },
+    ],
+    "No native form behavior.",
+    ["menu"],
+  ),
+  common(
+    "menubar",
+    "Menubar",
+    "navigation",
+    ["Menu", "MenuItem", "MenuPopover", "MenuSeparator", "MenuTrigger", "Menubar"],
+    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover placement="bottom start"><MenuItem>New note</MenuItem></MenuPopover></Menu><Menu><MenuTrigger>Edit</MenuTrigger><MenuPopover placement="bottom start"><MenuItem>Undo</MenuItem></MenuPopover></Menu></Menubar>',
+    [
+      p(
+        "Menubar",
+        "root",
+        "Horizontal bar of menus that shares one tab stop; while a menu is open, openness follows focus across the bar.",
+        true,
+        false,
+        [
+          prop(
+            "aria-label",
+            "string",
+            "Names the bar after the application area it commands, such as Notes.",
+          ),
+        ],
+      ),
+      p(
+        "Menu",
+        "root",
+        "Open-state provider for one bar item; the same Menu component used standalone.",
+        false,
+        false,
+        [
+          prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+          prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        ],
+      ),
+      p(
+        "MenuTrigger",
+        "trigger",
+        "Inside a Menubar it renders as the bar's menuitem and joins the roving tab stop.",
+        true,
+        false,
+        [prop("disabled", "boolean", "Disables opening and skips the item when arrowing.")],
+      ),
+      p("MenuPopover", "content", "Menu container, opened below its bar item.", true, false, [
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, usually "bottom start"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the bar item and the menu."),
+      ]),
+      p("MenuSeparator", "label", "Rule between groups of items.", true, true),
+      p("MenuItem", "item", "Action item.", true, false, [
+        prop("onClick", "(event) => void", "Runs the action; preventDefault keeps the menu open."),
+        prop("value", "string", "Optional identity for typeahead and data-value."),
+        prop("disabled", "boolean", "Disables the action."),
+      ]),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves into the bar to the last-used item; Tab again leaves." },
+      {
+        keys: ["ArrowRight"],
+        action:
+          "Moves to the next item, wrapping; while a menu is open, opens the neighbor's menu.",
+      },
+      {
+        keys: ["ArrowLeft"],
+        action:
+          "Moves to the previous item, wrapping; while a menu is open, opens the neighbor's menu.",
+      },
+      { keys: ["ArrowDown"], action: "Opens the focused item's menu and focuses the first item." },
+      { keys: ["Enter"], action: "Opens the focused item's menu and focuses the first item." },
+      { keys: ["Space"], action: "Opens the focused item's menu and focuses the first item." },
+      { keys: ["Home"], action: "Moves to the first item." },
+      { keys: ["End"], action: "Moves to the last item." },
+      {
+        keys: ["Escape"],
+        action: "Closes the open menu and returns focus to its bar item.",
+        scope: "open menu",
+      },
+      {
+        keys: ["ArrowRight"],
+        action: "Opens the focused submenu item.",
+        scope: "submenu",
+      },
+      {
+        keys: ["ArrowLeft"],
+        action: "Closes the submenu and refocuses its item.",
+        scope: "submenu",
+      },
+    ],
+    [
+      { attribute: "[data-open]", on: "MenuTrigger, MenuPopover", meaning: "That menu is open." },
+      {
+        attribute: ":popover-open",
+        on: "MenuPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
+      {
+        attribute: ":focus-visible",
+        on: "MenuTrigger, MenuItem",
+        meaning: "The item has visible keyboard focus.",
+      },
+      {
+        attribute: "[data-disabled]",
+        on: "MenuTrigger, MenuItem",
+        meaning: "The item is disabled.",
+      },
+    ],
+    "No native form behavior.",
+    ["menu"],
+  ),
+  common(
+    "tree",
+    "Tree",
+    "navigation",
+    ["Tree", "TreeGroup", "TreeItem"],
+    '<Tree aria-label="Files" defaultExpanded={["src"]}><TreeItem value="src">src<TreeGroup><TreeItem value="index">index.ts</TreeItem></TreeGroup></TreeItem><TreeItem value="readme">README.md</TreeItem></Tree>',
+    [
+      p(
+        "Tree",
+        "root",
+        "Hierarchy container and the tree's single tab stop; arrow keys walk visible rows.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Names the tree; nothing labels it automatically."),
+          prop("value / defaultValue", "string", "Controlled or initial selected item."),
+          prop("onChange", "(value: string) => void", "Receives the next selected item's value."),
+          prop("expanded / defaultExpanded", "string[]", "Controlled or initial expanded items."),
+          prop(
+            "onExpandedChange",
+            "(expanded: string[]) => void",
+            "Receives the next expanded item values.",
+          ),
+        ],
+      ),
+      p(
+        "TreeItem",
+        "item",
+        "Selectable row; nesting a TreeGroup inside makes it an expandable branch.",
+        true,
+        false,
+        [
+          prop("value", "string", "This item's selection and expansion key."),
+          prop("disabled", "boolean", "Disables the item and removes it from the arrow-key order."),
+          prop(
+            "textValue",
+            "string",
+            "Overrides the text crawled from the row for typeahead when markup makes it ambiguous.",
+          ),
+        ],
+      ),
+      p(
+        "TreeGroup",
+        "content",
+        "Container for one item's children; it gets the hidden attribute while its parent is collapsed.",
+        true,
+        true,
+        [],
+      ),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves into the tree to the active item; Tab again leaves." },
+      { keys: ["ArrowDown"], action: "Moves to the next visible item without wrapping." },
+      { keys: ["ArrowUp"], action: "Moves to the previous visible item without wrapping." },
+      {
+        keys: ["ArrowRight"],
+        action: "Expands a collapsed item; on an expanded item, moves to its first child.",
+      },
+      {
+        keys: ["ArrowLeft"],
+        action: "Collapses an expanded item; otherwise moves to the parent item.",
+      },
+      { keys: ["Home"], action: "Moves to the first visible item." },
+      { keys: ["End"], action: "Moves to the last visible item." },
+      { keys: ["Enter"], action: "Selects the focused item." },
+      { keys: ["Space"], action: "Selects the focused item." },
+    ],
+    [
+      { attribute: "[data-selected]", on: "TreeItem", meaning: "The item is selected." },
+      { attribute: "[data-expanded]", on: "TreeItem", meaning: "The item's branch is open." },
+      { attribute: "[data-disabled]", on: "TreeItem", meaning: "The item is disabled." },
+      {
+        attribute: ":focus-visible",
+        on: "TreeItem",
+        meaning: "The item has visible keyboard focus.",
+      },
+    ],
+    "Selection does not create a native form value; mirror it into a hidden input when a form needs it.",
+    ["grid-list", "list-box"],
   ),
 ];
 
