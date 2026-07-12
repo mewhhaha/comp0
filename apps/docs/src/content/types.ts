@@ -8,6 +8,7 @@ export type AnatomyKind =
   | "trigger"
   | "value"
   | "content"
+  | "region"
   | "item"
   | "input"
   | "feedback";

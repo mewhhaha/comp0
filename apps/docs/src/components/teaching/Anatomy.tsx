@@ -1,9 +1,13 @@
 import {
+  ArrowsRightLeftIcon,
+  Bars3Icon,
   CheckIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
   MinusIcon,
+  PlayIcon,
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/16/solid";
@@ -32,7 +36,7 @@ type ControlShape =
   | "icon"
   | "block";
 
-type ItemShape = "row" | "tab" | "crumb" | "radio";
+type ItemShape = "row" | "tab" | "crumb" | "radio" | "slide" | "cell";
 
 type DiagramNode =
   | { type: "frame"; owner: Numbered; variant: "provider" | "container"; children: DiagramNode[] }
@@ -44,6 +48,7 @@ type DiagramNode =
       value?: Numbered | undefined;
       chevron: boolean;
       wide?: boolean | undefined;
+      glyph?: typeof XMarkIcon | undefined;
     }
   | { type: "row"; owner?: undefined; children: DiagramNode[] }
   | { type: "chip"; owner: Numbered }
@@ -58,6 +63,7 @@ function inputShape(name: string): ControlShape {
   if (/slider|range/i.test(name)) return "slider";
   if (/number/i.test(name)) return "stepper";
   if (/search/i.test(name)) return "search";
+  if (/file|hidden/i.test(name)) return "ghost";
   return "field";
 }
 
@@ -70,21 +76,41 @@ function loneRootShape(name: string): ControlShape {
 
 function itemShape(name: string): ItemShape {
   if (/radio/i.test(name)) return "radio";
+  if (/slide/i.test(name)) return "slide";
+  if (/cell/i.test(name)) return "cell";
   if (/^ta[bg](?![a-z])/i.test(name)) return "tab";
+  if (/button|column/i.test(name)) return "tab";
   if (/breadcrumb/i.test(name)) return "crumb";
   return "row";
 }
 
+const triggerGlyphs: [RegExp, typeof XMarkIcon][] = [
+  [/clear|close|dismiss/i, XMarkIcon],
+  [/previous|back/i, ChevronLeftIcon],
+  [/next|forward/i, ChevronRightIcon],
+  [/play|pause|autoplay/i, PlayIcon],
+  [/drag|handle|grip/i, Bars3Icon],
+  [/resiz/i, ArrowsRightLeftIcon],
+];
+
 function triggerNode(entry: Numbered, rest: Numbered[], value?: Numbered): DiagramNode {
-  const shape: ControlShape = /clear|close|dismiss/i.test(entry.part.name) ? "icon" : "button";
-  const chevron = value !== undefined || rest.some((e) => e.part.kind === "item");
+  if (/context/i.test(entry.part.name)) {
+    return { type: "control", owner: entry, shape: "ghost", chevron: false };
+  }
+  const glyph = triggerGlyphs.find(([pattern]) => pattern.test(entry.part.name))?.[1];
+  if (glyph) return { type: "control", owner: entry, shape: "icon", glyph, chevron: false };
+  const chevron =
+    value !== undefined ||
+    /menu/i.test(entry.part.name) ||
+    rest.some((e) => e.part.kind === "item" || e.part.kind === "region");
   const wide = rest.some((e) => e.part.kind === "content") || value !== undefined;
-  return { type: "control", owner: entry, shape, value, chevron, wide };
+  return { type: "control", owner: entry, shape: "button", value, chevron, wide };
 }
 
 // Turns the ordered part list into a nested wireframe: providers become dashed
-// frames around what follows, triggers absorb their value, and the first
-// content part becomes a floating panel holding the remaining items/sections.
+// frames around what follows, triggers absorb their value and sit together in
+// one row when consecutive, regions wrap the items/inputs that follow them,
+// and the first content part becomes a floating panel holding the rest.
 function parseParts(list: Numbered[]): DiagramNode[] {
   const nodes: DiagramNode[] = [];
   let i = 0;
@@ -117,11 +143,27 @@ function parseParts(list: Numbered[]): DiagramNode[] {
         i += 1;
       }
     } else if (kind === "trigger") {
-      const next = list[i + 1];
-      const value = next?.part.kind === "value" ? next : undefined;
-      const consumed = value ? 2 : 1;
-      nodes.push(triggerNode(entry, list.slice(i + consumed), value));
-      i += consumed;
+      const run: DiagramNode[] = [];
+      while (i < list.length) {
+        const current = list[i];
+        if (!current || current.part.kind !== "trigger") break;
+        const next = list[i + 1];
+        const value = next?.part.kind === "value" ? next : undefined;
+        i += value ? 2 : 1;
+        run.push(triggerNode(current, list.slice(i), value));
+      }
+      const first = run[0];
+      if (run.length === 1 && first) {
+        nodes.push(first);
+      } else {
+        // Side-by-side triggers share one row, so none of them renders wide.
+        nodes.push({
+          type: "row",
+          children: run.map((node) =>
+            node.type === "control" ? { ...node, wide: undefined } : node,
+          ),
+        });
+      }
     } else if (kind === "content") {
       const rest = list.slice(i + 1);
       const chips = rest.filter((e) => e.part.kind === "content");
@@ -135,6 +177,20 @@ function parseParts(list: Numbered[]): DiagramNode[] {
         ],
       });
       i = list.length;
+    } else if (kind === "region") {
+      let j = i + 1;
+      while (j < list.length) {
+        const inner = list[j]?.part.kind;
+        if (inner !== "item" && inner !== "input") break;
+        j += 1;
+      }
+      nodes.push({
+        type: "frame",
+        owner: entry,
+        variant: "container",
+        children: parseParts(list.slice(i + 1, j)),
+      });
+      i = j;
     } else if (kind === "item") {
       const rest = list.slice(i + 1);
       const wrapsOtherParts = rest.some(
@@ -256,10 +312,11 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
     );
   }
   if (shape === "icon") {
+    const Glyph = node.glyph ?? XMarkIcon;
     return (
       <div className="relative inline-flex size-10 shrink-0 items-center justify-center self-start justify-self-start rounded-lg bg-zinc-200 dark:bg-zinc-700">
         <Pin number={owner.number} />
-        <XMarkIcon className="size-4 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+        <Glyph className="size-4 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
       </div>
     );
   }
@@ -353,6 +410,54 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
 
 function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) {
   const { owner, shape } = node;
+  if (shape === "slide") {
+    return (
+      <div className="flex items-stretch gap-2 pt-1">
+        {[0, 1, 2].map((index) => (
+          <span
+            key={index}
+            className={cn(
+              "relative flex h-20 items-center justify-center rounded-lg",
+              index === 1 &&
+                "min-w-0 flex-1 bg-teal-600/10 px-3 ring-1 ring-teal-600/30 dark:bg-teal-400/10 dark:ring-teal-400/30",
+              index !== 1 &&
+                "w-8 shrink-0 bg-zinc-100 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/10",
+            )}
+          >
+            {index === 1 && <Pin number={owner.number} />}
+            {index === 1 ? (
+              <PartName className="text-teal-800/80 dark:text-teal-200/80">
+                {owner.part.name}
+              </PartName>
+            ) : (
+              <Skeleton className="w-4" />
+            )}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  if (shape === "cell") {
+    return (
+      <div className="relative grid gap-2 pt-1">
+        <Pin number={owner.number} />
+        <PartName>{owner.part.name}</PartName>
+        <span className="grid grid-cols-7 gap-1.5">
+          {Array.from({ length: 14 }, (_, index) => (
+            <span
+              key={index}
+              className={cn(
+                "aspect-square rounded",
+                index === 9 && "bg-teal-600/80 dark:bg-teal-400/80",
+                index !== 9 &&
+                  "bg-zinc-100 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/10",
+              )}
+            />
+          ))}
+        </span>
+      </div>
+    );
+  }
   if (shape === "tab" || shape === "crumb") {
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-3 pt-1">
