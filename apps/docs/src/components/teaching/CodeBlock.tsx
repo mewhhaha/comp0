@@ -82,7 +82,7 @@ export function CodeBlock({ code, language = "tsx", title, className }: CodeBloc
         <span className="font-mono tracking-wide text-zinc-500 uppercase">{language}</span>
       </figcaption>
       <pre
-        className="max-w-full overflow-x-auto p-4 font-mono text-base/6 text-zinc-100 [tab-size:2] sm:text-sm"
+        className="max-h-[30rem] max-w-full overflow-auto p-4 font-mono text-base/6 text-zinc-100 [tab-size:2] sm:text-sm"
         tabIndex={0}
       >
         <code

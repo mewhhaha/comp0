@@ -7,6 +7,36 @@ import { DialogTrigger } from "./components/DialogTrigger.js";
 import { Popover } from "./components/Popover.js";
 import { PopoverContent } from "./components/PopoverContent.js";
 import { PopoverTrigger } from "./components/PopoverTrigger.js";
+import { placementSurfaceStyle, popoverAnchorName } from "./components/overlay-shared.js";
+
+describe("popover placement styles", () => {
+  it("derives matching css anchor names from ids React generates", () => {
+    expect(popoverAnchorName("«r1»-trigger")).toBe("--comp0-anchor-r1-trigger");
+    expect(popoverAnchorName(undefined)).toBeUndefined();
+  });
+
+  it("maps placements to position areas with a flip fallback on the placement axis", () => {
+    expect(placementSurfaceStyle("bottom start", 8, "«r0»-trigger", undefined)).toEqual({
+      inset: "auto",
+      margin: 0,
+      positionArea: "block-end span-inline-end",
+      positionTryFallbacks: "flip-block",
+      positionAnchor: "--comp0-anchor-r0-trigger",
+      marginBlock: "8px",
+    });
+    expect(placementSurfaceStyle("right top", 4, "«r0»-trigger", undefined)).toMatchObject({
+      positionArea: "right span-bottom",
+      positionTryFallbacks: "flip-inline",
+      marginInline: "4px",
+    });
+  });
+
+  it("keeps caller-provided style declarations in charge", () => {
+    const style = placementSurfaceStyle("top", 0, "id", { positionArea: "left" } as never);
+    expect(style).toMatchObject({ positionArea: "left" });
+    expect(placementSurfaceStyle(undefined, 8, "id", { color: "red" })).toEqual({ color: "red" });
+  });
+});
 
 describe("overlay composition", () => {
   it("keeps provider roots wrapper-free and connects dialog parts with stable ids", () => {

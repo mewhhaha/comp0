@@ -9,7 +9,7 @@ import { composeRefs, dataAttr } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field.js";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { Button } from "./Button.js";
-import { usePopoverContext } from "./overlay-shared.js";
+import { triggerAnchorStyle, usePopoverContext } from "./overlay-shared.js";
 
 export type SelectTriggerProps = ButtonHTMLAttributes<HTMLButtonElement> &
   Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "download" | "href" | "rel" | "target"> & {
@@ -22,6 +22,7 @@ export function SelectTrigger({
   onClick,
   onKeyDown,
   ref,
+  style,
   ...props
 }: SelectTriggerProps & RefProp<HTMLButtonElement>) {
   const select = useSelectRootContext();
@@ -42,6 +43,7 @@ export function SelectTrigger({
     ref: composeRefs(ref, popover.setTriggerElement),
     disabled: resolvedDisabled,
     id: props.id ?? select.triggerId,
+    style: triggerAnchorStyle(select.triggerId, style),
     "aria-controls": props["aria-controls"] ?? select.listBoxId,
     "aria-describedby": description || undefined,
     "aria-expanded": popover.open,

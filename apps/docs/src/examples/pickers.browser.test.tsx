@@ -54,8 +54,11 @@ describe("picker docs examples", () => {
       expect(trigger.getAttribute("aria-controls")).toBe(listbox.id);
       expect(listbox.getAttribute("popover")).toBe("auto");
       expect(listbox.closest('[role="dialog"]')).toBeNull();
-      expect(trigger.className).toContain("[anchor-name:--select-example]");
-      expect(listbox.className).toContain("[position-area:block-end]");
+      expect(trigger.style.getPropertyValue("anchor-name")).toMatch(/^--comp0-anchor-/);
+      expect(listbox.style.getPropertyValue("position-anchor")).toBe(
+        trigger.style.getPropertyValue("anchor-name"),
+      );
+      expect(listbox.style.getPropertyValue("position-area")).toBe("block-end");
 
       act(() => trigger.click());
       expect(trigger.getAttribute("aria-expanded")).toBe("true");
@@ -90,8 +93,11 @@ describe("picker docs examples", () => {
       expect(input.getAttribute("aria-controls")).toBe(listbox.id);
       expect(listbox.getAttribute("popover")).toBe("auto");
       expect(listbox.closest('[role="dialog"]')).toBeNull();
-      expect(input.className).toContain("[anchor-name:--combobox-example]");
-      expect(listbox.className).toContain("[position-area:block-end]");
+      expect(input.style.getPropertyValue("anchor-name")).toMatch(/^--comp0-anchor-/);
+      expect(listbox.style.getPropertyValue("position-anchor")).toBe(
+        input.style.getPropertyValue("anchor-name"),
+      );
+      expect(listbox.style.getPropertyValue("position-area")).toBe("block-end");
 
       input.focus();
       type(input, "to");

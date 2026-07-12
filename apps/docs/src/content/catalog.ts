@@ -291,18 +291,18 @@ const lessons: Record<string, LessonCopy> = {
     "Like a note that pops out beside the thing it explains.",
     "Use it for extra controls or detail that should not block the page.",
     "Start Popover with PopoverTrigger.",
-    "Put PopoverContent after it and add PopoverArrow inside content only when useful.",
+    "Put PopoverContent after it and pick a placement such as bottom start.",
     "Use a visible label for the trigger.",
-    "<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent><PopoverArrow />Extra choices</PopoverContent></Popover>",
+    '<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent placement="bottom start" offset={8}><PopoverArrow />Extra choices</PopoverContent></Popover>',
   ),
   tooltip: lesson(
     "A short description revealed from an existing control.",
     "Like a tiny sticky note that appears when you pause over an icon.",
     "Use it for brief help, never for essential instructions.",
     "Start Tooltip with the control people already use.",
-    "Add TooltipPopover with one short explanation.",
+    "Add TooltipPopover with one short explanation, placed on the side you want, and a TooltipArrow caret styled to point back at the trigger.",
     "Give an icon-only trigger its own aria-label too.",
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover>Helpful detail</TooltipPopover></Tooltip>',
+    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
   ),
 };
 const accessibility: Record<string, string[]> = {
@@ -350,6 +350,7 @@ const accessibility: Record<string, string[]> = {
     "Label the search purpose, even when the placeholder says Search.",
     "Give the clear button understandable text or an aria-label.",
     "Announce result counts outside the input when results update.",
+    'Pass as="search" when this is the page\'s search landmark; the native element announces it.',
   ],
   checkbox: [
     "Each checkbox needs visible choice text.",
@@ -410,6 +411,7 @@ const accessibility: Record<string, string[]> = {
     "Give the grid an aria-label when it has no visible heading.",
     "Keep row focus and row selection visibly distinct.",
     "Reach row controls with ArrowRight; do not add extra tab stops.",
+    "Reordering never requires a pointer: Alt+Arrow moves the focused row and a live region announces its new position.",
   ],
   table: [
     "Give the table an aria-label or a visible caption.",
@@ -1012,6 +1014,7 @@ const navigation = [
         on: "Disclosure, DisclosureTrigger, DisclosurePanel",
         meaning: "The disclosure is open.",
       },
+      { attribute: ":open", on: "Disclosure", meaning: "Native details pseudo-class equivalent." },
     ],
     "No native form behavior.",
     ["accordion", "popover"],
@@ -1155,6 +1158,12 @@ const navigation = [
       ),
       p("MenuPopover", "content", "Menu container.", true, false, [
         prop("aria-label", "string", "Names the menu when the trigger text is vague."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom start" or "right top" for submenus; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the menu."),
       ]),
       p("MenuSection", "root", "Optional labelled section.", true, true, [
         prop("aria-label", "string", "Names the group of items."),
@@ -1186,6 +1195,11 @@ const navigation = [
     ],
     [
       { attribute: "[data-open]", on: "MenuTrigger, MenuPopover", meaning: "The menu is open." },
+      {
+        attribute: ":popover-open",
+        on: "MenuPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
       {
         attribute: ":focus-visible",
         on: "MenuItem",
@@ -1292,6 +1306,11 @@ const navigation = [
         prop("aria-label", "string", "Names the grid; nothing labels it automatically."),
         prop("value / defaultValue", "string", "Controlled or initial selected row."),
         prop("onChange", "(value: string) => void", "Receives the next selected row."),
+        prop(
+          "onReorder",
+          "(values: string[]) => void",
+          "Receives the full new row order; providing it makes rows draggable and movable with Alt+Arrow keys, with moves announced to screen readers.",
+        ),
       ]),
       p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
         prop("value", "string", "This row’s selection key."),
@@ -1312,10 +1331,23 @@ const navigation = [
       { keys: ["End"], action: "Moves to the last row." },
       { keys: ["Enter"], action: "Selects the focused row." },
       { keys: ["Space"], action: "Selects the focused row." },
+      { keys: ["Alt", "ArrowUp"], action: "Moves the row up.", scope: "with onReorder" },
+      { keys: ["Alt", "ArrowDown"], action: "Moves the row down.", scope: "with onReorder" },
     ],
     [
       { attribute: "[data-selected]", on: "GridListItem", meaning: "The row is selected." },
       { attribute: "[data-disabled]", on: "GridListItem", meaning: "The row is disabled." },
+      { attribute: "[data-dragging]", on: "GridListItem", meaning: "The row is being dragged." },
+      {
+        attribute: "[data-drop-before]",
+        on: "GridListItem",
+        meaning: "The dragged row will drop before this row; style it as the drop preview.",
+      },
+      {
+        attribute: "[data-drop-after]",
+        on: "GridListItem",
+        meaning: "The dragged row will drop after this row; style it as the drop preview.",
+      },
       {
         attribute: ":focus-visible",
         on: "GridListItem and its controls",
@@ -1430,6 +1462,12 @@ const picker = [
       ]),
       p("SelectPopover", "content", "The listbox surface.", true, false, [
         prop("aria-label", "string", "Names the listbox when there is no visible Label."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the listbox."),
       ]),
       p("SelectOption", "item", "Selectable option.", true, false, [
         prop("value", "string", "This option’s value."),
@@ -1452,6 +1490,11 @@ const picker = [
         attribute: "[data-open]",
         on: "SelectTrigger, SelectPopover",
         meaning: "Choices are open.",
+      },
+      {
+        attribute: ":popover-open",
+        on: "SelectPopover",
+        meaning: "Native pseudo-class equivalent.",
       },
       { attribute: "[data-placeholder]", on: "SelectValue", meaning: "No value is selected." },
       { attribute: "[data-value]", on: "SelectValue", meaning: "A value is selected." },
@@ -1490,6 +1533,12 @@ const picker = [
       ),
       p("ComboboxPopover", "content", "The listbox results surface.", true, false, [
         prop("aria-label", "string", "Names the results list when there is no visible Label."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Input side to open on, such as "bottom"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the input and the listbox."),
       ]),
       p("ComboboxOption", "item", "Selectable result.", true, false, [
         prop("value", "string", "This result’s value."),
@@ -1511,6 +1560,11 @@ const picker = [
         attribute: "[data-open]",
         on: "ComboboxInput, ComboboxPopover",
         meaning: "Results are open.",
+      },
+      {
+        attribute: ":popover-open",
+        on: "ComboboxPopover",
+        meaning: "Native pseudo-class equivalent.",
       },
       { attribute: "[data-selected]", on: "ComboboxOption", meaning: "Option is selected." },
       {
@@ -1548,6 +1602,11 @@ const picker = [
       p("DialogContent", "content", "Modal dialog element.", true, false, [
         prop("aria-label", "string", "Accessible name for the dialog task."),
         prop("portal", "boolean", "Renders into document.body; on by default."),
+        prop(
+          "closedby",
+          '"any" | "closerequest" | "none"',
+          "Native dismissal policy; any adds light dismiss where supported.",
+        ),
         prop("onClose", "(event) => void", "Native dialog close event."),
       ]),
     ],
@@ -1561,6 +1620,7 @@ const picker = [
         on: "DialogTrigger, DialogContent",
         meaning: "The dialog is open.",
       },
+      { attribute: ":open", on: "DialogContent", meaning: "Native pseudo-class equivalent." },
     ],
     "No native form behavior; forms may live inside DialogContent.",
     ["alert-dialog", "popover"],
@@ -1586,6 +1646,11 @@ const picker = [
       p("AlertDialogContent", "content", "Modal alert dialog content.", true, false, [
         prop("aria-label", "string", "Accessible name for the decision."),
         prop("portal", "boolean", "Renders into document.body; on by default."),
+        prop(
+          "closedby",
+          '"any" | "closerequest" | "none"',
+          "Native dismissal policy; none blocks Escape when the decision must be explicit.",
+        ),
       ]),
     ],
     [
@@ -1598,6 +1663,7 @@ const picker = [
         on: "DialogTrigger, AlertDialogContent",
         meaning: "The alert is open.",
       },
+      { attribute: ":open", on: "AlertDialogContent", meaning: "Native pseudo-class equivalent." },
     ],
     "No native form behavior; put a confirmation form inside when needed.",
     ["dialog", "button"],
@@ -1627,6 +1693,12 @@ const picker = [
           "Accessible name; the content is a dialog with no default name.",
         ),
         prop("popover", '"auto" | "manual" | "none"', "Top-layer mode; auto by default."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom start"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the surface."),
       ]),
       p("PopoverArrow", "content", "Optional decorative arrow inside PopoverContent.", true, true),
     ],
@@ -1641,6 +1713,11 @@ const picker = [
         on: "PopoverTrigger, PopoverContent",
         meaning: "The popover is open.",
       },
+      {
+        attribute: ":popover-open",
+        on: "PopoverContent",
+        meaning: "Native pseudo-class equivalent.",
+      },
     ],
     "No native form behavior.",
     ["dialog", "menu", "tooltip"],
@@ -1649,8 +1726,8 @@ const picker = [
     "tooltip",
     "Tooltip",
     "pickers",
-    ["Tooltip", "TooltipPopover", "TooltipTrigger"],
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover>Helpful detail</TooltipPopover></Tooltip>',
+    ["Tooltip", "TooltipArrow", "TooltipPopover", "TooltipTrigger"],
+    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
     [
       p("Tooltip", "root", "Open-state provider.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -1663,7 +1740,21 @@ const picker = [
           "Fragment merges the trigger onto your own element child.",
         ),
       ]),
-      p("TooltipPopover", "content", "Short descriptive text."),
+      p("TooltipPopover", "content", "Short descriptive text.", true, false, [
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "top" or "bottom start"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the tooltip."),
+      ]),
+      p(
+        "TooltipArrow",
+        "content",
+        "Optional decorative caret inside TooltipPopover; style it to point at the trigger.",
+        true,
+        true,
+      ),
     ],
     [
       { keys: ["Escape"], action: "Closes the tooltip." },
@@ -1674,6 +1765,11 @@ const picker = [
         attribute: "[data-open]",
         on: "TooltipTrigger, TooltipPopover",
         meaning: "The tooltip is visible.",
+      },
+      {
+        attribute: ":popover-open",
+        on: "TooltipPopover",
+        meaning: "Native pseudo-class equivalent.",
       },
     ],
     "No native form behavior.",

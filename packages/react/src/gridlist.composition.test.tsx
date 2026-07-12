@@ -1,3 +1,4 @@
+import { act, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { GridList } from "./components/GridList.js";
@@ -73,5 +74,100 @@ describe("grid list composition", () => {
     onChange.mockClear();
     fireClick(rows[0]!.querySelector("button")!);
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  function ReorderableList({ spy }: { spy: (values: string[]) => void }) {
+    const [files, setFiles] = useState(["report.pdf", "photos.zip", "notes.txt"]);
+    return (
+      <GridList
+        aria-label="Files"
+        onReorder={(next) => {
+          spy(next);
+          setFiles(next);
+        }}
+      >
+        {files.map((name) => (
+          <GridListItem key={name} value={name}>
+            {name}
+          </GridListItem>
+        ))}
+      </GridList>
+    );
+  }
+
+  function fireDrag(element: Element, type: string, clientY = 0) {
+    act(() => {
+      element.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientY }));
+    });
+  }
+
+  const flushTimers = () => act(() => new Promise<void>((resolve) => setTimeout(resolve)));
+
+  it("moves a row with Alt+Arrow, keeps focus on it, and announces the position", async () => {
+    const spy = vi.fn();
+    const { container } = render(<ReorderableList spy={spy} />);
+    const rowValues = () =>
+      [...container.querySelectorAll<HTMLElement>("[role='row']")].map(
+        (row) => row.dataset["value"],
+      );
+    const first = container.querySelector<HTMLElement>("[role='row']")!;
+    expect(first.getAttribute("aria-keyshortcuts")).toBe("Alt+ArrowUp Alt+ArrowDown");
+
+    first.focus();
+    fireKeyDown(first, "ArrowDown", { altKey: true });
+    expect(spy).toHaveBeenLastCalledWith(["photos.zip", "report.pdf", "notes.txt"]);
+    expect(rowValues()).toEqual(["photos.zip", "report.pdf", "notes.txt"]);
+
+    await flushTimers();
+    expect(document.activeElement).toBe(container.querySelectorAll("[role='row']")[1]);
+    expect(container.querySelector("[aria-live]")?.textContent).toBe(
+      "Moved report.pdf to position 2 of 3.",
+    );
+
+    fireKeyDown(document.activeElement!, "ArrowUp", { altKey: true });
+    expect(spy).toHaveBeenLastCalledWith(["report.pdf", "photos.zip", "notes.txt"]);
+    await flushTimers();
+
+    spy.mockClear();
+    fireKeyDown(document.activeElement!, "ArrowUp", { altKey: true });
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("shows a styleable drop preview while dragging and reorders on drop", () => {
+    const spy = vi.fn();
+    const { container } = render(<ReorderableList spy={spy} />);
+    const rows = container.querySelectorAll<HTMLElement>("[role='row']");
+    const [first, , last] = rows;
+    Object.defineProperty(last!, "getBoundingClientRect", {
+      value: () => ({ top: 80, height: 40, bottom: 120, left: 0, right: 100, width: 100 }),
+    });
+
+    expect(first!.draggable).toBe(true);
+    fireDrag(first!, "dragstart");
+    expect(first!.hasAttribute("data-dragging")).toBe(true);
+
+    fireDrag(last!, "dragover", 85);
+    expect(last!.hasAttribute("data-drop-before")).toBe(true);
+    expect(last!.hasAttribute("data-drop-after")).toBe(false);
+
+    fireDrag(last!, "dragover", 115);
+    expect(last!.hasAttribute("data-drop-after")).toBe(true);
+    expect(last!.hasAttribute("data-drop-before")).toBe(false);
+
+    fireDrag(last!, "drop", 115);
+    expect(spy).toHaveBeenLastCalledWith(["photos.zip", "notes.txt", "report.pdf"]);
+
+    fireDrag(first!, "dragend");
+    for (const row of container.querySelectorAll("[role='row']")) {
+      expect(row.hasAttribute("data-dragging")).toBe(false);
+      expect(row.hasAttribute("data-drop-before")).toBe(false);
+      expect(row.hasAttribute("data-drop-after")).toBe(false);
+    }
+  });
+
+  it("keeps rows undraggable without onReorder", () => {
+    const { rows } = renderGridList();
+    expect(rows[0]!.draggable).toBe(false);
+    expect(rows[0]!.hasAttribute("aria-keyshortcuts")).toBe(false);
   });
 });

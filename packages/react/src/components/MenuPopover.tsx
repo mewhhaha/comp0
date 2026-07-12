@@ -13,15 +13,18 @@ import {
   type SelectableCollectionContextValue,
 } from "./collection-shared.js";
 import { useMenuRootContext, type MenuPopoverProps } from "./menu-shared.js";
-import { usePopoverSurface } from "./overlay-shared.js";
+import { placementSurfaceStyle, usePopoverSurface } from "./overlay-shared.js";
 
 export type { MenuPopoverProps } from "./menu-shared.js";
 
 export function MenuPopover({
   ref,
+  offset,
   onKeyDown,
   onToggle,
   onBlur,
+  placement,
+  style,
   children,
   ...props
 }: MenuPopoverProps & RefProp<HTMLDivElement>) {
@@ -77,6 +80,7 @@ export function MenuPopover({
         role={props.role ?? "menu"}
         popover="auto"
         hidden={!menu?.open}
+        style={placementSurfaceStyle(placement, offset, menu?.triggerId, style)}
         data-open={menu?.open || undefined}
         aria-labelledby={props["aria-labelledby"] ?? menu?.triggerId}
         onToggle={(event) => {

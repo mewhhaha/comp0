@@ -1,1 +1,1 @@
-export { exampleRegistry, getExample } from "./registry.js";
+export { exampleRegistry, getExample, getExampleSource } from "./registry.js";

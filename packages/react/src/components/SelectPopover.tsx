@@ -2,14 +2,21 @@ import { composeRefs, dataAttr, findTypeaheadMatch, useTypeaheadSearch } from "@
 import { createElement, useLayoutEffect, useMemo, useRef, type HTMLAttributes } from "react";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { SelectCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
-import { usePopoverSurface } from "./overlay-shared.js";
+import {
+  placementSurfaceStyle,
+  usePopoverSurface,
+  type PopoverPlacementProps,
+} from "./overlay-shared.js";
 
-export type SelectPopoverProps = HTMLAttributes<HTMLDivElement>;
+export type SelectPopoverProps = HTMLAttributes<HTMLDivElement> & PopoverPlacementProps;
 
 export function SelectPopover({
-  ref,
+  offset,
   onKeyDown,
   onToggle,
+  placement,
+  ref,
+  style,
   ...props
 }: SelectPopoverProps & RefProp<HTMLDivElement>) {
   const select = useSelectRootContext();
@@ -56,6 +63,7 @@ export function SelectPopover({
     role: props.role ?? "listbox",
     popover: "auto",
     hidden: !popover.open,
+    style: placementSurfaceStyle(placement, offset, select.triggerId, style),
     "data-open": dataAttr(popover.open),
     "aria-labelledby": labelledBy,
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {

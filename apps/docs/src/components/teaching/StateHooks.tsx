@@ -10,8 +10,10 @@ export function StateHooks({ hooks, className }: StateHooksProps) {
   return (
     <section className={cn("max-w-full min-w-0", className)}>
       <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Style hooks</h3>
-      <p className="mt-1 text-base/7 text-pretty text-zinc-600 sm:text-sm/6 dark:text-zinc-300">
-        Attributes your CSS can target to paint each state.
+      <p className="mt-1 max-w-[66ch] text-base/7 text-pretty text-zinc-600 sm:text-sm/6 dark:text-zinc-300">
+        Attributes that appear while a state is true. Target them with Tailwind data variants such
+        as <code className="font-mono text-teal-800 dark:text-teal-200">data-open:bg-zinc-100</code>
+        , or with any CSS selector.
       </p>
       <dl className="mt-4 grid divide-y divide-zinc-950/5 dark:divide-white/10">
         {hooks.map((hook) => (

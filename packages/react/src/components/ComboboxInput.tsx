@@ -2,7 +2,7 @@ import { type ChangeEventHandler, type InputHTMLAttributes } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field.js";
 import { useComboBoxRootContext, type RefProp } from "../shared.js";
-import { usePopoverContext } from "./overlay-shared.js";
+import { triggerAnchorStyle, usePopoverContext } from "./overlay-shared.js";
 
 export type ComboboxInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -15,6 +15,7 @@ export function ComboboxInput({
   onChange,
   onKeyDown,
   ref,
+  style,
   ...props
 }: ComboboxInputProps & RefProp<HTMLInputElement>) {
   const combobox = useComboBoxRootContext();
@@ -37,6 +38,7 @@ export function ComboboxInput({
       ref={composeRefs(ref, popover.setTriggerElement)}
       id={props.id ?? combobox.inputId}
       role={props.role ?? "combobox"}
+      style={triggerAnchorStyle(combobox.inputId, style)}
       value={combobox.displayValue}
       disabled={disabled}
       required={required}

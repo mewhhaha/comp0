@@ -2,13 +2,20 @@ import { composeRefs, dataAttr } from "@comp0/core";
 import { createElement, useLayoutEffect, useMemo, useRef, type HTMLAttributes } from "react";
 import { useComboBoxRootContext, type RefProp } from "../shared.js";
 import { ComboboxCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
-import { usePopoverSurface } from "./overlay-shared.js";
+import {
+  placementSurfaceStyle,
+  usePopoverSurface,
+  type PopoverPlacementProps,
+} from "./overlay-shared.js";
 
-export type ComboboxPopoverProps = HTMLAttributes<HTMLDivElement>;
+export type ComboboxPopoverProps = HTMLAttributes<HTMLDivElement> & PopoverPlacementProps;
 
 export function ComboboxPopover({
-  ref,
+  offset,
   onToggle,
+  placement,
+  ref,
+  style,
   ...props
 }: ComboboxPopoverProps & RefProp<HTMLDivElement>) {
   const combo = useComboBoxRootContext();
@@ -41,6 +48,7 @@ export function ComboboxPopover({
     role: props.role ?? "listbox",
     popover: "auto",
     hidden: !popover.open,
+    style: placementSurfaceStyle(placement, offset, combo.inputId, style),
     "data-open": dataAttr(popover.open),
     "aria-labelledby": labelledBy,
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {
