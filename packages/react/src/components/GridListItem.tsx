@@ -1,8 +1,14 @@
-import { useContext, useId, useLayoutEffect, useRef, type HTMLAttributes } from "react";
+import { useContext, useId, useLayoutEffect, useRef, useState, type HTMLAttributes } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { resolveItemLabel } from "./collection-shared.js";
-import { GridListContext, GridListDndContext, rowFocusables } from "./grid-list-shared.js";
+import {
+  GridListContext,
+  GridListDndContext,
+  GridListItemContext,
+  rowFocusables,
+  type GridListItemContextValue,
+} from "./grid-list-shared.js";
 
 export type GridListItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;
@@ -33,6 +39,24 @@ export function GridListItem({
   const id = idProp ?? `grid-list-row-${generatedId}`;
   const resolvedDisabled = Boolean(disabled);
   const reorderable = Boolean(dnd) && !resolvedDisabled;
+  // A mounted GridListDragHandle takes over drag initiation so the row body
+  // stays free for scrolling and text selection.
+  const handleCount = useRef(0);
+  const [hasHandle, setHasHandle] = useState(false);
+  const registerHandle = () => {
+    handleCount.current += 1;
+    if (handleCount.current === 1) setHasHandle(true);
+    return () => {
+      handleCount.current -= 1;
+      if (handleCount.current === 0) setHasHandle(false);
+    };
+  };
+  const itemContext: GridListItemContextValue = {
+    value,
+    label: textValue ?? value,
+    reorderable,
+    registerHandle,
+  };
   const selected = gridList?.selectedKey === value;
   const active = gridList?.activeKey === value;
   const dragging = dnd?.dragValue === value;
@@ -76,7 +100,7 @@ export function GridListItem({
       id={id}
       role="row"
       tabIndex={tabIndex}
-      draggable={reorderable || undefined}
+      draggable={(reorderable && !hasHandle) || undefined}
       aria-selected={selected}
       aria-disabled={resolvedDisabled || undefined}
       aria-keyshortcuts={reorderable ? "Alt+ArrowUp Alt+ArrowDown" : undefined}
@@ -134,9 +158,11 @@ export function GridListItem({
         dnd?.endDrag();
       }}
     >
-      <div role="gridcell" data-slot="grid-list-cell">
-        {children}
-      </div>
+      <GridListItemContext value={itemContext}>
+        <div role="gridcell" data-slot="grid-list-cell">
+          {children}
+        </div>
+      </GridListItemContext>
     </div>
   );
 }

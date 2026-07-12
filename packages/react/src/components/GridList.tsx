@@ -26,11 +26,14 @@ export type GridListProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" 
   onChange?: ((value: string) => void) | undefined;
   /** Receives the full new order of row values; providing it makes rows draggable and movable with Alt+Arrow keys. */
   onReorder?: ((values: string[]) => void) | undefined;
+  /** Vetoes a proposed order before it is offered: blocked drop positions show no drop preview and blocked keyboard moves are announced but not applied. */
+  canReorder?: ((values: string[], moved: string) => boolean) | undefined;
 };
 
 export function GridList({
   value,
   defaultValue,
+  canReorder,
   onChange,
   onDragLeave,
   onKeyDown,
@@ -134,27 +137,44 @@ export function GridList({
     if (from < 0 || to < 0 || to >= order.length) return;
     order.splice(from, 1);
     order.splice(to, 0, movedValue);
+    if (canReorder && !canReorder(order, movedValue)) {
+      const label = itemMap.current.get(movedValue)?.textValue ?? movedValue;
+      setAnnouncement(`Cannot move ${label} there.`);
+      return;
+    }
     onReorder(order);
     announceMove(movedValue, order);
     refocusAfterReorder(movedValue);
   };
 
-  const commitDrop = () => {
-    if (!onReorder || !dragValue || !dropTarget || dropTarget.value === dragValue) {
-      resetDrag();
-      return;
-    }
+  /** The order a drop on the given target would produce, or null when it changes nothing or is vetoed by canReorder. */
+  const orderForDrop = (movedValue: string, target: GridListDropTarget) => {
+    if (target.value === movedValue) return null;
     const current = items().map((item) => item.key);
-    const order = current.filter((key) => key !== dragValue);
-    const targetIndex = order.indexOf(dropTarget.value);
-    if (targetIndex < 0) {
-      resetDrag();
+    const order = current.filter((key) => key !== movedValue);
+    const targetIndex = order.indexOf(target.value);
+    if (targetIndex < 0) return null;
+    order.splice(target.edge === "before" ? targetIndex : targetIndex + 1, 0, movedValue);
+    if (order.every((key, index) => key === current[index])) return null;
+    if (canReorder && !canReorder(order, movedValue)) return null;
+    return order;
+  };
+
+  const setDropTarget = (target: GridListDropTarget | null) => {
+    if (!target || !dragValue) {
+      setDropTargetState(null);
       return;
     }
-    order.splice(dropTarget.edge === "before" ? targetIndex : targetIndex + 1, 0, dragValue);
-    if (order.some((key, index) => key !== current[index])) {
-      onReorder(order);
-      announceMove(dragValue, order);
+    setDropTargetState(orderForDrop(dragValue, target) ? target : null);
+  };
+
+  const commitDrop = () => {
+    if (onReorder && dragValue && dropTarget) {
+      const order = orderForDrop(dragValue, dropTarget);
+      if (order) {
+        onReorder(order);
+        announceMove(dragValue, order);
+      }
     }
     resetDrag();
   };
@@ -165,7 +185,7 @@ export function GridList({
       dragValue,
       dropTarget,
       startDrag: setDragValue,
-      setDropTarget: setDropTargetState,
+      setDropTarget,
       commitDrop,
       endDrag: resetDrag,
       moveItem,
@@ -200,9 +220,10 @@ export function GridList({
             const insideRow = target !== row;
             const focusables = rowFocusables(row);
 
+            // Alt+Arrow also works from controls inside the row, such as a
+            // drag handle.
             if (
               dndContext &&
-              !insideRow &&
               !rowRecord.disabled &&
               event.altKey &&
               (event.key === "ArrowUp" || event.key === "ArrowDown")

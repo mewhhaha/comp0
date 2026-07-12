@@ -33,6 +33,10 @@ describe("docs content catalog", () => {
       const example = getExample(component.slug);
       expect(example, component.slug).toBeDefined();
       expect(example, component.slug).toBe(exampleRegistry[component.slug]);
+      for (const variant of component.moreExamples ?? []) {
+        const key = `${component.slug}.${variant.id}`;
+        expect(getExample(key), key).toBeDefined();
+      }
     }
   });
 

@@ -88,6 +88,27 @@ export default function ComponentRoute() {
                 title={`${doc.title}.tsx`}
               />
             </div>
+            {doc.moreExamples?.map((variant) => {
+              const VariantExample = getExample(`${doc.slug}.${variant.id}`);
+              const variantSource = getExampleSource(`${doc.slug}.${variant.id}`);
+              if (!VariantExample || !variantSource) return null;
+              return (
+                <section className="mt-10" key={variant.id}>
+                  <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+                    {variant.title}
+                  </h3>
+                  <p className="mt-1 max-w-[66ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
+                    {variant.description}
+                  </p>
+                  <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
+                    <LiveExample title={variant.title}>
+                      <VariantExample />
+                    </LiveExample>
+                    <CodeBlock code={variantSource} title={`${doc.slug}.${variant.id}.tsx`} />
+                  </div>
+                </section>
+              );
+            })}
           </ComponentSection>
 
           <ComponentSection

@@ -490,6 +490,7 @@ const common = (
   hooks: ComponentDoc["stateHooks"],
   form: string,
   related: string[],
+  moreExamples?: ComponentDoc["moreExamples"],
 ): ComponentDoc => {
   const copy = lessons[slug];
   const notes = accessibility[slug];
@@ -503,6 +504,7 @@ const common = (
     imports: names,
     parts,
     exampleSource: `${imp(names)}\n\nexport function Example() {\n  return (\n${formatExample(source)}\n  );\n}`,
+    moreExamples,
     keyboard,
     stateHooks: hooks,
     form,
@@ -1299,7 +1301,7 @@ const navigation = [
     "grid-list",
     "Grid List",
     "navigation",
-    ["Button", "GridList", "GridListItem"],
+    ["Button", "GridList", "GridListDragHandle", "GridListItem"],
     '<GridList aria-label="Files"><GridListItem value="report">report.pdf<Button>Share</Button></GridListItem></GridList>',
     [
       p("GridList", "root", "Grid container and the list's single tab stop.", true, false, [
@@ -1311,6 +1313,11 @@ const navigation = [
           "(values: string[]) => void",
           "Receives the full new row order; providing it makes rows draggable and movable with Alt+Arrow keys, with moves announced to screen readers.",
         ),
+        prop(
+          "canReorder",
+          "(values: string[], moved: string) => boolean",
+          "Vetoes a proposed order: blocked drop positions show no drop preview and blocked keyboard moves are announced but not applied.",
+        ),
       ]),
       p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
         prop("value", "string", "This row’s selection key."),
@@ -1321,6 +1328,13 @@ const navigation = [
           "Overrides the text crawled from children when markup makes it ambiguous.",
         ),
       ]),
+      p(
+        "GridListDragHandle",
+        "trigger",
+        "Optional labelled button inside a row; while present, drags start from it instead of the whole row, keeping the row body free for scrolling and text selection.",
+        true,
+        true,
+      ),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves to the next row." },
@@ -1356,6 +1370,14 @@ const navigation = [
     ],
     "Selection does not create a native form value; mirror it into a hidden input when a form needs it.",
     ["list-box", "table"],
+    [
+      {
+        id: "reorder",
+        title: "Reorder with a drag handle",
+        description:
+          "onReorder makes rows movable; the handle keeps drags off the row body, canReorder pins notes.txt to the end (blocked positions show no drop preview), and Alt+Arrow moves each row without a pointer.",
+      },
+    ],
   ),
   common(
     "table",

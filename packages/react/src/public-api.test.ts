@@ -29,6 +29,7 @@ const publicComponents = [
   "Fieldset",
   "FileTrigger",
   "GridList",
+  "GridListDragHandle",
   "GridListItem",
   "Input",
   "Label",

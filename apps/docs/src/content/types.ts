@@ -62,6 +62,13 @@ export type StateHook = {
   meaning: string;
 };
 
+export type ComponentExampleVariant = {
+  /** Registry key suffix; the example file lives at cases/<slug>.<id>.tsx. */
+  id: string;
+  title: string;
+  description: string;
+};
+
 export type ComponentDoc = {
   slug: string;
   title: string;
@@ -73,6 +80,7 @@ export type ComponentDoc = {
   parts: ComponentPart[];
   steps: LessonStep[];
   exampleSource: string;
+  moreExamples?: ComponentExampleVariant[] | undefined;
   keyboard: KeyboardAction[];
   stateHooks: StateHook[];
   form: string;

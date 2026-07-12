@@ -48,7 +48,7 @@ export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
         <div className="mt-5 grid gap-6">
           {componentGroups.map((group) => (
             <section key={group.id}>
-              <h2 className="px-3 text-base/7 font-medium text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
+              <h2 className="px-3 text-base/7 font-medium text-zinc-950 sm:text-sm/6 dark:text-white">
                 {group.title}
               </h2>
               <ul className="mt-1 grid gap-0.5" role="list">

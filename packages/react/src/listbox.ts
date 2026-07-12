@@ -8,6 +8,7 @@ export * from "./components/MenuSection.js";
 export * from "./components/MenuTrigger.js";
 export * from "./components/GridList.js";
 export * from "./components/GridListItem.js";
+export * from "./components/GridListDragHandle.js";
 export * from "./components/Table.js";
 export * from "./components/TableBody.js";
 export * from "./components/TableCell.js";
