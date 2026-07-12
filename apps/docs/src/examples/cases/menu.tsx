@@ -1,4 +1,5 @@
 import { Menu, MenuItem, MenuPopover, MenuSection, MenuSeparator, MenuTrigger } from "@comp0/react";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
   return (
@@ -28,7 +29,7 @@ export function Example() {
         <MenuSeparator className="my-1 h-px bg-zinc-950/10 dark:bg-white/10" />
         <Menu>
           <MenuTrigger className="flex w-full items-center justify-between rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800">
-            Share to <span aria-hidden="true">›</span>
+            Share to <ChevronRightIcon className="size-4 text-zinc-400" aria-hidden="true" />
           </MenuTrigger>
           <MenuPopover
             placement="right top"

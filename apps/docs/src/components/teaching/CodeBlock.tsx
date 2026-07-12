@@ -1,3 +1,5 @@
+import { Button, useToast } from "@comp0/react";
+import { ClipboardDocumentIcon } from "@heroicons/react/16/solid";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { ThemedToken } from "shiki/types";
 import type { CodeLanguage } from "../../content/types.js";
@@ -28,6 +30,26 @@ function getTokenStyle(token: ThemedToken): CSSProperties {
     fontWeight: (fontStyle & 2) !== 0 ? 700 : undefined,
     textDecorationLine,
   };
+}
+
+function CopyButton({ code }: { code: string }) {
+  const { notify } = useToast();
+  return (
+    <Button
+      aria-label="Copy code"
+      className="flex items-center rounded-md p-1.5 text-zinc-500 outline-none data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-focus-visible:outline-teal-400 data-hovered:bg-white/10 data-hovered:text-zinc-200 data-pressed:bg-white/15"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(code);
+        } catch {
+          return;
+        }
+        notify("Copied to clipboard");
+      }}
+    >
+      <ClipboardDocumentIcon className="size-5 sm:size-4" aria-hidden="true" />
+    </Button>
+  );
 }
 
 export function CodeBlock({ code, language = "tsx", title, className }: CodeBlockProps) {
@@ -77,9 +99,12 @@ export function CodeBlock({ code, language = "tsx", title, className }: CodeBloc
         className,
       )}
     >
-      <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-base font-medium text-zinc-300 sm:text-sm">
+      <figcaption className="flex items-center justify-between border-b border-white/10 py-2 pr-2.5 pl-4 text-base font-medium text-zinc-300 sm:text-sm">
         <span>{title ?? "Example"}</span>
-        <span className="font-mono tracking-wide text-zinc-500 uppercase">{language}</span>
+        <span className="flex items-center gap-2">
+          <span className="font-mono tracking-wide text-zinc-500 uppercase">{language}</span>
+          <CopyButton code={code} />
+        </span>
       </figcaption>
       <pre
         className="max-h-[30rem] max-w-full overflow-auto p-4 font-mono text-base/6 text-zinc-100 [tab-size:2] sm:text-sm"

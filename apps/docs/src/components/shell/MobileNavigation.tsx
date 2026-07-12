@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Dialog, DialogContent, DialogTrigger } from "@comp0/react";
 import { DocsNavigation } from "./DocsNavigation.js";
 
@@ -16,7 +16,7 @@ export function MobileNavigation({ className }: MobileNavigationProps) {
         aria-label="Open documentation navigation"
         className={`relative grid size-10 place-items-center rounded-lg text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400 ${className ?? ""}`}
       >
-        <Menu aria-hidden="true" className="size-6 shrink-0" />
+        <Bars3Icon aria-hidden="true" className="size-6 shrink-0" />
         <span
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
@@ -36,7 +36,7 @@ export function MobileNavigation({ className }: MobileNavigationProps) {
               className="relative grid size-10 place-items-center rounded-lg text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400"
               onClick={() => setOpen(false)}
             >
-              <X aria-hidden="true" className="size-6 shrink-0" />
+              <XMarkIcon aria-hidden="true" className="size-6 shrink-0" />
               <span
                 aria-hidden="true"
                 className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"

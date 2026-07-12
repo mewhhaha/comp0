@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, CircleCheck, Info, Lightbulb } from "lucide-react";
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+} from "@heroicons/react/24/outline";
 import { cn } from "./cn.js";
 
 type CalloutProps = {
@@ -11,22 +16,22 @@ type CalloutProps = {
 
 const tones = {
   info: {
-    Icon: Info,
+    Icon: InformationCircleIcon,
     classes:
       "border-blue-200 bg-blue-50 text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-50",
   },
   tip: {
-    Icon: Lightbulb,
+    Icon: LightBulbIcon,
     classes:
       "border-teal-200 bg-teal-50 text-teal-950 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-50",
   },
   warning: {
-    Icon: AlertTriangle,
+    Icon: ExclamationTriangleIcon,
     classes:
       "border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-50",
   },
   success: {
-    Icon: CircleCheck,
+    Icon: CheckCircleIcon,
     classes:
       "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-50",
   },

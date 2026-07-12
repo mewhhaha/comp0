@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Tag, TagGroup } from "@comp0/react";
+import { XMarkIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
   const [tags, setTags] = useState(["news", "sports", "arts", "travel"]);
@@ -26,10 +27,10 @@ export function Example() {
           <span className="text-base capitalize sm:text-sm">{tag}</span>
           <Button
             aria-label={`Remove ${tag}`}
-            className="rounded-full px-1 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+            className="rounded-full p-0.5 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
             onClick={() => remove(tag)}
           >
-            ×
+            <XMarkIcon className="size-3.5" aria-hidden="true" />
           </Button>
         </Tag>
       ))}

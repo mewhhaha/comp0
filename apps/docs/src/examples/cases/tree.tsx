@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Tree, TreeGroup, TreeItem } from "@comp0/react";
+import { DocumentIcon, FolderIcon, FolderOpenIcon } from "@heroicons/react/16/solid";
 
 type FileNode = {
   name: string;
@@ -21,16 +22,16 @@ const files: FileNode[] = [
 ];
 
 function FileItem({ node, expanded }: { node: FileNode; expanded: string[] }) {
-  let glyph = "📄";
+  let Glyph = DocumentIcon;
   if (node.children) {
-    glyph = "📁";
-    if (expanded.includes(node.name)) glyph = "📂";
+    Glyph = FolderIcon;
+    if (expanded.includes(node.name)) Glyph = FolderOpenIcon;
   }
 
   return (
     <TreeItem value={node.name} textValue={node.name} className="grid gap-0.5 outline-none">
       <span className="flex cursor-pointer items-center gap-1.5 rounded px-2 py-1.5 text-base text-zinc-800 sm:py-1 sm:text-sm dark:text-zinc-100 [[data-selected]>&]:bg-teal-100 [[data-selected]>&]:text-teal-950 dark:[[data-selected]>&]:bg-teal-950 dark:[[data-selected]>&]:text-teal-50 [[role=treeitem]:focus-visible>&]:outline-2 [[role=treeitem]:focus-visible>&]:outline-teal-600 dark:[[role=treeitem]:focus-visible>&]:outline-teal-400">
-        <span aria-hidden="true">{glyph}</span>
+        <Glyph className="size-4 shrink-0 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
         {node.name}
       </span>
       {node.children && (

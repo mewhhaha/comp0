@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@heroicons/react/16/solid";
 import { Link } from "react-router";
 import { componentGroups } from "../../content/index.js";
 
@@ -24,7 +24,7 @@ export function ComponentDirectory({ className }: ComponentDirectoryProps) {
           to="/components"
         >
           See the full index
-          <ArrowRight aria-hidden="true" className="size-5 shrink-0 sm:size-4" />
+          <ArrowRightIcon aria-hidden="true" className="size-5 shrink-0 sm:size-4" />
         </Link>
       </div>
       <div className="mt-10 grid gap-10 lg:grid-cols-2">

@@ -1,4 +1,5 @@
 import { BreadcrumbLink, Breadcrumbs } from "@comp0/react";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
   return (
@@ -10,7 +11,10 @@ export function Example() {
       >
         Home
       </BreadcrumbLink>
-      <span aria-hidden="true">/</span>
+      <ChevronRightIcon
+        className="size-4 self-center text-zinc-400 dark:text-zinc-500"
+        aria-hidden="true"
+      />
       <BreadcrumbLink
         href="#docs"
         className="underline"
@@ -18,7 +22,10 @@ export function Example() {
       >
         Docs
       </BreadcrumbLink>
-      <span aria-hidden="true">/</span>
+      <ChevronRightIcon
+        className="size-4 self-center text-zinc-400 dark:text-zinc-500"
+        aria-hidden="true"
+      />
       <span aria-current="page">Components</span>
     </Breadcrumbs>
   );
