@@ -358,6 +358,15 @@ const lessons: Record<string, LessonCopy> = {
     "Pick orientation to match the layout; arrow keys follow it automatically.",
     '<Toolbar aria-label="Text formatting"><ToggleButtonGroup type="multiple" aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton></ToggleButtonGroup></Toolbar>',
   ),
+  "split-button": lesson(
+    "A default-action button paired with a menu of alternatives.",
+    "Like a door with a handle and a keypad: push for the usual way in, or open the options.",
+    "Use it when one action is the common choice but a few related ones should stay one reach away.",
+    "Wrap a Button and a Menu in SplitButton and give it an aria-label.",
+    "Put the default action on the Button; give the MenuTrigger its own name such as More options.",
+    "Arrow keys move between the two segments as one tab stop; the menu opens from its own button.",
+    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuItem onClick={saveAs}>Save as…</MenuItem></MenuPopover></Menu></SplitButton>',
+  ),
   "context-menu": lesson(
     "A menu opened from a right click instead of a button.",
     "Like flipping something over at a workbench: the tools for that exact spot appear under your hand.",
@@ -640,6 +649,11 @@ const accessibility: Record<string, string[]> = {
     "Give the toolbar an aria-label that names the task, such as Text formatting.",
     "Keep controls in a visual order that matches the arrow-key order.",
     "Nested composites like a listbox or menu keep their own arrow keys; do not double-handle them.",
+  ],
+  "split-button": [
+    "Give SplitButton an aria-label and the menu button its own distinct name.",
+    "Keep the default action first so it reads and roves before the menu button.",
+    "Offer the menu's actions somewhere else too; a hidden menu is easy to miss.",
   ],
   "context-menu": [
     "Give the MenuPopover an aria-label; a context menu has no trigger button to borrow a name from.",
@@ -1169,6 +1183,54 @@ const action = [
     ],
     "A toolbar does not create form values; its controls submit their own.",
     ["toggle-button", "menu"],
+  ),
+  common(
+    "split-button",
+    "Split Button",
+    "actions",
+    ["Button", "Menu", "MenuItem", "MenuPopover", "MenuTrigger", "SplitButton"],
+    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuItem onClick={saveAs}>Save as…</MenuItem><MenuItem onClick={saveCopy}>Save a copy…</MenuItem></MenuPopover></Menu></SplitButton>',
+    [
+      p(
+        "SplitButton",
+        "root",
+        "Groups the default button and the menu button as one tab stop; arrow keys move between them.",
+        true,
+        false,
+        [prop("aria-label", "string", "Names the whole control for assistive technology.")],
+      ),
+      p(
+        "Button",
+        "trigger",
+        "The default action; disabling it drops it from the arrow-key order.",
+        true,
+        false,
+        [
+          prop("onClick", "(event) => void", "Runs the default action."),
+          prop("disabled", "boolean", "Removes this segment from the tab stop."),
+        ],
+      ),
+      p("MenuTrigger", "trigger", "The menu button that opens the alternatives.", true, false, [
+        prop("aria-label", "string", "Names the menu segment, distinct from the default action."),
+      ]),
+      p("MenuPopover / MenuItem", "content", "The alternative actions, from the Menu family."),
+    ],
+    [
+      {
+        keys: ["Tab"],
+        action: "Moves into the control at the last-used segment; Tab again leaves.",
+      },
+      { keys: ["ArrowRight"], action: "Moves to the next segment without wrapping." },
+      { keys: ["ArrowLeft"], action: "Moves to the previous segment without wrapping." },
+      { keys: ["Home"], action: "Moves to the first segment." },
+      { keys: ["End"], action: "Moves to the last segment." },
+      { keys: ["ArrowDown"], action: "Opens the menu from the menu button.", scope: "menu button" },
+      { keys: ["Enter"], action: "Presses the focused segment." },
+      { keys: ["Space"], action: "Presses the focused segment." },
+    ],
+    [],
+    "A split button does not create form values; its buttons submit their own.",
+    ["button", "menu", "toolbar"],
   ),
 ];
 
