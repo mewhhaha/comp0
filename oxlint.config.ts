@@ -49,6 +49,7 @@ export default defineConfig({
         "packages/react/src/components/TabList.tsx",
         "packages/react/src/components/GridList.tsx",
         "packages/react/src/components/TagGroup.tsx",
+        "packages/react/src/components/Toolbar.tsx",
       ],
       rules: {
         // Focus is roved among owned options/tabs/rows, not placed on the

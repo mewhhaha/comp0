@@ -48,9 +48,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like a light switch that shows its own position.",
     "Use one for an independent setting or a group for small formatting choices.",
     "Start with one ToggleButton.",
-    "Wrap related independent toggles in ToggleButtonGroup so their relationship is announced.",
-    "Use defaultSelected on each button that should begin on; the group only organizes them.",
-    '<ToggleButtonGroup aria-label="Text style"><ToggleButton defaultSelected>Bold</ToggleButton></ToggleButtonGroup>',
+    "Wrap related toggles in ToggleButtonGroup; give each button a value when the group should manage the selection.",
+    'Pass type="single" or type="multiple" with value/defaultValue and onChange on the group, or keep defaultSelected per button when the group only organizes them.',
+    '<ToggleButtonGroup type="multiple" defaultValue={["bold"]} aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton></ToggleButtonGroup>',
   ),
   link: lesson(
     "A real anchor for travelling to another URL.",
@@ -304,6 +304,60 @@ const lessons: Record<string, LessonCopy> = {
     "Give an icon-only trigger its own aria-label too.",
     '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
   ),
+  meter: lesson(
+    "A native gauge for a measurement within a known range.",
+    "Like a fuel gauge: a level, not a task getting done.",
+    "Use it for usage levels such as storage, battery, or password strength.",
+    "Add Meter where the measurement belongs and pass value with min and max.",
+    "Name it with a wired Label or an aria-label.",
+    "Set low, high, and optimum when parts of the range are good or bad; style via the --comp0-meter-value variable.",
+    '<Meter aria-label="Storage used" value={64} min={0} max={100} low={50} high={85} />',
+  ),
+  "progress-bar": lesson(
+    "A native progress element for how much of a task is done.",
+    "Like a moving truck's loading gauge filling toward full.",
+    "Use it while work completes over time, such as an upload.",
+    "Add ProgressBar where the task's status belongs.",
+    "Name it with a wired Label or an aria-label.",
+    "Pass value as the completed fraction of max, or omit value while the total is unknown; style the fill via the --comp0-progress-value variable.",
+    '<ProgressBar aria-label="Uploading photos" value={0.4} />',
+  ),
+  separator: lesson(
+    "A native rule that divides content into visually distinct groups.",
+    "Like the printed line between sections on a paper form.",
+    "Use it between groups of content or controls that should read as distinct.",
+    "Place Separator between the groups it divides.",
+    'Set orientation="vertical" between items in a horizontal row and give it a width and height.',
+    'Pass role="presentation" when the line is purely decorative so nothing extra is announced.',
+    '<Separator orientation="vertical" />',
+  ),
+  "skip-link": lesson(
+    "A hidden link that lets keyboard users jump past repeated content.",
+    "Like an express elevator straight past the lobby floors.",
+    "Use it as the first focusable element so keyboard users can bypass navigation (WCAG 2.4.1).",
+    "Put SkipLink first inside body, before the repeated navigation.",
+    'Point href at the main content, such as "#main".',
+    "Give the target element the matching id and tabIndex={-1} so focus lands there.",
+    '<SkipLink href="#main">Skip to main content</SkipLink>',
+  ),
+  toast: lesson(
+    "A short status message that appears, announces itself, and leaves on its own.",
+    "Like a waiter briefly telling you the kitchen got your order.",
+    "Use it to confirm background results such as saves; keep anything needing a decision in a dialog.",
+    "Wrap the app in ToastProvider and call notify from useToast where results happen.",
+    "Add one ToastRegion whose render prop returns a Toast with a ToastDismiss inside.",
+    'Use kind "alert" plus timeout null for urgent messages people must not miss.',
+    "<ToastRegion>{(toast) => <Toast toast={toast}>{toast.content}<ToastDismiss /></Toast>}</ToastRegion>",
+  ),
+  toolbar: lesson(
+    "A labelled strip of controls that share one tab stop.",
+    "Like the tool tray beside a workbench: everything at hand, one reach away.",
+    "Use it when several related controls would otherwise each cost a Tab press.",
+    "Wrap the controls in Toolbar and give it an aria-label.",
+    "Group related toggles in ToggleButtonGroup so their relationship is announced.",
+    "Pick orientation to match the layout; arrow keys follow it automatically.",
+    '<Toolbar aria-label="Text formatting"><ToggleButtonGroup type="multiple" aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton></ToggleButtonGroup></Toolbar>',
+  ),
 };
 const accessibility: Record<string, string[]> = {
   button: [
@@ -458,6 +512,12 @@ const accessibility: Record<string, string[]> = {
     "Keep tooltip text brief and descriptive.",
     "Do not put required interactive content inside a tooltip.",
   ],
+  meter: ["meter"],
+  "progress-bar": ["progress-bar"],
+  separator: ["separator"],
+  "skip-link": ["skip-link"],
+  toast: ["toast"],
+  toolbar: ["toolbar"],
 };
 
 const formatExample = (source: string) => {
@@ -542,21 +602,37 @@ const action = [
     "Toggle Button",
     "actions",
     ["ToggleButton", "ToggleButtonGroup"],
-    '<ToggleButtonGroup aria-label="Text style"><ToggleButton defaultSelected>Bold</ToggleButton></ToggleButtonGroup>',
+    '<ToggleButtonGroup type="multiple" defaultValue={["bold"]} aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton><ToggleButton value="italic">Italic</ToggleButton></ToggleButtonGroup>',
     [
       p(
         "ToggleButtonGroup",
         "root",
-        "Optional semantic layout group; it renders a group but does not manage selection.",
+        "Optional group; it announces the relationship and manages selection once type, value, defaultValue, or onChange is set.",
         true,
         true,
         [
           prop("aria-label", "string", "Names the group for assistive technology."),
           prop("orientation", '"horizontal" | "vertical"', "Announced and styleable direction."),
+          prop("type", '"single" | "multiple"', "Whether the group keeps one value or many."),
+          prop(
+            "value / defaultValue",
+            "string | string[]",
+            "Controlled or initial selection: a string for single, a string[] for multiple.",
+          ),
+          prop(
+            "onChange",
+            "(value: string | string[]) => void",
+            'Receives the next selection; "" when a single group empties.',
+          ),
         ],
       ),
       p("ToggleButton", "root", "Native button that owns the press target.", true, false, [
-        prop("selected / defaultSelected", "boolean", "Controlled or initial on state."),
+        prop("value", "string", "Identifies the button inside a selection-managing group."),
+        prop(
+          "selected / defaultSelected",
+          "boolean",
+          "Controlled or initial on state when standalone.",
+        ),
         prop("onChange", "(selected: boolean) => void", "Receives the next on state."),
         prop("disabled", "boolean", "Disables the toggle."),
       ]),
@@ -570,7 +646,7 @@ const action = [
       { attribute: "[data-disabled]", on: "ToggleButton", meaning: "It cannot change." },
     ],
     "Toggle buttons do not create native form values.",
-    ["button", "checkbox"],
+    ["button", "checkbox", "toolbar"],
   ),
   common(
     "link",
@@ -629,12 +705,292 @@ const action = [
         "VisuallyHidden",
         "root",
         "Wrapper that hides children visually but keeps them available to assistive technology.",
+        true,
+        false,
+        [
+          prop(
+            "focusable",
+            "boolean",
+            "Reveals the content while it or a descendant has focus, as a skip link does.",
+          ),
+        ],
       ),
     ],
     [],
     [],
     "No form behavior.",
     ["tooltip", "button"],
+  ),
+  common(
+    "meter",
+    "Meter",
+    "actions",
+    ["Meter"],
+    '<Meter aria-label="Storage used" value={64} min={0} max={100} />',
+    [
+      p("Meter", "root", "Native meter element.", true, false, [
+        prop("value", "number", "Current measurement between min and max."),
+        prop("min / max", "number", "Range bounds; native defaults are 0 and 1."),
+        prop(
+          "low / high / optimum",
+          "number",
+          "Native thresholds the browser uses to color the gauge.",
+        ),
+        prop(
+          "aria-label",
+          "string",
+          "Names the gauge when no Label is wired; or pair Label htmlFor with the id.",
+        ),
+        prop("id", "string", "Defaults to the surrounding field's control id for Label wiring."),
+      ]),
+    ],
+    [],
+    [],
+    "No form behavior; a meter reports a measurement and submits nothing.",
+    ["progress-bar"],
+  ),
+  common(
+    "progress-bar",
+    "Progress Bar",
+    "actions",
+    ["ProgressBar"],
+    '<ProgressBar aria-label="Uploading photos" value={0.4} />',
+    [
+      p("ProgressBar", "root", "Native progress element.", true, false, [
+        prop(
+          "value",
+          "number",
+          "Completed amount between 0 and max; omit it for an indeterminate bar.",
+        ),
+        prop("max", "number", "Upper bound of the range; the native default is 1."),
+        prop(
+          "aria-label",
+          "string",
+          "Names the bar when no Label is wired; or pair Label htmlFor with the id.",
+        ),
+        prop("id", "string", "Defaults to the surrounding field's control id for Label wiring."),
+      ]),
+    ],
+    [],
+    [
+      {
+        attribute: "[data-indeterminate]",
+        on: "ProgressBar",
+        meaning: "No value was given; the bar shows unknown progress.",
+      },
+      {
+        attribute: ":indeterminate",
+        on: "ProgressBar",
+        meaning: "Native pseudo-class for the same unknown-progress state.",
+      },
+    ],
+    "No form behavior; progress reports status and submits nothing.",
+    ["meter"],
+  ),
+  common(
+    "separator",
+    "Separator",
+    "actions",
+    ["Separator"],
+    "<Separator />",
+    [
+      p(
+        "Separator",
+        "root",
+        "Native hr, or a div with the separator role when vertical.",
+        true,
+        false,
+        [
+          prop(
+            "orientation",
+            '"horizontal" | "vertical"',
+            'Rendering direction; vertical renders a div with aria-orientation="vertical".',
+          ),
+          prop("role", "string", 'Pass "presentation" when the rule is purely decorative.'),
+          prop(
+            "className",
+            "string",
+            "Styles the rule; a vertical separator needs its own width and height.",
+          ),
+        ],
+      ),
+    ],
+    [],
+    [
+      {
+        attribute: "[data-orientation]",
+        on: "Separator",
+        meaning: 'The rendering direction: "horizontal" or "vertical".',
+      },
+    ],
+    "No form behavior.",
+    ["toolbar", "menu"],
+  ),
+  common(
+    "toast",
+    "Toast",
+    "actions",
+    ["Button", "Toast", "ToastDismiss", "ToastProvider", "ToastRegion", "useToast"],
+    "<ToastProvider><SaveButton /><ToastRegion>{(toast) => <Toast toast={toast}>{toast.content}<ToastDismiss /></Toast>}</ToastRegion></ToastProvider>",
+    [
+      p("ToastProvider", "root", "Owns the notification queue; it owns no DOM.", false, false, [
+        prop(
+          "children",
+          "ReactNode",
+          "App content plus one ToastRegion; call useToast anywhere inside.",
+        ),
+      ]),
+      p(
+        "useToast",
+        "root",
+        "Hook returning notify and dismiss; throws outside ToastProvider.",
+        false,
+        false,
+        [
+          prop(
+            "notify(content, options?)",
+            '(content: ReactNode, options?: { kind?: "status" | "alert"; timeout?: number | null }) => string',
+            "Queues a toast and returns its id; kind defaults to status, timeout to 6000 ms, and null keeps it until dismissed.",
+          ),
+          prop("dismiss(id)", "(id: string) => void", "Removes a queued toast by id."),
+        ],
+      ),
+      p(
+        "ToastRegion",
+        "content",
+        "Labelled live region shown in the top layer only while toasts exist; hover or focus pauses auto-dismiss timers.",
+        true,
+        false,
+        [
+          prop(
+            "children",
+            "(toast: ToastRecord) => ReactNode",
+            "Render prop that returns one Toast per queued record.",
+          ),
+          prop(
+            "aria-label",
+            "string",
+            'Region name for assistive technology; defaults to "Notifications".',
+          ),
+          prop("forceMount", "boolean", "Keep the region rendered while the queue is empty."),
+        ],
+      ),
+      p(
+        "Toast",
+        "content",
+        "One notification; role=status for polite kinds and role=alert for urgent ones.",
+        true,
+        false,
+        [
+          prop("toast", "ToastRecord", "The queued record this item renders."),
+          prop("children", "ReactNode", "Custom layout; defaults to the record's content."),
+        ],
+      ),
+      p(
+        "ToastDismiss",
+        "trigger",
+        "Native button pre-wired to dismiss its surrounding toast.",
+        true,
+        true,
+        [prop("aria-label", "string", 'Accessible name; defaults to "Dismiss notification".')],
+      ),
+    ],
+    [
+      { keys: ["Tab"], action: "Reaches the dismiss button and other controls inside each toast." },
+      {
+        keys: ["Escape"],
+        action:
+          "Intentionally not a global shortcut; dismissal stays on the buttons inside the region.",
+      },
+    ],
+    [
+      { attribute: "[data-kind=alert]", on: "Toast", meaning: "The toast is urgent." },
+      { attribute: "[data-kind=status]", on: "Toast", meaning: "The toast is polite." },
+      {
+        attribute: ":popover-open",
+        on: "ToastRegion",
+        meaning: "The region is shown in the top layer.",
+      },
+    ],
+    "Toasts do not create native form values.",
+    ["tooltip", "popover"],
+  ),
+  common(
+    "toolbar",
+    "Toolbar",
+    "actions",
+    ["Toolbar", "ToggleButton", "ToggleButtonGroup"],
+    '<Toolbar aria-label="Text formatting"><ToggleButtonGroup type="multiple" defaultValue={["bold"]} aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton><ToggleButton value="italic">Italic</ToggleButton></ToggleButtonGroup><ToggleButtonGroup type="single" defaultValue="left" aria-label="Alignment"><ToggleButton value="left">Left</ToggleButton><ToggleButton value="right">Right</ToggleButton></ToggleButtonGroup></Toolbar>',
+    [
+      p(
+        "Toolbar",
+        "root",
+        "Row of controls that shares one tab stop; arrow keys move between them.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Names the toolbar for assistive technology."),
+          prop(
+            "orientation",
+            '"horizontal" | "vertical"',
+            'Arrow-key direction, announced via aria-orientation; defaults to "horizontal".',
+          ),
+        ],
+      ),
+      p(
+        "ToggleButtonGroup",
+        "item",
+        "Optional selection group inside the toolbar; it announces the relationship and can manage which values are on.",
+        true,
+        true,
+        [
+          prop("aria-label", "string", "Names the group for assistive technology."),
+          prop("type", '"single" | "multiple"', "Whether the group keeps one value or many."),
+          prop(
+            "value / defaultValue",
+            "string | string[]",
+            "Controlled or initial selection: a string for single, a string[] for multiple.",
+          ),
+          prop(
+            "onChange",
+            "(value: string | string[]) => void",
+            'Receives the next selection; "" when a single group empties.',
+          ),
+        ],
+      ),
+      p("ToggleButton", "trigger", "Native button that owns one press target.", true, true, [
+        prop("value", "string", "Identifies the button inside a selection-managing group."),
+        prop("disabled", "boolean", "Removes the button from the toolbar's arrow-key order."),
+      ]),
+    ],
+    [
+      {
+        keys: ["Tab"],
+        action: "Moves into the toolbar to the last-used control; Tab again leaves.",
+      },
+      {
+        keys: ["ArrowRight"],
+        action: "Moves to the next control without wrapping.",
+        scope: "horizontal",
+      },
+      {
+        keys: ["ArrowLeft"],
+        action: "Moves to the previous control without wrapping.",
+        scope: "horizontal",
+      },
+      { keys: ["ArrowDown"], action: "Moves to the next control.", scope: "vertical" },
+      { keys: ["ArrowUp"], action: "Moves to the previous control.", scope: "vertical" },
+      { keys: ["Home"], action: "Moves to the first control." },
+      { keys: ["End"], action: "Moves to the last control." },
+      { keys: ["Enter"], action: "Presses the focused control." },
+      { keys: ["Space"], action: "Presses the focused control." },
+    ],
+    [
+      { attribute: "[data-orientation]", on: "Toolbar", meaning: "The arrow-key direction." },
+      { attribute: "[data-selected]", on: "ToggleButton", meaning: "The button is on." },
+    ],
+    "A toolbar does not create form values; its controls submit their own.",
+    ["toggle-button", "menu"],
   ),
 ];
 
@@ -1448,6 +1804,44 @@ const navigation = [
     ],
     "No native form behavior; it presents data.",
     ["grid-list", "list-box"],
+  ),
+  common(
+    "skip-link",
+    "Skip Link",
+    "navigation",
+    ["SkipLink"],
+    '<SkipLink href="#main">Skip to main content</SkipLink>',
+    [
+      p(
+        "SkipLink",
+        "root",
+        "Native anchor that stays visually hidden until it receives focus.",
+        true,
+        false,
+        [
+          prop("href", "string", 'In-page target the link jumps to, such as "#main".'),
+          prop(
+            "className / style",
+            "string / CSSProperties",
+            "Styles the revealed link; merged with the hiding styles while hidden.",
+          ),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Tab"], action: "Reveals the link when it receives focus." },
+      { keys: ["Enter"], action: "Jumps to the target and hides the link again." },
+    ],
+    [
+      { attribute: "[data-focused]", on: "SkipLink", meaning: "The link is focused and visible." },
+      {
+        attribute: ":focus-visible",
+        on: "SkipLink",
+        meaning: "Native keyboard-focus styling hook.",
+      },
+    ],
+    "No form behavior.",
+    ["link", "visually-hidden"],
   ),
 ];
 
