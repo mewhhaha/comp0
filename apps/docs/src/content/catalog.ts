@@ -350,6 +350,7 @@ const accessibility: Record<string, string[]> = {
     "Label the search purpose, even when the placeholder says Search.",
     "Give the clear button understandable text or an aria-label.",
     "Announce result counts outside the input when results update.",
+    'Pass as="search" when this is the page\'s search landmark; the native element announces it.',
   ],
   checkbox: [
     "Each checkbox needs visible choice text.",
@@ -1012,6 +1013,7 @@ const navigation = [
         on: "Disclosure, DisclosureTrigger, DisclosurePanel",
         meaning: "The disclosure is open.",
       },
+      { attribute: ":open", on: "Disclosure", meaning: "Native details pseudo-class equivalent." },
     ],
     "No native form behavior.",
     ["accordion", "popover"],
@@ -1186,6 +1188,11 @@ const navigation = [
     ],
     [
       { attribute: "[data-open]", on: "MenuTrigger, MenuPopover", meaning: "The menu is open." },
+      {
+        attribute: ":popover-open",
+        on: "MenuPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
       {
         attribute: ":focus-visible",
         on: "MenuItem",
@@ -1453,6 +1460,11 @@ const picker = [
         on: "SelectTrigger, SelectPopover",
         meaning: "Choices are open.",
       },
+      {
+        attribute: ":popover-open",
+        on: "SelectPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
       { attribute: "[data-placeholder]", on: "SelectValue", meaning: "No value is selected." },
       { attribute: "[data-value]", on: "SelectValue", meaning: "A value is selected." },
     ],
@@ -1512,6 +1524,11 @@ const picker = [
         on: "ComboboxInput, ComboboxPopover",
         meaning: "Results are open.",
       },
+      {
+        attribute: ":popover-open",
+        on: "ComboboxPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
       { attribute: "[data-selected]", on: "ComboboxOption", meaning: "Option is selected." },
       {
         attribute: "[data-active]",
@@ -1548,6 +1565,11 @@ const picker = [
       p("DialogContent", "content", "Modal dialog element.", true, false, [
         prop("aria-label", "string", "Accessible name for the dialog task."),
         prop("portal", "boolean", "Renders into document.body; on by default."),
+        prop(
+          "closedby",
+          '"any" | "closerequest" | "none"',
+          "Native dismissal policy; any adds light dismiss where supported.",
+        ),
         prop("onClose", "(event) => void", "Native dialog close event."),
       ]),
     ],
@@ -1561,6 +1583,7 @@ const picker = [
         on: "DialogTrigger, DialogContent",
         meaning: "The dialog is open.",
       },
+      { attribute: ":open", on: "DialogContent", meaning: "Native pseudo-class equivalent." },
     ],
     "No native form behavior; forms may live inside DialogContent.",
     ["alert-dialog", "popover"],
@@ -1586,6 +1609,11 @@ const picker = [
       p("AlertDialogContent", "content", "Modal alert dialog content.", true, false, [
         prop("aria-label", "string", "Accessible name for the decision."),
         prop("portal", "boolean", "Renders into document.body; on by default."),
+        prop(
+          "closedby",
+          '"any" | "closerequest" | "none"',
+          "Native dismissal policy; none blocks Escape when the decision must be explicit.",
+        ),
       ]),
     ],
     [
@@ -1598,6 +1626,7 @@ const picker = [
         on: "DialogTrigger, AlertDialogContent",
         meaning: "The alert is open.",
       },
+      { attribute: ":open", on: "AlertDialogContent", meaning: "Native pseudo-class equivalent." },
     ],
     "No native form behavior; put a confirmation form inside when needed.",
     ["dialog", "button"],
@@ -1641,6 +1670,11 @@ const picker = [
         on: "PopoverTrigger, PopoverContent",
         meaning: "The popover is open.",
       },
+      {
+        attribute: ":popover-open",
+        on: "PopoverContent",
+        meaning: "Native pseudo-class equivalent.",
+      },
     ],
     "No native form behavior.",
     ["dialog", "menu", "tooltip"],
@@ -1674,6 +1708,11 @@ const picker = [
         attribute: "[data-open]",
         on: "TooltipTrigger, TooltipPopover",
         meaning: "The tooltip is visible.",
+      },
+      {
+        attribute: ":popover-open",
+        on: "TooltipPopover",
+        meaning: "Native pseudo-class equivalent.",
       },
     ],
     "No native form behavior.",
