@@ -1,4 +1,3 @@
-import { useId } from "react";
 import type { KeyboardAction, KeyboardToken } from "../../content/types.js";
 import { cn } from "./cn.js";
 
@@ -27,7 +26,7 @@ export function Keycap({ token, className }: KeycapProps) {
   return (
     <kbd
       className={cn(
-        "inline-flex min-h-7 items-center justify-center rounded border border-zinc-300 bg-zinc-100 px-2 font-mono text-base font-semibold text-zinc-700 sm:text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100",
+        "inline-flex min-h-7 items-center justify-center rounded-md bg-zinc-50 px-2 font-mono text-base font-medium text-zinc-700 ring-1 ring-zinc-950/10 ring-inset sm:text-sm dark:bg-white/5 dark:text-zinc-100 dark:ring-white/10",
         className,
       )}
       aria-label={key.spoken}
@@ -43,38 +42,26 @@ type KeyboardGuideProps = {
 };
 
 export function KeyboardGuide({ actions, className }: KeyboardGuideProps) {
-  const titleId = `${useId().replaceAll(":", "")}-keyboard-guide-title`;
   return (
-    <section
-      className={cn(
-        "rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-900",
-        className,
-      )}
-      aria-labelledby={titleId}
-    >
-      <h3 id={titleId} className="text-lg font-semibold text-zinc-950 dark:text-white">
-        Keyboard guide
-      </h3>
-      <dl className="mt-4 grid gap-4">
-        {actions.map((item) => (
-          <div
-            key={`${item.keys.join("-")}-${item.action}`}
-            className="grid gap-2 sm:grid-cols-[minmax(10rem,auto)_1fr] sm:items-center"
-          >
-            <dt className="flex flex-wrap gap-1.5">
-              {item.keys.map((token) => (
-                <Keycap key={token} token={token} />
-              ))}
-            </dt>
-            <dd className="text-base/6 text-zinc-600 sm:text-sm dark:text-zinc-300">
-              {item.action}
-              {item.scope && (
-                <span className="text-zinc-500 dark:text-zinc-400"> · {item.scope}</span>
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <dl className={cn("grid divide-y divide-zinc-950/5 dark:divide-white/10", className)}>
+      {actions.map((item) => (
+        <div
+          key={`${item.keys.join("-")}-${item.action}`}
+          className="grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(11rem,auto)_1fr] sm:items-center"
+        >
+          <dt className="flex flex-wrap gap-1.5">
+            {item.keys.map((token) => (
+              <Keycap key={token} token={token} />
+            ))}
+          </dt>
+          <dd className="text-base/7 text-zinc-600 sm:text-sm/6 dark:text-zinc-300">
+            {item.action}
+            {item.scope && (
+              <span className="text-zinc-500 dark:text-zinc-400"> · {item.scope}</span>
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }

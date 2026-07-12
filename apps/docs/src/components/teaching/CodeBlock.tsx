@@ -73,13 +73,13 @@ export function CodeBlock({ code, language = "tsx", title, className }: CodeBloc
   return (
     <figure
       className={cn(
-        "m-0 max-w-full min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-950 dark:border-zinc-700",
+        "m-0 max-w-full min-w-0 overflow-hidden rounded-xl border border-zinc-950/10 bg-zinc-950 dark:border-white/10",
         className,
       )}
     >
       <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-base font-medium text-zinc-300 sm:text-sm">
         <span>{title ?? "Example"}</span>
-        <span className="tracking-[0.14em] text-zinc-500 uppercase">{language}</span>
+        <span className="font-mono tracking-wide text-zinc-500 uppercase">{language}</span>
       </figcaption>
       <pre
         className="max-w-full overflow-x-auto p-4 font-mono text-base/6 text-zinc-100 [tab-size:2] sm:text-sm"

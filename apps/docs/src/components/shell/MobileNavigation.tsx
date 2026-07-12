@@ -28,12 +28,9 @@ export function MobileNavigation({ className }: MobileNavigationProps) {
       >
         <div className="flex h-full min-w-0 flex-col">
           <div className="flex shrink-0 items-center justify-between border-b border-zinc-950/10 px-5 py-4 dark:border-white/10">
-            <div>
-              <p className="font-mono text-sm/6 text-teal-700 dark:text-teal-300">comp0</p>
-              <h2 className="text-lg font-semibold" id="mobile-navigation-title">
-                Documentation
-              </h2>
-            </div>
+            <h2 className="font-mono text-lg font-semibold" id="mobile-navigation-title">
+              comp0
+            </h2>
             <Button
               aria-label="Close documentation navigation"
               className="relative grid size-10 place-items-center rounded-lg text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400"

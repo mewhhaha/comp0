@@ -19,9 +19,7 @@ export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
   return (
     <nav aria-label="Documentation" className={className}>
       <div>
-        <p className="font-mono text-sm/6 font-medium tracking-wide text-teal-700 uppercase dark:text-teal-300">
-          Start here
-        </p>
+        <p className="px-3 text-sm/6 font-semibold text-zinc-950 dark:text-white">Start here</p>
         <ul className="mt-2 grid gap-0.5" role="list">
           <li>
             <NavLink className={navLinkClass} end onClick={onNavigate} to="/">
@@ -31,7 +29,7 @@ export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
           {learnDocs.map((lesson) => (
             <li key={lesson.slug}>
               <NavLink className={navLinkClass} onClick={onNavigate} to={`/learn/${lesson.slug}`}>
-                {lesson.order}. {lesson.title}
+                {lesson.title}
               </NavLink>
             </li>
           ))}
@@ -39,17 +37,18 @@ export function DocsNavigation({ className, onNavigate }: DocsNavigationProps) {
       </div>
 
       <div className="mt-8">
-        <NavLink
-          className="font-mono text-sm/6 font-medium tracking-wide text-teal-700 uppercase outline-none focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-600 dark:text-teal-300 dark:focus-visible:outline-teal-400"
-          onClick={onNavigate}
-          to="/components"
-        >
-          Components
-        </NavLink>
-        <div className="mt-3 grid gap-7">
+        <p className="px-3 text-sm/6 font-semibold text-zinc-950 dark:text-white">Components</p>
+        <ul className="mt-2 grid gap-0.5" role="list">
+          <li>
+            <NavLink className={navLinkClass} end onClick={onNavigate} to="/components">
+              Overview
+            </NavLink>
+          </li>
+        </ul>
+        <div className="mt-5 grid gap-6">
           {componentGroups.map((group) => (
             <section key={group.id}>
-              <h2 className="text-base font-medium text-zinc-950 sm:text-sm dark:text-white">
+              <h2 className="px-3 text-base/7 font-medium text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
                 {group.title}
               </h2>
               <ul className="mt-1 grid gap-0.5" role="list">

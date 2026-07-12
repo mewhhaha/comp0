@@ -35,9 +35,9 @@ const tones = {
 export function Callout({ children, title, tone = "info", className }: CalloutProps) {
   const { Icon, classes } = tones[tone];
   return (
-    <aside className={cn("flex gap-3 rounded-xl border p-4", classes, className)}>
-      <Icon className="size-6 shrink-0" aria-hidden="true" />
-      <div className="min-w-0 text-base/6 sm:text-sm">
+    <aside className={cn("flex items-start gap-3 rounded-xl border p-4", classes, className)}>
+      <Icon className="mt-0.5 size-5 shrink-0 sm:size-4" aria-hidden="true" />
+      <div className="min-w-0 text-base/6 sm:text-sm/6">
         {title ? <p className="font-semibold">{title}</p> : null}
         <div className={title ? "mt-1" : undefined}>{children}</div>
       </div>

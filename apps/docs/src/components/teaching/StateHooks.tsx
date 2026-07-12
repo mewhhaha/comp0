@@ -1,6 +1,4 @@
-import { useId } from "react";
 import type { StateHook } from "../../content/types.js";
-import { Braces } from "lucide-react";
 import { cn } from "./cn.js";
 
 type StateHooksProps = {
@@ -9,35 +7,27 @@ type StateHooksProps = {
 };
 
 export function StateHooks({ hooks, className }: StateHooksProps) {
-  const titleId = `${useId().replaceAll(":", "")}-state-hooks-title`;
   return (
-    <section className={cn("max-w-full min-w-0", className)} aria-labelledby={titleId}>
-      <div className="flex items-center gap-3">
-        <Braces className="size-6 text-teal-700 dark:text-teal-300" aria-hidden="true" />
-        <div>
-          <h3 id={titleId} className="text-lg font-semibold text-zinc-950 dark:text-white">
-            State hooks and selectors
-          </h3>
-          <p className="text-base text-zinc-600 sm:text-sm dark:text-zinc-300">
-            Style component state with data attributes and native CSS selectors.
-          </p>
-        </div>
-      </div>
-      <dl className="mt-4 grid gap-3">
+    <section className={cn("max-w-full min-w-0", className)}>
+      <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Style hooks</h3>
+      <p className="mt-1 text-base/7 text-pretty text-zinc-600 sm:text-sm/6 dark:text-zinc-300">
+        Attributes your CSS can target to paint each state.
+      </p>
+      <dl className="mt-4 grid divide-y divide-zinc-950/5 dark:divide-white/10">
         {hooks.map((hook) => (
           <div
             key={hook.attribute}
-            className="grid gap-1 rounded-lg bg-zinc-50 p-3 sm:grid-cols-[12rem_1fr] sm:items-baseline dark:bg-zinc-800"
+            className="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(12rem,auto)_1fr] sm:items-baseline sm:gap-4"
           >
-            <dt>
-              <code className="text-base font-semibold text-teal-800 sm:text-sm dark:text-teal-200">
+            <dt className="min-w-0 text-base sm:text-sm">
+              <code className="font-mono font-medium text-teal-800 dark:text-teal-200">
                 {hook.attribute}
               </code>
               <p className="mt-0.5 font-mono text-xs/5 text-zinc-500 dark:text-zinc-400">
                 on {hook.on}
               </p>
             </dt>
-            <dd className="text-base/6 text-zinc-600 sm:text-sm dark:text-zinc-300">
+            <dd className="text-base/7 text-zinc-600 sm:text-sm/6 dark:text-zinc-300">
               {hook.meaning}
             </dd>
           </div>

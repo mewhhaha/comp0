@@ -17,7 +17,7 @@ export function meta() {
 export default function IndexRoute() {
   return (
     <div>
-      <HomeHero className="px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" />
+      <HomeHero className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" />
       <div className="border-t border-zinc-950/10 dark:border-white/10">
         <LearningPath className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-10" />
       </div>

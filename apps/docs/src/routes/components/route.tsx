@@ -11,7 +11,7 @@ import {
   StateHooks,
   StepList,
 } from "../../components/teaching/index.js";
-import { componentBySlug, components } from "../../content/index.js";
+import { componentBySlug, componentGroups, components } from "../../content/index.js";
 import { getExample } from "../../examples/index.js";
 import { ComponentOutline } from "./ComponentOutline.js";
 import { ComponentSection } from "./ComponentSection.js";
@@ -32,11 +32,13 @@ export default function ComponentRoute() {
   if (!doc) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-10">
-        <p className="font-mono text-sm/6 text-teal-700 dark:text-teal-300">Component not found</p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance text-zinc-950 dark:text-white">
+        <p className="text-base/7 font-medium text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
+          Component not found
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-zinc-950 sm:text-4xl dark:text-white">
           That part is not in the public toolbox.
         </h1>
-        <p className="mt-5 text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
+        <p className="mt-4 max-w-[48ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
           Open the component index to see every pattern that has graduated into this alpha.
         </p>
         <Link
@@ -50,6 +52,7 @@ export default function ComponentRoute() {
   }
 
   const Example = getExample(doc.slug);
+  const group = componentGroups.find((candidate) => candidate.id === doc.group);
   const index = components.indexOf(doc);
   const previous = components[index - 1];
   const next = components[index + 1];
@@ -67,28 +70,19 @@ export default function ComponentRoute() {
   if (doc.stateHooks.length > 0) stylingLesson = <StateHooks hooks={doc.stateHooks} />;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-12 px-4 py-12 sm:px-6 sm:py-16 lg:px-10 lg:py-20 xl:grid-cols-[minmax(0,1fr)_13rem]">
+    <div className="mx-auto grid max-w-6xl gap-12 px-4 py-12 sm:px-6 sm:py-16 lg:px-10 xl:grid-cols-[minmax(0,1fr)_13rem]">
       <article className="min-w-0">
-        <PageIntro doc={doc} eyebrow="Component field guide" />
-        <p className="mt-6 max-w-[66ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
-          <strong className="font-medium text-zinc-950 dark:text-white">
-            When to reach for it:
-          </strong>{" "}
+        <PageIntro doc={doc} eyebrow={group?.title} />
+        <p className="mt-4 max-w-[66ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
+          <strong className="font-medium text-zinc-950 dark:text-white">When to use it:</strong>{" "}
           {doc.whenToUse}
         </p>
         <ComponentOutline className="mt-8 xl:hidden" compact doc={doc} />
 
-        <div className="mt-14 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-14">
-          <ComponentSection
-            description="The real component next to the source that produced it."
-            id="example"
-            number="01"
-            title="Try it."
-          >
+        <div className="mt-16 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-16">
+          <ComponentSection id="example" title="Example">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
-              <LiveExample description="Click it, focus it, and use the keys from this page.">
-                {Example ? <Example /> : <p>Example unavailable.</p>}
-              </LiveExample>
+              <LiveExample>{Example ? <Example /> : <p>Example unavailable.</p>}</LiveExample>
               <CodeBlock code={doc.exampleSource} title={`${doc.title}.tsx`} />
             </div>
           </ComponentSection>
@@ -96,74 +90,44 @@ export default function ComponentRoute() {
           <ComponentSection
             description="Dashed frames are invisible state providers; shaded shapes own real DOM. Numbered pins match the list below."
             id="anatomy"
-            number="02"
-            title="Anatomy."
+            title="Anatomy"
           >
             <Anatomy parts={doc.parts} />
           </ComponentSection>
 
-          <ComponentSection
-            description="One part at a time, from the main element to the finished composition."
-            id="build"
-            number="03"
-            title="Build it step by step."
-          >
+          <ComponentSection id="build" title="Step by step">
             <StepList steps={doc.steps} />
           </ComponentSection>
 
-          <ComponentSection
-            description="What each key does while focus is inside."
-            id="keyboard"
-            number="04"
-            title="Keyboard support."
-          >
+          <ComponentSection id="keyboard" title="Keyboard">
             {keyboardLesson}
           </ComponentSection>
 
-          <ComponentSection
-            description="What gets submitted, what must be labelled, and what assistive technology needs."
-            id="contract"
-            number="05"
-            title="Forms and accessibility."
-          >
-            <div className="grid gap-8 rounded-xl bg-zinc-50 p-5 ring-1 ring-zinc-950/10 sm:p-6 dark:bg-white/3 dark:ring-white/10">
-              <section>
-                <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
-                  Forms and state
-                </h3>
-                <p className="mt-2 text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
-                  {doc.form}
-                </p>
-              </section>
-              <section className="border-t border-zinc-950/10 pt-6 dark:border-white/10">
-                <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
-                  Accessibility checklist
-                </h3>
-                <ul className="mt-3 grid gap-3" role="list">
-                  {doc.accessibility.map((item) => (
-                    <li
-                      className="flex items-start gap-3 text-base/7 text-zinc-600 dark:text-zinc-300"
-                      key={item}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-600 dark:bg-teal-400"
-                      />
-                      <span className="min-w-0">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </div>
+          <ComponentSection id="contract" title="Forms and accessibility">
+            <p className="max-w-[66ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
+              {doc.form}
+            </p>
+            <h3 className="mt-8 text-base font-semibold text-zinc-950 dark:text-white">
+              Accessibility checklist
+            </h3>
+            <ul className="mt-3 grid gap-3" role="list">
+              {doc.accessibility.map((item) => (
+                <li
+                  className="flex items-start gap-3 text-base/7 text-zinc-600 dark:text-zinc-300"
+                  key={item}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 size-1.5 shrink-0 rounded-full bg-teal-600 dark:bg-teal-400"
+                  />
+                  <span className="min-w-0">{item}</span>
+                </li>
+              ))}
+            </ul>
           </ComponentSection>
 
-          <ComponentSection
-            description="Every exported part, what it renders, and the state attributes your CSS can target."
-            id="api"
-            number="06"
-            title="API and styling."
-          >
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
+          <ComponentSection id="api" title="API reference">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8">
               <ApiReference imports={doc.imports} parts={doc.parts} />
               {stylingLesson}
             </div>
@@ -171,8 +135,10 @@ export default function ComponentRoute() {
         </div>
 
         {doc.related.length > 0 && (
-          <section className="mt-14 border-t border-zinc-950/10 pt-8 dark:border-white/10">
-            <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">Keep exploring</h2>
+          <section className="mt-16 border-t border-zinc-950/10 pt-8 dark:border-white/10">
+            <h2 className="text-base font-semibold text-zinc-950 dark:text-white">
+              Keep exploring
+            </h2>
             <ul className="mt-4 flex flex-wrap gap-2" role="list">
               {doc.related.map((relatedSlug) => {
                 const related = componentBySlug.get(relatedSlug);

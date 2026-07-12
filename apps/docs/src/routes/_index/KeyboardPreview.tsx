@@ -15,11 +15,8 @@ export function KeyboardPreview({ className }: KeyboardPreviewProps) {
       <div className="rounded-[min(2vw,var(--radius-2xl))] bg-zinc-50 p-5 ring-1 ring-zinc-950/10 sm:p-8 dark:bg-white/3 dark:ring-white/10">
         <div className="grid gap-8 @3xl:grid-cols-[3fr_5fr] @3xl:items-end">
           <div>
-            <p className="font-mono text-sm/6 font-medium tracking-wide text-teal-700 uppercase dark:text-teal-300">
-              Keyboard included
-            </p>
-            <h2 className="mt-3 max-w-[22ch] text-3xl font-semibold tracking-tight text-balance text-zinc-950 dark:text-white">
-              The symbols become a tiny instruction manual.
+            <h2 className="max-w-[40ch] text-2xl font-semibold tracking-tight text-balance text-zinc-950 sm:text-3xl dark:text-white">
+              The keyboard is part of the contract.
             </h2>
             <p className="mt-4 max-w-[52ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
               Every reference page shows the exact keys that work and what each one does. No

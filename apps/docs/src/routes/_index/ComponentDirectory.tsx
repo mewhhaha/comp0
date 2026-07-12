@@ -11,13 +11,10 @@ export function ComponentDirectory({ className }: ComponentDirectoryProps) {
     <section className={className}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="font-mono text-sm/6 font-medium tracking-wide text-teal-700 uppercase dark:text-teal-300">
-            Component field guide
-          </p>
-          <h2 className="mt-3 max-w-[26ch] text-3xl font-semibold tracking-tight text-balance text-zinc-950 sm:text-4xl dark:text-white">
+          <h2 className="max-w-[40ch] text-2xl font-semibold tracking-tight text-balance text-zinc-950 sm:text-3xl dark:text-white">
             Find the thing you want to build.
           </h2>
-          <p className="mt-4 max-w-[58ch] text-base/7 text-pretty text-zinc-600 sm:text-lg/8 dark:text-zinc-300">
+          <p className="mt-4 max-w-[56ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
             Each page starts with a working example, opens the component into labelled parts, and
             rebuilds it one step at a time.
           </p>
@@ -27,13 +24,13 @@ export function ComponentDirectory({ className }: ComponentDirectoryProps) {
           to="/components"
         >
           See the full index
-          <ArrowRight aria-hidden="true" className="size-6 shrink-0" />
+          <ArrowRight aria-hidden="true" className="size-5 shrink-0 sm:size-4" />
         </Link>
       </div>
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
         {componentGroups.map((group) => (
           <section key={group.id}>
-            <h3 className="text-xl font-semibold text-zinc-950 dark:text-white">{group.title}</h3>
+            <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">{group.title}</h3>
             <p className="mt-2 max-w-[55ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
               {group.description}
             </p>
