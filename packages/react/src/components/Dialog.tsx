@@ -1,4 +1,4 @@
-import { createElement, Fragment, useMemo, useRef, useId } from "react";
+import { createElement, Fragment, useRef, useId } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { DialogContext, type DialogProps } from "./overlay-shared.js";
@@ -20,21 +20,18 @@ export function Dialog({
     defaultValue: defaultOpen,
     onChange: onToggle,
   });
-  const context = useMemo(
-    () => ({
-      open,
-      setOpen,
-      triggerId: `${props.id ?? generatedId}-trigger`,
-      contentId: `${props.id ?? generatedId}-content`,
-      focusTrigger() {
-        triggerRef.current?.focus();
-      },
-      setTriggerElement(element: HTMLElement | null) {
-        triggerRef.current = element;
-      },
-    }),
-    [generatedId, open, props.id, setOpen],
-  );
+  const context = {
+    open,
+    setOpen,
+    triggerId: `${props.id ?? generatedId}-trigger`,
+    contentId: `${props.id ?? generatedId}-content`,
+    focusTrigger() {
+      triggerRef.current?.focus();
+    },
+    setTriggerElement(element: HTMLElement | null) {
+      triggerRef.current = element;
+    },
+  };
   let root = children;
   if (as && as !== Fragment) {
     root = createElement(
@@ -44,5 +41,5 @@ export function Dialog({
     );
   }
 
-  return <DialogContext.Provider value={context}>{root}</DialogContext.Provider>;
+  return <DialogContext value={context}>{root}</DialogContext>;
 }

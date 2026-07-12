@@ -95,11 +95,11 @@ writeFileSync(
 writeFileSync(
   join(consumerDirectory, "consumer.tsx"),
   `import {useControllableState} from "@comp0/core";
-import {Select, SelectContent, SelectOption, SelectTrigger} from "@comp0/react";
+import {Popover, Select, SelectPopover, SelectOption, SelectTrigger} from "@comp0/react";
 
 export function Consumer() {
   const [value] = useControllableState({defaultValue: "alpha"});
-  return <Select defaultValue={value}><SelectTrigger>Open</SelectTrigger><SelectContent><SelectOption value="alpha">Alpha</SelectOption></SelectContent></Select>;
+  return <Select defaultValue={value}><Popover><SelectTrigger>Open</SelectTrigger><SelectPopover><SelectOption value="alpha">Alpha</SelectOption></SelectPopover></Popover></Select>;
 }
 `,
 );

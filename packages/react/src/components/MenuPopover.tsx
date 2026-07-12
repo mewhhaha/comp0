@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import {
   composeRefs,
   findTypeaheadMatch,
@@ -31,51 +31,47 @@ export function MenuPopover({
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
   const activeKey = useRef("");
   const wasOpen = useRef(false);
-  const context = useMemo<SelectableCollectionContextValue>(
-    () => ({
-      activeKey: activeKey.current,
-      selectedKey: "",
-      setActiveKey(key) {
-        activeKey.current = key;
-      },
-      setSelectedKey() {},
-      close() {
-        menu?.closeAll();
-      },
-      register(key, textValue, element, disabled) {
-        if (element)
-          itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
-        else itemMap.current.delete(key);
-      },
-      items() {
-        return sortItems([...itemMap.current.values()]);
-      },
-    }),
-    [menu],
-  );
-  const focusItem = useCallback(
-    (key: string) => {
-      const item = context.items().find((candidate) => candidate.key === key);
-      if (!item) return;
-      context.setActiveKey(key);
-      item.element?.focus();
+  const context: SelectableCollectionContextValue = {
+    activeKey: activeKey.current,
+    selectedKey: "",
+    setActiveKey(key) {
+      activeKey.current = key;
     },
-    [context],
-  );
+    setSelectedKey() {},
+    close() {
+      menu?.closeAll();
+    },
+    register(key, textValue, element, disabled) {
+      if (element) itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
+      else itemMap.current.delete(key);
+    },
+    items() {
+      return sortItems([...itemMap.current.values()]);
+    },
+  };
+  const focusItem = (key: string) => {
+    const item = context.items().find((candidate) => candidate.key === key);
+    if (!item) return;
+    context.setActiveKey(key);
+    item.element?.focus();
+  };
 
   useLayoutEffect(() => {
     if (menu?.open && !wasOpen.current) {
-      const firstItem = context.items().find((item) => !item.disabled);
-      if (firstItem) focusItem(firstItem.key);
+      const items = sortItems([...itemMap.current.values()]);
+      const firstItem = items.find((item) => !item.disabled);
+      if (firstItem) {
+        activeKey.current = firstItem.key;
+        firstItem.element?.focus();
+      }
     }
     wasOpen.current = Boolean(menu?.open);
-  }, [context, focusItem, menu?.open]);
+  }, [menu?.open]);
 
   return (
-    <MenuContext.Provider value={context}>
+    <MenuContext value={context}>
       <div
         {...props}
-        {...{ anchor: menu?.triggerId }}
         ref={composeRefs(surfaceRef, ref)}
         id={props.id ?? menu?.contentId}
         role={props.role ?? "menu"}
@@ -145,6 +141,6 @@ export function MenuPopover({
       >
         {children}
       </div>
-    </MenuContext.Provider>
+    </MenuContext>
   );
 }

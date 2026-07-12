@@ -1,5 +1,4 @@
 import { type RefProp } from "../shared.js";
-import { useMemo } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { Input } from "./Input.js";
@@ -32,28 +31,16 @@ export function NumberField({
   const resolvedInvalid = Boolean(invalid);
   const resolvedRequired = Boolean(required);
   const { controlId, descriptionId, errorId, labelId } = ids;
-  const fieldContext = useMemo(
-    () => ({
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-      disabled: resolvedDisabled,
-      invalid: resolvedInvalid,
-      required: resolvedRequired,
-      ...feedback,
-    }),
-    [
-      controlId,
-      descriptionId,
-      errorId,
-      feedback,
-      labelId,
-      resolvedDisabled,
-      resolvedInvalid,
-      resolvedRequired,
-    ],
-  );
+  const fieldContext = {
+    controlId,
+    descriptionId,
+    errorId,
+    labelId,
+    disabled: resolvedDisabled,
+    invalid: resolvedInvalid,
+    required: resolvedRequired,
+    ...feedback,
+  };
 
   return (
     <FieldProvider value={fieldContext}>

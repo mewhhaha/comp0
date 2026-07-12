@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   findTypeaheadMatch,
   getRovingFocusTarget,
@@ -51,33 +51,35 @@ export function ListBox({
     activeKeyRef.current = activeKey;
   }, [activeKey]);
 
-  const register = useCallback(
-    (key: string, textValue: string, element: HTMLElement | null, disabled?: boolean) => {
-      if (!element) {
-        if (itemMap.current.delete(key)) itemVersion.current += 1;
-        return;
-      }
+  const register = (
+    key: string,
+    textValue: string,
+    element: HTMLElement | null,
+    disabled?: boolean,
+  ) => {
+    if (!element) {
+      if (itemMap.current.delete(key)) itemVersion.current += 1;
+      return;
+    }
 
-      const current = itemMap.current.get(key);
-      if (
-        current?.id !== element.id ||
-        current?.textValue !== textValue ||
-        current.element !== element ||
-        current.disabled !== disabled
-      ) {
-        itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
-        itemVersion.current += 1;
-      }
+    const current = itemMap.current.get(key);
+    if (
+      current?.id !== element.id ||
+      current?.textValue !== textValue ||
+      current.element !== element ||
+      current.disabled !== disabled
+    ) {
+      itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
+      itemVersion.current += 1;
+    }
 
-      if (!selectedRef.current && !activeKeyRef.current && !disabled) {
-        activeKeyRef.current = key;
-        setActiveKey(key);
-      }
-    },
-    [],
-  );
+    if (!selectedRef.current && !activeKeyRef.current && !disabled) {
+      activeKeyRef.current = key;
+      setActiveKey(key);
+    }
+  };
 
-  const items = useCallback(() => {
+  const items = () => {
     if (sortedItemCache.current.version !== itemVersion.current) {
       sortedItemCache.current = {
         version: itemVersion.current,
@@ -85,22 +87,19 @@ export function ListBox({
       };
     }
     return sortedItemCache.current.items;
-  }, []);
+  };
 
-  const context: SelectableCollectionContextValue = useMemo(
-    () => ({
-      activeKey,
-      selectedKey: selected,
-      setActiveKey,
-      setSelectedKey: setSelected,
-      register,
-      items,
-    }),
-    [activeKey, items, register, selected, setSelected],
-  );
+  const context: SelectableCollectionContextValue = {
+    activeKey,
+    selectedKey: selected,
+    setActiveKey,
+    setSelectedKey: setSelected,
+    register,
+    items,
+  };
 
   return (
-    <ListBoxContext.Provider value={context}>
+    <ListBoxContext value={context}>
       <div
         {...props}
         ref={ref}
@@ -126,6 +125,6 @@ export function ListBox({
       >
         {children}
       </div>
-    </ListBoxContext.Provider>
+    </ListBoxContext>
   );
 }

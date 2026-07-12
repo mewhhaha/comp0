@@ -1,12 +1,4 @@
-import {
-  createElement,
-  Fragment,
-  useCallback,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import { createElement, Fragment, useId, useLayoutEffect, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { usePickerRootContext } from "../shared.js";
@@ -32,38 +24,32 @@ export function Popover({
     defaultValue: defaultOpen,
     onChange: onToggle,
   });
-  const setOpen = useCallback(
-    (nextOpen: boolean) => {
-      if (!nextOpen) restoreFocus.current = false;
-      setOpenState(nextOpen);
-    },
-    [setOpenState],
-  );
-  const requestClose = useCallback(() => {
+  const setOpen = (nextOpen: boolean) => {
+    if (!nextOpen) restoreFocus.current = false;
+    setOpenState(nextOpen);
+  };
+  const requestClose = () => {
     restoreFocus.current = true;
     setOpenState(false);
-  }, [setOpenState]);
+  };
   useLayoutEffect(() => {
     if (wasOpen.current && !open && restoreFocus.current) triggerRef.current?.focus();
     if (!open) restoreFocus.current = false;
     wasOpen.current = open;
   }, [open]);
-  const context = useMemo(
-    () => ({
-      open,
-      setOpen,
-      requestClose,
-      triggerId: picker?.triggerId ?? `${props.id ?? generatedId}-trigger`,
-      contentId: picker?.listBoxId ?? `${props.id ?? generatedId}-content`,
-      focusTrigger() {
-        triggerRef.current?.focus();
-      },
-      setTriggerElement(element: HTMLElement | null) {
-        triggerRef.current = element;
-      },
-    }),
-    [generatedId, open, picker?.listBoxId, picker?.triggerId, props.id, requestClose, setOpen],
-  );
+  const context = {
+    open,
+    setOpen,
+    requestClose,
+    triggerId: picker?.triggerId ?? `${props.id ?? generatedId}-trigger`,
+    contentId: picker?.listBoxId ?? `${props.id ?? generatedId}-content`,
+    focusTrigger() {
+      triggerRef.current?.focus();
+    },
+    setTriggerElement(element: HTMLElement | null) {
+      triggerRef.current = element;
+    },
+  };
   let root = children;
   if (as && as !== Fragment) {
     root = createElement(
@@ -73,5 +59,5 @@ export function Popover({
     );
   }
 
-  return <PopoverContext.Provider value={context}>{root}</PopoverContext.Provider>;
+  return <PopoverContext value={context}>{root}</PopoverContext>;
 }

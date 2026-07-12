@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { ComboBoxRootContext, PickerRootContext, type RefProp } from "../shared.js";
@@ -58,86 +58,48 @@ export function Combobox({
   const unregisterItem = useCallback((key: string) => {
     itemTextRef.current.delete(key);
   }, []);
-  const setSelectedKey = useCallback(
-    (key: string) => {
-      setSelected(key);
-      const text = itemTextRef.current.get(key);
-      setSelectedText(typeof text === "string" ? text : key);
-      if (typeof text === "string") setInputValue(text);
-    },
-    [setInputValue, setSelected],
-  );
-  const isItemVisible = useCallback(
-    (textValue: string) =>
-      allowsEmptyCollection || inputValue === "" || filter(textValue, inputValue),
-    [allowsEmptyCollection, filter, inputValue],
-  );
+  const setSelectedKey = (key: string) => {
+    setSelected(key);
+    const text = itemTextRef.current.get(key);
+    setSelectedText(typeof text === "string" ? text : key);
+    if (typeof text === "string") setInputValue(text);
+  };
+  const isItemVisible = (textValue: string) =>
+    allowsEmptyCollection || inputValue === "" || filter(textValue, inputValue);
   let displayValue = inputValue;
   if (displayValue === "" && selected) displayValue = selectedText;
   const { controlId, descriptionId, errorId, labelId } = ids;
-  const fieldContext = useMemo(
-    () => ({
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-      disabled: resolvedDisabled,
-      invalid: resolvedInvalid,
-      required: resolvedRequired,
-      ...feedback,
-    }),
-    [
-      controlId,
-      descriptionId,
-      errorId,
-      feedback,
-      labelId,
-      resolvedDisabled,
-      resolvedInvalid,
-      resolvedRequired,
-    ],
-  );
-  const context = useMemo(
-    () => ({
-      activeKey,
-      activeId,
-      disabled: resolvedDisabled,
-      invalid: resolvedInvalid,
-      required: resolvedRequired,
-      displayValue,
-      inputValue,
-      selectedKey: selected,
-      inputId: controlId,
-      listBoxId: `${controlId}-listbox`,
-      labelId,
-      descriptionId,
-      setActiveKey,
-      setActiveId,
-      setInputValue,
-      setSelectedKey,
-      registerItem,
-      unregisterItem,
-      isItemVisible,
-    }),
-    [
-      controlId,
-      descriptionId,
-      labelId,
-      activeKey,
-      activeId,
-      displayValue,
-      inputValue,
-      resolvedDisabled,
-      resolvedInvalid,
-      resolvedRequired,
-      registerItem,
-      selected,
-      setInputValue,
-      setSelectedKey,
-      unregisterItem,
-      isItemVisible,
-    ],
-  );
+  const fieldContext = {
+    controlId,
+    descriptionId,
+    errorId,
+    labelId,
+    disabled: resolvedDisabled,
+    invalid: resolvedInvalid,
+    required: resolvedRequired,
+    ...feedback,
+  };
+  const context = {
+    activeKey,
+    activeId,
+    disabled: resolvedDisabled,
+    invalid: resolvedInvalid,
+    required: resolvedRequired,
+    displayValue,
+    inputValue,
+    selectedKey: selected,
+    inputId: controlId,
+    listBoxId: `${controlId}-listbox`,
+    labelId,
+    descriptionId,
+    setActiveKey,
+    setActiveId,
+    setInputValue,
+    setSelectedKey,
+    registerItem,
+    unregisterItem,
+    isItemVisible,
+  };
 
   const content = (
     <>
@@ -155,14 +117,14 @@ export function Combobox({
   const Root = as;
   return (
     <FieldProvider value={fieldContext}>
-      <PickerRootContext.Provider
+      <PickerRootContext
         value={{
           disabled: resolvedDisabled,
           triggerId: controlId,
           listBoxId: `${controlId}-listbox`,
         }}
       >
-        <ComboBoxRootContext.Provider value={context}>
+        <ComboBoxRootContext value={context}>
           {Root && Root !== Fragment ? (
             <Root
               {...props}
@@ -181,8 +143,8 @@ export function Combobox({
           ) : (
             content
           )}
-        </ComboBoxRootContext.Provider>
-      </PickerRootContext.Provider>
+        </ComboBoxRootContext>
+      </PickerRootContext>
     </FieldProvider>
   );
 }

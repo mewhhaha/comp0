@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useId, useLayoutEffect, useRef } from "react";
+import { createContext, useContext, useId, useLayoutEffect, useRef } from "react";
 import { FOCUSABLE_SELECTOR } from "./grid-list-shared.js";
 
 export interface TableContextValue {
@@ -63,15 +63,12 @@ export function useTableCell(ref: React.Ref<HTMLTableCellElement> | undefined) {
   const key = useId().replace(/:/g, "");
   const register = table?.register;
   const elementRef = useRef<HTMLTableCellElement | null>(null);
-  const cellRef = useCallback(
-    (element: HTMLTableCellElement | null) => {
-      elementRef.current = element;
-      register?.(key, element);
-      if (typeof ref === "function") ref(element);
-      else if (ref) ref.current = element;
-    },
-    [key, ref, register],
-  );
+  const cellRef = (element: HTMLTableCellElement | null) => {
+    elementRef.current = element;
+    register?.(key, element);
+    if (typeof ref === "function") ref(element);
+    else if (ref) ref.current = element;
+  };
   const tabIndex = table?.activeKey === key ? 0 : -1;
 
   // Widgets inside cells are reachable with the arrow keys, never with Tab,

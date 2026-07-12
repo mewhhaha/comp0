@@ -24,7 +24,6 @@ export function TooltipPopover({
   const Content = as ?? "div";
   return createElement(Content, {
     ...props,
-    anchor: tooltip?.triggerId,
     ref: composeRefs(surfaceRef, ref),
     id: props.id ?? tooltip?.contentId,
     role: props.role ?? "tooltip",

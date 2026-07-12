@@ -75,8 +75,8 @@ export function Button<TElement extends ElementType = "button">({
     nativeDisabled = disabled;
   } else {
     ariaDisabled = disabled || undefined;
-    role ??= "button";
-    tabIndex ??= 0;
+    role = role ?? "button";
+    tabIndex = tabIndex ?? 0;
   }
   const mergedProps = mergeProps<Record<string, unknown>>(
     props as Record<string, unknown>,

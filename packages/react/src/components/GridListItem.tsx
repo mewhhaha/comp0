@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useContext,
-  useId,
-  useLayoutEffect,
-  useRef,
-  type HTMLAttributes,
-} from "react";
+import { useContext, useId, useLayoutEffect, useRef, type HTMLAttributes } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { resolveItemLabel } from "./collection-shared.js";
@@ -42,21 +35,16 @@ export function GridListItem({
   else if (selected || active) tabIndex = 0;
   const ariaLabel = props["aria-label"];
 
-  const itemRef = useCallback(
-    (element: HTMLDivElement | null) => {
-      rowRef.current = element;
-      gridList?.register(
-        value,
-        resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
-        element,
-        resolvedDisabled,
-      );
-      composeRefs(ref)(element);
-    },
-    // children stays out: the layout effect below re-reads rendered text.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ariaLabel, gridList, ref, resolvedDisabled, textValue, value],
-  );
+  const itemRef = (element: HTMLDivElement | null) => {
+    rowRef.current = element;
+    gridList?.register(
+      value,
+      resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
+      element,
+      resolvedDisabled,
+    );
+    composeRefs(ref)(element);
+  };
 
   // Interactive children are reachable with ArrowRight instead of Tab, so
   // the grid stays a single tab stop.

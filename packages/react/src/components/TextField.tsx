@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { type RefProp } from "../shared.js";
@@ -31,33 +30,18 @@ export function TextField({
     onChange,
   });
   const { controlId, descriptionId, errorId, labelId } = ids;
-  const providerValue = useMemo(
-    () => ({
-      controlId,
-      descriptionId,
-      errorId,
-      labelId,
-      disabled: resolvedDisabled,
-      invalid: resolvedInvalid,
-      required: resolvedRequired,
-      value: controlsValue ? fieldValue : undefined,
-      setValue: controlsValue ? setFieldValue : undefined,
-      ...feedback,
-    }),
-    [
-      controlsValue,
-      controlId,
-      descriptionId,
-      errorId,
-      feedback,
-      fieldValue,
-      labelId,
-      resolvedDisabled,
-      resolvedInvalid,
-      resolvedRequired,
-      setFieldValue,
-    ],
-  );
+  const providerValue = {
+    controlId,
+    descriptionId,
+    errorId,
+    labelId,
+    disabled: resolvedDisabled,
+    invalid: resolvedInvalid,
+    required: resolvedRequired,
+    value: controlsValue ? fieldValue : undefined,
+    setValue: controlsValue ? setFieldValue : undefined,
+    ...feedback,
+  };
 
   return (
     <FieldProvider value={providerValue}>

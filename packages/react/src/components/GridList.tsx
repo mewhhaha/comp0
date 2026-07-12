@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type HTMLAttributes } from "react";
+import { useEffect, useRef, useState, type HTMLAttributes } from "react";
 import {
   findTypeaheadMatch,
   getRovingFocusTarget,
@@ -51,34 +51,33 @@ export function GridList({
     activeKeyRef.current = activeKey;
   }, [activeKey]);
 
-  const register = useCallback(
-    (key: string, textValue: string, element: HTMLElement | null, disabled?: boolean) => {
-      if (!element) {
-        itemMap.current.delete(key);
-        return;
-      }
-      itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
-      if (!selectedRef.current && !activeKeyRef.current && !disabled) {
-        activeKeyRef.current = key;
-        setActiveKey(key);
-      }
-    },
-    [],
-  );
+  const register = (
+    key: string,
+    textValue: string,
+    element: HTMLElement | null,
+    disabled?: boolean,
+  ) => {
+    if (!element) {
+      itemMap.current.delete(key);
+      return;
+    }
+    itemMap.current.set(key, { key, id: element.id, textValue, element, disabled });
+    if (!selectedRef.current && !activeKeyRef.current && !disabled) {
+      activeKeyRef.current = key;
+      setActiveKey(key);
+    }
+  };
 
-  const items = useCallback(() => sortItems([...itemMap.current.values()]), []);
+  const items = () => sortItems([...itemMap.current.values()]);
 
-  const context: SelectableCollectionContextValue = useMemo(
-    () => ({
-      activeKey,
-      selectedKey: selected,
-      setActiveKey,
-      setSelectedKey: setSelected,
-      register,
-      items,
-    }),
-    [activeKey, items, register, selected, setSelected],
-  );
+  const context: SelectableCollectionContextValue = {
+    activeKey,
+    selectedKey: selected,
+    setActiveKey,
+    setSelectedKey: setSelected,
+    register,
+    items,
+  };
 
   const focusRow = (key: string | undefined) => {
     if (!key) return false;
@@ -90,7 +89,7 @@ export function GridList({
   };
 
   return (
-    <GridListContext.Provider value={context}>
+    <GridListContext value={context}>
       <div
         {...props}
         ref={ref}
@@ -154,6 +153,6 @@ export function GridList({
       >
         {children}
       </div>
-    </GridListContext.Provider>
+    </GridListContext>
   );
 }
