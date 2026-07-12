@@ -257,11 +257,7 @@ export function GridList({
           }}
         >
           {children}
-          {dndContext && (
-            <VisuallyHidden aria-live="polite">
-              {announcement}
-            </VisuallyHidden>
-          )}
+          {dndContext && <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>}
         </div>
       </GridListDndContext>
     </GridListContext>
