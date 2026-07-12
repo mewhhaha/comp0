@@ -2,6 +2,7 @@ import type { KeyboardAction, KeyboardToken } from "../../content/types.js";
 import { cn } from "./cn.js";
 
 const keyLabels: Record<KeyboardToken, { visual: string; spoken: string }> = {
+  Alt: { visual: "Alt", spoken: "Alt or Option" },
   ArrowDown: { visual: "↓", spoken: "Arrow down" },
   ArrowLeft: { visual: "←", spoken: "Arrow left" },
   ArrowRight: { visual: "→", spoken: "Arrow right" },

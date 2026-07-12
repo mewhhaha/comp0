@@ -35,6 +35,7 @@ export type LessonStep = {
 };
 
 export type KeyboardToken =
+  | "Alt"
   | "ArrowDown"
   | "ArrowLeft"
   | "ArrowRight"

@@ -46,9 +46,11 @@ export function fireClick(element: Element) {
   });
 }
 
-export function fireKeyDown(element: Element, key: string) {
+export function fireKeyDown(element: Element, key: string, init?: KeyboardEventInit) {
   act(() => {
-    element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    element.dispatchEvent(
+      new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }),
+    );
   });
 }
 

@@ -411,6 +411,7 @@ const accessibility: Record<string, string[]> = {
     "Give the grid an aria-label when it has no visible heading.",
     "Keep row focus and row selection visibly distinct.",
     "Reach row controls with ArrowRight; do not add extra tab stops.",
+    "Reordering never requires a pointer: Alt+Arrow moves the focused row and a live region announces its new position.",
   ],
   table: [
     "Give the table an aria-label or a visible caption.",
@@ -1305,6 +1306,11 @@ const navigation = [
         prop("aria-label", "string", "Names the grid; nothing labels it automatically."),
         prop("value / defaultValue", "string", "Controlled or initial selected row."),
         prop("onChange", "(value: string) => void", "Receives the next selected row."),
+        prop(
+          "onReorder",
+          "(values: string[]) => void",
+          "Receives the full new row order; providing it makes rows draggable and movable with Alt+Arrow keys, with moves announced to screen readers.",
+        ),
       ]),
       p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
         prop("value", "string", "This row’s selection key."),
@@ -1325,10 +1331,23 @@ const navigation = [
       { keys: ["End"], action: "Moves to the last row." },
       { keys: ["Enter"], action: "Selects the focused row." },
       { keys: ["Space"], action: "Selects the focused row." },
+      { keys: ["Alt", "ArrowUp"], action: "Moves the row up.", scope: "with onReorder" },
+      { keys: ["Alt", "ArrowDown"], action: "Moves the row down.", scope: "with onReorder" },
     ],
     [
       { attribute: "[data-selected]", on: "GridListItem", meaning: "The row is selected." },
       { attribute: "[data-disabled]", on: "GridListItem", meaning: "The row is disabled." },
+      { attribute: "[data-dragging]", on: "GridListItem", meaning: "The row is being dragged." },
+      {
+        attribute: "[data-drop-before]",
+        on: "GridListItem",
+        meaning: "The dragged row will drop before this row; style it as the drop preview.",
+      },
+      {
+        attribute: "[data-drop-after]",
+        on: "GridListItem",
+        meaning: "The dragged row will drop after this row; style it as the drop preview.",
+      },
       {
         attribute: ":focus-visible",
         on: "GridListItem and its controls",
