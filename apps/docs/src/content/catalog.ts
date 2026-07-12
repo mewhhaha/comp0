@@ -870,13 +870,20 @@ const action = [
     ["FileTrigger"],
     '<FileTrigger inputProps={{ name: "photo" }}>Upload photo</FileTrigger>',
     [
-      p("FileTrigger", "root", "Native label that owns the visible trigger words.", true, false, [
-        prop(
-          "inputProps",
-          "InputHTMLAttributes",
-          "Props for the native file input, including name, accept, multiple, and onChange.",
-        ),
-      ]),
+      p(
+        "FileTrigger",
+        "trigger",
+        "Native label that owns the visible trigger words.",
+        true,
+        false,
+        [
+          prop(
+            "inputProps",
+            "InputHTMLAttributes",
+            "Props for the native file input, including name, accept, multiple, and onChange.",
+          ),
+        ],
+      ),
       p("file input", "input", "Native file input supplied through inputProps."),
     ],
     [
@@ -1035,7 +1042,7 @@ const action = [
       ]),
       p(
         "useToast",
-        "root",
+        "value",
         "Hook returning notify and dismiss; throws outside ToastProvider.",
         false,
         false,
@@ -1132,7 +1139,7 @@ const action = [
       ),
       p(
         "ToggleButtonGroup",
-        "item",
+        "root",
         "Optional selection group inside the toolbar; it announces the relationship and can manage which values are on.",
         true,
         true,
@@ -1151,7 +1158,7 @@ const action = [
           ),
         ],
       ),
-      p("ToggleButton", "trigger", "Native button that owns one press target.", true, true, [
+      p("ToggleButton", "item", "Native button that owns one press target.", true, true, [
         prop("value", "string", "Identifies the button inside a selection-managing group."),
         prop("disabled", "boolean", "Removes the button from the toolbar's arrow-key order."),
       ]),
@@ -1649,7 +1656,7 @@ const field = [
       ),
       p(
         "RangeSliderTrack",
-        "content",
+        "region",
         "The rail the thumbs travel along; pressing it moves and focuses the nearest thumb.",
         true,
         false,
@@ -1864,7 +1871,7 @@ const navigation = [
       p("AccordionTrigger", "trigger", "Native button that opens its panel.", true, false, [
         prop("disabled", "boolean", "Disables this trigger on top of the item's disabled state."),
       ]),
-      p("AccordionPanel", "content", "Revealed region.", true, false, [
+      p("AccordionPanel", "region", "Revealed region.", true, false, [
         prop("role", '"region" | "group"', "Use group when many panels would flood landmarks."),
       ]),
     ],
@@ -1901,7 +1908,7 @@ const navigation = [
         prop("onChange", "(open: boolean) => void", "Receives the next open state."),
       ]),
       p("DisclosureTrigger", "trigger", "Native summary element that toggles the details."),
-      p("DisclosurePanel", "content", "Revealed content."),
+      p("DisclosurePanel", "region", "Revealed content."),
     ],
     [
       { keys: ["Enter"], action: "Toggles the panel." },
@@ -1937,7 +1944,7 @@ const navigation = [
         prop("tab", "string", "Identity that pairs this tab with its panel."),
         prop("disabled", "boolean", "Disables the tab."),
       ]),
-      p("TabPanel", "content", "Panel for a matching tab.", true, false, [
+      p("TabPanel", "region", "Panel for a matching tab.", true, false, [
         prop("tab", "string", "The tab this panel belongs to."),
       ]),
     ],
@@ -2216,6 +2223,13 @@ const navigation = [
           "Vetoes a proposed order: blocked drop positions show no drop preview and blocked keyboard moves are announced but not applied.",
         ),
       ]),
+      p(
+        "GridListDragHandle",
+        "trigger",
+        "Optional labelled button inside a row; while present, drags start from it instead of the whole row, keeping the row body free for scrolling and text selection.",
+        true,
+        true,
+      ),
       p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
         prop("value", "string", "This row’s selection key."),
         prop("disabled", "boolean", "Disables the row."),
@@ -2225,13 +2239,6 @@ const navigation = [
           "Overrides the text crawled from children when markup makes it ambiguous.",
         ),
       ]),
-      p(
-        "GridListDragHandle",
-        "trigger",
-        "Optional labelled button inside a row; while present, drags start from it instead of the whole row, keeping the row body free for scrolling and text selection.",
-        true,
-        true,
-      ),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves to the next row." },
@@ -2618,6 +2625,14 @@ const navigation = [
         ],
       ),
       p(
+        "TreeGroup",
+        "region",
+        "Container for one item's children; it gets the hidden attribute while its parent is collapsed.",
+        true,
+        true,
+        [],
+      ),
+      p(
         "TreeItem",
         "item",
         "Selectable row; nesting a TreeGroup inside makes it an expandable branch.",
@@ -2632,14 +2647,6 @@ const navigation = [
             "Overrides the text crawled from the row for typeahead when markup makes it ambiguous.",
           ),
         ],
-      ),
-      p(
-        "TreeGroup",
-        "content",
-        "Container for one item's children; it gets the hidden attribute while its parent is collapsed.",
-        true,
-        true,
-        [],
       ),
     ],
     [
@@ -2705,38 +2712,8 @@ const navigation = [
         ],
       ),
       p(
-        "CarouselAutoplayToggle",
-        "trigger",
-        "Native button that stops and restarts auto-rotation; renders nothing without autoplay.",
-        true,
-        true,
-        [
-          prop(
-            "aria-label",
-            "string",
-            'Defaults to "Pause carousel" while rotating and "Play carousel" once stopped.',
-          ),
-        ],
-      ),
-      p(
-        "CarouselPrevious",
-        "trigger",
-        "Native button that shows the previous slide; disabled on the first slide unless loop.",
-        true,
-        true,
-        [prop("aria-label", "string", 'Accessible name; defaults to "Previous slide".')],
-      ),
-      p(
-        "CarouselNext",
-        "trigger",
-        "Native button that shows the next slide; disabled on the last slide unless loop.",
-        true,
-        true,
-        [prop("aria-label", "string", 'Accessible name; defaults to "Next slide".')],
-      ),
-      p(
         "CarouselViewport",
-        "content",
+        "region",
         "Wraps the slides; exposes --comp0-carousel-index for transform tracks and flips aria-live between off (rotating) and polite (paused or stopped).",
         true,
         false,
@@ -2759,6 +2736,36 @@ const navigation = [
             "aria-label",
             "string",
             'Names the slide after its content; defaults to its computed "N of M" position.',
+          ),
+        ],
+      ),
+      p(
+        "CarouselPrevious",
+        "trigger",
+        "Native button that shows the previous slide; disabled on the first slide unless loop.",
+        true,
+        true,
+        [prop("aria-label", "string", 'Accessible name; defaults to "Previous slide".')],
+      ),
+      p(
+        "CarouselNext",
+        "trigger",
+        "Native button that shows the next slide; disabled on the last slide unless loop.",
+        true,
+        true,
+        [prop("aria-label", "string", 'Accessible name; defaults to "Next slide".')],
+      ),
+      p(
+        "CarouselAutoplayToggle",
+        "trigger",
+        "Native button that stops and restarts auto-rotation; renders nothing without autoplay.",
+        true,
+        true,
+        [
+          prop(
+            "aria-label",
+            "string",
+            'Defaults to "Pause carousel" while rotating and "Play carousel" once stopped.',
           ),
         ],
       ),
@@ -3253,7 +3260,7 @@ const picker = [
       p("CalendarNextButton", "trigger", "Native button that shows the next month.", true, true, [
         prop("aria-label", "string", 'Defaults to the English "Next month"; pass a translation.'),
       ]),
-      p("CalendarGrid", "content", "Month table with localized weekday headers.", true, false, [
+      p("CalendarGrid", "region", "Month table with localized weekday headers.", true, false, [
         prop(
           "children",
           "(cell: MonthMatrixCell) => ReactNode",
