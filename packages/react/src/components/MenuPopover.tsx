@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import {
   composeRefs,
   findTypeaheadMatch,
@@ -12,7 +12,8 @@ import {
   type CollectionItemRecord,
   type SelectableCollectionContextValue,
 } from "./collection-shared.js";
-import { useMenuRootContext, type MenuPopoverProps } from "./menu-shared.js";
+import { useContextMenuContext, useMenuRootContext, type MenuPopoverProps } from "./menu-shared.js";
+import { useMenubarContext } from "./menubar-shared.js";
 import { placementSurfaceStyle, usePopoverSurface } from "./overlay-shared.js";
 
 export type { MenuPopoverProps } from "./menu-shared.js";
@@ -29,6 +30,14 @@ export function MenuPopover({
   ...props
 }: MenuPopoverProps & RefProp<HTMLDivElement>) {
   const menu = useMenuRootContext();
+  // A top-level menu inside a menubar hands ArrowLeft/ArrowRight to the bar;
+  // submenus keep the existing ArrowLeft-closes behavior.
+  const menubar = useMenubarContext();
+  const inMenubar = menubar !== null && menu !== null && !menu.isSubmenu;
+  // A context menu's own popover carries the recorded pointer position as
+  // CSS variables and is labelled explicitly (there is no trigger button).
+  const contextMenu = useContextMenuContext();
+  const ownContextMenu = contextMenu !== null && contextMenu.contentId === menu?.contentId;
   const typeaheadSearch = useTypeaheadSearch();
   const { onNativeToggle, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
@@ -71,6 +80,21 @@ export function MenuPopover({
     wasOpen.current = Boolean(menu?.open);
   }, [menu?.open]);
 
+  let surfaceStyle = placementSurfaceStyle(placement, offset, menu?.triggerId, style);
+  if (ownContextMenu) {
+    // Positioning stays consumer CSS, for example:
+    // position: fixed; left: var(--comp0-context-menu-x); top: var(--comp0-context-menu-y)
+    surfaceStyle = {
+      "--comp0-context-menu-x": `${contextMenu.position.x}px`,
+      "--comp0-context-menu-y": `${contextMenu.position.y}px`,
+      ...surfaceStyle,
+    } as CSSProperties;
+  }
+  // A context menu has no trigger button to borrow a label from; pass an
+  // aria-label (or aria-labelledby) on the popover instead.
+  let labelledBy = props["aria-labelledby"];
+  if (!ownContextMenu && labelledBy === undefined) labelledBy = menu?.triggerId;
+
   return (
     <MenuContext value={context}>
       <div
@@ -80,9 +104,9 @@ export function MenuPopover({
         role={props.role ?? "menu"}
         popover="auto"
         hidden={!menu?.open}
-        style={placementSurfaceStyle(placement, offset, menu?.triggerId, style)}
+        style={surfaceStyle}
         data-open={menu?.open || undefined}
-        aria-labelledby={props["aria-labelledby"] ?? menu?.triggerId}
+        aria-labelledby={labelledBy}
         onToggle={(event) => {
           onToggle?.(event);
           // Toggle events from nested popovers bubble in the React tree;
@@ -126,6 +150,16 @@ export function MenuPopover({
             menu?.setOpen(false);
             menu?.focusTrigger();
             return;
+          }
+          // In a menubar, horizontal arrows move to the neighboring
+          // top-level item and open its menu (open follows focus). A
+          // submenu trigger item already claimed ArrowRight above us.
+          if (inMenubar && menu && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+            const moved = menubar.moveFocus(menu.triggerId, event.key, { open: true });
+            if (moved) {
+              event.preventDefault();
+              return;
+            }
           }
           const items = context.items();
           const activeElement =

@@ -1,4 +1,5 @@
 export * from "./collection.js";
+export * from "./date.js";
 export * from "./interactions.js";
 export * from "./roving-focus.js";
 export * from "./state.js";
