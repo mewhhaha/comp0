@@ -41,6 +41,18 @@ export default defineConfig({
         resolve: {
           alias: aliases,
         },
+        // Compiled modules import react/compiler-runtime; declare it so a cold
+        // cache does not discover it mid-run, re-optimize, and load a second
+        // React copy into the browser.
+        optimizeDeps: {
+          include: [
+            "react",
+            "react/jsx-runtime",
+            "react/compiler-runtime",
+            "react-dom",
+            "react-dom/client",
+          ],
+        },
         test: {
           browser: {
             enabled: true,
