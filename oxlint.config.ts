@@ -128,7 +128,10 @@ export default defineConfig({
       },
     },
     {
-      files: ["packages/react/src/components/Table.tsx"],
+      files: [
+        "packages/react/src/components/Table.tsx",
+        "packages/react/src/components/CalendarGrid.tsx",
+      ],
       rules: {
         // Promoting a native table to role=grid is the point of the component.
         "jsx-a11y/no-noninteractive-element-to-interactive-role": "off",
@@ -138,6 +141,35 @@ export default defineConfig({
       files: ["packages/react/src/components/Resizer.tsx"],
       rules: {
         // An APG window splitter is an interactive separator by definition.
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+      },
+    },
+    {
+      files: [
+        "packages/react/src/components/Carousel.tsx",
+        "packages/react/src/components/CarouselSlide.tsx",
+      ],
+      rules: {
+        // The APG carousel pattern names the root and each slide with
+        // role="group" plus an aria-roledescription; the suggested
+        // fieldset/details elements carry the wrong semantics.
+        "jsx-a11y/prefer-tag-over-role": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/Carousel.tsx"],
+      rules: {
+        // WCAG 2.2.2 pause-on-hover/focus bookkeeping listens on the carousel
+        // root; the handlers only pause auto-rotation and trigger no action,
+        // so the root stays non-interactive.
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/Feed.tsx"],
+      rules: {
+        // The APG feed pattern handles PageDown/PageUp and Ctrl+Home/End on
+        // the feed container while focus stays on the articles inside it.
         "jsx-a11y/no-noninteractive-element-interactions": "off",
       },
     },

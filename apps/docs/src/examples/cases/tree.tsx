@@ -1,6 +1,5 @@
 import { useState } from "react";
-// TODO(integration): fold into the "@comp0/react" import once index.ts exports ./tree.js.
-import { Tree, TreeGroup, TreeItem } from "../../../../../packages/react/src/tree.js";
+import { Tree, TreeGroup, TreeItem } from "@comp0/react";
 
 type FileNode = {
   name: string;

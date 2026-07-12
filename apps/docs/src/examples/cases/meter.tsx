@@ -1,5 +1,5 @@
 import { Label } from "@comp0/react";
-import { Meter } from "../../../../../packages/react/src/status.js";
+import { Meter } from "@comp0/react";
 
 export function Example() {
   return (

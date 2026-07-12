@@ -1,6 +1,5 @@
 import { ToggleButton, ToggleButtonGroup } from "@comp0/react";
-// TODO(integration): fold into the "@comp0/react" import once index.ts exports ./toolbar.js.
-import { Toolbar } from "../../../../../packages/react/src/toolbar.js";
+import { Toolbar } from "@comp0/react";
 
 export function Example() {
   return (

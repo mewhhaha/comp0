@@ -1,6 +1,5 @@
 import { Menu, MenuItem, MenuPopover, MenuSeparator, MenuTrigger } from "@comp0/react";
-// TODO(integration): fold into the "@comp0/react" import once index.ts exports ./menubar.js.
-import { Menubar } from "../../../../../packages/react/src/menubar.js";
+import { Menubar } from "@comp0/react";
 
 export function Example() {
   return (

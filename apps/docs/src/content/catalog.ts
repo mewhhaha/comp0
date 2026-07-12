@@ -403,6 +403,60 @@ const lessons: Record<string, LessonCopy> = {
     "Read the selection from onChange; pass defaultExpanded, or expanded with onExpandedChange, to manage the open branches. Clicking an expandable row selects it and toggles its branch.",
     '<Tree aria-label="Files" defaultExpanded={["src"]}><TreeItem value="src">src<TreeGroup><TreeItem value="index">index.ts</TreeItem></TreeGroup></TreeItem></Tree>',
   ),
+  calendar: lesson(
+    "A month grid for choosing one day with the keyboard or a click.",
+    "Like a wall calendar: one page per month, one finger on a day.",
+    "Use it when seeing the whole month helps, alone or inside a DatePicker.",
+    "Wrap CalendarHeader and CalendarGrid in Calendar; the grid renders the month on its own.",
+    "Add CalendarPreviousButton and CalendarNextButton around the header for month paging.",
+    "Read the choice from onChange as an ISO date, and fence the range with min/max; arrow keys walk days, PageUp/PageDown walk months.",
+    '<Calendar defaultValue="2026-07-14" onChange={setDate}><CalendarHeader /><CalendarGrid /></Calendar>',
+  ),
+  carousel: lesson(
+    "A labelled strip of slides shown one at a time with previous and next controls.",
+    "Like a rotating shop window: one display at a time, and you can turn the crank yourself.",
+    "Use it to feature a few highlights in limited space; use Tabs when people pick sections by name.",
+    "Wrap everything in Carousel with an aria-label, and put the slides in CarouselViewport.",
+    "Add CarouselPrevious and CarouselNext, plus CarouselAutoplayToggle when autoplay is set.",
+    "Pass autoplay in milliseconds only with the toggle present; rotation pauses on hover or focus and the toggle stops it for good.",
+    '<Carousel aria-label="Featured recipes" autoplay={5000}><CarouselAutoplayToggle /><CarouselPrevious /><CarouselNext /><CarouselViewport><CarouselSlide>Soup</CarouselSlide></CarouselViewport></Carousel>',
+  ),
+  "color-field": lesson(
+    "A labelled native color swatch that opens the browser's picker.",
+    "Like a paint chip on a hardware-store card: tap it to browse the full palette.",
+    "Use it when people choose one opaque color, such as a theme accent.",
+    "Start a TextField with a Label naming what the color is for.",
+    "Put ColorField inside it instead of Input, with a name so the value submits.",
+    'The native value is hex sRGB without alpha, such as "#0d9488"; say so in a Description when transparency might be expected.',
+    '<TextField defaultValue="#0d9488"><Label>Accent color</Label><ColorField name="accent" /></TextField>',
+  ),
+  "date-field": lesson(
+    "Native date and time inputs with the shared label and feedback pieces.",
+    "Like a printed form with boxes for day, month, and year: the browser fills in the format.",
+    "Use them whenever people type or pick a plain date or time value.",
+    "Start a TextField with a Label and put DateField (or TimeField) inside it.",
+    "Add Description for a hint, FieldError for validation, and min/max ISO bounds.",
+    "Give each input a name so the form submits its ISO value; the browser handles parsing and the platform picker.",
+    '<TextField><Label>Departure</Label><DateField name="departure" min="2026-07-01" /></TextField>',
+  ),
+  "date-picker": lesson(
+    "A typed date input with a calendar popover sharing one value.",
+    "Like a paper form beside a wall calendar: write the date or point at it.",
+    "Use it when people know some dates by heart and browse for others.",
+    "Wrap a Label, a Popover with a DateField, and a DatePickerTrigger in DatePicker.",
+    "Put a Calendar with CalendarHeader and CalendarGrid inside DatePickerPopover; it adopts the shared value automatically.",
+    "Read the value from onChange as an ISO date; picking a day closes the popover and refills the DateField, and typing updates the calendar.",
+    '<DatePicker defaultValue="2026-07-14"><Label>Reservation</Label><Popover><DateField /><DatePickerTrigger /><DatePickerPopover><Calendar><CalendarHeader /><CalendarGrid /></Calendar></DatePickerPopover></Popover></DatePicker>',
+  ),
+  feed: lesson(
+    "An infinite-scroll list of articles that keyboard users can page through and escape.",
+    "Like a stack of morning papers: flip to the next story, or put the pile down at any time.",
+    "Use it for scroll-loaded content such as news or activity streams; use GridList for a selectable collection.",
+    "Wrap the stream in Feed with an aria-label.",
+    "Render one FeedArticle per story with aria-labelledby pointing at its title.",
+    "Set busy while loading more, and total when you know how many articles exist beyond the rendered ones.",
+    '<Feed aria-label="Recipe stories" busy={loading}><FeedArticle aria-labelledby="story-1"><h3 id="story-1">Roasted tomato soup</h3></FeedArticle></Feed>',
+  ),
 };
 const accessibility: Record<string, string[]> = {
   button: [
@@ -611,6 +665,36 @@ const accessibility: Record<string, string[]> = {
     "Give the tree an aria-label that names the hierarchy, such as Project files.",
     "Levels, positions, and expansion state are announced automatically; keep each row's visible text meaningful on its own and pass textValue when markup obscures it.",
     "Clicking an expandable row both selects it and toggles its branch, while ArrowRight and ArrowLeft expand and collapse for keyboard users; avoid extra click targets inside rows.",
+  ],
+  calendar: [
+    "The grid is one tab stop; arrow keys move between days, so keep custom cells as buttons.",
+    "Month and weekday names come from Intl for the given locale, but the prev/next button labels default to English aria-labels; translate them.",
+    "The header is a polite live region, so month changes are announced without moving focus.",
+  ],
+  carousel: [
+    "Give the carousel an aria-label naming the content, such as Featured recipes.",
+    "Keep CarouselAutoplayToggle first in the tab order whenever autoplay is set; hover and focus pauses are temporary, the toggle is the guaranteed stop (WCAG 2.2.2).",
+    "Slide changes announce politely only while rotation is paused or stopped; name slides after their content with aria-label when N of M is too vague.",
+  ],
+  "color-field": [
+    "Use Label so the swatch has a name; a bare colored square says nothing.",
+    "Show the chosen value or its meaning as visible text; the swatch alone is a color-only signal.",
+    "Native color inputs hold opaque hex sRGB only; explain that limit in a Description when alpha or wide gamut might be expected.",
+  ],
+  "date-field": [
+    "Always name the input with a Label or an aria-label; the segments announce themselves.",
+    "Native inputs bring the platform's own accessible date and time pickers for free; do not hide them without a replacement.",
+    "Use min/max instead of custom validation so errors surface through the browser's constraint messages.",
+  ],
+  "date-picker": [
+    "Keep the DateField: typing a date must stay possible without opening the calendar.",
+    'The trigger and surface default to English aria-labels ("Choose date", "Calendar"); translate them for localized apps.',
+    "Opening moves focus to the focused day and closing returns it to the trigger; Escape always closes without changing the value.",
+  ],
+  feed: [
+    "Give the feed an aria-label naming the stream, such as Recipe stories.",
+    "Label every article via aria-labelledby on FeedArticle so PageDown announces where it landed.",
+    "Keep something focusable before and after the feed; Ctrl+Home and Ctrl+End are how keyboard users escape an endless scroll.",
   ],
 };
 
@@ -1566,6 +1650,131 @@ const field = [
     "Submits two hidden inputs, `${name}-start` and `${name}-end`, carrying the pair.",
     ["slider", "number-field"],
   ),
+  common(
+    "color-field",
+    "Color Field",
+    "fields",
+    ["ColorField", "Description", "Label", "TextField"],
+    '<TextField defaultValue="#0d9488"><Label>Accent color</Label><ColorField name="accent" /><Description>Hex sRGB only.</Description></TextField>',
+    [
+      p(
+        "TextField",
+        "root",
+        "Shared field brain that connects the label, the color input, help, and errors.",
+        false,
+        true,
+        [
+          prop(
+            "value / defaultValue",
+            "string",
+            'Controlled or initial hex value such as "#0d9488".',
+          ),
+          prop("onChange", "(value: string) => void", "Receives the next hex value."),
+          prop(
+            "disabled / invalid / required",
+            "boolean",
+            "Field state inherited by the color input and announced through the label pieces.",
+          ),
+        ],
+      ),
+      p("Label", "label", "Names the color for sighted and assistive users.", true, false),
+      p(
+        "ColorField",
+        "input",
+        "Native color input; the browser supplies the swatch and picker.",
+        true,
+        false,
+        [
+          prop("name", "string", "Submits the hex value with a form."),
+          prop(
+            "value / defaultValue",
+            "string",
+            "Controlled or initial hex value when standalone.",
+          ),
+          prop(
+            "onChange",
+            "(event: ChangeEvent) => void",
+            "Native change event; read event.currentTarget.value for the hex string.",
+          ),
+          prop("disabled / required", "boolean", "Overrides the surrounding field state."),
+        ],
+      ),
+      p("Description", "feedback", "Hint wired via aria-describedby.", true, true),
+    ],
+    [
+      { keys: ["Enter"], action: "Opens the browser color picker on the focused swatch." },
+      { keys: ["Space"], action: "Opens the browser color picker on the focused swatch." },
+    ],
+    [
+      { attribute: "[data-value]", on: "ColorField", meaning: "The current hex value." },
+      { attribute: "[data-invalid]", on: "ColorField", meaning: "The field is invalid." },
+      { attribute: ":disabled", on: "ColorField", meaning: "The input is disabled." },
+      { attribute: "[data-focus-visible]", on: "ColorField", meaning: "Focused via keyboard." },
+    ],
+    "Submits its hex value under name like any native input.",
+    ["text-field"],
+  ),
+  common(
+    "date-field",
+    "Date Field",
+    "fields",
+    ["DateField", "Description", "Label", "TextField", "TimeField"],
+    '<><TextField><Label>Departure</Label><DateField name="departure" min="2026-07-01" /><Description>Trips start in July.</Description></TextField><TextField><Label>Pickup</Label><TimeField name="pickup" step={900} /></TextField></>',
+    [
+      p(
+        "TextField",
+        "root",
+        "Optional shared field brain connecting the label, input, help, and errors.",
+        false,
+        true,
+        [
+          prop("value / defaultValue", "string", "Controlled or initial ISO value."),
+          prop("onChange", "(value: string) => void", "Receives the next ISO value."),
+          prop("disabled / invalid / required", "boolean", "Field-wide states."),
+        ],
+      ),
+      p("Label", "label", "Visible name connected to the input."),
+      p(
+        "DateField",
+        "input",
+        "Native date input; the browser owns typing and validation.",
+        true,
+        false,
+        [
+          prop("name", "string", "Submission name; the value submits as YYYY-MM-DD."),
+          prop("min / max", "string", 'Earliest and latest selectable dates as "YYYY-MM-DD".'),
+          prop("disabled / required", "boolean", "Override the field-wide state for this control."),
+          prop("aria-label", "string", "Names the input when there is no visible Label."),
+        ],
+      ),
+      p("TimeField", "input", "Native time input over the same field wiring.", true, true, [
+        prop("name", "string", "Submission name; the value submits as HH:mm."),
+        prop("min / max", "string", 'Earliest and latest selectable times such as "09:00".'),
+        prop(
+          "step",
+          "number",
+          "Granularity in seconds; 60 is the browser default, 1 reveals seconds.",
+        ),
+      ]),
+    ],
+    [
+      { keys: ["ArrowUp"], action: "Steps the focused date or time segment up." },
+      { keys: ["ArrowDown"], action: "Steps the focused date or time segment down." },
+      { keys: ["ArrowLeft"], action: "Moves to the previous segment." },
+      { keys: ["ArrowRight"], action: "Moves to the next segment." },
+    ],
+    [
+      { attribute: "[data-value]", on: "DateField, TimeField", meaning: "The field has a value." },
+      { attribute: "[data-invalid]", on: "DateField, TimeField", meaning: "The value is invalid." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "DateField, TimeField",
+        meaning: "Keyboard focus is on the field.",
+      },
+    ],
+    'DateField and TimeField are native inputs: name them and they submit ISO values ("YYYY-MM-DD" and "HH:mm") with native min/max/required validation.',
+    ["date-picker", "calendar", "select"],
+  ),
 ];
 
 const navigation = [
@@ -2400,6 +2609,181 @@ const navigation = [
     "Selection does not create a native form value; mirror it into a hidden input when a form needs it.",
     ["grid-list", "list-box"],
   ),
+  common(
+    "carousel",
+    "Carousel",
+    "navigation",
+    [
+      "Carousel",
+      "CarouselAutoplayToggle",
+      "CarouselNext",
+      "CarouselPrevious",
+      "CarouselSlide",
+      "CarouselViewport",
+    ],
+    '<Carousel aria-label="Featured recipes" loop autoplay={5000}><CarouselAutoplayToggle>⏯</CarouselAutoplayToggle><CarouselPrevious>‹</CarouselPrevious><CarouselNext>›</CarouselNext><CarouselViewport><CarouselSlide>Roasted tomato soup</CarouselSlide><CarouselSlide>Charred corn salad</CarouselSlide></CarouselViewport></Carousel>',
+    [
+      p(
+        "Carousel",
+        "root",
+        "Section with the carousel roledescription; owns the slide index and the autoplay pause bookkeeping.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Names the carousel for assistive technology; required."),
+          prop("index / defaultIndex", "number", "Controlled or initial slide index."),
+          prop("onIndexChange", "(index: number) => void", "Receives the next slide index."),
+          prop("loop", "boolean", "Previous on the first slide and Next on the last wrap around."),
+          prop(
+            "autoplay",
+            "number",
+            "Milliseconds between automatic advances; rotation pauses on hover or focus and stops via the toggle.",
+          ),
+        ],
+      ),
+      p(
+        "CarouselAutoplayToggle",
+        "trigger",
+        "Native button that stops and restarts auto-rotation; renders nothing without autoplay.",
+        true,
+        true,
+        [
+          prop(
+            "aria-label",
+            "string",
+            'Defaults to "Pause carousel" while rotating and "Play carousel" once stopped.',
+          ),
+        ],
+      ),
+      p(
+        "CarouselPrevious",
+        "trigger",
+        "Native button that shows the previous slide; disabled on the first slide unless loop.",
+        true,
+        true,
+        [prop("aria-label", "string", 'Accessible name; defaults to "Previous slide".')],
+      ),
+      p(
+        "CarouselNext",
+        "trigger",
+        "Native button that shows the next slide; disabled on the last slide unless loop.",
+        true,
+        true,
+        [prop("aria-label", "string", 'Accessible name; defaults to "Next slide".')],
+      ),
+      p(
+        "CarouselViewport",
+        "content",
+        "Wraps the slides; exposes --comp0-carousel-index for transform tracks and flips aria-live between off (rotating) and polite (paused or stopped).",
+        true,
+        false,
+        [
+          prop(
+            "style",
+            "CSSProperties",
+            "Merged under the exposed --comp0-carousel-index variable.",
+          ),
+        ],
+      ),
+      p(
+        "CarouselSlide",
+        "item",
+        "One slide, announced as a group with the slide roledescription.",
+        true,
+        false,
+        [
+          prop(
+            "aria-label",
+            "string",
+            'Names the slide after its content; defaults to its computed "N of M" position.',
+          ),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves through the rotation, previous, and next controls." },
+      { keys: ["Enter"], action: "Presses the focused carousel control." },
+      { keys: ["Space"], action: "Presses the focused carousel control." },
+    ],
+    [
+      { attribute: "[data-current]", on: "CarouselSlide", meaning: "This slide is showing." },
+      { attribute: "[data-rotating]", on: "Carousel", meaning: "Auto-rotation is advancing." },
+      {
+        attribute: "[data-stopped]",
+        on: "Carousel, CarouselAutoplayToggle",
+        meaning: "The toggle stopped auto-rotation.",
+      },
+      {
+        attribute: ":disabled",
+        on: "CarouselPrevious, CarouselNext",
+        meaning: "The bound was reached without loop.",
+      },
+    ],
+    "A carousel does not create form values.",
+    ["tabs"],
+  ),
+  common(
+    "feed",
+    "Feed",
+    "navigation",
+    ["Feed", "FeedArticle"],
+    '<Feed aria-label="Recipe stories" total={12}><FeedArticle aria-labelledby="story-1"><h3 id="story-1">Roasted tomato soup</h3></FeedArticle><FeedArticle aria-labelledby="story-2"><h3 id="story-2">Charred corn salad</h3></FeedArticle></Feed>',
+    [
+      p(
+        "Feed",
+        "root",
+        "The scroll-loaded article list; PageDown and PageUp walk it and Ctrl+Home / Ctrl+End escape it.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Names the feed for assistive technology; required."),
+          prop("busy", "boolean", "Marks the feed as loading more articles via aria-busy."),
+          prop(
+            "total",
+            "number",
+            "Total article count when known beyond the rendered ones; feeds aria-setsize, which otherwise reports the rendered count.",
+          ),
+        ],
+      ),
+      p(
+        "FeedArticle",
+        "item",
+        "Native article that can receive focus; announces its position and set size automatically.",
+        true,
+        false,
+        [
+          prop(
+            "aria-labelledby",
+            "string",
+            "Point it at the article's title element so screen readers hear what it is about.",
+          ),
+        ],
+      ),
+    ],
+    [
+      { keys: ["PageDown"], action: "Moves focus to the next article." },
+      { keys: ["PageUp"], action: "Moves focus to the previous article." },
+      {
+        keys: ["Ctrl", "End"],
+        action: "Moves focus to the first focusable element after the feed.",
+      },
+      {
+        keys: ["Ctrl", "Home"],
+        action: "Moves focus to the first focusable element before the feed.",
+      },
+      { keys: ["Tab"], action: "Moves through links and controls inside the focused article." },
+    ],
+    [
+      { attribute: "[data-busy]", on: "Feed", meaning: "More articles are loading." },
+      {
+        attribute: ":focus-visible",
+        on: "FeedArticle",
+        meaning: "The article has keyboard focus.",
+      },
+    ],
+    "A feed does not create form values.",
+    ["grid-list"],
+  ),
 ];
 
 const picker = [
@@ -2747,6 +3131,182 @@ const picker = [
     ],
     "No native form behavior.",
     ["popover", "visually-hidden"],
+  ),
+  common(
+    "calendar",
+    "Calendar",
+    "pickers",
+    [
+      "Calendar",
+      "CalendarCell",
+      "CalendarGrid",
+      "CalendarHeader",
+      "CalendarNextButton",
+      "CalendarPreviousButton",
+    ],
+    '<Calendar as="div" defaultValue="2026-07-14" onChange={setDate}><CalendarPreviousButton /><CalendarHeader /><CalendarNextButton /><CalendarGrid>{(cell) => <CalendarCell date={cell.iso} outsideMonth={cell.outsideMonth} />}</CalendarGrid></Calendar>',
+    [
+      p("Calendar", "root", "Selected-date and visible-month provider.", false, false, [
+        prop("value / defaultValue", "string", 'Controlled or initial date as "YYYY-MM-DD".'),
+        prop("onChange", "(value: string) => void", "Receives the selected ISO date."),
+        prop("min / max", "string", "Inclusive selectable range; days outside it are disabled."),
+        prop(
+          "locale",
+          "string",
+          "BCP 47 tag for month and weekday names and the week start; defaults to the browser locale.",
+        ),
+        prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
+      ]),
+      p("CalendarHeader", "label", "Live region announcing the visible month.", true, false, [
+        prop(
+          "children",
+          "(label: string) => ReactNode",
+          "Custom content receiving the localized month-and-year label.",
+        ),
+      ]),
+      p(
+        "CalendarPreviousButton",
+        "trigger",
+        "Native button that shows the previous month.",
+        true,
+        true,
+        [
+          prop(
+            "aria-label",
+            "string",
+            'Defaults to the English "Previous month"; pass a translation.',
+          ),
+        ],
+      ),
+      p("CalendarNextButton", "trigger", "Native button that shows the next month.", true, true, [
+        prop("aria-label", "string", 'Defaults to the English "Next month"; pass a translation.'),
+      ]),
+      p("CalendarGrid", "content", "Month table with localized weekday headers.", true, false, [
+        prop(
+          "children",
+          "(cell: MonthMatrixCell) => ReactNode",
+          "Custom day cell renderer; defaults to a plain CalendarCell.",
+        ),
+      ]),
+      p("CalendarCell", "item", "Day cell wrapping the real day button.", true, true, [
+        prop("date", "string", 'This cell\'s date as "YYYY-MM-DD".'),
+        prop(
+          "outsideMonth",
+          "boolean",
+          "Marks a leading or trailing day from a neighboring month.",
+        ),
+        prop("children", "ReactNode", "Visible day content; defaults to the day number."),
+      ]),
+    ],
+    [
+      { keys: ["ArrowLeft"], action: "Moves focus one day back." },
+      { keys: ["ArrowRight"], action: "Moves focus one day forward." },
+      { keys: ["ArrowUp"], action: "Moves focus one week back." },
+      { keys: ["ArrowDown"], action: "Moves focus one week forward." },
+      { keys: ["Home"], action: "Moves focus to the start of the week." },
+      { keys: ["End"], action: "Moves focus to the end of the week." },
+      { keys: ["PageUp"], action: "Shows the previous month." },
+      { keys: ["PageDown"], action: "Shows the next month." },
+      { keys: ["Shift", "PageUp"], action: "Shows the previous year." },
+      { keys: ["Shift", "PageDown"], action: "Shows the next year." },
+      { keys: ["Enter"], action: "Selects the focused day." },
+      { keys: ["Space"], action: "Selects the focused day." },
+    ],
+    [
+      { attribute: "[data-selected]", on: "CalendarCell", meaning: "The day is selected." },
+      { attribute: "[data-today]", on: "CalendarCell", meaning: "The day is today." },
+      {
+        attribute: "[data-outside-month]",
+        on: "CalendarCell",
+        meaning: "The day belongs to a neighboring month.",
+      },
+      { attribute: "[data-value]", on: "Calendar (with as)", meaning: "A date is selected." },
+    ],
+    "Selection does not create a native form value; pair the calendar with a named DateField, or mirror the value into a hidden input.",
+    ["date-picker", "date-field", "select"],
+  ),
+  common(
+    "date-picker",
+    "Date Picker",
+    "pickers",
+    [
+      "Calendar",
+      "CalendarGrid",
+      "CalendarHeader",
+      "DateField",
+      "DatePicker",
+      "DatePickerPopover",
+      "DatePickerTrigger",
+      "Label",
+      "Popover",
+    ],
+    '<DatePicker defaultValue="2026-07-14"><Label>Reservation</Label><Popover><DateField /><DatePickerTrigger /><DatePickerPopover><Calendar><CalendarHeader /><CalendarGrid /></Calendar></DatePickerPopover></Popover></DatePicker>',
+    [
+      p("DatePicker", "root", "Shared date value and field-context provider.", false, false, [
+        prop("value / defaultValue", "string", 'Controlled or initial date as "YYYY-MM-DD".'),
+        prop("onChange", "(value: string) => void", "Receives the selected ISO date."),
+        prop("disabled / invalid / required", "boolean", "Field-wide states."),
+        prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
+      ]),
+      p("Label", "label", "Visible name connected to the DateField."),
+      p("Popover", "root", "Open-state and top-layer popup lifecycle provider.", false),
+      p(
+        "DateField",
+        "input",
+        "Native date input that reads and writes the picker's value.",
+        true,
+        true,
+        [prop("name", "string", "Submission name; the value submits as YYYY-MM-DD.")],
+      ),
+      p("DatePickerTrigger", "trigger", "Native button that opens the calendar.", true, false, [
+        prop("aria-label", "string", 'Defaults to the English "Choose date"; pass a translation.'),
+        prop("disabled", "boolean", "Disables opening."),
+      ]),
+      p("DatePickerPopover", "content", "The calendar dialog surface.", true, false, [
+        prop("aria-label", "string", 'Defaults to the English "Calendar"; pass a translation.'),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom end"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the surface."),
+      ]),
+      p(
+        "Calendar",
+        "content",
+        "Month grid that adopts the picker's value and closes it on selection.",
+      ),
+    ],
+    [
+      {
+        keys: ["Enter"],
+        action: "Opens the calendar from the trigger; selects the focused day inside.",
+      },
+      {
+        keys: ["Space"],
+        action: "Opens the calendar from the trigger; selects the focused day inside.",
+      },
+      { keys: ["Escape"], action: "Closes the calendar and returns focus to the trigger." },
+      {
+        keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Move between days in the open calendar.",
+      },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "DatePickerTrigger, DatePickerPopover",
+        meaning: "The calendar is open.",
+      },
+      {
+        attribute: ":popover-open",
+        on: "DatePickerPopover",
+        meaning: "Native pseudo-class equivalent.",
+      },
+      { attribute: "[data-value]", on: "DatePicker (with as)", meaning: "A date is selected." },
+    ],
+    "The nested DateField owns form participation: give it a name and the shared value submits as YYYY-MM-DD with native validation.",
+    ["calendar", "date-field", "select"],
   ),
 ];
 

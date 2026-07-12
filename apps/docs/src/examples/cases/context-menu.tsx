@@ -1,6 +1,5 @@
 import { MenuItem, MenuPopover, MenuSeparator } from "@comp0/react";
-// TODO(integration): fold into the "@comp0/react" import once index.ts exports ./menubar.js.
-import { ContextMenu, ContextMenuTrigger } from "../../../../../packages/react/src/menubar.js";
+import { ContextMenu, ContextMenuTrigger } from "@comp0/react";
 
 export function Example() {
   return (

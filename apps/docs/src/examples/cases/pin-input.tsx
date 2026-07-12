@@ -1,7 +1,7 @@
 import { useState } from "react";
 // Integrator: swap for `import { PinInput, PinInputField } from "@comp0/react";`
 // once index.ts exports the pin-input barrel.
-import { PinInput, PinInputField } from "../../../../../packages/react/src/pin-input.js";
+import { PinInput, PinInputField } from "@comp0/react";
 
 export function Example() {
   const [code, setCode] = useState("");

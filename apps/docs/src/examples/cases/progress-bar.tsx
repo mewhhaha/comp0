@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Label } from "@comp0/react";
-import { ProgressBar } from "../../../../../packages/react/src/status.js";
+import { ProgressBar } from "@comp0/react";
 
 export function Example() {
   const [value, setValue] = useState(0.4);

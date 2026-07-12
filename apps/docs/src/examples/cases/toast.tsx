@@ -1,12 +1,5 @@
 import { Button } from "@comp0/react";
-// TODO(integration): fold into the "@comp0/react" import once index.ts exports ./toast.js.
-import {
-  Toast,
-  ToastDismiss,
-  ToastProvider,
-  ToastRegion,
-  useToast,
-} from "../../../../../packages/react/src/toast.js";
+import { Toast, ToastDismiss, ToastProvider, ToastRegion, useToast } from "@comp0/react";
 
 function Triggers() {
   const { notify } = useToast();

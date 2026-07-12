@@ -1,6 +1,10 @@
 export * from "./button.js";
+export * from "./carousel.js";
 export * from "./choices.js";
+export * from "./color.js";
+export * from "./date.js";
 export * from "./disclosure.js";
+export * from "./feed.js";
 export { Label, type LabelProps } from "./components/Label.js";
 export { Description, type DescriptionProps } from "./components/Description.js";
 export { FieldError, type FieldErrorProps } from "./components/FieldError.js";
