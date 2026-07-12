@@ -1,16 +1,27 @@
 import { createElement } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
-import { usePopoverSurface, type PopoverContentProps } from "./overlay-shared.js";
-export type { PopoverContentProps } from "./overlay-shared.js";
+import {
+  placementSurfaceStyle,
+  usePopoverSurface,
+  type PopoverContentProps,
+} from "./overlay-shared.js";
+export type {
+  PopoverContentProps,
+  PopoverPlacement,
+  PopoverPlacementProps,
+} from "./overlay-shared.js";
 
 export function PopoverContent({
   as,
   hidden,
+  offset,
   onKeyDown,
   onToggle,
+  placement,
   popover: popoverProp = "auto",
   ref,
+  style,
   ...props
 }: PopoverContentProps & RefProp<HTMLDivElement>) {
   // Top layer by default, matching SelectPopover; pass popover="none" to
@@ -26,6 +37,7 @@ export function PopoverContent({
     role: props.role ?? "dialog",
     popover: popoverMode,
     hidden: hidden ?? !popover?.open,
+    style: placementSurfaceStyle(placement, offset, popover?.triggerId, style),
     "data-open": dataAttr(popover?.open),
     "data-slot": dataSlot(props, "popover-content"),
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {

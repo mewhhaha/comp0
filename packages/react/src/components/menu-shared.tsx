@@ -6,6 +6,7 @@ import {
   type ElementType,
   type HTMLAttributes,
 } from "react";
+import { type PopoverPlacementProps } from "./overlay-shared.js";
 
 export type MenuProps = Omit<HTMLAttributes<HTMLElement>, "onToggle"> & {
   as?: ElementType | typeof Fragment | undefined;
@@ -22,7 +23,7 @@ export type MenuTriggerProps = Omit<
   as?: ElementType | typeof Fragment | undefined;
 } & Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "download" | "href" | "rel" | "target">;
 
-export type MenuPopoverProps = HTMLAttributes<HTMLDivElement>;
+export type MenuPopoverProps = HTMLAttributes<HTMLDivElement> & PopoverPlacementProps;
 
 export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;

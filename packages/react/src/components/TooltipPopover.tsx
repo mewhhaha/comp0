@@ -2,19 +2,24 @@ import { createElement } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import {
+  placementSurfaceStyle,
   usePopoverSurface,
   useTooltipContext,
   type OverlayContentProps,
+  type PopoverPlacementProps,
 } from "./overlay-shared.js";
-export type TooltipPopoverProps = OverlayContentProps;
+export type TooltipPopoverProps = OverlayContentProps & PopoverPlacementProps;
 
 export function TooltipPopover({
   as,
   hidden,
+  offset,
   onPointerEnter,
   onPointerLeave,
   onToggle,
+  placement,
   ref,
+  style,
   ...props
 }: TooltipPopoverProps & RefProp<HTMLDivElement>) {
   const tooltip = useTooltipContext();
@@ -29,6 +34,7 @@ export function TooltipPopover({
     role: props.role ?? "tooltip",
     popover: "manual",
     hidden: hidden ?? !tooltip?.open,
+    style: placementSurfaceStyle(placement, offset, tooltip?.triggerId, style),
     "data-open": dataAttr(tooltip?.open),
     "data-slot": dataSlot(props, "tooltip-content"),
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {

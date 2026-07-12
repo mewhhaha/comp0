@@ -12,7 +12,7 @@ import {
   StepList,
 } from "../../components/teaching/index.js";
 import { componentBySlug, componentGroups, components } from "../../content/index.js";
-import { getExample } from "../../examples/index.js";
+import { getExample, getExampleSource } from "../../examples/index.js";
 import { ComponentOutline } from "./ComponentOutline.js";
 import { ComponentSection } from "./ComponentSection.js";
 
@@ -83,7 +83,10 @@ export default function ComponentRoute() {
           <ComponentSection id="example" title="Example">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
               <LiveExample>{Example ? <Example /> : <p>Example unavailable.</p>}</LiveExample>
-              <CodeBlock code={doc.exampleSource} title={`${doc.title}.tsx`} />
+              <CodeBlock
+                code={getExampleSource(doc.slug) ?? doc.exampleSource}
+                title={`${doc.title}.tsx`}
+              />
             </div>
           </ComponentSection>
 

@@ -28,8 +28,8 @@ export const learnDocs = [
         id: "first-component",
         title: "Start with one small component",
         explanation:
-          "Pick one job, such as saving a form, and add the matching component. comp0 is headless, so it gives you behavior and HTML meaning but not a finished visual theme. Add your own className and CSS after the behavior makes sense.",
-        code: '<Button className="primary">Save</Button>',
+          "Pick one job, such as saving a form, and add the matching component. comp0 is headless, so it gives you behavior and HTML meaning but not a finished visual theme. Style it with Tailwind utility classes after the behavior makes sense — every example in these docs does the same.",
+        code: '<Button className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800">\n  Save\n</Button>',
         language: "tsx",
       },
     ],
@@ -71,32 +71,33 @@ export const learnDocs = [
     slug: "styling",
     order: 3,
     title: "Styling",
-    summary: "Bring your own visual design and let state attributes show what is happening.",
+    summary:
+      "Style every part with Tailwind utility classes and let state attributes drive what changes.",
     sections: [
       {
-        id: "your-css",
+        id: "tailwind-utilities",
         title: "Style the element that exists",
         explanation:
-          "Headless means comp0 does not choose your colors, spacing, or borders. Pass className and ordinary DOM props to the part that actually renders an element. Then write CSS for that class just as you would for native HTML.",
-        code: ".save-button {\n  border-radius: 0.5rem;\n}",
-        language: "css",
-        note: "Do not search for a hidden comp0 theme. Your CSS is intentionally in charge.",
+          "Headless means comp0 does not choose your colors, spacing, or borders. Pass className with Tailwind utilities to the part that actually renders an element, exactly as you would style native HTML. Plain CSS works too, but every example in these docs uses Tailwind so you can copy classes straight into your app.",
+        code: '<SelectTrigger className="w-full rounded-lg border border-zinc-950/10 bg-white px-3 py-2 text-sm">\n  <SelectValue />\n</SelectTrigger>',
+        language: "tsx",
+        note: "Do not search for a hidden comp0 theme. Your classes are intentionally in charge.",
       },
       {
         id: "presence-state",
-        title: "Use state attributes by presence",
+        title: "Style state with data variants",
         explanation:
-          'Components add attributes such as data-open only while that state is true. When a popover closes, data-open is removed instead of becoming data-open="false". CSS can therefore ask whether the attribute is present.',
-        code: ".menu-trigger[data-open] {\n  background: rebeccapurple;\n}\n\n.option[data-selected] { font-weight: 700; }",
-        language: "css",
+          'Components add attributes such as data-open only while that state is true. When a popover closes, data-open is removed instead of becoming data-open="false". Tailwind\'s data variants match exactly that presence, so data-open: and data-selected: utilities switch on and off with the state.',
+        code: '<MenuTrigger className="rounded-lg px-3 py-2 text-sm data-open:bg-zinc-100">\n  Actions\n</MenuTrigger>\n\n<SelectOption className="px-3 py-2 text-sm data-selected:bg-teal-100 data-selected:font-medium" value="small">\n  Small\n</SelectOption>',
+        language: "tsx",
       },
       {
         id: "focus",
         title: "Show focus clearly",
         explanation:
-          "Keyboard users need to see where they are before they press a key. Keep a strong :focus-visible outline or replace it with an equally obvious style. Also style disabled and invalid states so a control does not silently change meaning.",
-        code: ".save-button:focus-visible {\n  outline: 3px solid cornflowerblue;\n  outline-offset: 2px;\n}",
-        language: "css",
+          "Keyboard users need to see where they are before they press a key. Keep a strong focus-visible: outline or replace it with an equally obvious style. Also style disabled and invalid states, with data-disabled: and data-invalid:, so a control does not silently change meaning.",
+        code: '<Button className="rounded-lg bg-teal-700 px-3 py-2 text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 data-disabled:opacity-50">\n  Save\n</Button>',
+        language: "tsx",
       },
     ],
   },

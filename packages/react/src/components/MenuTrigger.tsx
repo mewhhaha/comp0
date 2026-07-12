@@ -4,6 +4,7 @@ import { composeRefs } from "@comp0/core";
 import { Slot, type RefProp } from "../shared.js";
 import { MenuContext, resolveItemLabel } from "./collection-shared.js";
 import { useMenuRootContext, type MenuTriggerProps } from "./menu-shared.js";
+import { triggerAnchorStyle } from "./overlay-shared.js";
 
 export type { MenuTriggerProps } from "./menu-shared.js";
 
@@ -13,6 +14,7 @@ export function MenuTrigger({
   onClick,
   onKeyDown,
   ref,
+  style,
   ...props
 }: MenuTriggerProps & RefProp<HTMLElement>) {
   const menu = useMenuRootContext();
@@ -61,6 +63,7 @@ export function MenuTrigger({
       type: undefined,
       role: "menuitem",
       tabIndex: -1,
+      style: triggerAnchorStyle(menu?.triggerId, style),
       "aria-haspopup": "menu",
       "aria-controls": menu?.contentId,
       "aria-expanded": menu?.open,
@@ -94,6 +97,7 @@ export function MenuTrigger({
     ...props,
     ref: setElement,
     id: props.id ?? menu?.triggerId,
+    style: triggerAnchorStyle(menu?.triggerId, style),
     type: isNativeButton ? (props.type ?? "button") : undefined,
     disabled: isNativeButton ? disabled : undefined,
     "aria-disabled": isNativeButton ? undefined : disabled || undefined,

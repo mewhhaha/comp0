@@ -79,6 +79,7 @@ const publicComponents = [
   "ToggleButton",
   "ToggleButtonGroup",
   "Tooltip",
+  "TooltipArrow",
   "TooltipPopover",
   "TooltipTrigger",
   "VisuallyHidden",

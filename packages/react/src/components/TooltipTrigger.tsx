@@ -1,7 +1,11 @@
 import { createElement, Fragment } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { dataSlot, Slot, type RefProp } from "../shared.js";
-import { useTooltipContext, type OverlayTriggerProps } from "./overlay-shared.js";
+import {
+  triggerAnchorStyle,
+  useTooltipContext,
+  type OverlayTriggerProps,
+} from "./overlay-shared.js";
 export type TooltipTriggerProps = OverlayTriggerProps;
 
 export function TooltipTrigger({
@@ -11,6 +15,7 @@ export function TooltipTrigger({
   onPointerEnter,
   onPointerLeave,
   ref,
+  style,
   ...props
 }: TooltipTriggerProps & RefProp<HTMLButtonElement>) {
   const tooltip = useTooltipContext();
@@ -26,6 +31,7 @@ export function TooltipTrigger({
     ref: triggerRef,
     id: props.id ?? tooltip?.triggerId,
     type: as ? undefined : (props.type ?? "button"),
+    style: triggerAnchorStyle(tooltip?.triggerId, style),
     "aria-describedby": ariaDescribedBy,
     "data-open": dataAttr(tooltip?.open),
     "data-slot": dataSlot(props, "tooltip-trigger"),

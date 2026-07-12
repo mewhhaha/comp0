@@ -291,18 +291,18 @@ const lessons: Record<string, LessonCopy> = {
     "Like a note that pops out beside the thing it explains.",
     "Use it for extra controls or detail that should not block the page.",
     "Start Popover with PopoverTrigger.",
-    "Put PopoverContent after it and add PopoverArrow inside content only when useful.",
+    "Put PopoverContent after it and pick a placement such as bottom start.",
     "Use a visible label for the trigger.",
-    "<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent><PopoverArrow />Extra choices</PopoverContent></Popover>",
+    '<Popover><PopoverTrigger>More</PopoverTrigger><PopoverContent placement="bottom start" offset={8}><PopoverArrow />Extra choices</PopoverContent></Popover>',
   ),
   tooltip: lesson(
     "A short description revealed from an existing control.",
     "Like a tiny sticky note that appears when you pause over an icon.",
     "Use it for brief help, never for essential instructions.",
     "Start Tooltip with the control people already use.",
-    "Add TooltipPopover with one short explanation.",
+    "Add TooltipPopover with one short explanation, placed on the side you want, and a TooltipArrow caret styled to point back at the trigger.",
     "Give an icon-only trigger its own aria-label too.",
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover>Helpful detail</TooltipPopover></Tooltip>',
+    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
   ),
 };
 const accessibility: Record<string, string[]> = {
@@ -1157,6 +1157,12 @@ const navigation = [
       ),
       p("MenuPopover", "content", "Menu container.", true, false, [
         prop("aria-label", "string", "Names the menu when the trigger text is vague."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom start" or "right top" for submenus; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the menu."),
       ]),
       p("MenuSection", "root", "Optional labelled section.", true, true, [
         prop("aria-label", "string", "Names the group of items."),
@@ -1437,6 +1443,12 @@ const picker = [
       ]),
       p("SelectPopover", "content", "The listbox surface.", true, false, [
         prop("aria-label", "string", "Names the listbox when there is no visible Label."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the listbox."),
       ]),
       p("SelectOption", "item", "Selectable option.", true, false, [
         prop("value", "string", "This option’s value."),
@@ -1502,6 +1514,12 @@ const picker = [
       ),
       p("ComboboxPopover", "content", "The listbox results surface.", true, false, [
         prop("aria-label", "string", "Names the results list when there is no visible Label."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Input side to open on, such as "bottom"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the input and the listbox."),
       ]),
       p("ComboboxOption", "item", "Selectable result.", true, false, [
         prop("value", "string", "This result’s value."),
@@ -1656,6 +1674,12 @@ const picker = [
           "Accessible name; the content is a dialog with no default name.",
         ),
         prop("popover", '"auto" | "manual" | "none"', "Top-layer mode; auto by default."),
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom start"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the surface."),
       ]),
       p("PopoverArrow", "content", "Optional decorative arrow inside PopoverContent.", true, true),
     ],
@@ -1683,8 +1707,8 @@ const picker = [
     "tooltip",
     "Tooltip",
     "pickers",
-    ["Tooltip", "TooltipPopover", "TooltipTrigger"],
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover>Helpful detail</TooltipPopover></Tooltip>',
+    ["Tooltip", "TooltipArrow", "TooltipPopover", "TooltipTrigger"],
+    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
     [
       p("Tooltip", "root", "Open-state provider.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -1697,7 +1721,21 @@ const picker = [
           "Fragment merges the trigger onto your own element child.",
         ),
       ]),
-      p("TooltipPopover", "content", "Short descriptive text."),
+      p("TooltipPopover", "content", "Short descriptive text.", true, false, [
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "top" or "bottom start"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the tooltip."),
+      ]),
+      p(
+        "TooltipArrow",
+        "content",
+        "Optional decorative caret inside TooltipPopover; style it to point at the trigger.",
+        true,
+        true,
+      ),
     ],
     [
       { keys: ["Escape"], action: "Closes the tooltip." },
