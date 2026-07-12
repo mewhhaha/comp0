@@ -44,15 +44,18 @@ writeFileSync(
         "@types/react": "19.2.16",
         "@types/react-dom": "19.2.3",
       },
-      pnpm: {
-        overrides: {
-          "@comp0/core": `file:${join(packageDirectory, coreArchive)}`,
-        },
-      },
     },
     null,
     2,
   ),
+);
+
+// pnpm 11 reads overrides from pnpm-workspace.yaml, not the package.json
+// pnpm field; without this the react archive resolves @comp0/core from the
+// registry, where it is not published.
+writeFileSync(
+  join(consumerDirectory, "pnpm-workspace.yaml"),
+  `overrides:\n  "@comp0/core": file:${join(packageDirectory, coreArchive)}\n`,
 );
 
 writeFileSync(
