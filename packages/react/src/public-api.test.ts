@@ -93,6 +93,7 @@ const publicComponents = [
   "Separator",
   "SkipLink",
   "Slider",
+  "SplitButton",
   "Switch",
   "Tab",
   "TabList",

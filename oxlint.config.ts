@@ -174,6 +174,17 @@ export default defineConfig({
       },
     },
     {
+      files: ["packages/react/src/components/SplitButton.tsx"],
+      rules: {
+        // A split button groups its two segments with role="group" and roves
+        // focus between them from the container; the suggested fieldset/details
+        // carry the wrong semantics, and the arrow-key handler only moves the
+        // roving tab stop, so the group stays non-interactive.
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+      },
+    },
+    {
       files: ["apps/docs/src/*.ts", "apps/docs/src/*.tsx"],
       jsPlugins: ["eslint-plugin-better-tailwindcss"],
       rules: {

@@ -17,6 +17,7 @@ export * from "./overlay.js";
 export * from "./primitives.js";
 export * from "./pickers.js";
 export * from "./range.js";
+export * from "./split-button.js";
 export * from "./status.js";
 export * from "./text-field.js";
 export * from "./toast.js";
