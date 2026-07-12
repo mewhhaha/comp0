@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldIds } from "../field.js";
+import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { ComboBoxRootContext, PickerRootContext, type RefProp } from "../shared.js";
 import { defaultFilter, type ComboboxProps } from "./pickers-shared.js";
 export type { ComboboxProps } from "./pickers-shared.js";
@@ -24,6 +24,7 @@ export function Combobox({
   ...props
 }: ComboboxProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
+  const feedback = useFieldFeedback();
   const [activeKey, setActiveKey] = useState("");
   const [activeId, setActiveId] = useState("");
   const itemTextRef = useRef(new Map<string, ReactNode>());
@@ -83,11 +84,13 @@ export function Combobox({
       disabled: resolvedDisabled,
       invalid: resolvedInvalid,
       required: resolvedRequired,
+      ...feedback,
     }),
     [
       controlId,
       descriptionId,
       errorId,
+      feedback,
       labelId,
       resolvedDisabled,
       resolvedInvalid,

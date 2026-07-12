@@ -1,4 +1,11 @@
-import { useContext, useRef, useState, type HTMLAttributes, type RefObject } from "react";
+import {
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+  type RefObject,
+} from "react";
 import { dataAttr } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { TableColumnContext } from "./table-shared.js";
@@ -56,6 +63,22 @@ export function Resizer({
     return orientation === "vertical" ? element.offsetWidth : element.offsetHeight;
   };
   const inColumn = column !== null && !target;
+  // A focusable separator must expose aria-valuenow; measure the target when
+  // the consumer does not track the size themselves.
+  const [measured, setMeasured] = useState<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (size !== undefined) return;
+    const element = target?.current ?? column?.element() ?? selfRef.current?.parentElement;
+    if (!element) return;
+    const update = () => {
+      setMeasured(orientation === "vertical" ? element.offsetWidth : element.offsetHeight);
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [column, orientation, size, target]);
 
   return (
     <span
@@ -69,7 +92,7 @@ export function Resizer({
       aria-orientation={orientation}
       aria-valuemin={min}
       aria-valuemax={max}
-      aria-valuenow={size}
+      aria-valuenow={size ?? measured}
       tabIndex={props.tabIndex ?? (inColumn ? -1 : 0)}
       data-dragging={dataAttr(dragging)}
       data-slot={dataSlot(props, "resizer")}

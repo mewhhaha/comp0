@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Menu } from "./components/Menu.js";
 import { MenuItem } from "./components/MenuItem.js";
@@ -13,6 +13,7 @@ import { SelectValue } from "./components/SelectValue.js";
 
 describe("collection item labels", () => {
   it("crawls markup children for typeahead text and honors the textValue override", () => {
+    vi.useFakeTimers();
     const { container } = render(
       <Menu defaultOpen>
         <MenuTrigger>Actions</MenuTrigger>
@@ -34,8 +35,14 @@ describe("collection item labels", () => {
 
     fireKeyDown(content, "c");
     expect(document.activeElement).toBe(items[1]);
+    // Rapid keystrokes extend one buffered search: "co" still matches Copy.
+    fireKeyDown(content, "o");
+    expect(document.activeElement).toBe(items[1]);
+    // After the buffer times out a new search starts.
+    vi.advanceTimersByTime(700);
     fireKeyDown(content, "z");
     expect(document.activeElement).toBe(items[2]);
+    vi.useRealTimers();
   });
 
   it("shows crawled option text in SelectValue for markup children", () => {

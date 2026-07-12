@@ -130,8 +130,6 @@ function FileTriggerExample() {
         className="inline-flex w-fit cursor-pointer rounded border border-dashed border-zinc-950/20 px-3 py-2.5 text-base text-zinc-800 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-teal-600 sm:py-2 sm:text-sm dark:border-white/20 dark:text-zinc-100 dark:has-focus-visible:outline-teal-400"
         inputProps={{
           name: "example-file",
-          className: "sr-only",
-          hidden: false,
           "aria-label": "Choose a file",
           onChange: (event) => setName(event.currentTarget.files?.[0]?.name ?? "No file selected"),
         }}

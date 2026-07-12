@@ -92,7 +92,7 @@ export function ComboboxInput({
             combobox.setSelectedKey(option.dataset.value ?? option.id);
             popover.setOpen(false);
           }
-        } else if (event.key === "Escape") {
+        } else if (event.key === "Escape" && popover.open) {
           event.preventDefault();
           popover.setOpen(false);
         }

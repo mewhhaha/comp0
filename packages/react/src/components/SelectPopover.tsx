@@ -1,4 +1,4 @@
-import { composeRefs, dataAttr } from "@comp0/core";
+import { composeRefs, dataAttr, findTypeaheadMatch, useTypeaheadSearch } from "@comp0/core";
 import {
   createElement,
   useCallback,
@@ -20,6 +20,7 @@ export function SelectPopover({
   ...props
 }: SelectPopoverProps & RefProp<HTMLDivElement>) {
   const select = useSelectRootContext();
+  const typeaheadSearch = useTypeaheadSearch();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   if (!select || !popover)
     throw new Error("SelectPopover must be rendered inside Select and Popover.");
@@ -49,6 +50,10 @@ export function SelectPopover({
       next.element?.focus();
     }
   };
+  // A consumer aria-label wins; falling back to the label id would point at
+  // nothing when no Label is rendered.
+  let labelledBy = props["aria-labelledby"];
+  if (!props["aria-label"]) labelledBy ??= select.labelId;
   const surface = createElement("div", {
     ...props,
     ref: composeRefs(surfaceRef, ref),
@@ -58,7 +63,7 @@ export function SelectPopover({
     anchor: select.triggerId,
     hidden: !popover.open,
     "data-open": dataAttr(popover.open),
-    "aria-labelledby": props["aria-labelledby"] ?? select.labelId,
+    "aria-labelledby": labelledBy,
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {
       onToggle?.(event);
       // Toggle events from nested popovers bubble in the React tree; only
@@ -85,6 +90,19 @@ export function SelectPopover({
         );
         if (current) select.setSelectedKey(current.value);
         popover.requestClose();
+        return;
+      }
+      if (event.key.length === 1 && event.key.trim() !== "") {
+        const items = [...options.current.values()];
+        const currentKey = items.find((item) => item.element === document.activeElement)?.value;
+        const match = findTypeaheadMatch(
+          items.map((item) => ({ key: item.value, textValue: item.text, disabled: item.disabled })),
+          typeaheadSearch(event.key),
+          currentKey,
+        );
+        if (!match) return;
+        event.preventDefault();
+        items.find((item) => item.value === match)?.element?.focus();
       }
     },
   } as never);

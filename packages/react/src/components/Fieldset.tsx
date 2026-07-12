@@ -2,7 +2,7 @@ import { type RefProp } from "../shared.js";
 import { useMemo } from "react";
 import { dataAttr } from "@comp0/core";
 import { FieldProvider } from "./FieldProvider.js";
-import { useFieldIds, describedBy } from "./field-shared.js";
+import { useFieldFeedback, useFieldIds, describedBy } from "./field-shared.js";
 import { type FieldsetProps } from "./field-shared.js";
 export type { FieldsetProps } from "./field-shared.js";
 export function Fieldset({
@@ -15,6 +15,7 @@ export function Fieldset({
   ...props
 }: FieldsetProps & RefProp<HTMLFieldSetElement>) {
   const ids = useFieldIds(id);
+  const feedback = useFieldFeedback();
   const fieldDisabled = Boolean(disabled);
   const fieldInvalid = Boolean(invalid);
   const fieldRequired = Boolean(required);
@@ -28,8 +29,18 @@ export function Fieldset({
       disabled: fieldDisabled,
       invalid: fieldInvalid,
       required: fieldRequired,
+      ...feedback,
     }),
-    [fieldDisabled, fieldInvalid, fieldRequired, controlId, descriptionId, errorId, labelId],
+    [
+      feedback,
+      fieldDisabled,
+      fieldInvalid,
+      fieldRequired,
+      controlId,
+      descriptionId,
+      errorId,
+      labelId,
+    ],
   );
   return (
     <FieldProvider value={fieldContext}>
@@ -38,7 +49,7 @@ export function Fieldset({
         ref={ref}
         id={id}
         disabled={fieldDisabled}
-        aria-describedby={describedBy({ ...ids, invalid: fieldInvalid })}
+        aria-describedby={describedBy({ ...ids, invalid: fieldInvalid, ...feedback }) || undefined}
         aria-invalid={fieldInvalid || undefined}
         data-disabled={dataAttr(fieldDisabled)}
         data-invalid={dataAttr(fieldInvalid)}

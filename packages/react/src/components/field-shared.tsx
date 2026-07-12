@@ -1,7 +1,10 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useId,
+  useMemo,
+  useState,
   type FieldsetHTMLAttributes,
   type HTMLAttributes,
   type LabelHTMLAttributes,
@@ -16,6 +19,10 @@ export interface FieldContextValue {
   required?: boolean | undefined;
   value?: string | undefined;
   setValue?: ((value: string) => void) | undefined;
+  descriptionMounted?: boolean | undefined;
+  errorMounted?: boolean | undefined;
+  registerDescription?: (() => () => void) | undefined;
+  registerError?: (() => () => void) | undefined;
 }
 
 export const FieldContext = createContext<FieldContextValue | null>(null);
@@ -36,11 +43,40 @@ export function useFieldIds(id: string | undefined) {
   };
 }
 
+/**
+ * Tracks whether a Description or FieldError is actually rendered so
+ * aria-describedby never references an id that does not exist. Providers
+ * feed the flags and register callbacks into their FieldContext value.
+ */
+export function useFieldFeedback() {
+  const [descriptionMounted, setDescriptionMounted] = useState(false);
+  const [errorMounted, setErrorMounted] = useState(false);
+  const registerDescription = useCallback(() => {
+    setDescriptionMounted(true);
+    return () => setDescriptionMounted(false);
+  }, []);
+  const registerError = useCallback(() => {
+    setErrorMounted(true);
+    return () => setErrorMounted(false);
+  }, []);
+  return useMemo(
+    () => ({ descriptionMounted, errorMounted, registerDescription, registerError }),
+    [descriptionMounted, errorMounted, registerDescription, registerError],
+  );
+}
+
 export function describedBy(
   context: FieldContextValue | null,
   describedByProp?: string | undefined,
 ) {
-  return [describedByProp, context?.descriptionId, context?.invalid ? context.errorId : undefined]
+  // Contexts hand-rolled without mount tracking keep referencing both ids.
+  const hasDescription = context?.descriptionMounted ?? true;
+  const hasError = context?.errorMounted ?? true;
+  return [
+    describedByProp,
+    hasDescription ? context?.descriptionId : undefined,
+    context?.invalid && hasError ? context.errorId : undefined,
+  ]
     .filter(Boolean)
     .join(" ")
     .trim();

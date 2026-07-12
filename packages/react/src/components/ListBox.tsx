@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { findTypeaheadMatch, getRovingFocusTarget, useControllableState } from "@comp0/core";
+import {
+  findTypeaheadMatch,
+  getRovingFocusTarget,
+  useControllableState,
+  useTypeaheadSearch,
+} from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { ListBoxContext, sortItems } from "./collection-shared.js";
 import {
@@ -23,6 +28,7 @@ export function ListBox({
     defaultValue: defaultValue ?? "",
     onChange,
   });
+  const typeaheadSearch = useTypeaheadSearch();
   const [activeKey, setActiveKey] = useState(selected);
   const activeKeyRef = useRef(activeKey);
   const selectedRef = useRef(selected);
@@ -107,9 +113,10 @@ export function ListBox({
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
           const items = context.items();
-          const key =
-            getRovingFocusTarget(items, selected, event.key, { orientation, loop: true }) ??
-            (event.key.length === 1 ? findTypeaheadMatch(items, event.key, selected) : undefined);
+          let key = getRovingFocusTarget(items, selected, event.key, { orientation, loop: true });
+          if (!key && event.key.length === 1) {
+            key = findTypeaheadMatch(items, typeaheadSearch(event.key), selected);
+          }
           if (!key) return;
           event.preventDefault();
           setActiveKey(key);

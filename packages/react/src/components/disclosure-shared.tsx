@@ -31,6 +31,7 @@ export type DisclosureTriggerProps = HTMLAttributes<HTMLElement>;
 export type DisclosurePanelProps = HTMLAttributes<HTMLDivElement>;
 
 export interface TabsContextValue {
+  baseId: string;
   selectedKey: string;
   setSelectedKey: (key: string) => void;
   registerTab: (key: string, element: HTMLButtonElement | null, disabled?: boolean) => void;
@@ -38,6 +39,11 @@ export interface TabsContextValue {
 }
 
 export const TabsContext = createContext<TabsContextValue | null>(null);
+
+export const tabPairIds = (context: TabsContextValue | null, tab: string) => {
+  const prefix = context ? `${context.baseId}-` : "";
+  return { tabId: `${prefix}tab-${tab}`, panelId: `${prefix}panel-${tab}` };
+};
 
 export type TabsProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "onChange"> & {
   as?: ElementType | typeof Fragment | undefined;

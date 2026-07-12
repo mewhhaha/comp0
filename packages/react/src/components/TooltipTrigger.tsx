@@ -46,7 +46,8 @@ export function TooltipTrigger({
     },
     onPointerLeave(event: React.PointerEvent<HTMLButtonElement>) {
       onPointerLeave?.(event);
-      if (!event.defaultPrevented) tooltip?.setOpen(false);
+      // Delayed so the pointer can travel onto the tooltip content.
+      if (!event.defaultPrevented) tooltip?.scheduleClose();
     },
   });
 }

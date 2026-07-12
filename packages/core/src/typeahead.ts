@@ -20,6 +20,28 @@ export function findTypeaheadMatch(items: TypeaheadItem[], search: string, curre
     ?.key;
 }
 
+/**
+ * Returns an accumulator for typeahead searches: each printable key extends
+ * the search string until the timeout elapses, so typing "co" matches
+ * "Copy" instead of jumping between "c" and "o" items.
+ */
+export function useTypeaheadSearch(timeout = 700) {
+  const bufferRef = useRef("");
+  const timeoutRef = useRef<number | undefined>(undefined);
+
+  return useCallback(
+    (key: string) => {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => {
+        bufferRef.current = "";
+      }, timeout);
+      bufferRef.current += key;
+      return bufferRef.current;
+    },
+    [timeout],
+  );
+}
+
 /** Returns a keyboard handler that buffers printable characters for typeahead navigation. */
 export function useTypeahead(options: {
   items: TypeaheadItem[];

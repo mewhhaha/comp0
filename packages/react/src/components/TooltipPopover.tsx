@@ -11,6 +11,8 @@ export type TooltipPopoverProps = OverlayContentProps;
 export function TooltipPopover({
   as,
   hidden,
+  onPointerEnter,
+  onPointerLeave,
   onToggle,
   ref,
   ...props
@@ -36,6 +38,15 @@ export function TooltipPopover({
       // this surface's own toggles drive its state.
       if (event.target !== event.currentTarget) return;
       if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
+    },
+    // Hovering the content keeps the tooltip open (WCAG 1.4.13).
+    onPointerEnter(event: React.PointerEvent<HTMLDivElement>) {
+      onPointerEnter?.(event);
+      if (!event.defaultPrevented) tooltip?.cancelClose();
+    },
+    onPointerLeave(event: React.PointerEvent<HTMLDivElement>) {
+      onPointerLeave?.(event);
+      if (!event.defaultPrevented) tooltip?.scheduleClose();
     },
   } as never);
 }

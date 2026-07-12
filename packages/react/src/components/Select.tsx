@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldIds } from "../field.js";
+import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { PickerRootContext, SelectRootContext, type RefProp } from "../shared.js";
 import { type SelectProps } from "./pickers-shared.js";
 export type { SelectProps } from "./pickers-shared.js";
@@ -41,6 +41,7 @@ export function Select({
   ...props
 }: SelectProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
+  const feedback = useFieldFeedback();
   const itemTextRef = useRef(new Map<string, ReactNode>());
   const selectedRef = useRef("");
   const [selectedText, setSelectedText] = useState<ReactNode>();
@@ -77,11 +78,13 @@ export function Select({
       disabled: resolvedDisabled,
       invalid: resolvedInvalid,
       required: resolvedRequired,
+      ...feedback,
     }),
     [
       controlId,
       descriptionId,
       errorId,
+      feedback,
       labelId,
       resolvedDisabled,
       resolvedInvalid,

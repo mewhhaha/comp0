@@ -45,6 +45,7 @@ export function Button<TElement extends ElementType = "button">({
   children,
   className,
   disabled: disabledProp,
+  onClick,
   pending,
   ref,
   ...props
@@ -97,7 +98,12 @@ export function Button<TElement extends ElementType = "button">({
       className: resolveClassName(className, state),
       children: resolveChildren(children, state),
       onClick(event: ReactMouseEvent<HTMLElement>) {
-        if (!isNativeButton && disabled) event.preventDefault();
+        // aria-disabled elements still receive pointer clicks; swallow them.
+        if (!isNativeButton && disabled) {
+          event.preventDefault();
+          return;
+        }
+        (onClick as ((clickEvent: ReactMouseEvent<HTMLElement>) => void) | undefined)?.(event);
       },
       onKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
         if (isNativeButton || disabled) return;

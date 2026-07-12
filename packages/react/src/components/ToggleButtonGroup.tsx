@@ -17,7 +17,6 @@ export function ToggleButtonGroup({
     ...props,
     ref,
     role: props.role ?? "group",
-    "aria-orientation": props["aria-orientation"] ?? orientation,
     "data-orientation": orientation,
     "data-slot": props["data-slot"] ?? "toggle-button-group",
   });

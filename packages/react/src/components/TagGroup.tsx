@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useRef, useState, type HTMLAttributes } from "react";
-import { findTypeaheadMatch, getRovingFocusTarget, useControllableState } from "@comp0/core";
+import {
+  findTypeaheadMatch,
+  getRovingFocusTarget,
+  useControllableState,
+  useTypeaheadSearch,
+} from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { sortItems, type CollectionItemRecord } from "./collection-shared.js";
 import { TagGroupContext, type TagGroupContextValue } from "./tag-shared.js";
@@ -30,6 +35,7 @@ export function TagGroup({
     defaultValue: defaultValue ?? [],
     onChange,
   });
+  const typeaheadSearch = useTypeaheadSearch();
   const [activeKey, setActiveKey] = useState("");
   const activeKeyRef = useRef(activeKey);
   activeKeyRef.current = activeKey;
@@ -108,9 +114,12 @@ export function TagGroup({
             toggle(current.key);
             return;
           }
-          const key =
-            getRovingFocusTarget(tags, current.key, event.key, { orientation: "horizontal" }) ??
-            (event.key.length === 1 ? findTypeaheadMatch(tags, event.key, current.key) : undefined);
+          let key = getRovingFocusTarget(tags, current.key, event.key, {
+            orientation: "horizontal",
+          });
+          if (!key && event.key.length === 1) {
+            key = findTypeaheadMatch(tags, typeaheadSearch(event.key), current.key);
+          }
           if (!key) return;
           event.preventDefault();
           setActiveKey(key);

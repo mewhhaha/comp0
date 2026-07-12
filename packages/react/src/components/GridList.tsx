@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type HTMLAttributes } from "react";
-import { findTypeaheadMatch, getRovingFocusTarget, useControllableState } from "@comp0/core";
+import {
+  findTypeaheadMatch,
+  getRovingFocusTarget,
+  useControllableState,
+  useTypeaheadSearch,
+} from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import {
   sortItems,
@@ -28,6 +33,7 @@ export function GridList({
     defaultValue: defaultValue ?? "",
     onChange,
   });
+  const typeaheadSearch = useTypeaheadSearch();
   const [activeKey, setActiveKey] = useState(selected);
   const activeKeyRef = useRef(activeKey);
   const selectedRef = useRef(selected);
@@ -138,7 +144,7 @@ export function GridList({
             return;
           }
           if (!insideRow && event.key.length === 1) {
-            const key = findTypeaheadMatch(rows, event.key, rowRecord.key);
+            const key = findTypeaheadMatch(rows, typeaheadSearch(event.key), rowRecord.key);
             if (key) {
               event.preventDefault();
               focusRow(key);

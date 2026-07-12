@@ -1,7 +1,7 @@
 import { type RefProp } from "../shared.js";
 import { useId, useMemo } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { describedBy, FieldProvider, useFieldIds } from "../field.js";
+import { describedBy, FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { RadioGroupContext } from "./choices-shared.js";
 import { type RadioGroupProps } from "./choices-shared.js";
 export type { RadioGroupProps } from "./choices-shared.js";
@@ -19,6 +19,7 @@ export function RadioGroup({
 }: RadioGroupProps & RefProp<HTMLFieldSetElement>) {
   const generatedName = useId();
   const ids = useFieldIds(id);
+  const feedback = useFieldFeedback();
   const [selected, setSelected] = useControllableState({
     value,
     defaultValue,
@@ -37,8 +38,18 @@ export function RadioGroup({
       disabled,
       invalid: resolvedInvalid,
       required: resolvedRequired,
+      ...feedback,
     }),
-    [disabled, controlId, descriptionId, errorId, labelId, resolvedInvalid, resolvedRequired],
+    [
+      disabled,
+      controlId,
+      descriptionId,
+      errorId,
+      feedback,
+      labelId,
+      resolvedInvalid,
+      resolvedRequired,
+    ],
   );
 
   return (
@@ -52,7 +63,9 @@ export function RadioGroup({
           id={id}
           name={name}
           disabled={disabled}
-          aria-describedby={describedBy({ ...ids, invalid: resolvedInvalid })}
+          aria-describedby={
+            describedBy({ ...ids, invalid: resolvedInvalid, ...feedback }) || undefined
+          }
           aria-invalid={resolvedInvalid || undefined}
           data-disabled={dataAttr(disabled)}
           data-invalid={dataAttr(resolvedInvalid)}

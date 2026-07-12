@@ -35,6 +35,10 @@ export function ComboboxPopover({
       combo.setActiveKey("");
     }
   }, [combo, popover.open]);
+  // A consumer aria-label wins; falling back to the label id would point at
+  // nothing when no Label is rendered.
+  let labelledBy = props["aria-labelledby"];
+  if (!props["aria-label"]) labelledBy ??= combo.labelId;
   const surface = createElement("div", {
     ...props,
     ref: composeRefs(surfaceRef, ref),
@@ -44,7 +48,7 @@ export function ComboboxPopover({
     anchor: combo.inputId,
     hidden: !popover.open,
     "data-open": dataAttr(popover.open),
-    "aria-labelledby": props["aria-labelledby"] ?? combo.labelId,
+    "aria-labelledby": labelledBy,
     onToggle(event: React.ToggleEvent<HTMLDivElement>) {
       onToggle?.(event);
       // Toggle events from nested popovers bubble in the React tree; only

@@ -1,5 +1,5 @@
 import { dataSlot, type RefProp } from "../shared.js";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { useControllableState } from "@comp0/core";
 import { TabsContext } from "./disclosure-shared.js";
 import { type TabsProps } from "./disclosure-shared.js";
@@ -14,6 +14,7 @@ export function Tabs({
   ref,
   ...props
 }: TabsProps & RefProp<HTMLElement>) {
+  const baseId = useId();
   const [selected, setSelected] = useControllableState({
     value,
     defaultValue: defaultValue ?? "",
@@ -29,9 +30,14 @@ export function Tabs({
   return (
     <TabsContext.Provider
       value={{
+        baseId,
         selectedKey: selected,
         setSelectedKey: setSelected,
         registerTab(key, element, disabled) {
+          if (!element) {
+            tabMap.current.delete(key);
+            return;
+          }
           tabMap.current.set(key, { key, element, disabled });
         },
         tabs() {

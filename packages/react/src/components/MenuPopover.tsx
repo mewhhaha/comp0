@@ -1,5 +1,10 @@
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
-import { composeRefs, findTypeaheadMatch, getRovingFocusTarget } from "@comp0/core";
+import {
+  composeRefs,
+  findTypeaheadMatch,
+  getRovingFocusTarget,
+  useTypeaheadSearch,
+} from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import {
   MenuContext,
@@ -21,6 +26,7 @@ export function MenuPopover({
   ...props
 }: MenuPopoverProps & RefProp<HTMLDivElement>) {
   const menu = useMenuRootContext();
+  const typeaheadSearch = useTypeaheadSearch();
   const { onNativeToggle, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
   const activeKey = useRef("");
@@ -86,16 +92,21 @@ export function MenuPopover({
         }}
         onBlur={(event) => {
           onBlur?.(event);
-          // A submenu follows focus: leaving its surface and trigger, for
-          // example by hovering a different parent item, closes it.
-          if (!menu?.isSubmenu || !menu.open) return;
+          // The menu follows focus: a submenu closes when focus moves to a
+          // different parent item, and any menu closes when focus tabs out
+          // of the popover and its trigger entirely.
+          if (!menu?.open) return;
           const next = event.relatedTarget;
           if (next instanceof Node) {
             if (event.currentTarget.contains(next)) return;
             const trigger = event.currentTarget.ownerDocument.getElementById(menu.triggerId);
             if (trigger?.contains(next)) return;
+            menu.setOpen(false);
+            return;
           }
-          menu.setOpen(false);
+          // Without a focus destination only a submenu follows the blur, so
+          // pointer light dismiss keeps handling the root menu.
+          if (menu.isSubmenu) menu.setOpen(false);
         }}
         onKeyDown={(event) => {
           onKeyDown?.(event);
@@ -120,12 +131,13 @@ export function MenuPopover({
           const activeElement =
             document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
           const current = items.find((item) => item.element === activeElement)?.key;
-          const key =
-            getRovingFocusTarget(items, current, event.key, {
-              orientation: "vertical",
-              loop: true,
-            }) ??
-            (event.key.length === 1 ? findTypeaheadMatch(items, event.key, current) : undefined);
+          let key = getRovingFocusTarget(items, current, event.key, {
+            orientation: "vertical",
+            loop: true,
+          });
+          if (!key && event.key.length === 1) {
+            key = findTypeaheadMatch(items, typeaheadSearch(event.key), current);
+          }
           if (!key) return;
           event.preventDefault();
           focusItem(key);
