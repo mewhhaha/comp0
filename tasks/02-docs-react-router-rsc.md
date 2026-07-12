@@ -13,13 +13,19 @@ Move `apps/docs` to React Router's RSC Framework Mode and split the docs into se
 - **Gating limitation**: the initial RSC preview supports server-rendered apps only. **SPA mode and pre-rendering are not yet supported.** This repo's docs app is SPA mode today.
 - The stated direction is that framework mode will eventually be built on RSC with a seamless transition, so none of the current route/module structure is throwaway.
 
-## Decision point 0 (resolve before writing code)
+## Decision point 0 — RESOLVED: deploy on Cloudflare Workers
 
-The docs app must become server-rendered (or the task waits). Check the current React Router version in `apps/docs/package.json` and the changelog for whether SPA/pre-render support landed since this plan was written. Then pick one:
+The repo owner has decided the docs deploy on **Cloudflare** — server-rendered on Workers via **`@cloudflare/vite-plugin`**. This unblocks the SPA-mode limitation: the app flips to SSR running in workerd.
 
-- **A. Server-rendered deployment** — flip to SSR and accept that deploys need a Node (or workers) runtime instead of static hosting. Check how the docs are currently deployed before choosing (nothing in-repo documents a deploy target; ask the repo owner if unclear — the answer changes hosting).
-- **B. Pre-rendering landed upstream** — if RSC pre-rendering shipped by the time you start, use it: the docs are fully static content and pre-rendering all catalog routes keeps static hosting.
-- **C. Neither acceptable** — stop; report that the migration is blocked on upstream SPA/prerender support.
+What that means concretely:
+
+- The Cloudflare Vite plugin has first-class RSC support: it integrates `@vitejs/plugin-rsc` and added a `childEnvironments` option to run the multiple RSC environments (rsc/ssr/client) inside a single Worker — see the changelog entry https://developers.cloudflare.com/changelog/post/2026-02-11-vite-plugin-child-environments/ and plugin docs https://developers.cloudflare.com/workers/vite-plugin/.
+- `unstable_reactRouterRSC` + `@cloudflare/vite-plugin` is a proven combination; use https://github.com/edmundhung/cloudflare-react-router-rsc as the reference wiring alongside the official template (it documents the required workarounds).
+- Known pitfall from that combination: the reactRouterRSC plugin's `optimizeDeps.include` of `react-router` can load **duplicate React instances in the worker environments** ("Invalid hook call" after clearing `node_modules/.vite`) — exclude `react-router` from optimization in the rsc/ssr environments per the reference repo. (This repo has met the same bug class in vitest; see the `optimizeDeps` comment in `vitest.config.ts`.)
+- Add a `wrangler.jsonc` for the docs Worker (name, compatibility date, assets binding for static output) and a deploy script (`pnpm --filter @comp0/docs exec wrangler deploy` or `vite build && wrangler deploy` per the plugin docs). CI gains nothing new unless deploys are wired later; keep deploy manual for now.
+- React Router v8 note: the old `@react-router/dev/vite/cloudflare` dev proxy was removed in v8 — `@cloudflare/vite-plugin` is the sanctioned path, so this plan is aligned with where RR is going.
+
+Fallback only if the preview combination proves too unstable: RSC pre-rendering (if it lands upstream) still permits Workers static assets hosting.
 
 ## Repo-specific context you must know
 
@@ -40,10 +46,10 @@ Scaffold the official RSC template in a scratch directory. Record: exact `react-
 
 ### Step 2 — Mechanical migration to RSC framework mode (everything still client)
 
-- Swap `reactRouter()` for `unstable_reactRouterRSC()` + `@vitejs/plugin-rsc` in `apps/docs/vite.config.ts` (keep tailwindcss and the compiler plugin; fix ordering per template).
-- Add the template's entry files; adjust `react-router.config.ts` (ssr true per Decision 0A, or prerender config per 0B).
+- Swap `reactRouter()` for `unstable_reactRouterRSC()` + `@vitejs/plugin-rsc` + `cloudflare()` from `@cloudflare/vite-plugin` in `apps/docs/vite.config.ts` (keep tailwindcss and the compiler plugin; ordering and `childEnvironments` config per the Cloudflare reference repo). Add `wrangler.jsonc`.
+- Add the template's entry files; adjust `react-router.config.ts` (`ssr: true`; the Worker is the server runtime). Verify `pnpm dev` runs through the Cloudflare plugin's workerd dev server and `wrangler deploy` of a build works against a preview environment.
 - Mark ALL existing route modules and shared components `"use client"` as a starting point so behavior is unchanged, and get the app booting: `pnpm dev` renders all four route types; `pnpm --filter @comp0/docs build` succeeds.
-- Gate: existing browser tests green; CI green. Commit this as its own PR-sized checkpoint.
+- Gate: existing browser tests green; CI green; cold-cache dev boot shows no duplicate-React "Invalid hook call" (the known optimizeDeps pitfall above). Commit this as its own PR-sized checkpoint.
 
 ### Step 3 — Draw the server/client boundary
 
@@ -70,9 +76,9 @@ Convert top-down, removing `"use client"` where possible:
 ## Out of scope
 
 - Any change to `packages/` (the library stays client-side headless components).
-- Deploy infrastructure changes beyond documenting what the new build needs.
+- CI-driven deploys (manual `wrangler deploy` is enough for this task; automation is a follow-up).
 - RSC-ifying the example cases themselves (they are interactive by definition).
 
 ## Definition of done
 
-Docs app builds and runs on RSC framework mode (pinned preview versions) with the content catalog and syntax highlighter server-only, the interactive shell/examples as client islands, a recorded client-bundle reduction, all four route types verified manually, browser tests + full CI green, and the boundary documented in the PR description.
+Docs app builds and runs on RSC framework mode (pinned preview versions) deployed to Cloudflare Workers via @cloudflare/vite-plugin with a checked-in wrangler.jsonc, the content catalog and syntax highlighter server-only, the interactive shell/examples as client islands, a recorded client-bundle reduction, all four route types verified manually, browser tests + full CI green, and the boundary documented in the PR description.
