@@ -101,4 +101,5 @@ export type RadioProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChange" 
   children?: ReactNode | ((state: Omit<ChoiceState, "indeterminate">) => ReactNode);
 };
 
-export type SwitchProps = CheckboxProps;
+// A switch is on or off; the checkbox mixed state has no valid switch ARIA.
+export type SwitchProps = Omit<CheckboxProps, "indeterminate">;

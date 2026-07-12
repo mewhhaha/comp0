@@ -6,6 +6,7 @@ import { type TabListProps } from "./disclosure-shared.js";
 export type { TabListProps } from "./disclosure-shared.js";
 export function TabList({
   orientation = "horizontal",
+  onFocus,
   onKeyDown,
   ref,
   ...props
@@ -19,6 +20,16 @@ export function TabList({
       role="tablist"
       aria-orientation={orientation}
       data-orientation={orientation}
+      tabIndex={tabs && !tabs.selectedKey ? 0 : undefined}
+      onFocus={(event) => {
+        onFocus?.(event);
+        if (event.defaultPrevented || !tabs || tabs.selectedKey) return;
+        if (event.target !== event.currentTarget) return;
+        tabs
+          .tabs()
+          .find((item) => item.element && !item.disabled)
+          ?.element?.focus();
+      }}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.defaultPrevented || !tabs) return;

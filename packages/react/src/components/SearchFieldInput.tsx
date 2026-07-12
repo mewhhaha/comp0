@@ -15,7 +15,11 @@ export function SearchFieldInput({
     onKeyDown?.(event);
     if (event.defaultPrevented || !searchField) return;
     if (event.key === "Enter") searchField.submit(event.currentTarget.value);
-    if (event.key === "Escape" && event.currentTarget.value) searchField.clear();
+    if (event.key === "Escape" && event.currentTarget.value) {
+      // Consumed so the same press does not also dismiss an enclosing layer.
+      event.preventDefault();
+      searchField.clear();
+    }
   }
 
   return <Input {...props} ref={ref} type="search" onKeyDown={handleKeyDown} />;

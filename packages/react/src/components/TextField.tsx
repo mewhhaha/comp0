@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldIds } from "../field.js";
+import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { type RefProp } from "../shared.js";
 import { ProviderRoot } from "./provider-root.js";
 import { type TextFieldProps } from "./text-field-shared.js";
@@ -19,6 +19,7 @@ export function TextField({
   ...props
 }: TextFieldProps & RefProp<HTMLElement>) {
   const ids = useFieldIds(id);
+  const feedback = useFieldFeedback();
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
@@ -41,12 +42,14 @@ export function TextField({
       required: resolvedRequired,
       value: controlsValue ? fieldValue : undefined,
       setValue: controlsValue ? setFieldValue : undefined,
+      ...feedback,
     }),
     [
       controlsValue,
       controlId,
       descriptionId,
       errorId,
+      feedback,
       fieldValue,
       labelId,
       resolvedDisabled,

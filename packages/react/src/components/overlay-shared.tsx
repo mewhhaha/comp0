@@ -63,10 +63,15 @@ export type PopoverContextValue = OverlayContextValue & {
   requestClose: () => void;
 };
 
+export type TooltipContextValue = OverlayContextValue & {
+  cancelClose: () => void;
+  scheduleClose: () => void;
+};
+
 export const DialogContext = createContext<OverlayContextValue | null>(null);
 export const ModalContext = createContext<OverlayContextValue | null>(null);
 export const PopoverContext = createContext<PopoverContextValue | null>(null);
-export const TooltipContext = createContext<OverlayContextValue | null>(null);
+export const TooltipContext = createContext<TooltipContextValue | null>(null);
 
 export function useDialogContext() {
   return useContext(DialogContext);

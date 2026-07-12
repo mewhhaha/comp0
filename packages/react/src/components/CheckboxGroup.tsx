@@ -1,7 +1,7 @@
 import { type RefProp } from "../shared.js";
 import { useMemo } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { describedBy, FieldProvider, useFieldIds } from "../field.js";
+import { describedBy, FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
 import { CheckboxGroupContext } from "./choices-shared.js";
 import { type CheckboxGroupProps } from "./choices-shared.js";
 export type { CheckboxGroupProps } from "./choices-shared.js";
@@ -18,6 +18,7 @@ export function CheckboxGroup({
   ...props
 }: CheckboxGroupProps & RefProp<HTMLFieldSetElement>) {
   const ids = useFieldIds(id);
+  const feedback = useFieldFeedback();
   const [selectedValues, setSelectedValues] = useControllableState({
     value,
     defaultValue,
@@ -36,8 +37,18 @@ export function CheckboxGroup({
       disabled,
       invalid: resolvedInvalid,
       required: resolvedRequired,
+      ...feedback,
     }),
-    [disabled, controlId, descriptionId, errorId, labelId, resolvedInvalid, resolvedRequired],
+    [
+      disabled,
+      controlId,
+      descriptionId,
+      errorId,
+      feedback,
+      labelId,
+      resolvedInvalid,
+      resolvedRequired,
+    ],
   );
 
   return (
@@ -61,7 +72,9 @@ export function CheckboxGroup({
           id={id}
           name={name}
           disabled={disabled}
-          aria-describedby={describedBy({ ...ids, invalid: resolvedInvalid })}
+          aria-describedby={
+            describedBy({ ...ids, invalid: resolvedInvalid, ...feedback }) || undefined
+          }
           aria-invalid={resolvedInvalid || undefined}
           data-disabled={dataAttr(disabled)}
           data-invalid={dataAttr(resolvedInvalid)}

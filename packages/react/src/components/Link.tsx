@@ -1,6 +1,7 @@
 import {
   type ComponentPropsWithRef,
   type ElementType,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { dataAttr, mergeInteractionProps, mergeProps, useFocusRing, useHover } from "@comp0/core";
@@ -45,13 +46,16 @@ export function Link<TElement extends ElementType = "a">({
   };
   const Component = as ?? "a";
   const isNativeAnchor = Component === "a";
+  let resolvedTabIndex = tabIndex;
+  if (disabled) resolvedTabIndex = -1;
+  else if (!isNativeAnchor) resolvedTabIndex = tabIndex ?? 0;
   const mergedProps = mergeProps<Record<string, unknown>>(
     props as Record<string, unknown>,
     mergeInteractionProps(focusProps, hoverProps) as Record<string, unknown>,
     {
       ref,
       href: disabled ? undefined : href,
-      tabIndex: disabled ? -1 : tabIndex,
+      tabIndex: resolvedTabIndex,
       role: isNativeAnchor ? undefined : ((props as Record<string, unknown>).role ?? "link"),
       "aria-disabled": disabled || undefined,
       "data-disabled": dataAttr(disabled),
@@ -66,6 +70,12 @@ export function Link<TElement extends ElementType = "a">({
           return;
         }
         onClick?.(event);
+      },
+      onKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+        if (isNativeAnchor || disabled || event.key !== "Enter") return;
+        // Custom elements that still render a real anchor activate natively.
+        if (event.currentTarget instanceof HTMLAnchorElement) return;
+        event.currentTarget.click();
       },
     },
   );

@@ -1,3 +1,4 @@
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Menu } from "./components/Menu.js";
@@ -73,6 +74,47 @@ describe("menu composition", () => {
     fireClick(items[0]!);
     expect(content.hidden).toBe(false);
     fireClick(items[1]!);
+    expect(content.hidden).toBe(true);
+  });
+
+  it("opens from the trigger with ArrowDown and focuses the first item", () => {
+    const { container } = render(
+      <Menu>
+        <MenuTrigger>Actions</MenuTrigger>
+        <MenuPopover>
+          <MenuItem>Copy</MenuItem>
+          <MenuItem>Paste</MenuItem>
+        </MenuPopover>
+      </Menu>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const content = container.querySelector<HTMLElement>("[role='menu']")!;
+
+    fireKeyDown(trigger, "ArrowDown");
+    expect(content.hidden).toBe(false);
+    expect(document.activeElement?.textContent).toBe("Copy");
+  });
+
+  it("closes when focus moves outside the menu and its trigger", () => {
+    const { container } = render(
+      <>
+        <Menu defaultOpen>
+          <MenuTrigger>Actions</MenuTrigger>
+          <MenuPopover>
+            <MenuItem>Copy</MenuItem>
+          </MenuPopover>
+        </Menu>
+        <button type="button">After</button>
+      </>,
+    );
+    const content = container.querySelector<HTMLElement>("[role='menu']")!;
+    const item = container.querySelector<HTMLElement>("[role='menuitem']")!;
+    const after = container.querySelectorAll<HTMLButtonElement>("button")[1]!;
+
+    act(() => {
+      item.focus();
+      item.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: after }));
+    });
     expect(content.hidden).toBe(true);
   });
 });

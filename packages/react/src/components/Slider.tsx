@@ -11,6 +11,7 @@ export function Slider({
   min = 0,
   max = 100,
   step = 1,
+  style,
   ref,
   ...props
 }: SliderProps & RefProp<HTMLInputElement>) {
@@ -33,7 +34,7 @@ export function Slider({
       disabled={resolvedDisabled}
       data-disabled={dataAttr(resolvedDisabled)}
       data-orientation="horizontal"
-      style={{ "--comp0-slider-value": `${sliderValue}` } as CSSProperties}
+      style={{ ...style, "--comp0-slider-value": `${sliderValue}` } as CSSProperties}
       onChange={(event) => setSliderValue(event.currentTarget.valueAsNumber)}
     />
   );

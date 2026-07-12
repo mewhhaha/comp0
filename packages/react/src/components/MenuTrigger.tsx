@@ -17,6 +17,7 @@ export type { MenuTriggerProps } from "./menu-shared.js";
 
 export function MenuTrigger({
   as,
+  disabled: disabledProp,
   onClick,
   onKeyDown,
   ref,
@@ -30,7 +31,7 @@ export function MenuTrigger({
   const submenu = menu?.isSubmenu === true && parentCollection !== null;
   const submenuKey = useId().replace(/:/g, "");
   const elementRef = useRef<HTMLElement | null>(null);
-  const disabled = Boolean(props.disabled);
+  const disabled = Boolean(disabledProp);
   const setElement = useCallback(
     (element: HTMLElement | null) => {
       elementRef.current = element;
@@ -68,6 +69,7 @@ export function MenuTrigger({
       ...props,
       ref: setElement,
       id: props.id ?? menu?.triggerId,
+      type: undefined,
       role: "menuitem",
       tabIndex: -1,
       "aria-haspopup": "menu",
@@ -120,7 +122,13 @@ export function MenuTrigger({
     },
     onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
       onKeyDown?.(event as never);
-      if (event.defaultPrevented || isNativeButton || disabled) return;
+      if (event.defaultPrevented || disabled) return;
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        menu?.setOpen(true);
+        return;
+      }
+      if (isNativeButton) return;
       if (event.key === " ") event.preventDefault();
       if (event.key === "Enter") event.currentTarget.click();
     },

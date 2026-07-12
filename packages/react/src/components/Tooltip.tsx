@@ -1,4 +1,4 @@
-import { createElement, Fragment, useId, useMemo, useRef } from "react";
+import { createElement, Fragment, useEffect, useId, useMemo, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { PopoverContext, TooltipContext, type TooltipProps } from "./overlay-shared.js";
@@ -15,6 +15,7 @@ export function Tooltip({
 }: TooltipProps & RefProp<HTMLElement>) {
   const generatedId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
+  const closeTimer = useRef<number | undefined>(undefined);
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
@@ -23,7 +24,19 @@ export function Tooltip({
   const context = useMemo(
     () => ({
       open,
-      setOpen,
+      setOpen(next: boolean) {
+        window.clearTimeout(closeTimer.current);
+        setOpen(next);
+      },
+      // A short close delay keeps the tooltip hoverable: the pointer can
+      // travel from the trigger onto the tooltip content (WCAG 1.4.13).
+      cancelClose() {
+        window.clearTimeout(closeTimer.current);
+      },
+      scheduleClose() {
+        window.clearTimeout(closeTimer.current);
+        closeTimer.current = window.setTimeout(() => setOpen(false), 150);
+      },
       triggerId: `${props.id ?? generatedId}-trigger`,
       contentId: `${props.id ?? generatedId}-content`,
       focusTrigger() {
@@ -35,6 +48,16 @@ export function Tooltip({
     }),
     [generatedId, open, props.id, setOpen],
   );
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+  // Escape dismisses an open tooltip no matter where focus is (WCAG 1.4.13).
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [open, setOpen]);
   // Tooltips compose with the popover system internally so TooltipPopover
   // can live in the top layer instead of expanding its container.
   const popoverContext = useMemo(
