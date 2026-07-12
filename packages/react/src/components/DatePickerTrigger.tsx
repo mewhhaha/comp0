@@ -29,7 +29,7 @@ export function DatePickerTrigger({
   const picker = useDatePickerContext();
   const popover = usePopoverContext();
   const field = useFieldContext();
-  if (!popover) throw new Error("DatePickerTrigger must be rendered inside Popover.");
+  if (!popover) throw new Error("DatePickerTrigger must be rendered inside DatePicker.");
   const resolvedDisabled = Boolean(disabled || picker?.disabled);
   const description = describedBy(field, props["aria-describedby"]);
   let ariaLabel = props["aria-label"];

@@ -30,8 +30,7 @@ export function ComboboxOption({
 }: ComboboxOptionProps & RefProp<HTMLDivElement>) {
   const combo = useComboBoxRootContext();
   const popover = usePopoverContext();
-  if (!combo || !popover)
-    throw new Error("ComboboxOption must be rendered inside Combobox and Popover.");
+  if (!combo || !popover) throw new Error("ComboboxOption must be rendered inside Combobox.");
   const {
     activeId,
     activeKey,

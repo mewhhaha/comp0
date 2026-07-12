@@ -5,7 +5,6 @@ import {
   Checkbox,
   Input,
   Label,
-  Popover,
   Radio,
   Select,
   SelectPopover,
@@ -23,12 +22,10 @@ describe("foundation components", () => {
     const { container } = render(
       <Select defaultValue="alpha">
         <Button onClick={clicked}>Generic action</Button>
-        <Popover>
-          <SelectTrigger>Open</SelectTrigger>
-          <SelectPopover>
-            <SelectOption value="alpha">Alpha</SelectOption>
-          </SelectPopover>
-        </Popover>
+        <SelectTrigger>Open</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="alpha">Alpha</SelectOption>
+        </SelectPopover>
       </Select>,
     );
     const buttons = container.querySelectorAll("button");

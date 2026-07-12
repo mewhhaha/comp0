@@ -25,12 +25,10 @@ describe("real-browser interaction contracts", () => {
       <div>
         <button type="button">Outside target</button>
         <Select id="light-dismiss-select">
-          <Popover>
-            <SelectTrigger>Choose</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="one">One</SelectOption>
-            </SelectPopover>
-          </Popover>
+          <SelectTrigger>Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="one">One</SelectOption>
+          </SelectPopover>
         </Select>
       </div>,
     );
@@ -52,13 +50,11 @@ describe("real-browser interaction contracts", () => {
     const { container, unmount } = render(
       <div>
         <button type="button">Outside target</button>
-        <Select id="controlled-select">
-          <Popover open onToggle={onToggle}>
-            <SelectTrigger>Choose</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="one">One</SelectOption>
-            </SelectPopover>
-          </Popover>
+        <Select id="controlled-select" open onToggle={onToggle}>
+          <SelectTrigger>Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="one">One</SelectOption>
+          </SelectPopover>
         </Select>
       </div>,
     );
@@ -88,21 +84,17 @@ describe("real-browser interaction contracts", () => {
     const secondToggle = vi.fn();
     const controlledPopovers = (firstOpen: boolean, secondOpen: boolean) => (
       <div>
-        <Select id="first-controlled-select">
-          <Popover open={firstOpen} onToggle={firstToggle}>
-            <SelectTrigger>First choice</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="one">One</SelectOption>
-            </SelectPopover>
-          </Popover>
+        <Select id="first-controlled-select" open={firstOpen} onToggle={firstToggle}>
+          <SelectTrigger>First choice</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="one">One</SelectOption>
+          </SelectPopover>
         </Select>
-        <Select id="second-controlled-select">
-          <Popover open={secondOpen} onToggle={secondToggle}>
-            <SelectTrigger>Second choice</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="two">Two</SelectOption>
-            </SelectPopover>
-          </Popover>
+        <Select id="second-controlled-select" open={secondOpen} onToggle={secondToggle}>
+          <SelectTrigger>Second choice</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="two">Two</SelectOption>
+          </SelectPopover>
         </Select>
       </div>
     );
@@ -172,14 +164,12 @@ describe("real-browser interaction contracts", () => {
 
   it("focuses the selected option when Select starts open", () => {
     const { container, unmount } = render(
-      <Select id="initially-open-select" defaultValue="two">
-        <Popover defaultOpen>
-          <SelectTrigger>Choose</SelectTrigger>
-          <SelectPopover>
-            <SelectOption value="one">One</SelectOption>
-            <SelectOption value="two">Two</SelectOption>
-          </SelectPopover>
-        </Popover>
+      <Select id="initially-open-select" defaultValue="two" defaultOpen>
+        <SelectTrigger>Choose</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="one">One</SelectOption>
+          <SelectOption value="two">Two</SelectOption>
+        </SelectPopover>
       </Select>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
@@ -195,13 +185,11 @@ describe("real-browser interaction contracts", () => {
   it("moves focus through select options and restores it after commit", () => {
     const { container, unmount } = render(
       <Select id="browser-select">
-        <Popover>
-          <SelectTrigger>Choose</SelectTrigger>
-          <SelectPopover>
-            <SelectOption value="one">One</SelectOption>
-            <SelectOption value="two">Two</SelectOption>
-          </SelectPopover>
-        </Popover>
+        <SelectTrigger>Choose</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="one">One</SelectOption>
+          <SelectOption value="two">Two</SelectOption>
+        </SelectPopover>
       </Select>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
@@ -222,14 +210,12 @@ describe("real-browser interaction contracts", () => {
   it("keeps combobox focus in the input with a mounted active descendant", () => {
     const { container, unmount } = render(
       <Combobox id="browser-combobox" allowsEmptyCollection>
-        <Popover>
-          <ComboboxInput aria-label="Framework" />
-          <ComboboxPopover>
-            <ComboboxOption value="logical-react" id="dom-react">
-              React
-            </ComboboxOption>
-          </ComboboxPopover>
-        </Popover>
+        <ComboboxInput aria-label="Framework" />
+        <ComboboxPopover>
+          <ComboboxOption value="logical-react" id="dom-react">
+            React
+          </ComboboxOption>
+        </ComboboxPopover>
       </Combobox>,
     );
     const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
@@ -247,20 +233,16 @@ describe("real-browser interaction contracts", () => {
     const { container, unmount } = render(
       <form>
         <Select id="browser-required-select" name="plan" required>
-          <Popover>
-            <SelectTrigger aria-label="Plan">Choose</SelectTrigger>
-            <SelectPopover>
-              <SelectOption value="pro">Pro</SelectOption>
-            </SelectPopover>
-          </Popover>
+          <SelectTrigger aria-label="Plan">Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="pro">Pro</SelectOption>
+          </SelectPopover>
         </Select>
         <Combobox id="browser-required-combobox" name="city" defaultValue="paris" required>
-          <Popover>
-            <ComboboxInput aria-label="City" />
-            <ComboboxPopover>
-              <ComboboxOption value="paris">Paris</ComboboxOption>
-            </ComboboxPopover>
-          </Popover>
+          <ComboboxInput aria-label="City" />
+          <ComboboxPopover>
+            <ComboboxOption value="paris">Paris</ComboboxOption>
+          </ComboboxPopover>
         </Combobox>
       </form>,
     );

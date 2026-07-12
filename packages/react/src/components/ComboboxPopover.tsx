@@ -20,8 +20,7 @@ export function ComboboxPopover({
 }: ComboboxPopoverProps & RefProp<HTMLDivElement>) {
   const combo = useComboBoxRootContext();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
-  if (!combo || !popover)
-    throw new Error("ComboboxPopover must be rendered inside Combobox and Popover.");
+  if (!combo || !popover) throw new Error("ComboboxPopover must be rendered inside Combobox.");
   const options = useRef(new Map<string, PickerOptionRecord>());
   // This identity feeds each option's cleanup effect; useMemo keeps it stable
   // even where the React Compiler bails out, or every popover re-render would

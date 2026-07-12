@@ -20,7 +20,7 @@ export function DatePickerPopover({
   ...props
 }: DatePickerPopoverProps & RefProp<HTMLDivElement>) {
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
-  if (!popover) throw new Error("DatePickerPopover must be rendered inside Popover.");
+  if (!popover) throw new Error("DatePickerPopover must be rendered inside DatePicker.");
   const wasOpen = useRef(false);
   useLayoutEffect(() => {
     if (popover.open && !wasOpen.current) {

@@ -4,7 +4,6 @@ import { Menu } from "./components/Menu.js";
 import { MenuItem } from "./components/MenuItem.js";
 import { MenuPopover } from "./components/MenuPopover.js";
 import { MenuTrigger } from "./components/MenuTrigger.js";
-import { Popover } from "./components/Popover.js";
 import { Select } from "./components/Select.js";
 import { SelectOption } from "./components/SelectOption.js";
 import { SelectPopover } from "./components/SelectPopover.js";
@@ -48,16 +47,14 @@ describe("collection item labels", () => {
   it("shows crawled option text in SelectValue for markup children", () => {
     const { container } = render(
       <Select defaultValue="small">
-        <Popover>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectPopover>
-            <SelectOption value="small">
-              <em>Small</em> size
-            </SelectOption>
-          </SelectPopover>
-        </Popover>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="small">
+            <em>Small</em> size
+          </SelectOption>
+        </SelectPopover>
       </Select>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;

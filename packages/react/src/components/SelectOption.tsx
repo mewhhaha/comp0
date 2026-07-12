@@ -26,8 +26,7 @@ export function SelectOption({
 }: SelectOptionProps & RefProp<HTMLDivElement>) {
   const select = useSelectRootContext();
   const popover = usePopoverContext();
-  if (!select || !popover)
-    throw new Error("SelectOption must be rendered inside Select and Popover.");
+  if (!select || !popover) throw new Error("SelectOption must be rendered inside Select.");
   const generatedId = useId().replace(/:/g, "");
   const id = idProp ?? `${select?.listBoxId ?? "select"}-option-${generatedId}`;
   const ariaLabel = props["aria-label"];

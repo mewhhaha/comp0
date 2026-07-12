@@ -8,7 +8,6 @@ import {
   DialogTrigger,
   Input,
   Label,
-  Popover,
   Select,
   SelectPopover,
   SelectOption,
@@ -24,12 +23,10 @@ function HydrationFixture() {
         <Input defaultValue="Ada" />
       </TextField>
       <Select id="hydrated-select" defaultValue="one">
-        <Popover>
-          <SelectTrigger>Choose</SelectTrigger>
-          <SelectPopover>
-            <SelectOption value="one">One</SelectOption>
-          </SelectPopover>
-        </Popover>
+        <SelectTrigger>Choose</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="one">One</SelectOption>
+        </SelectPopover>
       </Select>
       <Dialog defaultOpen>
         <DialogTrigger>Open</DialogTrigger>
