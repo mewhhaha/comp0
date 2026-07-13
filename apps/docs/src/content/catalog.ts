@@ -264,9 +264,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like a librarian who listens while you type and suggests books.",
     "Use it when people may type to narrow a long set of choices.",
     "Start Combobox with a labelled ComboboxInput.",
-    "Add ComboboxPopover beside the input; it is the listbox of results.",
+    "Place ComboboxTrigger beside the input, then add ComboboxPopover as the listbox of results.",
     "Combobox owns the selected value, field, form serialization, and open state; control the results with open, defaultOpen, and onToggle.",
-    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
+    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxTrigger aria-label="Show suggestions" /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
   ),
   autocomplete: lesson(
     "A provider that gives an existing text field a filtered collection of completions.",
@@ -323,22 +323,22 @@ const lessons: Record<string, LessonCopy> = {
     '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
   ),
   meter: lesson(
-    "A native gauge for a measurement within a known range.",
+    "A fully styleable gauge for a measurement within a known range.",
     "Like a fuel gauge: a level, not a task getting done.",
     "Use it for usage levels such as storage, battery, or password strength.",
     "Add Meter where the measurement belongs and pass value with min and max.",
     "Name it with a wired Label or an aria-label.",
-    "Set low, high, and optimum when parts of the range are good or bad; style via the --comp0-meter-value variable.",
-    '<Meter aria-label="Storage used" value={64} min={0} max={100} low={50} high={85} />',
+    "Add your own fill inside Meter and size it with --comp0-meter-value; low, high, and optimum remain available as data attributes.",
+    '<Meter aria-label="Storage used" value={64} min={0} max={100} low={50} high={85}><span className="fill" /></Meter>',
   ),
   "progress-bar": lesson(
-    "A native progress element for how much of a task is done.",
+    "A fully styleable progress indicator for how much of a task is done.",
     "Like a moving truck's loading gauge filling toward full.",
     "Use it while work completes over time, such as an upload.",
     "Add ProgressBar where the task's status belongs.",
     "Name it with a wired Label or an aria-label.",
-    "Pass value as the completed fraction of max, or omit value while the total is unknown; style the fill via the --comp0-progress-value variable.",
-    '<ProgressBar aria-label="Uploading photos" value={0.4} />',
+    "Pass value as the completed fraction of max, or omit value while the total is unknown; add your own fill and size it with --comp0-progress-value.",
+    '<ProgressBar aria-label="Uploading photos" value={0.4}><span className="fill" /></ProgressBar>',
   ),
   separator: lesson(
     "A native rule that divides content into visually distinct groups.",
@@ -990,26 +990,55 @@ const action = [
     "Meter",
     "actions",
     ["Meter"],
-    '<Meter aria-label="Storage used" value={64} min={0} max={100} />',
+    '<Meter aria-label="Storage used" value={64} min={0} max={100}><span className="fill" /></Meter>',
     [
-      p("Meter", "root", "Native meter element.", true, false, [
-        prop("value", "number", "Current measurement between min and max."),
-        prop("min / max", "number", "Range bounds; native defaults are 0 and 1."),
-        prop(
-          "low / high / optimum",
-          "number",
-          "Native thresholds the browser uses to color the gauge.",
-        ),
-        prop(
-          "aria-label",
-          "string",
-          "Names the gauge when no Label is wired; or pair Label htmlFor with the id.",
-        ),
-        prop("id", "string", "Defaults to the surrounding field's control id for Label wiring."),
-      ]),
+      p(
+        "Meter",
+        "root",
+        "Styleable div with meter semantics and an optional custom fill.",
+        true,
+        false,
+        [
+          prop("value", "number", "Current measurement between min and max."),
+          prop("min / max", "number", "Range bounds; defaults are 0 and 1."),
+          prop(
+            "low / high / optimum",
+            "number",
+            "Thresholds exposed as data-low, data-high, and data-optimum for custom styling.",
+          ),
+          prop(
+            "children",
+            "ReactNode | (state: MeterState) => ReactNode",
+            "Custom track contents or a render function receiving value, bounds, and percentage.",
+          ),
+          prop("aria-label", "string", "Names the gauge when it is not labelled by visible text."),
+          prop("aria-labelledby", "string", "Points to the visible text that names the gauge."),
+        ],
+      ),
     ],
     [],
-    [],
+    [
+      {
+        attribute: "--comp0-meter-value",
+        on: "Meter",
+        meaning: "Normalized 0–1 value for sizing a custom fill.",
+      },
+      {
+        attribute: "[data-low]",
+        on: "Meter",
+        meaning: "The low threshold was provided.",
+      },
+      {
+        attribute: "[data-high]",
+        on: "Meter",
+        meaning: "The high threshold was provided.",
+      },
+      {
+        attribute: "[data-optimum]",
+        on: "Meter",
+        meaning: "The optimum value was provided.",
+      },
+    ],
     "No form behavior; a meter reports a measurement and submits nothing.",
     ["progress-bar"],
   ),
@@ -1018,22 +1047,30 @@ const action = [
     "Progress Bar",
     "actions",
     ["ProgressBar"],
-    '<ProgressBar aria-label="Uploading photos" value={0.4} />',
+    '<ProgressBar aria-label="Uploading photos" value={0.4}><span className="fill" /></ProgressBar>',
     [
-      p("ProgressBar", "root", "Native progress element.", true, false, [
-        prop(
-          "value",
-          "number",
-          "Completed amount between 0 and max; omit it for an indeterminate bar.",
-        ),
-        prop("max", "number", "Upper bound of the range; the native default is 1."),
-        prop(
-          "aria-label",
-          "string",
-          "Names the bar when no Label is wired; or pair Label htmlFor with the id.",
-        ),
-        prop("id", "string", "Defaults to the surrounding field's control id for Label wiring."),
-      ]),
+      p(
+        "ProgressBar",
+        "root",
+        "Styleable div with progressbar semantics and an optional custom fill.",
+        true,
+        false,
+        [
+          prop(
+            "value",
+            "number",
+            "Completed amount between 0 and max; omit it for an indeterminate bar.",
+          ),
+          prop("max", "number", "Upper bound of the range; defaults to 1."),
+          prop(
+            "children",
+            "ReactNode | (state: ProgressBarState) => ReactNode",
+            "Custom track contents or a render function receiving value, max, and percentage.",
+          ),
+          prop("aria-label", "string", "Names the bar when it is not labelled by visible text."),
+          prop("aria-labelledby", "string", "Points to the visible text that names the bar."),
+        ],
+      ),
     ],
     [],
     [
@@ -1043,9 +1080,9 @@ const action = [
         meaning: "No value was given; the bar shows unknown progress.",
       },
       {
-        attribute: ":indeterminate",
+        attribute: "--comp0-progress-value",
         on: "ProgressBar",
-        meaning: "Native pseudo-class for the same unknown-progress state.",
+        meaning: "Normalized 0–1 value for sizing a custom fill.",
       },
     ],
     "No form behavior; progress reports status and submits nothing.",
@@ -3119,8 +3156,8 @@ const picker = [
     "combobox",
     "Combobox",
     "pickers",
-    ["Combobox", "ComboboxPopover", "ComboboxInput", "ComboboxOption", "Label"],
-    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
+    ["Combobox", "ComboboxInput", "ComboboxOption", "ComboboxPopover", "ComboboxTrigger", "Label"],
+    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxTrigger aria-label="Show suggestions" /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
     [
       p(
         "Combobox",
@@ -3152,6 +3189,21 @@ const picker = [
           prop("disabled / required", "boolean", "Override the field-wide state for this control."),
         ],
       ),
+      p(
+        "ComboboxTrigger",
+        "trigger",
+        "Optional button that opens or closes the suggestions with a pointer.",
+        true,
+        true,
+        [
+          prop(
+            "aria-label",
+            "string",
+            'Names the button; defaults to the English "Show suggestions".',
+          ),
+          prop("disabled", "boolean", "Disables the trigger and inherits Combobox.disabled."),
+        ],
+      ),
       p("ComboboxPopover", "content", "The listbox results surface.", true, false, [
         prop("aria-label", "string", "Names the results list when there is no visible Label."),
         prop(
@@ -3173,13 +3225,17 @@ const picker = [
     ],
     [
       { keys: ["ArrowDown"], action: "Moves through options." },
-      { keys: ["Enter"], action: "Selects option." },
+      {
+        keys: ["Enter"],
+        action: "Selects the active option from the input or opens from ComboboxTrigger.",
+      },
+      { keys: ["Space"], action: "Opens suggestions from ComboboxTrigger." },
       { keys: ["Escape"], action: "Closes results." },
     ],
     [
       {
         attribute: "[data-open]",
-        on: "ComboboxInput, ComboboxPopover",
+        on: "ComboboxInput, ComboboxTrigger, ComboboxPopover",
         meaning: "Results are open.",
       },
       {
@@ -3404,6 +3460,13 @@ const picker = [
     ],
     "Forms inside DialogContent submit normally; method=dialog closes the modal without navigation.",
     ["dialog", "alert-dialog"],
+    [
+      {
+        id: "drawer",
+        title: "Right-side drawer",
+        description: "Present a focused modal task from the right edge of the viewport.",
+      },
+    ],
   ),
   common(
     "dialog",

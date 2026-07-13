@@ -45,6 +45,17 @@ export default defineConfig({
     },
     {
       files: [
+        "packages/react/src/components/Meter.tsx",
+        "packages/react/src/components/ProgressBar.tsx",
+      ],
+      rules: {
+        // The native elements do not allow consumers to render and style their
+        // own track and fill, so these components apply the equivalent roles.
+        "jsx-a11y/prefer-tag-over-role": "off",
+      },
+    },
+    {
+      files: [
         "packages/react/src/components/RangeSlider.tsx",
         "packages/react/src/components/RangeSliderThumb.tsx",
         "packages/react/src/components/PinInput.tsx",

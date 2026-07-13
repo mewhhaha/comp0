@@ -5,6 +5,7 @@ import {
   ComboboxPopover,
   ComboboxInput,
   ComboboxOption,
+  ComboboxTrigger,
   Description,
   FieldError,
   Label,
@@ -173,6 +174,7 @@ describe("picker composition", () => {
     const { container } = render(
       <Combobox id="framework" onChange={changed} onInputChange={inputChanged}>
         <ComboboxInput aria-label="Framework" onChange={nativeChanged} />
+        <ComboboxTrigger />
         <ComboboxPopover>
           <ComboboxOption value="react" id="react-option">
             React
@@ -187,6 +189,12 @@ describe("picker composition", () => {
       </Combobox>,
     );
     const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
+    const trigger = container.querySelector<HTMLButtonElement>("button[aria-haspopup='listbox']")!;
+
+    expect(trigger.getAttribute("aria-controls")).toBe("framework-listbox");
+    fireClick(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    expect(document.activeElement).toBe(input);
 
     fireInput(input, "r");
     expect(nativeChanged.mock.calls[0]?.[0].nativeEvent).toBeInstanceOf(Event);

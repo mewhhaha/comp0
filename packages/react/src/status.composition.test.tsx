@@ -48,22 +48,31 @@ describe("Separator", () => {
 });
 
 describe("ProgressBar", () => {
-  it("renders a native progress with value, max, and a value fraction variable", () => {
-    const { container } = render(<ProgressBar aria-label="Upload" value={25} max={100} />);
-    const progress = container.querySelector("progress")!;
+  it("exposes progress semantics and a value fraction to a custom fill", () => {
+    const { container } = render(
+      <ProgressBar aria-label="Upload" value={25} max={100}>
+        {({ percentage }) => <span data-fill>{percentage}%</span>}
+      </ProgressBar>,
+    );
+    const progress = container.querySelector<HTMLElement>("[role='progressbar']")!;
 
-    expect(progress.getAttribute("value")).toBe("25");
-    expect(progress.getAttribute("max")).toBe("100");
+    expect(progress.tagName).toBe("DIV");
+    expect(progress.getAttribute("aria-valuenow")).toBe("25");
+    expect(progress.getAttribute("aria-valuemin")).toBe("0");
+    expect(progress.getAttribute("aria-valuemax")).toBe("100");
     expect(progress.getAttribute("aria-label")).toBe("Upload");
     expect(progress.hasAttribute("data-indeterminate")).toBe(false);
+    expect(progress.querySelector("[data-fill]")?.textContent).toBe("25%");
     expect(progress.style.getPropertyValue("--comp0-progress-value")).toBe("0.25");
   });
 
   it("marks a bar without a value as indeterminate", () => {
     const { container } = render(<ProgressBar aria-label="Loading" />);
-    const progress = container.querySelector("progress")!;
+    const progress = container.querySelector<HTMLElement>("[role='progressbar']")!;
 
-    expect(progress.hasAttribute("value")).toBe(false);
+    expect(progress.hasAttribute("aria-valuenow")).toBe(false);
+    expect(progress.getAttribute("aria-valuemin")).toBe("0");
+    expect(progress.getAttribute("aria-valuemax")).toBe("1");
     expect(progress.hasAttribute("data-indeterminate")).toBe(true);
     expect(progress.style.getPropertyValue("--comp0-progress-value")).toBe("");
   });
@@ -76,26 +85,31 @@ describe("ProgressBar", () => {
       </TextField>,
     );
     const label = container.querySelector("label")!;
-    const progress = container.querySelector("progress")!;
+    const progress = container.querySelector<HTMLElement>("[role='progressbar']")!;
 
     expect(progress.id).not.toBe("");
     expect(label.htmlFor).toBe(progress.id);
+    expect(progress.getAttribute("aria-labelledby")).toBe(label.id);
   });
 });
 
 describe("Meter", () => {
-  it("renders a native meter with its range attributes and a fraction variable", () => {
+  it("exposes meter semantics, thresholds, and a value fraction to a custom fill", () => {
     const { container } = render(
-      <Meter aria-label="Storage" value={30} min={0} max={100} low={20} high={80} optimum={10} />,
+      <Meter aria-label="Storage" value={30} min={0} max={100} low={20} high={80} optimum={10}>
+        {({ percentage }) => <span data-fill>{percentage}%</span>}
+      </Meter>,
     );
-    const meter = container.querySelector("meter")!;
+    const meter = container.querySelector<HTMLElement>("[role='meter']")!;
 
-    expect(meter.getAttribute("value")).toBe("30");
-    expect(meter.getAttribute("min")).toBe("0");
-    expect(meter.getAttribute("max")).toBe("100");
-    expect(meter.getAttribute("low")).toBe("20");
-    expect(meter.getAttribute("high")).toBe("80");
-    expect(meter.getAttribute("optimum")).toBe("10");
+    expect(meter.tagName).toBe("DIV");
+    expect(meter.getAttribute("aria-valuenow")).toBe("30");
+    expect(meter.getAttribute("aria-valuemin")).toBe("0");
+    expect(meter.getAttribute("aria-valuemax")).toBe("100");
+    expect(meter.getAttribute("data-low")).toBe("20");
+    expect(meter.getAttribute("data-high")).toBe("80");
+    expect(meter.getAttribute("data-optimum")).toBe("10");
+    expect(meter.querySelector("[data-fill]")?.textContent).toBe("30%");
     expect(meter.style.getPropertyValue("--comp0-meter-value")).toBe("0.3");
   });
 
@@ -107,10 +121,11 @@ describe("Meter", () => {
       </TextField>,
     );
     const label = container.querySelector("label")!;
-    const meter = container.querySelector("meter")!;
+    const meter = container.querySelector<HTMLElement>("[role='meter']")!;
 
     expect(meter.id).not.toBe("");
     expect(label.htmlFor).toBe(meter.id);
+    expect(meter.getAttribute("aria-labelledby")).toBe(label.id);
   });
 });
 

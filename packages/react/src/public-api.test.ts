@@ -32,6 +32,7 @@ const publicComponents = [
   "ComboboxInput",
   "ComboboxOption",
   "ComboboxPopover",
+  "ComboboxTrigger",
   "ContextMenu",
   "ContextMenuTrigger",
   "DateField",

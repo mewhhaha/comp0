@@ -5,5 +5,6 @@ export * from "./components/SelectPopover.js";
 export * from "./components/SelectOption.js";
 export * from "./components/Combobox.js";
 export * from "./components/ComboboxInput.js";
+export * from "./components/ComboboxTrigger.js";
 export * from "./components/ComboboxPopover.js";
 export * from "./components/ComboboxOption.js";

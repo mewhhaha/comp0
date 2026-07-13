@@ -2,8 +2,6 @@ import {
   createContext,
   type HTMLAttributes,
   type InputHTMLAttributes,
-  type MeterHTMLAttributes,
-  type ReactNode,
   type RefObject,
 } from "react";
 export type NumberFieldProps = Omit<HTMLAttributes<HTMLDivElement>, "onChange"> & {
@@ -95,16 +93,3 @@ export function valueAtPointer(
   }
   return min + Math.min(1, Math.max(0, fraction)) * (max - min);
 }
-
-export type ProgressBarProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
-  value?: number | undefined;
-  minValue?: number | undefined;
-  maxValue?: number | undefined;
-  children?:
-    | ReactNode
-    | ((state: { value: number | undefined; percentage: number | undefined }) => ReactNode);
-};
-
-export type MeterProps = MeterHTMLAttributes<HTMLMeterElement> & {
-  value: number;
-};
