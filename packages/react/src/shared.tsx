@@ -6,6 +6,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
   type Ref,
+  type RefObject,
 } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 
@@ -130,6 +131,7 @@ export function useComboBoxRootContext() {
 export interface SearchFieldContextValue {
   value: string;
   disabled: boolean;
+  inputRef: RefObject<HTMLInputElement | null>;
   clear: () => void;
   submit: (value?: string) => void;
   setValue: (value: string) => void;

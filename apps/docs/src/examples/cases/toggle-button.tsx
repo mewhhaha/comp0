@@ -1,12 +1,16 @@
-import { ToggleButton } from "@comp0/react";
+import { ToggleButton, ToggleButtonGroup } from "@comp0/react";
 
 export function Example() {
   return (
-    <ToggleButton
-      className="rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-950 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-50 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
-      defaultSelected
+    <ToggleButtonGroup
+      type="multiple"
+      defaultValue={["bold"]}
+      aria-label="Text style"
+      className="inline-flex divide-x divide-zinc-950/10 overflow-hidden rounded border border-zinc-950/10 [&>button]:px-3 [&>button]:py-2.5 [&>button]:text-base [&>button]:text-zinc-950 [&>button]:outline-teal-600 [&>button]:focus-visible:outline-2 [&>button[data-selected]]:bg-teal-100 [&>button[data-selected]]:text-teal-950 sm:[&>button]:py-2 sm:[&>button]:text-sm dark:divide-white/10 dark:border-white/10 dark:[&>button]:text-zinc-50 dark:[&>button]:outline-teal-400 dark:[&>button[data-selected]]:bg-teal-950 dark:[&>button[data-selected]]:text-teal-50"
     >
-      Pin note
-    </ToggleButton>
+      <ToggleButton value="bold">Bold</ToggleButton>
+      <ToggleButton value="italic">Italic</ToggleButton>
+      <ToggleButton value="underline">Underline</ToggleButton>
+    </ToggleButtonGroup>
   );
 }

@@ -228,9 +228,17 @@ function parseParts(list: Numbered[]): DiagramNode[] {
         i = list.length;
       } else {
         // A DOM-owning root mid-list is a list container (TabList, sections):
-        // it wraps only the items that directly follow it.
+        // it wraps directly following items and the labels or controls inside them.
         let j = i + 1;
         while (j < list.length && list[j]?.part.kind === "item") j += 1;
+        while (
+          j < list.length &&
+          (list[j]?.part.kind === "label" ||
+            list[j]?.part.kind === "trigger" ||
+            list[j]?.part.kind === "value")
+        ) {
+          j += 1;
+        }
         const children = j > i + 1 ? list.slice(i + 1, j) : rest;
         nodes.push({
           type: "frame",

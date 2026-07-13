@@ -1,18 +1,92 @@
 import { createContext } from "react";
-import { type SelectableCollectionContextValue } from "./collection-shared.js";
+import {
+  type CollectionItemRecord,
+  type SelectableCollectionContextValue,
+} from "./collection-shared.js";
 
-export const GridListContext = createContext<SelectableCollectionContextValue | null>(null);
+export type GridListContextValue = Omit<SelectableCollectionContextValue, "register"> & {
+  register: (
+    key: string,
+    textValue: string,
+    element: HTMLElement | null,
+    disabled?: boolean,
+    removedElement?: HTMLElement,
+  ) => void;
+  items: () => CollectionItemRecord[];
+};
+
+export const GridListContext = createContext<GridListContextValue | null>(null);
 
 export type GridListDropTarget = {
   value: string;
   edge: "before" | "after";
 };
 
+export type GridListOrder = Readonly<Record<string, readonly string[]>>;
+
+export type GridListMove = {
+  value: string;
+  from: { list: string; index: number };
+  to: { list: string; index: number };
+  before: string | null;
+};
+
+export type GridListGroupSource = {
+  list: string;
+  value: string;
+  label: string;
+};
+
+export type GridListGroupDropTarget = {
+  list: string;
+  value: string | null;
+  edge: "before" | "after";
+};
+
+export type GridListFocusRequest = {
+  list: string;
+  value: string;
+};
+
+export type GridListReorderGroupContextValue = {
+  source: GridListGroupSource | null;
+  target: GridListGroupDropTarget | null;
+  focusRequest: GridListFocusRequest | null;
+  movePending: boolean;
+  hasList: (name: string) => boolean;
+  acknowledgeFocusRequest: (request: GridListFocusRequest) => void;
+  registerList: (name: string, element: HTMLElement) => void;
+  unregisterList: (name: string, element: HTMLElement) => void;
+  registerRow: (
+    list: string,
+    value: string,
+    label: string,
+    element: HTMLElement,
+    disabled: boolean,
+  ) => void;
+  unregisterRow: (list: string, value: string, element: HTMLElement) => void;
+  startDrag: (list: string, value: string, label: string) => void;
+  setDropTarget: (target: GridListGroupDropTarget | null) => void;
+  commitDrop: () => void;
+  endDrag: () => void;
+  moveWithin: (list: string, value: string, delta: -1 | 1) => void;
+  moveTo: (list: string, value: string, targetList: string) => void;
+  canMoveTo: (list: string, value: string, targetList: string) => boolean;
+  getListLabel: (name: string) => string;
+};
+
+export const GridListReorderGroupContext = createContext<GridListReorderGroupContextValue | null>(
+  null,
+);
+
 export type GridListDndContextValue = {
+  listName?: string | undefined;
   dragValue: string;
   dropTarget: GridListDropTarget | null;
-  startDrag: (value: string) => void;
+  listDropTarget: boolean;
+  startDrag: (value: string, label: string) => void;
   setDropTarget: (target: GridListDropTarget | null) => void;
+  setDropAtEnd: () => void;
   commitDrop: () => void;
   endDrag: () => void;
   moveItem: (value: string, delta: -1 | 1) => void;
@@ -23,6 +97,7 @@ export const GridListDndContext = createContext<GridListDndContextValue | null>(
 export type GridListItemContextValue = {
   value: string;
   label: string;
+  listName?: string | undefined;
   reorderable: boolean;
   /** Called by a mounted GridListDragHandle; returns its cleanup. While one is registered the row itself stops being draggable. */
   registerHandle: () => () => void;
@@ -36,6 +111,6 @@ export const FOCUSABLE_SELECTOR =
 /** The focusable elements inside a row, excluding the row itself. */
 export function rowFocusables(row: HTMLElement) {
   return [...row.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
-    (element) => element !== row,
+    (element) => element !== row && !element.matches(":disabled"),
   );
 }

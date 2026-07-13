@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionPanel,
   AccordionTrigger,
+  Autocomplete,
   Checkbox,
   Combobox,
   ComboboxPopover,
@@ -14,7 +15,13 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  GridList,
+  GridListItem,
+  GridListMoveButton,
+  GridListReorderGroup,
   Label,
+  ListBox,
+  ListBoxItem,
   Radio,
   RadioGroup,
   Select,
@@ -25,6 +32,8 @@ import {
   Tab,
   TabList,
   TabPanel,
+  SearchField,
+  SearchFieldInput,
   TextField,
   Input,
 } from "./index.js";
@@ -59,6 +68,24 @@ describe("retained accessibility contracts", () => {
             <ComboboxOption value="react">React</ComboboxOption>
           </ComboboxPopover>
         </Combobox>
+        <Autocomplete>
+          <SearchField>
+            <Label>Destination</Label>
+            <SearchFieldInput />
+          </SearchField>
+          <ListBox aria-label="Destination suggestions">
+            <ListBoxItem value="warsaw">Warsaw</ListBoxItem>
+          </ListBox>
+        </Autocomplete>
+        <GridListReorderGroup value={{ todo: ["review"], done: [] }} onChange={() => {}}>
+          <GridList name="todo" aria-label="To do">
+            <GridListItem value="review" textValue="Review changes">
+              Review changes
+              <GridListMoveButton to="done">Move to done</GridListMoveButton>
+            </GridListItem>
+          </GridList>
+          <GridList name="done" aria-label="Done" />
+        </GridListReorderGroup>
         <Accordion defaultValue="one">
           <AccordionItem value="one">
             <AccordionHeader>

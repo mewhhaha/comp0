@@ -111,9 +111,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like a library search desk with an eraser beside the query.",
     "Use it for a query that filters or finds things.",
     "Start with SearchField, Label, and SearchFieldInput.",
-    "Add SearchFieldClear if clearing a query is useful.",
+    "Add SearchFieldClear if clearing a query is useful; it appears only while the query has text.",
     "Name the input when the query should be submitted.",
-    '<SearchField><Label>Search</Label><SearchFieldInput name="q" /></SearchField>',
+    '<SearchField><Label>Search</Label><SearchFieldInput name="q" /><SearchFieldClear aria-label="Clear search" /></SearchField>',
   ),
   checkbox: lesson(
     "One tick box or a collection that can have several ticks.",
@@ -220,8 +220,8 @@ const lessons: Record<string, LessonCopy> = {
     "Use it when rows need buttons or fields inside them; use ListBox for plain options.",
     "Start GridList with an aria-label.",
     "Add a GridListItem with a value for each row.",
-    "Put row actions inside the row; ArrowRight reaches them without adding tab stops.",
-    '<GridList aria-label="Files"><GridListItem value="report">report.pdf<Button>Share</Button></GridListItem></GridList>',
+    "For a board, wrap named lists in GridListReorderGroup and add GridListMoveButton controls beside the drag handle.",
+    '<GridList aria-label="Files"><GridListItem value="report">report.pdf</GridListItem></GridList>',
   ),
   table: lesson(
     "A native table you can walk cell by cell from the keyboard.",
@@ -267,6 +267,15 @@ const lessons: Record<string, LessonCopy> = {
     "Add ComboboxPopover beside the input; it is the listbox of results.",
     "Combobox owns the selected value, field, form serialization, and open state; control the results with open, defaultOpen, and onToggle.",
     '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
+  ),
+  autocomplete: lesson(
+    "A provider that gives an existing text field a filtered collection of completions.",
+    "Like typing at a travel desk while the matching destinations stay within reach.",
+    "Use it when the text remains the person’s query and choosing a result is a separate collection action; use Combobox when a choice must become the field value.",
+    "Wrap the field and its result collection in Autocomplete; it adds no DOM element.",
+    "Compose the field from SearchField and SearchFieldInput, then render results with ListBox and ListBoxItem.",
+    "Pass filter to match item text. Handle collection selection or menu actions yourself—choosing a result never overwrites the query.",
+    '<Autocomplete filter={contains}><SearchField><Label>Destination</Label><SearchFieldInput name="destination" /><ListBox aria-label="Destinations"><ListBoxItem value="paris">Paris</ListBoxItem></ListBox></SearchField></Autocomplete>',
   ),
   dialog: lesson(
     "A modal layer that asks people to finish or dismiss a focused task.",
@@ -466,6 +475,15 @@ const lessons: Record<string, LessonCopy> = {
     "Set busy while loading more, and total when you know how many articles exist beyond the rendered ones.",
     '<Feed aria-label="Recipe stories" busy={loading}><FeedArticle aria-labelledby="story-1"><h3 id="story-1">Roasted tomato soup</h3></FeedArticle></Feed>',
   ),
+  messages: lesson(
+    "A named message history that politely announces new messages appended at the end.",
+    "Like a conversation transcript whose newest line is read aloud without interrupting.",
+    "Use it for an ongoing chat or messaging history; use Feed for scroll-loaded articles.",
+    "Add Messages with an aria-label or aria-labelledby.",
+    "Append each complete message at the end, with visible sender and time context.",
+    "Keep the composer outside the history and set busy while a streamed message is being assembled.",
+    '<Messages aria-label="Conversation with Ada"><p>Ada: Hello.</p></Messages>',
+  ),
 };
 const accessibility: Record<string, string[]> = {
   button: [
@@ -574,6 +592,7 @@ const accessibility: Record<string, string[]> = {
     "Keep row focus and row selection visibly distinct.",
     "Reach row controls with ArrowRight; do not add extra tab stops.",
     "Reordering never requires a pointer: Alt+Arrow moves the focused row and a live region announces its new position.",
+    "For cross-list moves, render GridListMoveButton controls so the same operation works with a click, tap, Enter, or Space without dragging.",
   ],
   table: [
     "Give the table an aria-label or a visible caption.",
@@ -599,6 +618,11 @@ const accessibility: Record<string, string[]> = {
     "Use a visible Label so the input and results list share a clear name; without one, name both parts explicitly.",
     "Keep option text specific enough to distinguish matches.",
     "Do not hide required instructions only in the result list.",
+  ],
+  autocomplete: [
+    "Give the text field a visible Label and give an adjacent ListBox or MenuPopover its own clear name when its purpose is not evident.",
+    "Keep the active matching item mounted while virtual focus refers to it; use disableVirtualFocus when the collection should move DOM focus instead.",
+    "Make empty and loading messages non-selectable, and do not use a completion as the only way to enter a value.",
   ],
   dialog: [
     "Give DialogContent an accessible name.",
@@ -711,6 +735,11 @@ const accessibility: Record<string, string[]> = {
     "Label every article via aria-labelledby on FeedArticle so PageDown announces where it landed.",
     "Keep something focusable before and after the feed; Ctrl+Home and Ctrl+End are how keyboard users escape an endless scroll.",
   ],
+  messages: [
+    "Give the history an aria-label or aria-labelledby so its polite live region has a useful name.",
+    "Append completed messages at the end; when prepending older history, temporarily set aria-live to off so old messages are not announced as new.",
+    "Keep the message composer outside Messages, and do not move focus when a message arrives.",
+  ],
 };
 
 const formatExample = (source: string) => {
@@ -805,7 +834,11 @@ const action = [
         true,
         [
           prop("aria-label", "string", "Names the group for assistive technology."),
-          prop("orientation", '"horizontal" | "vertical"', "Announced and styleable direction."),
+          prop(
+            "orientation",
+            '"horizontal" | "vertical"',
+            "Direction exposed through data-orientation for styling.",
+          ),
           prop("type", '"single" | "multiple"', "Whether the group keeps one value or many."),
           prop(
             "value / defaultValue",
@@ -1395,11 +1428,17 @@ const field = [
         prop("name", "string", "Submission name for the query."),
         prop("placeholder", "string", "Hint text; never a replacement for Label."),
       ]),
-      p("SearchFieldClear", "trigger", "Optional native clear button.", true, true),
+      p(
+        "SearchFieldClear",
+        "trigger",
+        "Optional native clear button shown while the query has text.",
+        true,
+        true,
+      ),
     ],
     [
       { keys: ["Enter"], action: "Submits the surrounding form." },
-      { keys: ["Tab"], action: "Moves between input and clear button." },
+      { keys: ["Tab"], action: "Moves to the clear button while the query has text." },
     ],
     [
       { attribute: "[data-invalid]", on: "SearchFieldInput", meaning: "The field is invalid." },
@@ -2205,11 +2244,47 @@ const navigation = [
     "grid-list",
     "Grid List",
     "navigation",
-    ["Button", "GridList", "GridListDragHandle", "GridListItem"],
-    '<GridList aria-label="Files"><GridListItem value="report">report.pdf<Button>Share</Button></GridListItem></GridList>',
     [
+      "GridList",
+      "GridListDragHandle",
+      "GridListItem",
+      "GridListMoveButton",
+      "GridListReorderGroup",
+    ],
+    '<GridListReorderGroup value={columns} onChange={setColumns}><GridList name="todo" aria-label="To do"><GridListItem value="report"><GridListDragHandle />report.pdf<GridListMoveButton to="done">Move to done</GridListMoveButton></GridListItem></GridList><GridList name="done" aria-label="Done" /></GridListReorderGroup>',
+    [
+      p(
+        "GridListReorderGroup",
+        "root",
+        "Context-only owner for one atomic order shared by multiple named lists.",
+        false,
+        false,
+        [
+          prop(
+            "value",
+            "Record<string, readonly string[]>",
+            "Current row order keyed by GridList name; row values are unique across the group.",
+          ),
+          prop(
+            "onChange",
+            "(value, move) => void",
+            "Receives the complete next order and one move descriptor for local or cross-list moves.",
+          ),
+          prop(
+            "pending",
+            "boolean",
+            "Keeps a proposed move locked while an asynchronous owner decides; retaining value after pending clears rejects it.",
+          ),
+          prop(
+            "canMove",
+            "(value, move) => boolean",
+            "Vetoes a proposed complete order for drag-and-drop, Alt+Arrow reorders, and GridListMoveButton moves.",
+          ),
+        ],
+      ),
       p("GridList", "root", "Grid container and the list's single tab stop.", true, false, [
         prop("aria-label", "string", "Names the grid; nothing labels it automatically."),
+        prop("name", "string", "Column key required when the list is inside GridListReorderGroup."),
         prop("value / defaultValue", "string", "Controlled or initial selected row."),
         prop("onChange", "(value: string) => void", "Receives the next selected row."),
         prop(
@@ -2223,13 +2298,6 @@ const navigation = [
           "Vetoes a proposed order: blocked drop positions show no drop preview and blocked keyboard moves are announced but not applied.",
         ),
       ]),
-      p(
-        "GridListDragHandle",
-        "trigger",
-        "Optional labelled button inside a row; while present, drags start from it instead of the whole row, keeping the row body free for scrolling and text selection.",
-        true,
-        true,
-      ),
       p("GridListItem", "item", "Selectable row that can hold its own controls.", true, false, [
         prop("value", "string", "This row’s selection key."),
         prop("disabled", "boolean", "Disables the row."),
@@ -2239,6 +2307,24 @@ const navigation = [
           "Overrides the text crawled from children when markup makes it ambiguous.",
         ),
       ]),
+      p(
+        "GridListDragHandle",
+        "trigger",
+        "Optional labelled button inside a row; while present, native drags start from it instead of the row body.",
+        true,
+        true,
+      ),
+      p(
+        "GridListMoveButton",
+        "trigger",
+        "Optional click, tap, and keyboard path for appending a row to another named list.",
+        true,
+        true,
+        [
+          prop("to", "string", "Destination GridList name."),
+          prop("aria-label", "string", "Names the row and destination for an icon-only control."),
+        ],
+      ),
     ],
     [
       { keys: ["ArrowDown"], action: "Moves to the next row." },
@@ -2249,13 +2335,32 @@ const navigation = [
       { keys: ["End"], action: "Moves to the last row." },
       { keys: ["Enter"], action: "Selects the focused row." },
       { keys: ["Space"], action: "Selects the focused row." },
-      { keys: ["Alt", "ArrowUp"], action: "Moves the row up.", scope: "with onReorder" },
-      { keys: ["Alt", "ArrowDown"], action: "Moves the row down.", scope: "with onReorder" },
+      { keys: ["Alt", "ArrowUp"], action: "Moves the row up.", scope: "while reorderable" },
+      {
+        keys: ["Alt", "ArrowDown"],
+        action: "Moves the row down.",
+        scope: "while reorderable",
+      },
+      {
+        keys: ["Enter"],
+        action: "Moves the row to the named destination.",
+        scope: "on GridListMoveButton",
+      },
+      {
+        keys: ["Space"],
+        action: "Moves the row to the named destination.",
+        scope: "on GridListMoveButton",
+      },
     ],
     [
       { attribute: "[data-selected]", on: "GridListItem", meaning: "The row is selected." },
       { attribute: "[data-disabled]", on: "GridListItem", meaning: "The row is disabled." },
       { attribute: "[data-dragging]", on: "GridListItem", meaning: "The row is being dragged." },
+      {
+        attribute: "[data-drop-target]",
+        on: "GridList",
+        meaning: "The dragged row will be inserted in this list, including when it is empty.",
+      },
       {
         attribute: "[data-drop-before]",
         on: "GridListItem",
@@ -2280,6 +2385,12 @@ const navigation = [
         title: "Reorder with a drag handle",
         description:
           "onReorder makes rows movable; the handle keeps drags off the row body, canReorder pins notes.txt to the end (blocked positions show no drop preview), and Alt+Arrow moves each row without a pointer.",
+      },
+      {
+        id: "kanban",
+        title: "Kanban board",
+        description:
+          "GridListReorderGroup owns one controlled order for all columns. Drag for precise placement, use Alt+Arrow within a column, or activate the arrow buttons to move without dragging.",
       },
     ],
   ),
@@ -2852,7 +2963,50 @@ const navigation = [
       },
     ],
     "A feed does not create form values.",
-    ["grid-list"],
+    ["grid-list", "messages"],
+  ),
+  common(
+    "messages",
+    "Messages",
+    "navigation",
+    ["Button", "Label", "Messages", "TextArea", "TextField"],
+    '<section aria-labelledby="chat-title"><h2 id="chat-title">Conversation with Ada</h2><Messages aria-labelledby="chat-title"><p>Ada: Hello.</p></Messages><form><TextField><Label>Message</Label><TextArea name="message" /></TextField><Button type="submit">Send</Button></form></section>',
+    [
+      p(
+        "Messages",
+        "root",
+        "Chronological message log with implicit polite live announcements.",
+        true,
+        false,
+        [
+          prop(
+            "aria-label / aria-labelledby",
+            "string",
+            "Names the conversation history for assistive technology.",
+          ),
+          prop(
+            "busy",
+            "boolean",
+            "Defers live-region processing while a message is being assembled.",
+          ),
+          prop(
+            "aria-live",
+            '"off" | "polite" | "assertive"',
+            "Native override; use off temporarily while prepending older messages.",
+          ),
+        ],
+      ),
+    ],
+    [],
+    [
+      {
+        attribute: "[data-busy]",
+        on: "Messages",
+        meaning: "A message is still being assembled before announcement.",
+      },
+    ],
+    "Messages does not create form values; keep the message composer beside it, not inside it.",
+    ["feed", "text-area", "toast"],
   ),
 ];
 
@@ -3015,7 +3169,167 @@ const picker = [
       },
     ],
     "Combobox.name owns selected-value serialization. ComboboxInput owns text editing and required validity.",
-    ["select", "search-field"],
+    ["select", "autocomplete", "search-field"],
+  ),
+  common(
+    "autocomplete",
+    "Autocomplete",
+    "pickers",
+    [
+      "Autocomplete",
+      "Label",
+      "ListBox",
+      "ListBoxItem",
+      "Menu",
+      "MenuItem",
+      "MenuPopover",
+      "MenuTrigger",
+      "SearchField",
+      "SearchFieldInput",
+      "TextArea",
+      "TextField",
+    ],
+    '<Autocomplete filter={contains}><SearchField><Label>Destination</Label><SearchFieldInput name="destination" /><ListBox aria-label="Destinations"><ListBoxItem value="paris">Paris</ListBoxItem></ListBox></SearchField></Autocomplete>',
+    [
+      p(
+        "Autocomplete",
+        "root",
+        "Wrapper-free provider for one editable query and a composed collection.",
+        false,
+        false,
+        [
+          prop("children", "ReactNode", "A text field and its ListBox or Menu collection."),
+          prop(
+            "filter",
+            "(textValue: string, inputValue: string) => boolean",
+            "Optional client-side match rule for collection item text; omit it for externally filtered results.",
+          ),
+          prop(
+            "inputValue / defaultInputValue",
+            "string",
+            "Controlled or initial completion query; an inline editor may pass only its current token.",
+          ),
+          prop("onInputChange", "(value: string) => void", "Receives the next typed text."),
+          prop(
+            "disableAutoFocusFirst",
+            "boolean",
+            "Leaves virtual focus empty after the query changes.",
+          ),
+          prop(
+            "disableVirtualFocus",
+            "boolean",
+            "Restores the collection’s normal DOM-focus behavior.",
+          ),
+        ],
+      ),
+      p(
+        "SearchField",
+        "root",
+        "Editable query field; use TextField and TextArea for inline completion.",
+        false,
+      ),
+      p("Label", "label", "Visible name connected to the query field."),
+      p(
+        "SearchFieldInput",
+        "input",
+        "Native search input that provides the completion query.",
+        true,
+        false,
+        [
+          prop("name", "string", "Submission name for the typed query."),
+          prop("placeholder", "string", "Hint text; never a replacement for Label."),
+          prop(
+            "autoComplete",
+            "string",
+            "Native browser autofill hint; independent from application suggestions.",
+          ),
+        ],
+      ),
+      p(
+        "ListBox",
+        "region",
+        "Selectable completion results; it owns selection state and callbacks.",
+        true,
+        false,
+        [
+          prop("value / defaultValue", "string", "Controlled or initial selected item key."),
+          prop("onChange", "(value: string) => void", "Receives the selected completion key."),
+          prop("aria-label", "string", "Names results when no visible heading names them."),
+        ],
+      ),
+      p("ListBoxItem", "item", "One selectable completion result.", true, false, [
+        prop("value", "string", "Collection key passed to ListBox.onChange."),
+        prop("disabled", "boolean", "Excludes this result from selection."),
+        prop(
+          "textValue",
+          "string",
+          "Matching and typeahead text when rich children do not provide a plain label.",
+        ),
+      ]),
+    ],
+    [
+      { keys: ["ArrowDown"], action: "Moves virtual focus to the next matching result." },
+      { keys: ["ArrowUp"], action: "Moves virtual focus to the previous matching result." },
+      { keys: ["Home"], action: "Keeps native caret movement and clears virtual focus." },
+      { keys: ["End"], action: "Keeps native caret movement and clears virtual focus." },
+      { keys: ["ArrowLeft"], action: "Returns to text editing and clears virtual focus." },
+      { keys: ["ArrowRight"], action: "Returns to text editing and clears virtual focus." },
+      { keys: ["Enter"], action: "Selects the active listbox item or runs the active menu item." },
+      { keys: ["Escape"], action: "Uses the composed field or menu’s normal Escape behavior." },
+    ],
+    [
+      {
+        attribute: "[aria-activedescendant]",
+        on: "SearchFieldInput, TextArea",
+        meaning: "The query field points to the virtually focused completion.",
+      },
+      {
+        attribute: "[aria-controls]",
+        on: "SearchFieldInput, TextArea",
+        meaning: "The query field points at its composed completion collection.",
+      },
+      {
+        attribute: "[aria-autocomplete]",
+        on: "SearchFieldInput, TextArea",
+        meaning: "The field advertises its list of text-dependent completions.",
+      },
+      {
+        attribute: "[data-active]",
+        on: "ListBoxItem, MenuItem",
+        meaning: "The item has the virtual keyboard highlight.",
+      },
+      {
+        attribute: "[data-selected]",
+        on: "ListBoxItem",
+        meaning: "The collection selected this completion.",
+      },
+      {
+        attribute: "[data-disabled]",
+        on: "ListBoxItem, MenuItem",
+        meaning: "The completion cannot be selected or activated.",
+      },
+    ],
+    "The composed SearchFieldInput or TextArea owns native name and form serialization. ListBox selection and MenuItem actions stay separate from the typed query.",
+    ["combobox", "search-field", "list-box"],
+    [
+      {
+        id: "menu",
+        title: "Searchable menu",
+        description: "Filter command actions while Menu keeps its own activation behavior.",
+      },
+      {
+        id: "mentions",
+        title: "Mention completion",
+        description:
+          "Complete an @mention inside a multi-line message without replacing the rest of it.",
+      },
+      {
+        id: "recipients",
+        title: "Email recipients",
+        description:
+          "Add matching contacts as recipient tokens and clear the query after each selection.",
+      },
+    ],
   ),
   common(
     "dialog",

@@ -11,6 +11,7 @@ export function SearchFieldClear({
 }: SearchFieldClearProps & RefProp<HTMLButtonElement>) {
   const searchField = useSearchFieldContext();
   const resolvedDisabled = Boolean(disabled ?? searchField?.disabled);
+  if (searchField?.value === "") return null;
 
   return (
     <button
@@ -21,7 +22,9 @@ export function SearchFieldClear({
       data-disabled={dataAttr(resolvedDisabled)}
       onClick={(event) => {
         onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) searchField?.clear();
+        if (event.defaultPrevented || resolvedDisabled) return;
+        searchField?.inputRef.current?.focus();
+        searchField?.clear();
       }}
     />
   );

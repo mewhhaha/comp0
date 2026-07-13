@@ -6,6 +6,7 @@ import {
   useTypeaheadSearch,
 } from "@comp0/core";
 import { type RefProp } from "../shared.js";
+import { useAutocompleteContext } from "./autocomplete-shared.js";
 import {
   MenuContext,
   sortItems,
@@ -21,6 +22,8 @@ export type { MenuPopoverProps } from "./menu-shared.js";
 export function MenuPopover({
   ref,
   offset,
+  onContextMenu,
+  onContextMenuCapture,
   onKeyDown,
   onToggle,
   onBlur,
@@ -29,6 +32,12 @@ export function MenuPopover({
   children,
   ...props
 }: MenuPopoverProps & RefProp<HTMLDivElement>) {
+  const autocomplete = useAutocompleteContext();
+  const autocompleteInputRef = autocomplete?.inputRef;
+  const virtualFocusEnabled = autocomplete !== null && !autocomplete.disableVirtualFocus;
+  const collectionId = props.id ?? autocomplete?.defaultCollectionId;
+  const setAutocompleteCollectionId = autocomplete?.setCollectionId;
+  const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
   const menu = useMenuRootContext();
   // A top-level menu inside a menubar hands ArrowLeft/ArrowRight to the bar;
   // submenus keep the existing ArrowLeft-closes behavior.
@@ -70,6 +79,11 @@ export function MenuPopover({
 
   useLayoutEffect(() => {
     if (menu?.open && !wasOpen.current) {
+      if (virtualFocusEnabled) {
+        autocompleteInputRef?.current?.focus();
+        wasOpen.current = true;
+        return;
+      }
       const items = sortItems([...itemMap.current.values()]);
       const firstItem = items.find((item) => !item.disabled);
       if (firstItem) {
@@ -78,7 +92,24 @@ export function MenuPopover({
       }
     }
     wasOpen.current = Boolean(menu?.open);
-  }, [menu?.open]);
+  }, [autocompleteInputRef, menu?.open, virtualFocusEnabled]);
+
+  useLayoutEffect(() => {
+    if (!collectionId || !setAutocompleteCollectionId || !setAutocompleteCollectionVersion) return;
+    setAutocompleteCollectionId(collectionId);
+    setAutocompleteCollectionVersion((version) => version + 1);
+    return () => {
+      setAutocompleteCollectionId((currentId) =>
+        currentId === collectionId ? undefined : currentId,
+      );
+      setAutocompleteCollectionVersion((version) => version + 1);
+    };
+  }, [collectionId, setAutocompleteCollectionId, setAutocompleteCollectionVersion]);
+
+  useLayoutEffect(() => {
+    if (!setAutocompleteCollectionVersion) return;
+    setAutocompleteCollectionVersion((version) => version + 1);
+  }, [menu?.open, setAutocompleteCollectionVersion]);
 
   let surfaceStyle = placementSurfaceStyle(placement, offset, menu?.triggerId, style);
   if (ownContextMenu) {
@@ -93,20 +124,27 @@ export function MenuPopover({
   // A context menu has no trigger button to borrow a label from; pass an
   // aria-label (or aria-labelledby) on the popover instead.
   let labelledBy = props["aria-labelledby"];
-  if (!ownContextMenu && labelledBy === undefined) labelledBy = menu?.triggerId;
+  if (!ownContextMenu && !props["aria-label"] && labelledBy === undefined) {
+    labelledBy = menu?.triggerId;
+  }
 
   return (
     <MenuContext value={context}>
       <div
         {...props}
-        ref={composeRefs(surfaceRef, ref)}
-        id={props.id ?? menu?.contentId}
+        ref={composeRefs(surfaceRef, ref, autocomplete?.collectionRef)}
+        id={collectionId ?? menu?.contentId}
         role={props.role ?? "menu"}
         popover="auto"
         hidden={!menu?.open}
         style={surfaceStyle}
         data-open={menu?.open || undefined}
         aria-labelledby={labelledBy}
+        onContextMenu={onContextMenu}
+        onContextMenuCapture={(event) => {
+          onContextMenuCapture?.(event);
+          if (!event.defaultPrevented && ownContextMenu) event.preventDefault();
+        }}
         onToggle={(event) => {
           onToggle?.(event);
           // Toggle events from nested popovers bubble in the React tree;
@@ -121,6 +159,7 @@ export function MenuPopover({
           // of the popover and its trigger entirely.
           if (!menu?.open) return;
           const next = event.relatedTarget;
+          if (next === autocomplete?.inputRef.current) return;
           if (next instanceof Node) {
             if (event.currentTarget.contains(next)) return;
             const trigger = event.currentTarget.ownerDocument.getElementById(menu.triggerId);

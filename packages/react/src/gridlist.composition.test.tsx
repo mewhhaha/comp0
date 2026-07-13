@@ -1,9 +1,15 @@
-import { act, useState } from "react";
+import { act, useEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { GridList } from "./components/GridList.js";
 import { GridListDragHandle } from "./components/GridListDragHandle.js";
 import { GridListItem } from "./components/GridListItem.js";
+import { GridListMoveButton } from "./components/GridListMoveButton.js";
+import {
+  GridListReorderGroup,
+  type GridListMove,
+  type GridListOrder,
+} from "./components/GridListReorderGroup.js";
 
 function renderGridList(onChange = vi.fn()) {
   const result = render(
@@ -19,6 +25,141 @@ function renderGridList(onChange = vi.fn()) {
   );
   const rows = result.container.querySelectorAll<HTMLElement>("[role='row']");
   return { ...result, onChange, rows };
+}
+
+function GroupedLists({
+  initial,
+  spy,
+  canMove,
+  disabledValues = [],
+}: {
+  initial: Record<string, string[]>;
+  spy: (value: Record<string, string[]>, move: GridListMove) => void;
+  canMove?: ((value: GridListOrder, move: GridListMove) => boolean) | undefined;
+  disabledValues?: readonly string[] | undefined;
+}) {
+  const [order, setOrder] = useState(initial);
+  const names = Object.keys(order);
+
+  return (
+    <GridListReorderGroup
+      value={order}
+      canMove={canMove}
+      onChange={(next, move) => {
+        spy(next, move);
+        setOrder(next);
+      }}
+    >
+      {names.map((name) => (
+        <GridList key={name} name={name} aria-label={name}>
+          {order[name]!.map((rowValue) => (
+            <GridListItem
+              key={rowValue}
+              value={rowValue}
+              textValue={rowValue}
+              disabled={disabledValues.includes(rowValue)}
+            >
+              <GridListDragHandle>Move</GridListDragHandle>
+              {rowValue}
+              {names
+                .filter((targetName) => targetName !== name)
+                .map((targetName) => (
+                  <GridListMoveButton key={targetName} to={targetName}>
+                    Move to {targetName}
+                  </GridListMoveButton>
+                ))}
+            </GridListItem>
+          ))}
+        </GridList>
+      ))}
+    </GridListReorderGroup>
+  );
+}
+
+type ControlledGroupedListsProps = {
+  order: Record<string, string[]>;
+  onChange: (value: Record<string, string[]>, move: GridListMove) => void;
+  canMove?: ((value: GridListOrder, move: GridListMove) => boolean) | undefined;
+  pending?: boolean | undefined;
+  showDone?: boolean | undefined;
+  disabledValues?: readonly string[] | undefined;
+};
+
+function ControlledGroupedLists({
+  order,
+  onChange,
+  canMove,
+  pending,
+  showDone = true,
+  disabledValues = [],
+}: ControlledGroupedListsProps) {
+  return (
+    <GridListReorderGroup value={order} onChange={onChange} canMove={canMove} pending={pending}>
+      <button type="button" data-outside-focus>
+        Outside
+      </button>
+      <GridList name="todo" aria-label="To do">
+        {order["todo"]!.map((rowValue) => (
+          <GridListItem
+            key={rowValue}
+            value={rowValue}
+            textValue={rowValue}
+            disabled={disabledValues.includes(rowValue)}
+          >
+            {rowValue}
+            <GridListMoveButton to="done">Move to done</GridListMoveButton>
+            <button type="button" data-row-details>
+              Details
+            </button>
+          </GridListItem>
+        ))}
+      </GridList>
+      {showDone && (
+        <GridList name="done" aria-label="Done">
+          {order["done"]!.map((rowValue) => (
+            <GridListItem
+              key={rowValue}
+              value={rowValue}
+              textValue={rowValue}
+              disabled={disabledValues.includes(rowValue)}
+            >
+              {rowValue}
+              <GridListMoveButton to="todo">Move to todo</GridListMoveButton>
+              <button type="button" data-row-details>
+                Details
+              </button>
+            </GridListItem>
+          ))}
+        </GridList>
+      )}
+    </GridListReorderGroup>
+  );
+}
+
+type PendingControlledGroupedListsProps = Omit<ControlledGroupedListsProps, "pending"> & {
+  settled?: boolean | undefined;
+};
+
+function PendingControlledGroupedLists({
+  onChange,
+  settled = false,
+  ...props
+}: PendingControlledGroupedListsProps) {
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    if (settled) setPending(false);
+  }, [settled]);
+
+  return (
+    <ControlledGroupedLists
+      {...props}
+      pending={pending}
+      onChange={(next, move) => {
+        setPending(true);
+        onChange(next, move);
+      }}
+    />
+  );
 }
 
 describe("grid list composition", () => {
@@ -229,5 +370,511 @@ describe("grid list composition", () => {
 
     fireKeyDown(second!, "ArrowUp", { altKey: true });
     expect(spy).toHaveBeenLastCalledWith(["photos.zip", "report.pdf", "notes.txt"]);
+  });
+
+  it("moves a row between named lists with one atomic pointer transaction", async () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <GroupedLists initial={{ todo: ["design"], done: ["ship"] }} spy={spy} />,
+    );
+    const source = container.querySelector<HTMLElement>("[data-value='design']")!;
+    const target = container.querySelector<HTMLElement>("[data-value='ship']")!;
+    const origin = container.querySelector<HTMLElement>("[aria-label='todo']")!;
+    const destination = container.querySelector<HTMLElement>("[aria-label='done']")!;
+    Object.defineProperty(target, "getBoundingClientRect", {
+      value: () => ({ top: 80, height: 40, bottom: 120, left: 0, right: 100, width: 100 }),
+    });
+
+    fireDrag(source.querySelector("[data-slot='grid-list-drag-handle']")!, "dragstart");
+    fireDrag(target, "dragover", 85);
+    expect(destination.hasAttribute("data-drop-target")).toBe(true);
+    expect(target.hasAttribute("data-drop-before")).toBe(true);
+    fireDrag(target, "drop", 85);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenLastCalledWith(
+      { todo: [], done: ["design", "ship"] },
+      {
+        value: "design",
+        from: { list: "todo", index: 0 },
+        to: { list: "done", index: 0 },
+        before: "ship",
+      },
+    );
+    expect(destination.querySelectorAll("[role='row']")).toHaveLength(2);
+    expect(container.querySelector("[aria-live]")?.textContent).toBe(
+      "Moved design to done, position 1 of 2.",
+    );
+    await flushTimers();
+    expect(document.activeElement?.getAttribute("data-value")).toBe("design");
+    expect(origin.querySelectorAll("[role='row']")).toHaveLength(0);
+    expect(target.tabIndex).toBe(-1);
+    expect(destination.querySelector<HTMLElement>("[data-value='design']")?.tabIndex).toBe(0);
+  });
+
+  it("repairs each list's tab stop after repeated cross-list moves", () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <GroupedLists initial={{ todo: ["design", "build"], done: ["ship"] }} spy={spy} />,
+    );
+    const tabStopValues = (name: string) =>
+      [...container.querySelectorAll<HTMLElement>(`[aria-label='${name}'] [role='row']`)]
+        .filter((row) => row.tabIndex === 0)
+        .map((row) => row.dataset["value"]);
+
+    expect(tabStopValues("todo"), "initial todo tab stop").toEqual(["design"]);
+    expect(tabStopValues("done"), "initial done tab stop").toEqual(["ship"]);
+
+    fireClick(container.querySelector("[data-value='design'] [data-to='done']")!);
+    expect(document.activeElement?.getAttribute("data-value"), "focused row after first move").toBe(
+      "design",
+    );
+    expect(
+      container.querySelector("[aria-label='done']")?.contains(document.activeElement),
+      "focused row belongs to destination after first move",
+    ).toBe(true);
+    expect(tabStopValues("todo"), "todo tab stop after first move").toEqual(["build"]);
+    expect(tabStopValues("done"), "done tab stop after first move").toEqual(["design"]);
+
+    fireClick(container.querySelector("[data-value='design'] [data-to='todo']")!);
+    expect(tabStopValues("todo"), "todo tab stop after return move").toEqual(["design"]);
+    expect(tabStopValues("done"), "done tab stop after return move").toEqual(["ship"]);
+
+    fireClick(container.querySelector("[data-value='design'] [data-to='done']")!);
+    expect(tabStopValues("todo"), "todo tab stop after repeated move").toEqual(["build"]);
+    expect(tabStopValues("done"), "done tab stop after repeated move").toEqual(["design"]);
+    expect(document.activeElement?.getAttribute("data-value")).toBe("design");
+  });
+
+  it("announces and focuses a controlled move only after its order is accepted", () => {
+    const changed = vi.fn();
+    const initial = { todo: ["design"], done: [] as string[] };
+    const accepted = { todo: [] as string[], done: ["design"] };
+    const { container, rerender } = render(
+      <PendingControlledGroupedLists order={initial} onChange={changed} />,
+    );
+    const moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    act(() => moveButton.focus());
+
+    fireClick(moveButton);
+
+    expect(changed).toHaveBeenLastCalledWith(
+      accepted,
+      expect.objectContaining({ value: "design", to: { list: "done", index: 0 } }),
+    );
+    expect(container.querySelector("[aria-label='To do'] [data-value='design']")).toBeTruthy();
+    expect(container.querySelector("[aria-live]")?.textContent).toBe("");
+    expect(document.activeElement).toBe(moveButton);
+
+    rerender(<PendingControlledGroupedLists order={accepted} onChange={changed} settled />);
+
+    const movedRow = container.querySelector<HTMLElement>(
+      "[aria-label='Done'] [data-value='design']",
+    )!;
+    expect(container.querySelector("[aria-live]")?.textContent).toBe(
+      "Moved design to Done, position 1 of 1.",
+    );
+    expect(document.activeElement).toBe(movedRow);
+    expect(movedRow.tabIndex).toBe(0);
+
+    const outside = container.querySelector<HTMLButtonElement>("[data-outside-focus]")!;
+    act(() => outside.focus());
+    rerender(
+      <PendingControlledGroupedLists
+        order={accepted}
+        onChange={changed}
+        settled
+        showDone={false}
+      />,
+    );
+    rerender(<PendingControlledGroupedLists order={accepted} onChange={changed} settled />);
+    expect(document.activeElement).toBe(outside);
+  });
+
+  it("unlocks silently when the controlled owner rejects a move", () => {
+    const changed = vi.fn();
+    const order = { todo: ["design"], done: [] as string[] };
+    const { container } = render(<ControlledGroupedLists order={order} onChange={changed} />);
+    const moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    act(() => moveButton.focus());
+
+    fireClick(moveButton);
+
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(moveButton.disabled).toBe(false);
+    expect(container.querySelector("[aria-live]")?.textContent).toBe("");
+    expect(document.activeElement).toBe(moveButton);
+
+    fireClick(moveButton);
+    expect(changed).toHaveBeenCalledTimes(2);
+  });
+
+  it("blocks a second controlled move until the first proposal is acknowledged", () => {
+    const changed = vi.fn();
+    const initial = { todo: ["design", "build"], done: [] as string[] };
+    const afterDesign = { todo: ["build"], done: ["design"] };
+    const afterBuild = { todo: [] as string[], done: ["design", "build"] };
+    const { container, rerender } = render(
+      <PendingControlledGroupedLists order={initial} onChange={changed} />,
+    );
+
+    fireClick(container.querySelector("[data-value='design'] [data-to='done']")!);
+    const pendingButton = container.querySelector<HTMLButtonElement>(
+      "[data-value='build'] [data-to='done']",
+    )!;
+    expect(pendingButton.disabled).toBe(true);
+    fireClick(pendingButton);
+    expect(changed).toHaveBeenCalledTimes(1);
+
+    rerender(<PendingControlledGroupedLists order={afterDesign} onChange={changed} settled />);
+    const acknowledgedButton = container.querySelector<HTMLButtonElement>(
+      "[data-value='build'] [data-to='done']",
+    )!;
+    expect(acknowledgedButton.disabled).toBe(false);
+    fireClick(acknowledgedButton);
+    expect(changed).toHaveBeenLastCalledWith(
+      afterBuild,
+      expect.objectContaining({ value: "build", from: { list: "todo", index: 0 } }),
+    );
+  });
+
+  it("keeps waiting across equivalent orders and unlocks after an asynchronous rejection", () => {
+    const changed = vi.fn();
+    const initial = { todo: ["design"], done: [] as string[] };
+    const equivalent = { todo: ["design"], done: [] as string[] };
+    const { container, rerender } = render(
+      <PendingControlledGroupedLists order={initial} onChange={changed} />,
+    );
+    let moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+
+    fireClick(moveButton);
+    rerender(<PendingControlledGroupedLists order={equivalent} onChange={changed} />);
+
+    moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    expect(moveButton.disabled).toBe(true);
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("[aria-live]")?.textContent).toBe("");
+
+    rerender(<PendingControlledGroupedLists order={equivalent} onChange={changed} settled />);
+    moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    expect(moveButton.disabled).toBe(false);
+
+    fireClick(moveButton);
+    expect(changed).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears focus requests that a committed destination cannot service", () => {
+    const initial = { todo: ["design"], done: [] as string[] };
+    const accepted = { todo: [] as string[], done: ["design"] };
+
+    const missing = render(<PendingControlledGroupedLists order={initial} onChange={() => {}} />);
+    const missingMoveButton =
+      missing.container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    act(() => missingMoveButton.focus());
+    fireClick(missingMoveButton);
+    missing.rerender(
+      <PendingControlledGroupedLists
+        order={accepted}
+        onChange={() => {}}
+        settled
+        showDone={false}
+      />,
+    );
+    const missingOutside =
+      missing.container.querySelector<HTMLButtonElement>("[data-outside-focus]")!;
+    act(() => missingOutside.focus());
+    missing.rerender(
+      <PendingControlledGroupedLists order={accepted} onChange={() => {}} settled />,
+    );
+    expect(document.activeElement).toBe(missingOutside);
+    missing.unmount();
+
+    const disabled = render(<PendingControlledGroupedLists order={initial} onChange={() => {}} />);
+    const disabledMoveButton =
+      disabled.container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    act(() => disabledMoveButton.focus());
+    fireClick(disabledMoveButton);
+    disabled.rerender(
+      <PendingControlledGroupedLists
+        order={accepted}
+        onChange={() => {}}
+        settled
+        disabledValues={["design"]}
+      />,
+    );
+    const disabledOutside =
+      disabled.container.querySelector<HTMLButtonElement>("[data-outside-focus]")!;
+    act(() => disabledOutside.focus());
+    disabled.rerender(
+      <PendingControlledGroupedLists order={accepted} onChange={() => {}} settled />,
+    );
+    expect(document.activeElement).toBe(disabledOutside);
+  });
+
+  it("does not steal focus when the user leaves before a controlled move is accepted", () => {
+    const initial = { todo: ["design"], done: [] as string[] };
+    const accepted = { todo: [] as string[], done: ["design"] };
+    const { container, rerender } = render(
+      <PendingControlledGroupedLists order={initial} onChange={() => {}} />,
+    );
+    const moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    act(() => moveButton.focus());
+    fireClick(moveButton);
+    const outside = container.querySelector<HTMLButtonElement>("[data-outside-focus]")!;
+    act(() => outside.focus());
+
+    rerender(<PendingControlledGroupedLists order={accepted} onChange={() => {}} settled />);
+
+    expect(document.activeElement).toBe(outside);
+  });
+
+  it("skips a move button that becomes disabled after policy changes", () => {
+    const order = { todo: ["design"], done: [] as string[] };
+    const allow = () => true;
+    const veto = () => false;
+    const { container, rerender } = render(
+      <ControlledGroupedLists order={order} onChange={() => {}} canMove={allow} />,
+    );
+    const row = container.querySelector<HTMLElement>("[data-value='design']")!;
+    let moveButton = row.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    expect(moveButton.disabled).toBe(false);
+
+    rerender(<ControlledGroupedLists order={order} onChange={() => {}} canMove={veto} />);
+    moveButton = row.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    expect(moveButton.disabled).toBe(true);
+
+    act(() => row.focus());
+    fireKeyDown(row, "ArrowRight");
+    expect(document.activeElement).toBe(row.querySelector("[data-row-details]"));
+  });
+
+  it("accepts a drop on an empty list and exposes its root preview", () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <GroupedLists initial={{ todo: ["design"], done: [] }} spy={spy} />,
+    );
+    const source = container.querySelector<HTMLElement>("[data-value='design']")!;
+    const destination = container.querySelector<HTMLElement>("[aria-label='done']")!;
+
+    fireDrag(source.querySelector("[data-slot='grid-list-drag-handle']")!, "dragstart");
+    fireDrag(destination, "dragover");
+    expect(destination.hasAttribute("data-drop-target")).toBe(true);
+    fireDrag(destination, "drop");
+
+    expect(spy).toHaveBeenLastCalledWith(
+      { todo: [], done: ["design"] },
+      {
+        value: "design",
+        from: { list: "todo", index: 0 },
+        to: { list: "done", index: 0 },
+        before: null,
+      },
+    );
+    expect(destination.querySelector("[data-value='design']")).toBeTruthy();
+  });
+
+  it("provides a click and keyboard reachable move button instead of requiring a drag", () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <GroupedLists initial={{ todo: ["design"], done: [] }} spy={spy} />,
+    );
+    const button = container.querySelector<HTMLButtonElement>(
+      "[data-slot='grid-list-move-button'][data-to='done']",
+    )!;
+
+    expect(button.getAttribute("aria-label")).toBe("Move design to done");
+    expect(button.disabled).toBe(false);
+    fireClick(button);
+    expect(spy).toHaveBeenLastCalledWith(
+      { todo: [], done: ["design"] },
+      expect.objectContaining({ value: "design", to: { list: "done", index: 0 } }),
+    );
+  });
+
+  it("keeps a disabled row stationary through its move button", () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <GroupedLists
+        initial={{ todo: ["design"], done: [] }}
+        spy={spy}
+        disabledValues={["design"]}
+      />,
+    );
+    const source = container.querySelector<HTMLElement>("[data-value='design']")!;
+    const button = source.querySelector<HTMLButtonElement>("[data-to='done']")!;
+
+    expect(button.disabled).toBe(true);
+    fireClick(button);
+    fireKeyDown(button, "Enter");
+    fireKeyDown(button, " ");
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(source.closest("[aria-label='todo']")).toBeTruthy();
+  });
+
+  it("labels a move button from the resolved row label", () => {
+    const { container } = render(
+      <GridListReorderGroup value={{ todo: ["opaque-value"], done: [] }} onChange={() => {}}>
+        <GridList name="todo" aria-label="To do" defaultValue="opaque-value">
+          <GridListItem value="opaque-value">
+            <span>Design task</span>
+            <GridListMoveButton to="done" />
+          </GridListItem>
+        </GridList>
+        <GridList name="done" aria-label="Completed work" />
+      </GridListReorderGroup>,
+    );
+
+    expect(container.querySelector("[data-to='done']")?.getAttribute("aria-label")).toBe(
+      "Move Design task to Completed work",
+    );
+  });
+
+  it("updates destination labels when their accessible names change in the DOM", async () => {
+    const order = { todo: ["design"], done: [] as string[] };
+    const { container } = render(
+      <>
+        <span id="done-label">Completed work</span>
+        <GridListReorderGroup value={order} onChange={() => {}}>
+          <GridList name="todo" aria-label="To do">
+            <GridListItem value="design" textValue="design">
+              Design
+              <GridListMoveButton to="done" />
+            </GridListItem>
+          </GridList>
+          <GridList name="done" aria-labelledby="done-label" />
+        </GridListReorderGroup>
+      </>,
+    );
+    const moveButton = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    const destination = container.querySelector<HTMLElement>("[aria-labelledby='done-label']")!;
+    const label = container.querySelector<HTMLElement>("#done-label")!;
+    expect(moveButton.getAttribute("aria-label")).toBe("Move design to Completed work");
+
+    await act(async () => {
+      label.textContent = "Shipped work";
+      await Promise.resolve();
+    });
+    expect(moveButton.getAttribute("aria-label")).toBe("Move design to Shipped work");
+
+    await act(async () => {
+      destination.setAttribute("aria-label", "Archive");
+      await Promise.resolve();
+    });
+    expect(moveButton.getAttribute("aria-label")).toBe("Move design to Shipped work");
+
+    await act(async () => {
+      destination.removeAttribute("aria-labelledby");
+      await Promise.resolve();
+    });
+    expect(moveButton.getAttribute("aria-label")).toBe("Move design to Archive");
+  });
+
+  it("keeps Alt+Arrow reordering inside a grouped list", () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <GroupedLists initial={{ todo: ["one", "two"], done: [] }} spy={spy} />,
+    );
+    const first = container.querySelector<HTMLElement>("[data-value='one']")!;
+
+    first.focus();
+    fireKeyDown(first, "ArrowDown", { altKey: true });
+    expect(spy).toHaveBeenLastCalledWith(
+      { todo: ["two", "one"], done: [] },
+      {
+        value: "one",
+        from: { list: "todo", index: 0 },
+        to: { list: "todo", index: 1 },
+        before: null,
+      },
+    );
+  });
+
+  it("vetoes grouped previews, drops, and move buttons with one policy", () => {
+    const spy = vi.fn();
+    const canMove = (_value: GridListOrder, move: GridListMove) => move.to.list !== "done";
+    const { container } = render(
+      <GroupedLists initial={{ todo: ["design"], done: [] }} spy={spy} canMove={canMove} />,
+    );
+    const source = container.querySelector<HTMLElement>("[data-value='design']")!;
+    const destination = container.querySelector<HTMLElement>("[aria-label='done']")!;
+    const button = source.querySelector<HTMLButtonElement>("[data-to='done']")!;
+
+    expect(button.disabled).toBe(true);
+    fireDrag(source.querySelector("[data-slot='grid-list-drag-handle']")!, "dragstart");
+    fireDrag(destination, "dragover");
+    expect(destination.hasAttribute("data-drop-target")).toBe(false);
+    fireDrag(destination, "drop");
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate values and ambiguous reorder owners with evidence", () => {
+    expect(() =>
+      render(
+        <GridListReorderGroup
+          value={{ first: ["duplicate"], second: ["duplicate"] }}
+          onChange={() => {}}
+        >
+          <GridList name="first" aria-label="First" />
+          <GridList name="second" aria-label="Second" />
+        </GridListReorderGroup>,
+      ),
+    ).toThrow('GridListReorderGroup value "duplicate" appears in both "first" and "second"');
+
+    expect(() =>
+      render(
+        <GridList aria-label="Files">
+          <GridListItem value="duplicate">First</GridListItem>
+          <GridListItem value="duplicate">Second</GridListItem>
+        </GridList>,
+      ),
+    ).toThrow('GridListItem value "duplicate" is rendered more than once inside GridList.');
+
+    expect(() =>
+      render(
+        <GridListReorderGroup value={{ first: ["duplicate"], second: [] }} onChange={() => {}}>
+          <GridList name="first" aria-label="First">
+            <GridListItem value="duplicate">First owner</GridListItem>
+          </GridList>
+          <GridList name="second" aria-label="Second">
+            <GridListItem value="duplicate">Second owner</GridListItem>
+          </GridList>
+        </GridListReorderGroup>,
+      ),
+    ).toThrow(
+      'GridListItem value "duplicate" is rendered more than once inside GridListReorderGroup (in "first" and "second").',
+    );
+
+    expect(() =>
+      render(
+        <GridListReorderGroup value={{ first: [] }} onChange={() => {}}>
+          <GridList name="first" aria-label="First" onReorder={() => {}} />
+        </GridListReorderGroup>,
+      ),
+    ).toThrow('GridList "first" cannot use onReorder or canReorder');
+
+    expect(() =>
+      render(
+        <GridListReorderGroup value={{ first: [] }} onChange={() => {}}>
+          <GridList name="first" aria-label="First copy" />
+          <GridList name="first" aria-label="Second copy" />
+        </GridListReorderGroup>,
+      ),
+    ).toThrow('GridList name "first" is rendered more than once inside GridListReorderGroup.');
+
+    expect(() =>
+      render(
+        <GridListReorderGroup value={{ first: ["row"] }} onChange={() => {}}>
+          <GridList name="first" aria-label="First">
+            <GridListItem value="row">
+              Row
+              <GridListMoveButton to="missing" />
+            </GridListItem>
+          </GridList>
+        </GridListReorderGroup>,
+      ),
+    ).toThrow(
+      'GridListMoveButton destination "missing" is missing from GridListReorderGroup.value.',
+    );
   });
 });

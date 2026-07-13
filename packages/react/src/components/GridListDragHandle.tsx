@@ -1,4 +1,5 @@
 import { useContext, useLayoutEffect, type ButtonHTMLAttributes } from "react";
+import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { GridListDndContext, GridListItemContext } from "./grid-list-shared.js";
 
@@ -27,6 +28,7 @@ export function GridListDragHandle({
       draggable
       aria-label={props["aria-label"] ?? `Reorder ${item.label}`}
       aria-keyshortcuts={props["aria-keyshortcuts"] ?? "Alt+ArrowUp Alt+ArrowDown"}
+      data-dragging={dataAttr(dnd.dragValue === item.value)}
       data-slot="grid-list-drag-handle"
     />
   );

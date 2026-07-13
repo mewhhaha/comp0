@@ -1,14 +1,26 @@
-import { act } from "react";
+import { act, useState } from "react";
 import { userEvent } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
 import {
+  Autocomplete,
   Combobox,
   ComboboxPopover,
   ComboboxInput,
   ComboboxOption,
+  ContextMenu,
+  ContextMenuTrigger,
   Dialog,
   DialogContent,
   DialogTrigger,
+  GridList,
+  GridListDragHandle,
+  GridListItem,
+  GridListMoveButton,
+  GridListReorderGroup,
+  ListBox,
+  ListBoxItem,
+  MenuItem,
+  MenuPopover,
   Popover,
   PopoverOverlay,
   PopoverTrigger,
@@ -16,10 +28,43 @@ import {
   SelectPopover,
   SelectOption,
   SelectTrigger,
+  SearchField,
+  SearchFieldInput,
 } from "./index.js";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 
 describe("real-browser interaction contracts", () => {
+  it("suppresses the native context menu after a keyboard opener transfers focus", () => {
+    const { container, unmount } = render(
+      <ContextMenu id="browser-context-menu">
+        <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>
+        <MenuPopover aria-label="Attachment actions">
+          <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
+            Download
+          </MenuItem>
+        </MenuPopover>
+      </ContextMenu>,
+    );
+    const trigger = container.querySelector<HTMLElement>("[tabindex='0']")!;
+    const popover = container.querySelector<HTMLElement>("[role='menu']")!;
+    const keydown = new KeyboardEvent("keydown", {
+      key: "F10",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    act(() => trigger.dispatchEvent(keydown));
+    expect(keydown.defaultPrevented).toBe(true);
+    expect(popover.matches(":popover-open")).toBe(true);
+
+    const nativeEvent = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+    act(() => document.activeElement?.dispatchEvent(nativeEvent));
+    expect(nativeEvent.defaultPrevented).toBe(true);
+    expect(popover.matches(":popover-open")).toBe(true);
+    unmount();
+  });
+
   it("light-dismisses picker popovers without stealing outside focus", async () => {
     const { container, unmount } = render(
       <div>
@@ -226,6 +271,193 @@ describe("real-browser interaction contracts", () => {
     expect(document.activeElement).toBe(input);
     expect(input.getAttribute("aria-activedescendant")).toBe("dom-react");
     expect(document.getElementById("dom-react")).not.toBeNull();
+    unmount();
+  });
+
+  it("keeps autocomplete focus in SearchField while keyboard selection uses ListBox state", async () => {
+    const { container, unmount } = render(
+      <form>
+        <Autocomplete filter={(textValue, inputValue) => textValue.includes(inputValue)}>
+          <SearchField>
+            <SearchFieldInput aria-label="Destination" name="destination" />
+          </SearchField>
+          <ListBox aria-label="Destination suggestions">
+            <ListBoxItem value="logical-warsaw" id="warsaw-suggestion">
+              Warsaw
+            </ListBoxItem>
+          </ListBox>
+        </Autocomplete>
+      </form>,
+    );
+    const form = container.querySelector("form")!;
+    const input = container.querySelector<HTMLInputElement>("input")!;
+
+    await act(async () => userEvent.click(input));
+    await act(async () => userEvent.fill(input, "War"));
+    expect(document.activeElement).toBe(input);
+    expect(input.getAttribute("aria-activedescendant")).toBe("warsaw-suggestion");
+
+    await act(async () => userEvent.keyboard("{Enter}"));
+    expect(container.querySelector("#warsaw-suggestion")?.getAttribute("aria-selected")).toBe(
+      "true",
+    );
+    expect(input.value).toBe("War");
+    expect(new FormData(form).get("destination")).toBe("War");
+    expect(document.activeElement).toBe(input);
+    unmount();
+  });
+
+  it("moves a row from its handle and ignores native drags from row descendants", async () => {
+    function Board() {
+      const [order, setOrder] = useState<Record<string, string[]>>({
+        todo: ["review", "later"],
+        done: [],
+      });
+      return (
+        <GridListReorderGroup value={order} onChange={setOrder}>
+          <GridList name="todo" aria-label="To do">
+            {order["todo"]!.map((rowValue) => (
+              <GridListItem key={rowValue} value={rowValue} textValue={rowValue}>
+                <GridListDragHandle>Move</GridListDragHandle>
+                <a href="#review" draggable>
+                  {rowValue}
+                </a>
+              </GridListItem>
+            ))}
+          </GridList>
+          <GridList name="done" aria-label="Done">
+            {order["done"]!.map((rowValue) => (
+              <GridListItem key={rowValue} value={rowValue} textValue={rowValue}>
+                <GridListDragHandle>Move</GridListDragHandle>
+                {rowValue}
+              </GridListItem>
+            ))}
+          </GridList>
+        </GridListReorderGroup>
+      );
+    }
+
+    const { container, unmount } = render(<Board />);
+    const handle = container.querySelector<HTMLElement>("[data-slot='grid-list-drag-handle']")!;
+    const source = container.querySelector<HTMLElement>("[data-value='review']")!;
+    const link = source.querySelector<HTMLAnchorElement>("a")!;
+    const destination = container.querySelector<HTMLElement>("[aria-label='Done']")!;
+    const transfer = new DataTransfer();
+
+    act(() => {
+      link.dispatchEvent(
+        new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+    });
+    expect(source.hasAttribute("data-dragging")).toBe(false);
+
+    act(() => {
+      handle.dispatchEvent(
+        new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+    });
+    act(() => {
+      destination.dispatchEvent(
+        new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+    });
+    expect(destination.hasAttribute("data-drop-target")).toBe(true);
+
+    act(() => {
+      destination.dispatchEvent(
+        new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+    });
+    expect(destination.querySelector("[data-value='review']")).toBeTruthy();
+    await act(async () => new Promise((resolve) => setTimeout(resolve)));
+    const movedRow = destination.querySelector<HTMLElement>("[data-value='review']")!;
+    expect(document.activeElement).toBe(movedRow);
+    expect(movedRow.tabIndex).toBe(0);
+    expect(container.querySelector<HTMLElement>("[data-value='later']")?.tabIndex).toBe(0);
+    unmount();
+  });
+
+  it("starts whole-row reordering only from the row itself", () => {
+    const { container, unmount } = render(
+      <GridList aria-label="Files" onReorder={() => {}}>
+        <GridListItem value="report" textValue="Report">
+          <a href="#report" draggable>
+            Report
+          </a>
+        </GridListItem>
+        <GridListItem value="notes">Notes</GridListItem>
+      </GridList>,
+    );
+    const row = container.querySelector<HTMLElement>("[data-value='report']")!;
+    const link = row.querySelector<HTMLAnchorElement>("a")!;
+
+    act(() => {
+      link.dispatchEvent(
+        new DragEvent("dragstart", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: new DataTransfer(),
+        }),
+      );
+    });
+    expect(row.hasAttribute("data-dragging")).toBe(false);
+
+    act(() => {
+      row.dispatchEvent(
+        new DragEvent("dragstart", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: new DataTransfer(),
+        }),
+      );
+    });
+    expect(row.hasAttribute("data-dragging")).toBe(true);
+    unmount();
+  });
+
+  it("prevents pointer and keyboard activation of a disabled row's move button", () => {
+    function Board() {
+      const [order, setOrder] = useState<Record<string, string[]>>({
+        todo: ["review"],
+        done: [],
+      });
+      return (
+        <GridListReorderGroup value={order} onChange={setOrder}>
+          <GridList name="todo" aria-label="To do">
+            <GridListItem value="review" textValue="Review changes" disabled>
+              Review changes
+              <GridListMoveButton to="done">Move to done</GridListMoveButton>
+            </GridListItem>
+          </GridList>
+          <GridList name="done" aria-label="Done">
+            {order["done"]?.map((rowValue) => (
+              <GridListItem key={rowValue} value={rowValue}>
+                Review changes
+              </GridListItem>
+            ))}
+          </GridList>
+        </GridListReorderGroup>
+      );
+    }
+
+    const { container, unmount } = render(<Board />);
+    const button = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    const destination = container.querySelector<HTMLElement>("[aria-label='Done']")!;
+
+    expect(button.disabled).toBe(true);
+    act(() => {
+      button.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      button.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+      button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    button.focus();
+    expect(document.activeElement).not.toBe(button);
+    act(() => {
+      button.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      button.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    });
+
+    expect(destination.querySelector("[data-value='review']")).toBeNull();
     unmount();
   });
 

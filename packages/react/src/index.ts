@@ -1,3 +1,4 @@
+export * from "./autocomplete.js";
 export * from "./button.js";
 export * from "./carousel.js";
 export * from "./choices.js";
@@ -12,6 +13,7 @@ export { Fieldset, type FieldsetProps } from "./components/Fieldset.js";
 export { Legend, type LegendProps } from "./components/Legend.js";
 export * from "./listbox.js";
 export * from "./menubar.js";
+export * from "./messages.js";
 export * from "./pin-input.js";
 export * from "./overlay.js";
 export * from "./primitives.js";

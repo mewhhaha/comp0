@@ -1,6 +1,8 @@
 import { type KeyboardEvent } from "react";
+import { composeRefs } from "@comp0/core";
 import { useSearchFieldContext, type RefProp } from "../shared.js";
 import { Input } from "./Input.js";
+import { useAutocompleteContext } from "./autocomplete-shared.js";
 import { type SearchFieldInputProps } from "./text-field-shared.js";
 export type { SearchFieldInputProps } from "./text-field-shared.js";
 
@@ -9,10 +11,13 @@ export function SearchFieldInput({
   ref,
   ...props
 }: SearchFieldInputProps & RefProp<HTMLInputElement>) {
+  const autocomplete = useAutocompleteContext();
   const searchField = useSearchFieldContext();
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     onKeyDown?.(event);
+    if (event.defaultPrevented) return;
+    autocomplete?.handleInputKeyDown(event);
     if (event.defaultPrevented || !searchField) return;
     if (event.key === "Enter") searchField.submit(event.currentTarget.value);
     if (event.key === "Escape" && event.currentTarget.value) {
@@ -22,5 +27,12 @@ export function SearchFieldInput({
     }
   }
 
-  return <Input {...props} ref={ref} type="search" onKeyDown={handleKeyDown} />;
+  return (
+    <Input
+      {...props}
+      ref={composeRefs(ref, searchField?.inputRef)}
+      type="search"
+      onKeyDown={handleKeyDown}
+    />
+  );
 }

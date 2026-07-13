@@ -160,7 +160,9 @@ function renderContextMenu(onToggle?: (open: boolean) => void) {
       <ContextMenu id="attachment" onToggle={onToggle}>
         <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>
         <MenuPopover aria-label="Attachment actions">
-          <MenuItem value="download">Download</MenuItem>
+          <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
+            Download
+          </MenuItem>
           <MenuItem value="remove">Remove</MenuItem>
         </MenuPopover>
       </ContextMenu>
@@ -226,6 +228,26 @@ describe("context menu composition", () => {
     expect(document.activeElement).toBe(area);
 
     fireKeyDown(area, "ContextMenu");
+    expect(popover.hidden).toBe(false);
+  });
+
+  it("suppresses a native context menu after keyboard opening moves focus", () => {
+    const { area, popover } = renderContextMenu();
+    act(() => area.focus());
+    const keydown = new KeyboardEvent("keydown", {
+      key: "F10",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    act(() => area.dispatchEvent(keydown));
+
+    expect(keydown.defaultPrevented).toBe(true);
+    expect(popover.hidden).toBe(false);
+    expect(document.activeElement?.getAttribute("data-value")).toBe("download");
+
+    const nativeEvent = fireContextMenu(document.activeElement!);
+    expect(nativeEvent.defaultPrevented).toBe(true);
     expect(popover.hidden).toBe(false);
   });
 

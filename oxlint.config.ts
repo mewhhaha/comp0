@@ -100,13 +100,17 @@ export default defineConfig({
       },
     },
     {
-      files: ["packages/react/src/components/ComboboxOption.tsx"],
+      files: [
+        "packages/react/src/components/ComboboxOption.tsx",
+        "packages/react/src/components/ListBoxItem.tsx",
+        "packages/react/src/components/MenuItem.tsx",
+      ],
       rules: {
-        // Combobox focus stays in the input; options are addressed with aria-activedescendant.
+        // Virtual collection focus stays in the input; options are addressed with aria-activedescendant.
         "jsx-a11y/click-events-have-key-events": "off",
         "jsx-a11y/interactive-supports-focus": "off",
         // Labels are re-crawled from rendered children every render on purpose;
-        // registration bails out when the crawled text is unchanged.
+        // state and registration bail out when the crawled text is unchanged.
         "react-hooks/exhaustive-deps": "off",
       },
     },

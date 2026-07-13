@@ -1,6 +1,7 @@
 import { createElement, Fragment, useContext, useId, useRef } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type RefProp } from "../shared.js";
+import { useAutocompleteContext } from "./autocomplete-shared.js";
 import { MenuRootContext, type MenuProps } from "./menu-shared.js";
 import { PopoverContext } from "./overlay-shared.js";
 
@@ -16,6 +17,7 @@ export function Menu({
   ref,
   ...props
 }: MenuProps & RefProp<HTMLElement>) {
+  const autocomplete = useAutocompleteContext();
   const generatedId = useId().replace(/:/g, "");
   const parentMenu = useContext(MenuRootContext);
   const triggerElement = useRef<HTMLElement | null>(null);
@@ -29,15 +31,26 @@ export function Menu({
     open,
     isSubmenu: parentMenu !== null,
     triggerId: `${menuId}-trigger`,
-    contentId: `${menuId}-content`,
+    contentId:
+      autocomplete?.collectionId ?? autocomplete?.defaultCollectionId ?? `${menuId}-content`,
     setOpen,
     closeAll() {
+      if (autocomplete && !autocomplete.disableVirtualFocus) autocomplete.clearActive();
       setOpen(false);
       if (parentMenu) parentMenu.closeAll();
-      else triggerElement.current?.focus();
+      else if (autocomplete && !autocomplete.disableVirtualFocus) {
+        autocomplete.inputRef.current?.focus();
+      } else {
+        triggerElement.current?.focus();
+      }
     },
     focusTrigger() {
-      triggerElement.current?.focus();
+      if (autocomplete && !autocomplete.disableVirtualFocus) {
+        autocomplete.clearActive();
+        autocomplete.inputRef.current?.focus();
+      } else {
+        triggerElement.current?.focus();
+      }
     },
     setTriggerElement(element: HTMLElement | null) {
       triggerElement.current = element;

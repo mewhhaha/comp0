@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  composeRefs,
   findTypeaheadMatch,
   getRovingFocusTarget,
   useControllableState,
@@ -7,6 +8,7 @@ import {
 } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { ListBoxContext, sortItems } from "./collection-shared.js";
+import { useAutocompleteContext } from "./autocomplete-shared.js";
 import {
   type SelectableCollectionContextValue,
   type CollectionItemRecord,
@@ -23,6 +25,10 @@ export function ListBox({
   ref,
   ...props
 }: ListBoxProps & RefProp<HTMLDivElement>) {
+  const autocomplete = useAutocompleteContext();
+  const collectionId = props.id ?? autocomplete?.defaultCollectionId;
+  const setAutocompleteCollectionId = autocomplete?.setCollectionId;
+  const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
   const [selected, setSelected] = useControllableState({
     value,
     defaultValue: defaultValue ?? "",
@@ -98,12 +104,24 @@ export function ListBox({
     items,
   };
 
+  useLayoutEffect(() => {
+    if (!collectionId || !setAutocompleteCollectionId || !setAutocompleteCollectionVersion) return;
+    setAutocompleteCollectionId(collectionId);
+    setAutocompleteCollectionVersion((version) => version + 1);
+    return () => {
+      setAutocompleteCollectionId((currentId) =>
+        currentId === collectionId ? undefined : currentId,
+      );
+      setAutocompleteCollectionVersion((version) => version + 1);
+    };
+  }, [collectionId, setAutocompleteCollectionId, setAutocompleteCollectionVersion]);
+
   return (
     <ListBoxContext value={context}>
       <div
         {...props}
-        ref={ref}
-        id={props.id}
+        ref={composeRefs(ref, autocomplete?.collectionRef)}
+        id={collectionId}
         role="listbox"
         aria-labelledby={props["aria-labelledby"]}
         aria-orientation={orientation}
