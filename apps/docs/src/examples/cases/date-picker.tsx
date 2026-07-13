@@ -19,7 +19,9 @@ export function Example() {
         Reservation date
       </Label>
       <div className="flex gap-1.5">
-        <DateField className="w-full rounded border border-zinc-950/10 bg-white px-3 py-2.5 text-base text-zinc-950 outline-teal-600 focus-visible:outline-2 sm:py-2 sm:text-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:outline-teal-400 [&::-webkit-calendar-picker-indicator]:hidden" />
+        <div className="w-full overflow-hidden rounded border border-zinc-950/10 bg-white outline-teal-600 focus-within:outline-2 dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400">
+          <DateField className="w-[calc(100%+2.5rem)] border-0 bg-transparent px-3 py-2.5 text-base text-zinc-950 outline-none sm:py-2 sm:text-sm dark:text-zinc-50 [&::-webkit-calendar-picker-indicator]:hidden" />
+        </div>
         <DatePickerTrigger className="rounded border border-zinc-950/10 bg-white px-3 text-zinc-700 outline-teal-600 focus-visible:outline-2 data-open:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:outline-teal-400 dark:data-open:bg-zinc-800">
           <CalendarIcon className="size-4" aria-hidden="true" />
         </DatePickerTrigger>

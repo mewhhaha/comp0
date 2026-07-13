@@ -20,6 +20,8 @@ describe("FileTrigger docs example", () => {
     expect(label).not.toBeNull();
     expect(input).not.toBeNull();
     expect(input!.hidden).toBe(false);
+    expect(input!.name).toBe("example-file");
+    expect(input!.getAttribute("aria-label")).toBe("Choose a file");
 
     let activated = false;
     input!.addEventListener("click", () => {

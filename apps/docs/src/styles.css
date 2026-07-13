@@ -190,6 +190,7 @@
   button,
   [role="button"] {
     cursor: pointer;
+    user-select: none;
   }
 
   button:disabled,
@@ -204,6 +205,12 @@
 
   [hidden] {
     display: none !important;
+  }
+
+  /* Keep opted-in panels rendered for their grid-row exit motion; hidden still
+     removes the closed content from the accessibility tree. */
+  .docs-accordion-panel[hidden] {
+    display: grid !important;
   }
 
   @media (prefers-color-scheme: dark) {

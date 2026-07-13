@@ -66,9 +66,9 @@ const lessons: Record<string, LessonCopy> = {
     "Like asking a receptionist to open the filing cabinet.",
     "Use it when a person must choose local files.",
     "Style FileTrigger itself and give it clear words such as Upload photo.",
-    "Put accept, multiple, name, and onChange in inputProps.",
+    "Pass native file props such as accept, multiple, name, and onChange directly.",
     "The native input stays visually hidden but focusable by default, so keyboard users can reach it.",
-    '<FileTrigger inputProps={{ name: "photo" }}>Upload photo</FileTrigger>',
+    '<FileTrigger name="photo">Upload photo</FileTrigger>',
   ),
   "visually-hidden": lesson(
     "Extra words that screen readers can hear but sighted people do not see.",
@@ -286,6 +286,15 @@ const lessons: Record<string, LessonCopy> = {
     "Keep a clear close or finish action inside the content.",
     '<Dialog><DialogTrigger>Open details</DialogTrigger><DialogContent aria-label="Details">Details</DialogContent></Dialog>',
   ),
+  modal: lesson(
+    "A complete modal task composed from the Dialog primitives.",
+    "Like a temporary workbench placed over the page until one focused job is finished.",
+    "Use this composition for short forms or focused tasks that must pause interaction with the page behind them.",
+    "Start with Dialog and a DialogTrigger.",
+    "Compose the heading, content, and actions inside DialogContent.",
+    "Name the content from its visible heading and provide an explicit close action.",
+    '<Dialog><DialogTrigger>Edit profile</DialogTrigger><DialogContent aria-labelledby="profile-title"><h2 id="profile-title">Edit profile</h2></DialogContent></Dialog>',
+  ),
   "alert-dialog": lesson(
     "A modal layer for a serious decision that needs attention.",
     "Like a stop sign before a dangerous turn.",
@@ -466,6 +475,15 @@ const lessons: Record<string, LessonCopy> = {
     "Read the value from onChange as an ISO date; picking a day closes the popover and refills the DateField, and typing updates the calendar.",
     '<DatePicker defaultValue="2026-07-14"><Label>Reservation</Label><DateField /><DatePickerTrigger /><DatePickerPopover><Calendar><CalendarHeader /><CalendarGrid /></Calendar></DatePickerPopover></DatePicker>',
   ),
+  "time-picker": lesson(
+    "A typed time input with a custom list of useful times.",
+    "Like writing an appointment time or choosing one from the receptionist’s schedule.",
+    "Use this composition when people may type an exact time but a short set of common times speeds up selection.",
+    "Keep a labelled TimeField as the editable source of truth.",
+    "Open a ListBox of times from a PopoverTrigger beside the field.",
+    "Synchronize list selection with the field and close the popover after a choice.",
+    '<Popover><PopoverTrigger aria-label="Choose time" /><PopoverOverlay><ListBox aria-label="Available times"><ListBoxItem value="09:00">9:00 AM</ListBoxItem></ListBox></PopoverOverlay></Popover>',
+  ),
   feed: lesson(
     "An infinite-scroll list of articles that keyboard users can page through and escape.",
     "Like a stack of morning papers: flip to the next story, or put the pile down at any time.",
@@ -629,6 +647,11 @@ const accessibility: Record<string, string[]> = {
     "Keep focus inside the modal until it closes.",
     "Include a clear way to finish or dismiss the task.",
   ],
+  modal: [
+    "Connect DialogContent to a visible heading with aria-labelledby.",
+    "Keep the task short enough to understand without the page behind it.",
+    "Include an explicit close action even when Escape can dismiss the modal.",
+  ],
   "alert-dialog": [
     "Name the consequence, not just the button.",
     "Put the safer choice where it is easy to find.",
@@ -728,7 +751,12 @@ const accessibility: Record<string, string[]> = {
     "Keep the DateField: typing a date must stay possible without opening the calendar.",
     'The trigger and surface default to English aria-labels ("Choose date", "Calendar"); translate them for localized apps.',
     "Opening moves focus to the focused day and closing returns it to the trigger; Escape always closes without changing the value.",
-    "The native date input adds its own calendar button; hide it with [&::-webkit-calendar-picker-indicator]:hidden so only the DatePickerTrigger opens the calendar (Chromium and WebKit).",
+    "When adding a separate trigger, keep only one picker button visible; the example clips the browser-owned indicator without removing the native DateField.",
+  ],
+  "time-picker": [
+    "Keep the TimeField editable so the suggested list is never the only way to enter a time.",
+    "Name the icon-only trigger and the list of suggested times separately.",
+    "Format visible options for the locale while keeping stable HH:mm values for the field and form.",
   ],
   feed: [
     "Give the feed an aria-label naming the stream, such as Recipe stories.",
@@ -901,7 +929,7 @@ const action = [
     "File Trigger",
     "actions",
     ["FileTrigger"],
-    '<FileTrigger inputProps={{ name: "photo" }}>Upload photo</FileTrigger>',
+    '<FileTrigger name="photo">Upload photo</FileTrigger>',
     [
       p(
         "FileTrigger",
@@ -910,21 +938,24 @@ const action = [
         true,
         false,
         [
+          prop("name", "string", "Native form submission name."),
+          prop("accept", "string", "Accepted file types using native input syntax."),
+          prop("multiple", "boolean", "Allows more than one file to be selected."),
           prop(
-            "inputProps",
-            "InputHTMLAttributes",
-            "Props for the native file input, including name, accept, multiple, and onChange.",
+            "onChange",
+            "(event: ChangeEvent) => void",
+            "Receives the native file change event.",
           ),
         ],
       ),
-      p("file input", "input", "Native file input supplied through inputProps."),
+      p("file input", "input", "Visually hidden native file input owned by FileTrigger."),
     ],
     [
       { keys: ["Enter"], action: "Opens the browser file picker." },
       { keys: ["Space"], action: "Opens the browser file picker." },
     ],
     [],
-    "The hidden input submits selected files using inputProps.name.",
+    "The hidden input submits selected files using FileTrigger's name prop.",
     ["button", "text-field"],
   ),
   common(
@@ -3332,6 +3363,49 @@ const picker = [
     ],
   ),
   common(
+    "modal",
+    "Modal",
+    "pickers",
+    ["Dialog", "DialogContent", "DialogTrigger"],
+    '<Dialog><DialogTrigger>Edit profile</DialogTrigger><DialogContent aria-labelledby="profile-title"><h2 id="profile-title">Edit profile</h2></DialogContent></Dialog>',
+    [
+      p("Dialog", "root", "Wrapper-free provider for the composed modal state.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      ]),
+      p("DialogTrigger", "trigger", "Button that opens the modal.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p("DialogContent", "content", "Native modal surface containing the task.", true, false, [
+        prop("aria-labelledby", "string", "Points to the modal's visible heading."),
+        prop("portal", "boolean", "Renders into document.body; on by default."),
+        prop(
+          "closedby",
+          '"any" | "closerequest" | "none"',
+          "Native dismissal policy; any adds light dismiss where supported.",
+        ),
+      ]),
+    ],
+    [
+      { keys: ["Escape"], action: "Closes and restores trigger focus." },
+      { keys: ["Tab"], action: "Cycles inside the modal." },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "DialogTrigger, DialogContent",
+        meaning: "The modal is open.",
+      },
+      { attribute: ":open", on: "DialogContent", meaning: "Native pseudo-class equivalent." },
+    ],
+    "Forms inside DialogContent submit normally; method=dialog closes the modal without navigation.",
+    ["dialog", "alert-dialog"],
+  ),
+  common(
     "dialog",
     "Dialog",
     "pickers",
@@ -3373,7 +3447,7 @@ const picker = [
       { attribute: ":open", on: "DialogContent", meaning: "Native pseudo-class equivalent." },
     ],
     "No native form behavior; forms may live inside DialogContent.",
-    ["alert-dialog", "popover"],
+    ["modal", "alert-dialog", "popover"],
   ),
   common(
     "alert-dialog",
@@ -3710,7 +3784,45 @@ const picker = [
       { attribute: "[data-value]", on: "DatePicker (with as)", meaning: "A date is selected." },
     ],
     "The nested DateField owns form participation: give it a name and the shared value submits as YYYY-MM-DD with native validation.",
-    ["calendar", "date-field", "select"],
+    ["calendar", "date-field", "time-picker", "select"],
+  ),
+  common(
+    "time-picker",
+    "Time Picker",
+    "pickers",
+    ["Label", "ListBox", "ListBoxItem", "Popover", "PopoverOverlay", "PopoverTrigger", "TimeField"],
+    '<Popover><PopoverTrigger aria-label="Choose time" /><PopoverOverlay><ListBox aria-label="Available times"><ListBoxItem value="09:00">9:00 AM</ListBoxItem></ListBox></PopoverOverlay></Popover>',
+    [
+      p("Label", "label", "Visible name connected to the TimeField."),
+      p("TimeField", "input", "Native editable time input and form control.", true, false, [
+        prop("value", "string", "Controlled time as HH:mm."),
+        prop("name", "string", "Submission name for the time value."),
+        prop("onChange", "(event) => void", "Receives typed native input changes."),
+      ]),
+      p("Popover", "root", "Wrapper-free provider for the suggested-time popover.", false),
+      p("PopoverTrigger", "trigger", "Icon button that opens the time suggestions.", true, false, [
+        prop("aria-label", "string", "Names the icon-only trigger."),
+      ]),
+      p("PopoverOverlay", "content", "Floating surface for the suggested times.", true, false, [
+        prop("placement", "PopoverPlacement", "Places the surface beside the trigger."),
+        prop("offset", "number", "Pixel gap between the trigger and surface."),
+      ]),
+      p("ListBox", "region", "Selectable collection synchronized with the TimeField.", true),
+      p("ListBoxItem", "item", "One localized label backed by an HH:mm value.", true),
+    ],
+    [
+      { keys: ["Enter"], action: "Opens from the trigger or selects the focused time." },
+      { keys: ["Space"], action: "Opens from the trigger or selects the focused time." },
+      { keys: ["Escape"], action: "Closes the suggestions and returns focus." },
+      { keys: ["ArrowUp", "ArrowDown"], action: "Moves through the suggested times." },
+    ],
+    [
+      { attribute: "[data-open]", on: "PopoverTrigger", meaning: "The suggestions are open." },
+      { attribute: "[data-selected]", on: "ListBoxItem", meaning: "The field uses this time." },
+      { attribute: "[data-value]", on: "TimeField", meaning: "The field has a time value." },
+    ],
+    "TimeField remains the native form control; give it a name and it submits the synchronized HH:mm value.",
+    ["date-picker", "date-field", "list-box"],
   ),
 ];
 

@@ -1,8 +1,9 @@
-import { act } from "react";
+import { act, createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Button,
   Checkbox,
+  FileTrigger,
   Input,
   Label,
   Radio,
@@ -17,6 +18,35 @@ import {
 import { fireClick, render } from "../test/render.js";
 
 describe("foundation components", () => {
+  it("forwards file input props without an inputProps wrapper", () => {
+    const ref = createRef<HTMLInputElement>();
+    const changed = vi.fn();
+    const { container } = render(
+      <FileTrigger
+        ref={ref}
+        accept="image/png"
+        aria-label="Choose a profile image"
+        className="file-trigger"
+        multiple
+        name="profile-images"
+        onChange={changed}
+      >
+        Choose files
+      </FileTrigger>,
+    );
+    const label = container.querySelector("label")!;
+    const input = container.querySelector<HTMLInputElement>("input[type=file]")!;
+
+    expect(label.className).toBe("file-trigger");
+    expect(input.accept).toBe("image/png");
+    expect(input.multiple).toBe(true);
+    expect(input.name).toBe("profile-images");
+    expect(input.getAttribute("aria-label")).toBe("Choose a profile image");
+    expect(ref.current).toBe(input);
+    act(() => input.dispatchEvent(new Event("change", { bubbles: true })));
+    expect(changed).toHaveBeenCalledOnce();
+  });
+
   it("keeps generic buttons independent from picker state", () => {
     const clicked = vi.fn();
     const { container } = render(

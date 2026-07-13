@@ -1,9 +1,16 @@
 import { type RefProp } from "../shared.js";
 import { type CSSProperties, type InputHTMLAttributes, type LabelHTMLAttributes } from "react";
 
-export type FileTriggerProps = LabelHTMLAttributes<HTMLLabelElement> & {
-  inputProps?: InputHTMLAttributes<HTMLInputElement> | undefined;
-};
+type FileTriggerLabelProps = Pick<
+  LabelHTMLAttributes<HTMLLabelElement>,
+  "children" | "className" | "style"
+>;
+
+export type FileTriggerProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "children" | "className" | "style" | "type"
+> &
+  FileTriggerLabelProps;
 // Clips the input like VisuallyHidden so it stays focusable, unlike the
 // hidden attribute's display:none, which would remove the keyboard path.
 const visuallyHiddenInput = {
@@ -20,18 +27,15 @@ const visuallyHiddenInput = {
 
 export function FileTrigger({
   children,
-  inputProps,
+  className,
+  hidden = false,
   ref,
-  ...props
-}: FileTriggerProps & RefProp<HTMLLabelElement>) {
+  style,
+  ...inputProps
+}: FileTriggerProps & RefProp<HTMLInputElement>) {
   return (
-    <label {...props} ref={ref} data-slot="file-trigger">
-      <input
-        {...inputProps}
-        type="file"
-        style={inputProps?.style ?? visuallyHiddenInput}
-        hidden={inputProps?.hidden ?? false}
-      />
+    <label className={className} style={style} data-slot="file-trigger">
+      <input {...inputProps} ref={ref} type="file" style={visuallyHiddenInput} hidden={hidden} />
       {children}
     </label>
   );

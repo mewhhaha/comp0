@@ -9,7 +9,7 @@ export function Example() {
       <TooltipPopover
         placement="top"
         offset={6}
-        className="w-max overflow-visible rounded border-0 bg-zinc-900 px-2 py-1 text-base text-white sm:text-sm dark:bg-zinc-100 dark:text-zinc-900"
+        className="w-max translate-y-0 overflow-visible rounded border-0 bg-zinc-900 px-2 py-1 text-base text-white opacity-100 transition-[opacity,translate] duration-150 ease-out starting:translate-y-1 starting:opacity-0 motion-reduce:transition-none sm:text-sm dark:bg-zinc-100 dark:text-zinc-900"
       >
         Helpful context
         <TooltipArrow className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-zinc-900 dark:bg-zinc-100" />

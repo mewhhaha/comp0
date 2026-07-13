@@ -7,8 +7,8 @@ export function Example() {
       defaultSelected
       name="alerts"
     >
-      <span className="h-6 w-11 shrink-0 rounded-full bg-zinc-200 p-0.5 ring-2 ring-transparent group-data-focused:ring-teal-600 group-data-selected:bg-teal-600 sm:h-5 sm:w-9 dark:bg-zinc-800 dark:group-data-focused:ring-teal-400 dark:group-data-selected:bg-teal-400">
-        <span className="block size-5 rounded-full bg-white shadow-sm group-data-selected:translate-x-5 sm:size-4 sm:group-data-selected:translate-x-4 dark:shadow-none" />
+      <span className="h-6 w-11 shrink-0 rounded-full bg-zinc-200 p-0.5 ring-2 ring-transparent transition-colors duration-150 ease-out group-data-focused:ring-teal-600 group-data-selected:bg-teal-600 motion-reduce:transition-none sm:h-5 sm:w-9 dark:bg-zinc-800 dark:group-data-focused:ring-teal-400 dark:group-data-selected:bg-teal-400">
+        <span className="block size-5 rounded-full bg-white shadow-sm transition-transform duration-150 ease-out group-data-selected:translate-x-5 motion-reduce:transition-none sm:size-4 sm:group-data-selected:translate-x-4 dark:shadow-none" />
       </span>
       Enable alerts
     </Switch>
