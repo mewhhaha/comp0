@@ -1,6 +1,6 @@
 {
   "name": "@comp0/react",
-  "version": "0.1.0",
+  "version": "0.1.0-next.0",
   "description": "Headless React 19 components with native-first DOM semantics.",
   "keywords": [
     "accessibility",
