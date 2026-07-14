@@ -15,9 +15,6 @@
     }
   ],
   "packages": {
-    ".": {
-      "component": "comp0"
-    },
     "packages/core": {
       "component": "core"
     },
