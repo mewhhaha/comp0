@@ -25,9 +25,9 @@ pnpm test:compiler-smoke
 
 ## Releases
 
-Release Please maintains one release pull request for `@comp0/core` and `@comp0/react`, with their versions linked. Merging the release pull request creates path-specific GitHub releases and publishes the libraries in dependency order.
+Pushing a change to either library's `package.json` on `main` runs `pnpm -r publish --tag next`, publishing every workspace version that is not already in the registry to the prerelease channel. Push an exact version tag such as `v0.2.0` to publish the current unpublished versions under `latest` instead. Keep `@comp0/core` and `@comp0/react` on the same version and bump every prerelease version before publishing because npm versions are immutable.
 
-Publishing authenticates with the required `NPM_TOKEN` repository secret and records npm provenance. An optional `RELEASE_PLEASE_TOKEN` GitHub App or personal access token lets the release pull request trigger the normal pull-request CI workflow; otherwise Release Please uses `GITHUB_TOKEN`.
+Publishing authenticates with the required `NPM_TOKEN` repository secret and records npm provenance. The workspace root and documentation app are private, so recursive publishing considers only `@comp0/core` and `@comp0/react`.
 
 ## React Compiler
 
