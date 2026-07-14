@@ -24,7 +24,6 @@ export type OverlayRootProps = Omit<HTMLAttributes<HTMLElement>, "onToggle"> & {
 };
 
 export type DialogProps = OverlayRootProps;
-export type ModalProps = OverlayRootProps;
 export type AlertDialogProps = OverlayRootProps;
 export type PopoverProps = OverlayRootProps;
 export type TooltipProps = OverlayRootProps;
@@ -121,10 +120,6 @@ export function placementSurfaceStyle(
   return { ...computed, ...style } as CSSProperties;
 }
 
-export type ModalContentProps = Omit<React.DialogHTMLAttributes<HTMLDialogElement>, "open"> & {
-  portal?: boolean | undefined;
-};
-
 export type OverlayContextValue = {
   contentId: string;
   open: boolean;
@@ -144,16 +139,11 @@ export type TooltipContextValue = OverlayContextValue & {
 };
 
 export const DialogContext = createContext<OverlayContextValue | null>(null);
-export const ModalContext = createContext<OverlayContextValue | null>(null);
 export const PopoverContext = createContext<PopoverContextValue | null>(null);
 export const TooltipContext = createContext<TooltipContextValue | null>(null);
 
 export function useDialogContext() {
   return useContext(DialogContext);
-}
-
-export function useModalContext() {
-  return useContext(ModalContext);
 }
 
 export function usePopoverContext() {

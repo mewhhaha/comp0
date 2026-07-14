@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { defineConfig } from "vite";
-import { reactCompiler } from "../../react-compiler-vite";
+import { reactCompiler } from "../../react-compiler-vite.js";
 
 export default defineConfig({
   plugins: [

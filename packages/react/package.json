@@ -1,8 +1,28 @@
 {
   "name": "@comp0/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Headless React 19 components with native-first DOM semantics.",
+  "keywords": [
+    "accessibility",
+    "components",
+    "headless",
+    "react",
+    "ui"
+  ],
+  "homepage": "https://comp0-docs.horrible.workers.dev",
+  "bugs": {
+    "url": "https://github.com/mewhhaha/comp0/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mewhhaha/comp0.git",
+    "directory": "packages/react"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": false,
@@ -12,8 +32,12 @@
       "default": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "rm -rf dist && node ../../scripts/build-package.mjs && tsgo -p tsconfig.build.json",
+    "build": "rm -rf dist tsconfig.build.tsbuildinfo && node ../../scripts/build-package.mjs && tsgo -p tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsgo -p tsconfig.json"
   },
   "dependencies": {
@@ -24,7 +48,7 @@
     "react-dom": "19.2.7"
   },
   "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-dom": ">=19.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

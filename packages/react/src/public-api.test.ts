@@ -134,7 +134,7 @@ const publicComponents = [
 ].sort();
 
 describe("public React API", () => {
-  it("exports only the graduated alpha component catalog", () => {
+  it("exports only the documented component catalog", () => {
     expect(Object.keys(api).sort()).toEqual(publicComponents);
   });
 });

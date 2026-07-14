@@ -15,6 +15,65 @@ function run(command, args, cwd = root) {
   return execFileSync(command, args, { cwd, encoding: "utf8", stdio: "pipe" });
 }
 
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function readArchiveFile(archive, path) {
+  return run("tar", ["-xOf", archive, `package/${path}`]);
+}
+
+function inspectArchive(archive, packageName) {
+  const entries = run("tar", ["-tzf", archive]).trim().split("\n");
+  const manifest = JSON.parse(readArchiveFile(archive, "package.json"));
+  const expectedDirectory = packageName === "@comp0/core" ? "packages/core" : "packages/react";
+
+  assert(
+    manifest.name === packageName,
+    `Expected ${packageName} manifest, received ${manifest.name}.`,
+  );
+  assert(manifest.version === "0.1.0", `${packageName} must pack version 0.1.0.`);
+  assert(manifest.license === "MIT", `${packageName} must pack with the MIT license.`);
+  assert(typeof manifest.description === "string", `${packageName} must pack with a description.`);
+  assert(
+    ["accessibility", "headless", "react"].every((keyword) => manifest.keywords?.includes(keyword)),
+    `${packageName} must pack with its public discovery keywords.`,
+  );
+  assert(
+    manifest.homepage === "https://comp0-docs.horrible.workers.dev",
+    `${packageName} must link to the Worker documentation.`,
+  );
+  assert(
+    manifest.bugs?.url === "https://github.com/mewhhaha/comp0/issues",
+    `${packageName} must link to the issue tracker.`,
+  );
+  assert(
+    manifest.repository?.url === "git+https://github.com/mewhhaha/comp0.git",
+    `${packageName} must link to the source repository.`,
+  );
+  assert(
+    manifest.repository?.directory === expectedDirectory,
+    `${packageName} must identify its repository directory.`,
+  );
+  assert(manifest.publishConfig?.access === "public", `${packageName} must publish publicly.`);
+  assert(entries.includes("package/README.md"), `${packageName} tarball is missing README.md.`);
+  assert(entries.includes("package/LICENSE"), `${packageName} tarball is missing LICENSE.`);
+  assert(
+    entries.includes("package/dist/index.js"),
+    `${packageName} tarball is missing dist/index.js.`,
+  );
+  assert(
+    entries.includes("package/dist/index.d.ts"),
+    `${packageName} tarball is missing dist/index.d.ts.`,
+  );
+  assert(
+    !entries.some((entry) => entry.endsWith(".d.ts.map") || entry.endsWith(".tsbuildinfo")),
+    `${packageName} tarball must not contain declaration maps or build-info files.`,
+  );
+
+  return manifest;
+}
+
 mkdirSync(packageDirectory, { recursive: true });
 mkdirSync(consumerDirectory, { recursive: true });
 run("pnpm", ["--filter", "@comp0/core", "pack", "--pack-destination", packageDirectory]);
@@ -28,6 +87,29 @@ if (!coreArchive || !reactArchive) {
   throw new Error(`Expected packed core and react archives, received: ${archives.join(", ")}`);
 }
 
+const coreArchivePath = join(packageDirectory, coreArchive);
+const reactArchivePath = join(packageDirectory, reactArchive);
+const coreManifest = inspectArchive(coreArchivePath, "@comp0/core");
+const reactManifest = inspectArchive(reactArchivePath, "@comp0/react");
+
+assert(
+  coreManifest.peerDependencies?.react === "^19.0.0",
+  "@comp0/core must peer-depend on React 19.",
+);
+assert(
+  coreManifest.peerDependencies?.["react-dom"] === undefined,
+  "@comp0/core must not peer-depend on react-dom.",
+);
+assert(
+  reactManifest.dependencies?.["@comp0/core"] === "0.1.0",
+  "Packed @comp0/react must depend on @comp0/core 0.1.0.",
+);
+assert(
+  reactManifest.peerDependencies?.react === "^19.0.0" &&
+    reactManifest.peerDependencies?.["react-dom"] === "^19.0.0",
+  "@comp0/react must peer-depend on React and React DOM 19.",
+);
+
 writeFileSync(
   join(consumerDirectory, "package.json"),
   JSON.stringify(
@@ -39,9 +121,10 @@ writeFileSync(
         "@comp0/react": `file:${join(packageDirectory, reactArchive)}`,
         react: "19.2.7",
         "react-dom": "19.2.7",
+        "react-router": "8.2.0",
       },
       devDependencies: {
-        "@types/react": "19.2.16",
+        "@types/react": "19.2.17",
         "@types/react-dom": "19.2.3",
       },
     },
@@ -52,7 +135,8 @@ writeFileSync(
 
 // pnpm 11 reads overrides from pnpm-workspace.yaml, not the package.json
 // pnpm field; without this the react archive resolves @comp0/core from the
-// registry, where it is not published.
+// registry before this release exists there. The packed manifest is inspected
+// above before this local installation override is applied.
 writeFileSync(
   join(consumerDirectory, "pnpm-workspace.yaml"),
   `overrides:\n  "@comp0/core": file:${join(packageDirectory, coreArchive)}\n`,
@@ -98,11 +182,12 @@ writeFileSync(
 writeFileSync(
   join(consumerDirectory, "consumer.tsx"),
   `import {useControllableState} from "@comp0/core";
-import {Popover, Select, SelectPopover, SelectOption, SelectTrigger} from "@comp0/react";
+import {Label, Link as Comp0Link, Select, SelectPopover, SelectOption, SelectTrigger, SelectValue} from "@comp0/react";
+import {Link as RouterLink} from "react-router";
 
 export function Consumer() {
-  const [value] = useControllableState({defaultValue: "alpha"});
-  return <Select defaultValue={value}><Popover><SelectTrigger>Open</SelectTrigger><SelectPopover><SelectOption value="alpha">Alpha</SelectOption></SelectPopover></Popover></Select>;
+  const [value] = useControllableState({defaultValue: "basic"});
+  return <><Select as="div" defaultValue={value} name="plan"><Label>Plan</Label><SelectTrigger><SelectValue placeholder="Choose a plan" /></SelectTrigger><SelectPopover><SelectOption value="basic">Basic</SelectOption></SelectPopover></Select><Comp0Link as={RouterLink} to="/settings">Settings</Comp0Link></>;
 }
 `,
 );

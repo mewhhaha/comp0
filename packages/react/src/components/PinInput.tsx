@@ -29,8 +29,7 @@ export function PinInput({
   const resolvedDisabled = Boolean(disabled);
 
   // The registration identity feeds a layout-effect dependency in every
-  // PinInputField; useCallback keeps it stable even where the React Compiler
-  // bails out, so fields never unregister and lose their position mid-render.
+  // PinInputField; useCallback keeps fields from unregistering mid-render.
   const register = useCallback((element: HTMLInputElement) => {
     setFields((current) => {
       if (current.includes(element)) return current;

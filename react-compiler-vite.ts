@@ -3,8 +3,8 @@ import type { Plugin, Rollup } from "vite";
 
 /**
  * Runs the React Compiler over matching modules so dev servers and tests
- * execute the same compiled output that ships in dist. Component source
- * assumes the compiler and does not hand-memoize.
+ * execute the same compiled output that ships in dist. Component source uses
+ * manual memoization only where semantic identity must survive a bailout.
  */
 export function reactCompiler(filter: RegExp): Plugin {
   return {

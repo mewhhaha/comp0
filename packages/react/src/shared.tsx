@@ -60,10 +60,6 @@ export function useDataState(states: Record<string, boolean | undefined>) {
   return attrs;
 }
 
-export type AsChildProps = {
-  asChild?: boolean | undefined;
-};
-
 export type CommandAttributeProps = {
   command?:
     | "show-popover"
@@ -75,10 +71,6 @@ export type CommandAttributeProps = {
     | (string & {})
     | undefined;
   commandfor?: string | undefined;
-};
-
-export type AnchorAttributeProps = {
-  anchor?: string | undefined;
 };
 
 export type SelectRootContextValue = {

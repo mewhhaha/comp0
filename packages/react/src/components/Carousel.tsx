@@ -48,8 +48,7 @@ export function Carousel({
   const [focused, setFocused] = useState(false);
 
   // The registration identity feeds a layout-effect dependency in every
-  // CarouselSlide; useCallback keeps it stable even where the React Compiler
-  // bails out, so slides never unregister and lose their position mid-render.
+  // CarouselSlide; useCallback keeps slides from unregistering mid-render.
   const registerSlide = useCallback((element: HTMLElement) => {
     setSlides((current) => {
       if (current.includes(element)) return current;

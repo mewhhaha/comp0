@@ -3,7 +3,8 @@
   "compilerOptions": {
     "emitDeclarationOnly": true,
     "noEmit": false,
-    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
+    "declarationMap": false,
+    "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo",
     "paths": {
       "@comp0/core": ["../core/dist/index.d.ts"]
     }

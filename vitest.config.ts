@@ -8,8 +8,8 @@ const aliases = {
   "@comp0/react": fileURLToPath(new URL("./packages/react/src/index.ts", import.meta.url)),
 };
 
-// Tests run the same React Compiler output that ships in dist; source code
-// assumes the compiler and does not hand-memoize.
+// Tests run the same React Compiler output that ships in dist; source code uses
+// manual memoization only where semantic identity must survive a bailout.
 const compiler = () => reactCompiler(/packages\/(core|react)\/src\/.*\.tsx?$/);
 
 export default defineConfig({

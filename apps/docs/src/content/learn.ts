@@ -20,7 +20,7 @@ export const learnDocs = [
         id: "root-import",
         title: "Use one root-only import",
         explanation:
-          "Every supported component comes from @comp0/react. This is the front door that stays stable while internal files may move around. Import the names you need, then use them like normal React components.",
+          "Every supported component comes from @comp0/react. This is the public front door even when implementation files move around. Import the names you need, then use them like normal React components.",
         code: 'import { Button, TextField } from "@comp0/react";\n\n<Button>Save</Button>',
         language: "tsx",
       },

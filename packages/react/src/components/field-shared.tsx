@@ -51,7 +51,7 @@ export function useFieldFeedback() {
   const [descriptionMounted, setDescriptionMounted] = useState(false);
   const [errorMounted, setErrorMounted] = useState(false);
   // These identities feed effect dependencies in Description and FieldError;
-  // useCallback keeps them stable even where the React Compiler bails out.
+  // useCallback keeps their registration stable across provider renders.
   const registerDescription = useCallback(() => {
     setDescriptionMounted(true);
     return () => setDescriptionMounted(false);

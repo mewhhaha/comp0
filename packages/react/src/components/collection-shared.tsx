@@ -1,8 +1,4 @@
 import { createContext, type HTMLAttributes, type ReactNode } from "react";
-export type CollectionProps<TItem> = {
-  items?: Iterable<TItem> | undefined;
-  children: ReactNode | ((item: TItem) => ReactNode);
-};
 
 export interface SelectableCollectionContextValue {
   activeKey: string;
@@ -51,16 +47,6 @@ export type ListBoxItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   /** Overrides the text crawled from children for typeahead and display. */
   textValue?: string | undefined;
 };
-
-export type MenuProps = HTMLAttributes<HTMLDivElement>;
-
-export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
-  value?: string | undefined;
-  id?: string | undefined;
-  disabled?: boolean | undefined;
-};
-
-export type MenuSectionProps = HTMLAttributes<HTMLDivElement>;
 
 export type ListBoxSectionProps = HTMLAttributes<HTMLDivElement>;
 

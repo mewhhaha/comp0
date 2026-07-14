@@ -52,7 +52,7 @@ export function ServerComponent({ params }: ComponentRouteProps) {
           That part is not in the public toolbox.
         </h1>
         <p className="mt-4 max-w-[48ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
-          Open the component index to see every pattern that has graduated into this alpha.
+          Open the component index to see every documented pattern in the public API.
         </p>
         <Link
           className="mt-8 inline-flex rounded-lg bg-teal-700 px-3 py-2.5 text-base/7 font-medium text-white ring-1 ring-teal-700 outline-none hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 sm:text-sm/6 dark:bg-teal-400 dark:text-zinc-950 dark:ring-teal-400 dark:hover:bg-teal-300 dark:focus-visible:outline-teal-400"

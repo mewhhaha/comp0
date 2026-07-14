@@ -53,7 +53,7 @@ export function DocsShell({ children, className, navigation, paletteEntries }: D
             <footer className="border-t border-zinc-950/10 px-4 py-8 text-base/7 text-zinc-500 sm:px-6 sm:text-sm/6 lg:px-10 dark:border-white/10 dark:text-zinc-400">
               <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p>Built to teach the contract, not prescribe the pixels.</p>
-                <p className="font-mono">@comp0/react · internal alpha</p>
+                <p className="font-mono">@comp0/react · MIT</p>
               </div>
             </footer>
           </div>

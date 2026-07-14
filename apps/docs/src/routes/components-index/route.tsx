@@ -8,7 +8,7 @@ export function meta() {
     {
       name: "description",
       content:
-        "Browse every graduated comp0 component with anatomy, examples, keyboard behavior, and form contracts.",
+        "Browse comp0 components with anatomy, examples, keyboard behavior, and form contracts.",
     },
   ];
 }

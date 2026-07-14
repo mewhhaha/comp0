@@ -1,8 +1,28 @@
 {
   "name": "@comp0/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "React behavior hooks and DOM utilities for accessible headless interfaces.",
+  "keywords": [
+    "accessibility",
+    "headless",
+    "hooks",
+    "interactions",
+    "react"
+  ],
+  "homepage": "https://comp0-docs.horrible.workers.dev",
+  "bugs": {
+    "url": "https://github.com/mewhhaha/comp0/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mewhhaha/comp0.git",
+    "directory": "packages/core"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": false,
@@ -12,8 +32,12 @@
       "default": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "rm -rf dist && node ../../scripts/build-package.mjs && tsgo -p tsconfig.build.json",
+    "build": "rm -rf dist tsconfig.build.tsbuildinfo && node ../../scripts/build-package.mjs && tsgo -p tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsgo -p tsconfig.json"
   },
   "devDependencies": {
@@ -21,7 +45,6 @@
     "react-dom": "19.2.7"
   },
   "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-dom": ">=19.0.0"
+    "react": "^19.0.0"
   }
 }

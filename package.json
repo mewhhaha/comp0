@@ -13,7 +13,7 @@
     "test:all": "vitest run",
     "test:browser": "vitest run --project browser",
     "test:compiler-smoke": "pnpm build && node packages/react/test/verify-react-compiler.mjs",
-    "test:package": "pnpm build && node scripts/verify-packages.mjs",
+    "test:package": "node scripts/verify-packages.mjs",
     "typecheck": "tsgo -p tsconfig.typecheck.json"
   },
   "devDependencies": {

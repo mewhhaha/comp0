@@ -27,8 +27,7 @@ export function Feed({
   const [articles, setArticles] = useState<HTMLElement[]>([]);
 
   // The registration identity feeds a layout-effect dependency in every
-  // FeedArticle; useCallback keeps it stable even where the React Compiler
-  // bails out, so articles never unregister and lose their position mid-render.
+  // FeedArticle; useCallback keeps articles from unregistering mid-render.
   const registerArticle = useCallback((element: HTMLElement) => {
     setArticles((current) => {
       if (current.includes(element)) return current;
