@@ -10,6 +10,8 @@ const files = [
 export function Example() {
   const [selected, setSelected] = useState(files[0]!.name);
   const [sharedFile, setSharedFile] = useState<string>();
+  let actionMessage = "ArrowRight reaches links and actions inside a row.";
+  if (sharedFile) actionMessage = `Share link created for ${sharedFile}.`;
 
   return (
     <div className="flex max-w-xl flex-col gap-2">
@@ -50,10 +52,7 @@ export function Example() {
         ))}
       </GridList>
       <p className="text-base text-zinc-600 sm:text-sm dark:text-zinc-400">
-        Selected: {selected}.{" "}
-        {sharedFile
-          ? `Share link created for ${sharedFile}.`
-          : "ArrowRight reaches links and actions inside a row."}
+        Selected: {selected}. {actionMessage}
       </p>
     </div>
   );

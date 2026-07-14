@@ -68,10 +68,7 @@ export function HomeHero({ className }: HomeHeroProps) {
     <section className={className}>
       <div className="grid items-center gap-10 lg:grid-cols-[5fr_4fr] lg:gap-14">
         <div className="min-w-0">
-          <p className="font-mono text-sm/6 font-medium tracking-wide text-teal-700 uppercase dark:text-teal-300">
-            Headless React, explained slowly
-          </p>
-          <h1 className="mt-4 max-w-[18ch] text-5xl font-semibold tracking-tight text-balance text-zinc-950 sm:text-6xl dark:text-white">
+          <h1 className="max-w-[18ch] text-5xl font-semibold tracking-tight text-balance text-zinc-950 sm:text-6xl dark:text-white">
             Behavior you can see, understand, and make your own.
           </h1>
           <p className="mt-6 max-w-[54ch] text-lg/8 text-pretty text-zinc-600 dark:text-zinc-300">

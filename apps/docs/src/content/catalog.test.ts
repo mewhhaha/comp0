@@ -7,9 +7,9 @@ import { getExample, exampleRegistry } from "../examples/registry.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 52 unique component slugs", () => {
-    expect(components).toHaveLength(52);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(52);
+  it("contains 53 unique component slugs", () => {
+    expect(components).toHaveLength(53);
+    expect(new Set(components.map((component) => component.slug)).size).toBe(53);
   });
 
   it("resolves every related component link", () => {

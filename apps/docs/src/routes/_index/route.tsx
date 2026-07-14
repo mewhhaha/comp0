@@ -5,7 +5,7 @@ import { LearningPath } from "./LearningPath.js";
 
 export function meta() {
   return [
-    { title: "comp0 · Headless React, explained slowly" },
+    { title: "comp0 · Headless React components" },
     {
       name: "description",
       content:

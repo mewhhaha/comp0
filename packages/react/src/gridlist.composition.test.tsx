@@ -367,6 +367,7 @@ describe("grid list composition", () => {
           <a href="#report" draggable>
             Open
           </a>
+          <input aria-label="Rename report" />
         </GridListItem>
       </GridList>,
     );
@@ -374,12 +375,15 @@ describe("grid list composition", () => {
     const button = row.querySelector<HTMLButtonElement>("button:not([data-slot])")!;
     const icon = button.querySelector("svg")!;
     const link = row.querySelector("a")!;
+    const input = row.querySelector("input")!;
 
     fireDrag(button, "dragstart");
     expect(row.hasAttribute("data-dragging")).toBe(false);
     fireDrag(icon, "dragstart");
     expect(row.hasAttribute("data-dragging")).toBe(false);
     fireDrag(link, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(false);
+    fireDrag(input, "dragstart");
     expect(row.hasAttribute("data-dragging")).toBe(false);
 
     act(() => {

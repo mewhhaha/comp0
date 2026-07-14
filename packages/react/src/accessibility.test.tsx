@@ -22,6 +22,9 @@ import {
   Label,
   ListBox,
   ListBoxItem,
+  PasswordField,
+  PasswordFieldInput,
+  PasswordFieldToggle,
   Radio,
   RadioGroup,
   Select,
@@ -47,6 +50,11 @@ describe("retained accessibility contracts", () => {
           <Label>Name</Label>
           <Input />
         </TextField>
+        <PasswordField id="password">
+          <Label>Password</Label>
+          <PasswordFieldInput autoComplete="current-password" />
+          <PasswordFieldToggle />
+        </PasswordField>
         <Checkbox name="updates">Product updates</Checkbox>
         <RadioGroup name="plan" defaultValue="free">
           <legend>Plan</legend>
