@@ -38,6 +38,20 @@ function renderFeed(props: Partial<FeedProps> = {}) {
 }
 
 describe("feed composition", () => {
+  it("preserves explicit set metadata through client registration", () => {
+    const { container } = render(
+      <Feed aria-label="Updates">
+        <FeedArticle aria-posinset={4} aria-setsize={10}>
+          Fourth
+        </FeedArticle>
+      </Feed>,
+    );
+    const article = container.querySelector("article")!;
+
+    expect(article.getAttribute("aria-posinset")).toBe("4");
+    expect(article.getAttribute("aria-setsize")).toBe("10");
+  });
+
   it("renders role feed with focusable articles carrying posinset and setsize", () => {
     const { feed, articles } = renderFeed();
     expect(feed.getAttribute("aria-label")).toBe("Recipe feed");

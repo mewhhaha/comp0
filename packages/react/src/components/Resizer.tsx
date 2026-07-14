@@ -103,7 +103,8 @@ export function Resizer({
       }}
       onKeyDown={(event) => {
         onKeyDown?.(event);
-        if (event.defaultPrevented || inColumn) return;
+        if (event.defaultPrevented) return;
+        if (inColumn && !event.shiftKey) return;
         const forward = orientation === "vertical" ? "ArrowRight" : "ArrowDown";
         const backward = orientation === "vertical" ? "ArrowLeft" : "ArrowUp";
         if (event.key === forward || event.key === backward) {

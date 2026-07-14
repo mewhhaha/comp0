@@ -1,7 +1,6 @@
-import { composeRefs, dataAttr } from "@comp0/core";
-import { createElement, useLayoutEffect, useMemo, useRef, type HTMLAttributes } from "react";
+import { dataAttr, useComposedRefs } from "@comp0/core";
+import { createElement, useLayoutEffect, type HTMLAttributes } from "react";
 import { useComboBoxRootContext, type RefProp } from "../shared.js";
-import { ComboboxCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
 import {
   placementSurfaceStyle,
   usePopoverSurface,
@@ -20,16 +19,8 @@ export function ComboboxPopover({
 }: ComboboxPopoverProps & RefProp<HTMLDivElement>) {
   const combo = useComboBoxRootContext();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
+  const composedRef = useComposedRefs(surfaceRef, ref);
   if (!combo || !popover) throw new Error("ComboboxPopover must be rendered inside Combobox.");
-  const options = useRef(new Map<string, PickerOptionRecord>());
-  // This identity feeds each option's cleanup effect; useMemo keeps it stable
-  // even where the React Compiler bails out, or every popover re-render would
-  // unregister the options mid-life.
-  const context = useMemo(() => {
-    const register = (option: PickerOptionRecord) => options.current.set(option.value, option);
-    const unregister = (value: string) => options.current.delete(value);
-    return { register, unregister };
-  }, []);
   useLayoutEffect(() => {
     if (!popover.open) {
       combo.setActiveId("");
@@ -42,7 +33,7 @@ export function ComboboxPopover({
   if (!props["aria-label"]) labelledBy = labelledBy ?? combo.labelId;
   const surface = createElement("div", {
     ...props,
-    ref: composeRefs(surfaceRef, ref),
+    ref: composedRef,
     id: props.id ?? combo.listBoxId,
     role: props.role ?? "listbox",
     popover: "auto",
@@ -58,5 +49,5 @@ export function ComboboxPopover({
       if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
     },
   } as never);
-  return <ComboboxCollectionContext value={context}>{surface}</ComboboxCollectionContext>;
+  return surface;
 }

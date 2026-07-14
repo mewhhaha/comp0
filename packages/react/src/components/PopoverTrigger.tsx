@@ -1,5 +1,5 @@
 import { createElement, Fragment } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { dataSlot, Slot, type RefProp } from "../shared.js";
 import {
   triggerAnchorStyle,
@@ -16,16 +16,14 @@ export function PopoverTrigger({
   ...props
 }: PopoverTriggerProps & RefProp<HTMLButtonElement>) {
   const popover = usePopoverContext();
-  const triggerRef = (element: HTMLButtonElement | null) => {
-    popover?.setTriggerElement(element);
-    composeRefs(ref)(element);
-  };
+  const triggerRef = useComposedRefs(ref, popover?.setTriggerElement);
   const Trigger = as === Fragment ? Slot : (as ?? "button");
+  const isNativeButton = Trigger === "button";
   return createElement(Trigger, {
     ...props,
     ref: triggerRef,
     id: props.id ?? popover?.triggerId,
-    type: as ? undefined : (props.type ?? "button"),
+    type: isNativeButton ? (props.type ?? "button") : undefined,
     style: triggerAnchorStyle(popover?.triggerId, style),
     "aria-controls": props["aria-controls"] ?? popover?.contentId,
     "aria-expanded": popover?.open,

@@ -75,4 +75,53 @@ describe("tabs composition", () => {
     expect(document.activeElement?.textContent).toBe("Three");
     unmount();
   });
+
+  it("keeps a fallback tab stop when the selected key is missing or disabled", () => {
+    const { container, rerender } = render(
+      <Tabs value="missing">
+        <TabList aria-label="Project">
+          <Tab tab="one">One</Tab>
+          <Tab tab="two">Two</Tab>
+        </TabList>
+      </Tabs>,
+    );
+    const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
+    expect(tablist.tabIndex).toBe(0);
+    act(() => tablist.focus());
+    expect(document.activeElement?.textContent).toBe("One");
+
+    rerender(
+      <Tabs value="one">
+        <TabList aria-label="Project">
+          <Tab tab="one" disabled>
+            One
+          </Tab>
+          <Tab tab="two">Two</Tab>
+        </TabList>
+      </Tabs>,
+    );
+    expect(tablist.tabIndex).toBe(0);
+    act(() => tablist.focus());
+    expect(document.activeElement?.textContent).toBe("Two");
+  });
+
+  it("moves from DOM focus when a controlled selection is not accepted", () => {
+    const { container } = render(
+      <Tabs value="one">
+        <TabList aria-label="Project">
+          <Tab tab="one">One</Tab>
+          <Tab tab="two">Two</Tab>
+          <Tab tab="three">Three</Tab>
+        </TabList>
+      </Tabs>,
+    );
+    const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
+    const tabs = container.querySelectorAll<HTMLButtonElement>("[role='tab']");
+    tabs[0]!.focus();
+
+    fireKeyDown(tablist, "ArrowRight");
+    expect(document.activeElement).toBe(tabs[1]);
+    fireKeyDown(tabs[1]!, "ArrowRight");
+    expect(document.activeElement).toBe(tabs[2]);
+  });
 });

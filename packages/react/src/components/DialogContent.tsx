@@ -22,7 +22,7 @@ export function DialogContent({
     const element = contentRef.current;
     if (!element) return;
     if (dialog?.open) {
-      if (!wasOpenRef.current) restoreFocusRef.current = document.activeElement;
+      if (!wasOpenRef.current) restoreFocusRef.current = element.ownerDocument.activeElement;
       wasOpenRef.current = true;
       if (!element.open && typeof element.showModal === "function") element.showModal();
       else element.setAttribute("open", "");

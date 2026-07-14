@@ -1,5 +1,5 @@
 import { type RefProp } from "../shared.js";
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { TabsContext, tabPairIds } from "./disclosure-shared.js";
 import { type TabProps } from "./disclosure-shared.js";
@@ -7,7 +7,6 @@ export type { TabProps } from "./disclosure-shared.js";
 export function Tab({
   tab,
   disabled,
-  id,
   onClick,
   ref,
   ...props
@@ -16,18 +15,23 @@ export function Tab({
   const resolvedDisabled = Boolean(disabled);
   const selected = tabs?.selectedKey === tab;
   const { tabId, panelId } = tabPairIds(tabs, tab);
+  const registerTab = tabs?.registerTab;
+  const tabRef = useCallback(
+    (element: HTMLButtonElement | null) => {
+      registerTab?.(tab, element, resolvedDisabled);
+      composeRefs(ref)(element);
+    },
+    [ref, registerTab, resolvedDisabled, tab],
+  );
 
   return (
     <button
       {...props}
-      ref={(element) => {
-        tabs?.registerTab(tab, element, resolvedDisabled);
-        composeRefs(ref)(element);
-      }}
-      id={id ?? tabId}
+      ref={tabRef}
+      id={tabId}
       type="button"
       role="tab"
-      tabIndex={selected ? 0 : -1}
+      tabIndex={selected && !resolvedDisabled ? 0 : -1}
       aria-selected={selected}
       aria-controls={panelId}
       disabled={resolvedDisabled}

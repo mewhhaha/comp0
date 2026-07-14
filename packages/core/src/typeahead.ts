@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
 /** The search fields needed to match a collection item by typed text. */
 export interface TypeaheadItem {
@@ -29,17 +29,14 @@ export function useTypeaheadSearch(timeout = 700) {
   const bufferRef = useRef("");
   const timeoutRef = useRef<number | undefined>(undefined);
 
-  return useCallback(
-    (key: string) => {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = window.setTimeout(() => {
-        bufferRef.current = "";
-      }, timeout);
-      bufferRef.current += key;
-      return bufferRef.current;
-    },
-    [timeout],
-  );
+  return (key: string) => {
+    window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => {
+      bufferRef.current = "";
+    }, timeout);
+    bufferRef.current += key;
+    return bufferRef.current;
+  };
 }
 
 /** Returns a keyboard handler that buffers printable characters for typeahead navigation. */
@@ -52,22 +49,19 @@ export function useTypeahead(options: {
   const bufferRef = useRef("");
   const timeoutRef = useRef<number | undefined>(undefined);
 
-  return useCallback(
-    (event: Pick<KeyboardEvent, "key" | "preventDefault">) => {
-      if (event.key.length !== 1 || event.key.trim() === "") return;
+  return (event: Pick<KeyboardEvent, "key" | "preventDefault">) => {
+    if (event.key.length !== 1 || event.key.trim() === "") return;
 
-      window.clearTimeout(timeoutRef.current);
-      bufferRef.current += event.key;
-      timeoutRef.current = window.setTimeout(() => {
-        bufferRef.current = "";
-      }, options.timeout ?? 700);
+    window.clearTimeout(timeoutRef.current);
+    bufferRef.current += event.key;
+    timeoutRef.current = window.setTimeout(() => {
+      bufferRef.current = "";
+    }, options.timeout ?? 700);
 
-      const match = findTypeaheadMatch(options.items, bufferRef.current, options.currentKey);
-      if (match) {
-        event.preventDefault();
-        options.onMatch(match);
-      }
-    },
-    [options],
-  );
+    const match = findTypeaheadMatch(options.items, bufferRef.current, options.currentKey);
+    if (match) {
+      event.preventDefault();
+      options.onMatch(match);
+    }
+  };
 }

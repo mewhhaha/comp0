@@ -71,6 +71,12 @@ describe("carousel composition", () => {
       "3 of 3",
     ]);
     expect(currentLabels(slides)).toEqual([true, false, false]);
+    expect(slides.map((slide) => slide.getAttribute("aria-hidden"))).toEqual([
+      null,
+      "true",
+      "true",
+    ]);
+    expect(slides.map((slide) => slide.hasAttribute("inert"))).toEqual([false, true, true]);
     expect(viewport.style.getPropertyValue("--comp0-carousel-index")).toBe("0");
   });
 
@@ -95,6 +101,7 @@ describe("carousel composition", () => {
 
     fireClick(next);
     expect(currentLabels(slides)).toEqual([false, true, false]);
+    expect(slides.map((slide) => slide.hasAttribute("inert"))).toEqual([true, false, true]);
     expect(viewport.style.getPropertyValue("--comp0-carousel-index")).toBe("1");
     expect(previous.disabled).toBe(false);
 

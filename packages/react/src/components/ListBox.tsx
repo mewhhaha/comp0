@@ -45,6 +45,14 @@ export function ListBox({
     items: CollectionItemRecord[];
   }>({ version: -1, items: [] });
 
+  const syncOptionTabStops = (key: string) => {
+    const virtualFocus = autocomplete !== null && !autocomplete.disableVirtualFocus;
+    for (const item of itemMap.current.values()) {
+      if (!item.element || item.disabled) continue;
+      item.element.tabIndex = !virtualFocus && item.key === key ? 0 : -1;
+    }
+  };
+
   useEffect(() => {
     selectedRef.current = selected;
     if (selected) {
@@ -65,6 +73,12 @@ export function ListBox({
   ) => {
     if (!element) {
       if (itemMap.current.delete(key)) itemVersion.current += 1;
+      if (activeKeyRef.current === key) {
+        const fallback = items().find((item) => !item.disabled)?.key ?? "";
+        activeKeyRef.current = fallback;
+        syncOptionTabStops(fallback);
+        setActiveKey(fallback);
+      }
       return;
     }
 
@@ -79,8 +93,16 @@ export function ListBox({
       itemVersion.current += 1;
     }
 
-    if (!selectedRef.current && !activeKeyRef.current && !disabled) {
+    if (selectedRef.current === key && !disabled) {
       activeKeyRef.current = key;
+      syncOptionTabStops(key);
+      setActiveKey(key);
+      return;
+    }
+    const activeItem = itemMap.current.get(activeKeyRef.current);
+    if ((!activeItem || activeItem.disabled) && !disabled) {
+      activeKeyRef.current = key;
+      syncOptionTabStops(key);
       setActiveKey(key);
     }
   };

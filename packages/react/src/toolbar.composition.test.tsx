@@ -3,6 +3,7 @@ import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { ToggleButton } from "./components/ToggleButton.js";
 import { ToggleButtonGroup } from "./components/ToggleButtonGroup.js";
 import { Toolbar } from "./components/Toolbar.js";
+import { Link } from "./components/Link.js";
 
 function renderToolbar(props: { orientation?: "horizontal" | "vertical" } = {}) {
   const result = render(
@@ -101,6 +102,22 @@ describe("toolbar composition", () => {
     buttons[1]!.focus();
     fireKeyDown(buttons[1]!, "ArrowLeft");
     expect(document.activeElement).toBe(buttons[1]);
+  });
+
+  it("excludes aria-disabled polymorphic controls from the roving tab stop", () => {
+    const { container } = render(
+      <Toolbar aria-label="Actions">
+        <Link href="/archive" disabled>
+          Archive
+        </Link>
+        <button type="button">Delete</button>
+      </Toolbar>,
+    );
+    const link = container.querySelector<HTMLAnchorElement>("a")!;
+    const button = container.querySelector<HTMLButtonElement>("button")!;
+
+    expect(link.tabIndex).toBe(-1);
+    expect(button.tabIndex).toBe(0);
   });
 });
 

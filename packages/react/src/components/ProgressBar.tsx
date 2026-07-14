@@ -31,12 +31,12 @@ export function ProgressBar({
 }: ProgressBarProps & RefProp<HTMLDivElement>) {
   const field = useFieldContext();
   const description = describedBy(field, ariaDescribedBy);
-  const maxValue = max !== undefined && max > 0 ? max : 1;
-  const indeterminate = value === undefined;
+  const maxValue = max !== undefined && Number.isFinite(max) && max > 0 ? max : 1;
+  const indeterminate = value === undefined || !Number.isFinite(value);
   let resolvedValue: number | undefined;
   let percentage: number | undefined;
   let progressStyle = style;
-  if (value !== undefined) {
+  if (value !== undefined && Number.isFinite(value)) {
     resolvedValue = Math.min(Math.max(value, 0), maxValue);
     const fraction = resolvedValue / maxValue;
     percentage = fraction * 100;

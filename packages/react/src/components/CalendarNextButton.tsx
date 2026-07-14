@@ -18,7 +18,7 @@ export function CalendarNextButton({
   // The next month is unreachable when even its first day sits past max.
   const nextMonthStart = addMonths(`${calendar.visibleMonth}-01`, 1);
   const resolvedDisabled = Boolean(
-    disabled || (calendar.max && isAfter(nextMonthStart, calendar.max)),
+    disabled || calendar.disabled || (calendar.max && isAfter(nextMonthStart, calendar.max)),
   );
 
   return (

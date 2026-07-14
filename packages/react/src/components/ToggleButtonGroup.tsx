@@ -14,21 +14,32 @@ function toValues(value: ToggleButtonGroupValue) {
   return [];
 }
 
-export type ToggleButtonGroupProps = Omit<
+type ToggleButtonGroupBaseProps = Omit<
   HTMLAttributes<HTMLDivElement>,
   "defaultValue" | "onChange"
 > & {
   as?: ElementType | undefined;
   "data-slot"?: string | undefined;
   orientation?: "horizontal" | "vertical" | undefined;
-  /** Selection mode once the group manages selection; "single" keeps at most one button on. */
-  type?: "single" | "multiple" | undefined;
-  /** Controlled or initial selection: a string for single, a string[] for multiple. */
-  value?: ToggleButtonGroupValue | undefined;
-  defaultValue?: ToggleButtonGroupValue | undefined;
-  /** Receives the next selection ("" when a single group empties) rather than a DOM ChangeEvent. */
-  onChange?: ((value: ToggleButtonGroupValue) => void) | undefined;
 };
+
+type SingleToggleButtonGroupProps = {
+  type?: "single" | undefined;
+  value?: string | undefined;
+  defaultValue?: string | undefined;
+  /** Receives the next selection ("" when the group empties) rather than a DOM ChangeEvent. */
+  onChange?: ((value: string) => void) | undefined;
+};
+
+type MultipleToggleButtonGroupProps = {
+  type: "multiple";
+  value?: string[] | undefined;
+  defaultValue?: string[] | undefined;
+  onChange?: ((value: string[]) => void) | undefined;
+};
+
+export type ToggleButtonGroupProps = ToggleButtonGroupBaseProps &
+  (SingleToggleButtonGroupProps | MultipleToggleButtonGroupProps);
 
 export function ToggleButtonGroup({
   as,
@@ -49,7 +60,7 @@ export function ToggleButtonGroup({
   const [selected, setSelected] = useControllableState<ToggleButtonGroupValue>({
     value,
     defaultValue: defaultValue ?? (resolvedType === "multiple" ? [] : ""),
-    onChange,
+    onChange: onChange as ((value: ToggleButtonGroupValue) => void) | undefined,
   });
 
   const isSelected = (buttonValue: string) => toValues(selected).includes(buttonValue);

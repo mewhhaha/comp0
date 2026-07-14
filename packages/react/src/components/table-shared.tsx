@@ -1,4 +1,5 @@
 import { createContext, useContext, useId, useLayoutEffect, useRef } from "react";
+import { assignRef } from "@comp0/core";
 import { FOCUSABLE_SELECTOR } from "./grid-list-shared.js";
 
 export interface TableContextValue {
@@ -66,8 +67,7 @@ export function useTableCell(ref: React.Ref<HTMLTableCellElement> | undefined) {
   const cellRef = (element: HTMLTableCellElement | null) => {
     elementRef.current = element;
     register?.(key, element);
-    if (typeof ref === "function") ref(element);
-    else if (ref) ref.current = element;
+    assignRef(ref, element);
   };
   const tabIndex = table?.activeKey === key ? 0 : -1;
 

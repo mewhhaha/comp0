@@ -79,4 +79,33 @@ describe("resizer composition", () => {
     fireKey(separator, "ArrowRight");
     expect(document.activeElement).toBe(headers[1]);
   });
+
+  it("uses the resizer bounds for keyboard resizing inside a table column", () => {
+    const onResize = vi.fn();
+    const { container } = render(
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn onResize={onResize}>
+              Name
+              <Resizer aria-label="Resize name" size={120} min={100} max={128} />
+            </TableColumn>
+          </TableRow>
+        </TableHeader>
+      </Table>,
+    );
+    const separator = container.querySelector<HTMLElement>("[role='separator']")!;
+
+    act(() => {
+      separator.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    expect(onResize).toHaveBeenLastCalledWith(128);
+  });
 });

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": true,
+  "group-pull-request-title-pattern": "chore: release comp0 packages",
+  "plugins": [
+    {
+      "type": "node-workspace",
+      "merge": false
+    },
+    {
+      "type": "linked-versions",
+      "groupName": "comp0 libraries",
+      "components": ["core", "react"]
+    }
+  ],
+  "packages": {
+    ".": {
+      "component": "comp0"
+    },
+    "packages/core": {
+      "component": "core"
+    },
+    "packages/react": {
+      "component": "react"
+    }
+  }
+}

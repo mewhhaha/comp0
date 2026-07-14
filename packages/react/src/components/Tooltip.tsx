@@ -49,11 +49,13 @@ export function Tooltip({
   // Escape dismisses an open tooltip no matter where focus is (WCAG 1.4.13).
   useEffect(() => {
     if (!open) return;
+    const ownerDocument = triggerRef.current?.ownerDocument;
+    if (!ownerDocument) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-    document.addEventListener("keydown", onKeyDown, true);
-    return () => document.removeEventListener("keydown", onKeyDown, true);
+    ownerDocument.addEventListener("keydown", onKeyDown, true);
+    return () => ownerDocument.removeEventListener("keydown", onKeyDown, true);
   }, [open, setOpen]);
   // Tooltips compose with the popover system internally so TooltipPopover
   // can live in the top layer instead of expanding its container.

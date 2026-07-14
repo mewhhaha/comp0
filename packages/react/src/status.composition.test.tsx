@@ -78,6 +78,18 @@ describe("ProgressBar", () => {
     expect(progress.style.getPropertyValue("--comp0-progress-value")).toBe("");
   });
 
+  it("does not expose non-finite progress values to ARIA or CSS", () => {
+    const { container } = render(
+      <ProgressBar aria-label="Loading" value={Number.NaN} max={Number.POSITIVE_INFINITY} />,
+    );
+    const progress = container.querySelector<HTMLElement>("[role='progressbar']")!;
+
+    expect(progress.hasAttribute("aria-valuenow")).toBe(false);
+    expect(progress.getAttribute("aria-valuemax")).toBe("1");
+    expect(progress.hasAttribute("data-indeterminate")).toBe(true);
+    expect(progress.style.getPropertyValue("--comp0-progress-value")).toBe("");
+  });
+
   it("wires the field Label to the progress element", () => {
     const { container } = render(
       <TextField>
@@ -138,6 +150,23 @@ describe("Meter", () => {
     expect(label.htmlFor).toBe(meter.id);
     expect(meter.getAttribute("aria-labelledby")).toBe(label.id);
   });
+
+  it("normalizes non-finite meter values before exposing them to ARIA and CSS", () => {
+    const { container } = render(
+      <Meter
+        aria-label="Storage"
+        value={Number.NaN}
+        min={Number.NaN}
+        max={Number.POSITIVE_INFINITY}
+      />,
+    );
+    const meter = container.querySelector<HTMLElement>("[role='meter']")!;
+
+    expect(meter.getAttribute("aria-valuenow")).toBe("0");
+    expect(meter.getAttribute("aria-valuemin")).toBe("0");
+    expect(meter.getAttribute("aria-valuemax")).toBe("1");
+    expect(meter.style.getPropertyValue("--comp0-meter-value")).toBe("0");
+  });
 });
 
 describe("SkipLink", () => {
@@ -175,6 +204,8 @@ describe("VisuallyHidden", () => {
       </VisuallyHidden>,
     );
     const wrapper = container.querySelector<HTMLElement>("[data-slot='visually-hidden']")!;
+
+    expect(wrapper.tagName).toBe("SPAN");
 
     act(() => wrapper.querySelector("a")!.focus());
     expect(wrapper.style.position).toBe("absolute");

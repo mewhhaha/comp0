@@ -2,7 +2,7 @@ import { type HTMLAttributes } from "react";
 import { type RefProp } from "../shared.js";
 import { useFocusWithinReveal, visuallyHiddenStyle } from "./visually-hidden-shared.js";
 
-export type VisuallyHiddenProps = HTMLAttributes<HTMLDivElement> & {
+export type VisuallyHiddenProps = HTMLAttributes<HTMLSpanElement> & {
   /** Removes the hiding styles while the element or a descendant has focus. */
   focusable?: boolean | undefined;
 };
@@ -14,14 +14,14 @@ export function VisuallyHidden({
   onBlur,
   ref,
   ...props
-}: VisuallyHiddenProps & RefProp<HTMLDivElement>) {
-  const { revealed, reveal, conceal } = useFocusWithinReveal<HTMLDivElement>();
+}: VisuallyHiddenProps & RefProp<HTMLSpanElement>) {
+  const { revealed, reveal, conceal } = useFocusWithinReveal<HTMLSpanElement>();
   const hidden = !(focusable && revealed);
   let mergedStyle = style;
   if (hidden) mergedStyle = { ...visuallyHiddenStyle, ...style };
 
   return (
-    <div
+    <span
       {...props}
       ref={ref}
       data-slot="visually-hidden"

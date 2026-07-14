@@ -2,7 +2,11 @@ import { useRef } from "react";
 import { useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { AccordionContext } from "./accordion-shared.js";
-import { type AccordionProps, type AccordionTriggerRecord } from "./accordion-shared.js";
+import {
+  type AccordionProps,
+  type AccordionTriggerRecord,
+  type AccordionValue,
+} from "./accordion-shared.js";
 import { ProviderRoot } from "./provider-root.js";
 export type { AccordionProps } from "./accordion-shared.js";
 
@@ -29,15 +33,20 @@ export function Accordion({
   value,
   defaultValue,
   onChange,
-  collapsible = type === "multiple",
+  collapsible: collapsibleProp,
   ref,
   ...props
 }: AccordionProps & RefProp<HTMLElement>) {
   const triggerMap = useRef(new Map<string, AccordionTriggerRecord>());
+  let collapsible = collapsibleProp;
+  if (collapsible === undefined) collapsible = type === "multiple";
+  let initialValue: AccordionValue = "";
+  if (type === "multiple") initialValue = [];
+  if (defaultValue !== undefined) initialValue = defaultValue;
   const [currentValue, setCurrentValue] = useControllableState({
     value,
-    defaultValue: defaultValue ?? (type === "multiple" ? [] : ""),
-    onChange,
+    defaultValue: initialValue,
+    onChange: onChange as ((value: AccordionValue) => void) | undefined,
   });
   const selectedKeys = valueToSet(currentValue);
 

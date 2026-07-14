@@ -181,6 +181,34 @@ describe("toast composition", () => {
     expect(document.querySelector("[role='status']")).toBeNull();
   });
 
+  it("releases a hover pause when dismissing the last toast", () => {
+    const { container } = render(<App options={{ timeout: 100 }} />);
+    fireClick(notifyButton(container));
+    const region = document.querySelector("[role='region']")!;
+    hoverStart(region);
+    fireClick(region.querySelector("[data-slot='toast-dismiss']")!);
+
+    fireClick(notifyButton(container));
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(document.querySelector("[role='status']")).toBeNull();
+  });
+
+  it("releases a focus pause when dismissing the last toast", () => {
+    const { container } = render(<App options={{ timeout: 100 }} />);
+    fireClick(notifyButton(container));
+    const dismiss = document.querySelector<HTMLButtonElement>("[data-slot='toast-dismiss']")!;
+    act(() => dismiss.focus());
+    fireClick(dismiss);
+
+    fireClick(notifyButton(container));
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(document.querySelector("[role='status']")).toBeNull();
+  });
+
   it("removes only its own toast through ToastDismiss with a default label", () => {
     const { container } = render(<App options={{ timeout: null }} />);
     fireClick(notifyButton(container));

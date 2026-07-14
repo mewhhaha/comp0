@@ -30,8 +30,8 @@ export function FeedArticle({ ref, ...props }: FeedArticleProps & RefProp<HTMLEl
       {...props}
       ref={composeRefs(ref, setElement)}
       tabIndex={-1}
-      aria-posinset={position >= 0 ? position + 1 : undefined}
-      aria-setsize={position >= 0 ? setSize : undefined}
+      aria-posinset={props["aria-posinset"] ?? (position >= 0 ? position + 1 : undefined)}
+      aria-setsize={props["aria-setsize"] ?? (position >= 0 ? setSize : undefined)}
     />
   );
 }

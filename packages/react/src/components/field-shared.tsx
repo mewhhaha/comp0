@@ -1,12 +1,13 @@
 import {
+  Children,
   createContext,
-  useCallback,
+  isValidElement,
   useContext,
   useId,
-  useState,
   type FieldsetHTMLAttributes,
   type HTMLAttributes,
   type LabelHTMLAttributes,
+  type ReactNode,
 } from "react";
 export interface FieldContextValue {
   controlId: string;
@@ -18,10 +19,11 @@ export interface FieldContextValue {
   required?: boolean | undefined;
   value?: string | undefined;
   setValue?: ((value: string) => void) | undefined;
+  valueControlled?: boolean | undefined;
+  resetValue?: (() => void) | undefined;
+  restoreValue?: ((value: string) => void) | undefined;
   descriptionMounted?: boolean | undefined;
   errorMounted?: boolean | undefined;
-  registerDescription?: (() => () => void) | undefined;
-  registerError?: (() => () => void) | undefined;
 }
 
 export const FieldContext = createContext<FieldContextValue | null>(null);
@@ -42,34 +44,38 @@ export function useFieldIds(id: string | undefined) {
   };
 }
 
-/**
- * Tracks whether a Description or FieldError is actually rendered so
- * aria-describedby never references an id that does not exist. Providers
- * feed the flags and register callbacks into their FieldContext value.
- */
-export function useFieldFeedback() {
-  const [descriptionMounted, setDescriptionMounted] = useState(false);
-  const [errorMounted, setErrorMounted] = useState(false);
-  // These identities feed effect dependencies in Description and FieldError;
-  // useCallback keeps their registration stable across provider renders.
-  const registerDescription = useCallback(() => {
-    setDescriptionMounted(true);
-    return () => setDescriptionMounted(false);
-  }, []);
-  const registerError = useCallback(() => {
-    setErrorMounted(true);
-    return () => setErrorMounted(false);
-  }, []);
-  return { descriptionMounted, errorMounted, registerDescription, registerError };
+export const fieldFeedbackPart = Symbol("comp0.field-feedback-part");
+
+type FieldFeedbackComponent = {
+  [fieldFeedbackPart]?: "description" | "error";
+};
+
+/** Reads declaratively rendered feedback so ARIA relationships exist in server markup. */
+export function fieldFeedback(children: ReactNode, invalid = false) {
+  let descriptionMounted = false;
+  let errorMounted = false;
+
+  const visit = (nodes: ReactNode) => {
+    Children.forEach(nodes, (child) => {
+      if (!isValidElement<{ children?: ReactNode; forceMount?: boolean }>(child)) return;
+      const part = (child.type as FieldFeedbackComponent)[fieldFeedbackPart];
+      if (part === "description") descriptionMounted = true;
+      if (part === "error" && (invalid || Boolean(child.props.forceMount))) {
+        errorMounted = true;
+      }
+      if (!descriptionMounted || !errorMounted) visit(child.props.children);
+    });
+  };
+  visit(children);
+  return { descriptionMounted, errorMounted };
 }
 
 export function describedBy(
   context: FieldContextValue | null,
   describedByProp?: string | undefined,
 ) {
-  // Contexts hand-rolled without mount tracking keep referencing both ids.
-  const hasDescription = context?.descriptionMounted ?? true;
-  const hasError = context?.errorMounted ?? true;
+  const hasDescription = context?.descriptionMounted ?? false;
+  const hasError = context?.errorMounted ?? false;
   return [
     describedByProp,
     hasDescription ? context?.descriptionId : undefined,

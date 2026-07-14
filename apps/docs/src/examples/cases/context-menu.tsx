@@ -15,20 +15,20 @@ export function Example() {
       <MenuPopover className="fixed inset-auto top-(--comp0-context-menu-y) left-(--comp0-context-menu-x) m-0 w-44 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
         <MenuList aria-label="Attachment actions">
           <MenuItem
-            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
             value="download"
           >
             Download
           </MenuItem>
           <MenuItem
-            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
             value="rename"
           >
             Rename
           </MenuItem>
           <MenuSeparator className="my-1 h-px bg-zinc-950/10 dark:bg-white/10" />
           <MenuItem
-            className="w-full rounded px-3 py-2.5 text-left text-base text-red-700 hover:bg-red-50 sm:py-2 sm:text-sm dark:text-red-400 dark:hover:bg-red-950"
+            className="w-full rounded px-3 py-2.5 text-left text-base text-red-700 select-none hover:bg-red-50 sm:py-2 sm:text-sm dark:text-red-400 dark:hover:bg-red-950"
             value="remove"
           >
             Remove

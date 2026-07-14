@@ -18,7 +18,7 @@ export function CalendarPreviousButton({
   // The previous month is unreachable when even its last day sits before min.
   const previousMonthEnd = addDays(`${calendar.visibleMonth}-01`, -1);
   const resolvedDisabled = Boolean(
-    disabled || (calendar.min && isBefore(previousMonthEnd, calendar.min)),
+    disabled || calendar.disabled || (calendar.min && isBefore(previousMonthEnd, calendar.min)),
   );
 
   return (

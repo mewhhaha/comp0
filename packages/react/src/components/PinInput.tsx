@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
+import { useCallback, useRef, useState } from "react";
+import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { PinInputContext, type PinInputProps } from "./pin-input-shared.js";
+import { useFormControlState, useFormReset } from "./form-control-state.js";
 export type { PinInputProps, PinInputType } from "./pin-input-shared.js";
 
 /**
@@ -19,14 +20,25 @@ export function PinInput({
   type = "numeric",
   mask,
   name,
+  form,
   disabled,
   children,
   ref,
   ...props
 }: PinInputProps & RefProp<HTMLDivElement>) {
-  const [pinValue, setPinValue] = useControllableState({ value, defaultValue, onChange });
+  const hiddenInputRef = useRef<HTMLInputElement | null>(null);
+  const pinState = useFormControlState({ value, defaultValue, onChange });
+  const pinValue = pinState.value;
   const [fields, setFields] = useState<HTMLInputElement[]>([]);
   const resolvedDisabled = Boolean(disabled);
+  useFormReset({
+    controlRef: hiddenInputRef,
+    controlled: pinState.controlled,
+    form,
+    resetValue: pinState.resetValue,
+    restoreValue: pinState.restoreValue,
+    readValue: (element) => element.value,
+  });
 
   // The registration identity feeds a layout-effect dependency in every
   // PinInputField; useCallback keeps fields from unregistering mid-render.
@@ -50,7 +62,7 @@ export function PinInput({
   };
 
   const commit = (next: string) => {
-    setPinValue(next);
+    pinState.setValue(next);
     const count = fields.length;
     if (onComplete && count > 0 && next.length >= count && pinValue.length < count) {
       onComplete(next);
@@ -58,10 +70,11 @@ export function PinInput({
   };
 
   const setCharacter = (index: number, character: string) => {
-    let next = pinValue.slice(0, index) + character + pinValue.slice(index + 1);
+    const targetIndex = Math.min(index, pinValue.length);
+    let next = pinValue.slice(0, targetIndex) + character + pinValue.slice(targetIndex + 1);
     if (fields.length > 0) next = next.slice(0, fields.length);
     commit(next);
-    focusField(index + 1);
+    focusField(targetIndex + 1);
   };
 
   const clearCharacter = (index: number) => {
@@ -69,10 +82,11 @@ export function PinInput({
   };
 
   const pasteCode = (index: number, text: string) => {
-    let next = pinValue.slice(0, index) + text;
+    const targetIndex = Math.min(index, pinValue.length);
+    let next = pinValue.slice(0, targetIndex) + text;
     if (fields.length > 0) next = next.slice(0, fields.length);
     commit(next);
-    focusField(index + text.length);
+    focusField(targetIndex + text.length);
   };
 
   return (
@@ -92,7 +106,14 @@ export function PinInput({
     >
       <div {...props} ref={ref} role="group" data-disabled={dataAttr(resolvedDisabled)}>
         {children}
-        {name && <input type="hidden" name={name} value={pinValue} disabled={resolvedDisabled} />}
+        <input
+          ref={hiddenInputRef}
+          type="hidden"
+          form={form}
+          name={name}
+          value={pinValue}
+          disabled={resolvedDisabled}
+        />
       </div>
     </PinInputContext>
   );

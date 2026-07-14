@@ -92,7 +92,11 @@ export function ContextMenu({
     openAt(x, y) {
       if (!open) {
         let restore: HTMLElement | null = null;
-        if (document.activeElement instanceof HTMLElement) restore = document.activeElement;
+        const activeElement = areaElement.current?.ownerDocument.activeElement;
+        const ownerWindow = areaElement.current?.ownerDocument.defaultView;
+        if (ownerWindow && activeElement instanceof ownerWindow.HTMLElement) {
+          restore = activeElement;
+        }
         restoreElement.current = restore;
       }
       setPosition({ x, y });

@@ -21,7 +21,13 @@ pnpm test:package
 pnpm test:compiler-smoke
 ```
 
-`test:package` runs each package's prepack build, inspects both tarballs, installs them in a temporary consumer, typechecks current composition and polymorphic-link examples, executes both root exports, and verifies that undeclared subpaths are rejected.
+`test:package` runs each library's prepack build, inspects all three tarballs, installs the libraries in a temporary consumer, typechecks current composition and polymorphic-link examples, executes both library root exports, and verifies that undeclared subpaths are rejected. The unscoped `comp0` tarball contains only the project README and license alongside its package manifest.
+
+## Releases
+
+Release Please maintains one release pull request for `comp0`, `@comp0/core`, and `@comp0/react`. Core and React versions are linked; the unscoped placeholder is versioned independently. Merging the release pull request creates path-specific GitHub releases and publishes only the packages released by that pull request.
+
+Publishing uses npm trusted publishing with provenance. Configure each npm package to trust the GitHub Actions workflow `release-please.yml`. The first publication of an unclaimed package cannot have a trusted publisher yet, so add an `NPM_TOKEN` repository secret for the initial release; the workflow uses it as a fallback. An optional `RELEASE_PLEASE_TOKEN` GitHub App or personal access token lets the release pull request trigger the normal pull-request CI workflow; otherwise Release Please uses `GITHUB_TOKEN`.
 
 ## React Compiler
 

@@ -1,4 +1,4 @@
-import { composeRefs, dataAttr, findTypeaheadMatch, useTypeaheadSearch } from "@comp0/core";
+import { dataAttr, findTypeaheadMatch, useComposedRefs, useTypeaheadSearch } from "@comp0/core";
 import { createElement, useLayoutEffect, useMemo, useRef, type HTMLAttributes } from "react";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { SelectCollectionContext, type PickerOptionRecord } from "./pickers-shared.js";
@@ -9,6 +9,16 @@ import {
 } from "./overlay-shared.js";
 
 export type SelectPopoverProps = HTMLAttributes<HTMLDivElement> & PopoverPlacementProps;
+
+function optionsInDocumentOrder(options: Map<string, PickerOptionRecord>) {
+  return [...options.values()].sort((first, second) => {
+    if (!first.element || !second.element) return 0;
+    const position = first.element.compareDocumentPosition(second.element);
+    if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+    if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+    return 0;
+  });
+}
 
 export function SelectPopover({
   offset,
@@ -22,6 +32,7 @@ export function SelectPopover({
   const select = useSelectRootContext();
   const typeaheadSearch = useTypeaheadSearch();
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
+  const composedRef = useComposedRefs(surfaceRef, ref);
   if (!select || !popover) throw new Error("SelectPopover must be rendered inside Select.");
   const options = useRef(new Map<string, PickerOptionRecord>());
   const wasOpen = useRef(false);
@@ -33,16 +44,17 @@ export function SelectPopover({
     const unregister = (value: string) => options.current.delete(value);
     return { register, unregister };
   }, []);
+  const activeElement = () => surfaceRef.current?.ownerDocument.activeElement;
   useLayoutEffect(() => {
     if (popover.open && !wasOpen.current) {
-      const items = [...options.current.values()].filter((item) => !item.disabled);
+      const items = optionsInDocumentOrder(options.current).filter((item) => !item.disabled);
       (items.find((item) => item.value === select.selectedKey) ?? items[0])?.element?.focus();
     }
     wasOpen.current = popover.open;
   }, [popover.open, select.selectedKey]);
   const move = (key: string) => {
-    const items = [...options.current.values()].filter((item) => !item.disabled);
-    const index = items.findIndex((item) => item.element === document.activeElement);
+    const items = optionsInDocumentOrder(options.current).filter((item) => !item.disabled);
+    const index = items.findIndex((item) => item.element === activeElement());
     let next: PickerOptionRecord | undefined;
     if (key === "Home") next = items[0];
     else if (key === "End") next = items.at(-1);
@@ -57,7 +69,7 @@ export function SelectPopover({
   if (!props["aria-label"]) labelledBy = labelledBy ?? select.labelId;
   const surface = createElement("div", {
     ...props,
-    ref: composeRefs(surfaceRef, ref),
+    ref: composedRef,
     id: props.id ?? select.listBoxId,
     role: props.role ?? "listbox",
     popover: "auto",
@@ -86,16 +98,16 @@ export function SelectPopover({
       }
       if (["Enter", " "].includes(event.key)) {
         event.preventDefault();
-        const current = [...options.current.values()].find(
-          (item) => item.element === document.activeElement,
+        const current = optionsInDocumentOrder(options.current).find(
+          (item) => item.element === activeElement(),
         );
         if (current) select.setSelectedKey(current.value);
         popover.requestClose();
         return;
       }
       if (event.key.length === 1 && event.key.trim() !== "") {
-        const items = [...options.current.values()];
-        const currentKey = items.find((item) => item.element === document.activeElement)?.value;
+        const items = optionsInDocumentOrder(options.current);
+        const currentKey = items.find((item) => item.element === activeElement())?.value;
         const match = findTypeaheadMatch(
           items.map((item) => ({ key: item.value, textValue: item.text, disabled: item.disabled })),
           typeaheadSearch(event.key),

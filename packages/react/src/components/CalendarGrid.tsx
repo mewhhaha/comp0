@@ -34,7 +34,7 @@ export function CalendarGrid({
       aria-labelledby={labelledBy}
       onKeyDown={(event) => {
         onKeyDown?.(event);
-        if (event.defaultPrevented) return;
+        if (event.defaultPrevented || calendar.disabled) return;
         if (event.altKey || event.ctrlKey || event.metaKey) return;
         const { focusedDate } = calendar;
         if (event.key === "Enter" || event.key === " ") {

@@ -1,5 +1,5 @@
 import { createElement, useLayoutEffect, useRef, type HTMLAttributes } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import {
   placementSurfaceStyle,
@@ -20,6 +20,7 @@ export function DatePickerPopover({
   ...props
 }: DatePickerPopoverProps & RefProp<HTMLDivElement>) {
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
+  const composedRef = useComposedRefs(surfaceRef, ref);
   if (!popover) throw new Error("DatePickerPopover must be rendered inside DatePicker.");
   const wasOpen = useRef(false);
   useLayoutEffect(() => {
@@ -39,7 +40,7 @@ export function DatePickerPopover({
 
   return createElement("div", {
     ...props,
-    ref: composeRefs(surfaceRef, ref),
+    ref: composedRef,
     id: props.id ?? popover.contentId,
     role: props.role ?? "dialog",
     popover: "auto",

@@ -4,13 +4,19 @@ import { rowFocusables } from "./grid-list-shared.js";
 
 const NESTED_COMPOSITE_SELECTOR = "[role='listbox'],[role='grid'],[role='menu']";
 
-/** A container's roving controls: visible focusables outside nested composites. */
-export function rovingControls(container: HTMLElement) {
+function rovingControlCandidates(container: HTMLElement) {
   return rowFocusables(container).filter((element) => {
     if (element.closest("[hidden]")) return false;
     const composite = element.closest(NESTED_COMPOSITE_SELECTOR);
     return !composite || !container.contains(composite);
   });
+}
+
+/** A container's enabled roving controls: visible focusables outside nested composites. */
+export function rovingControls(container: HTMLElement) {
+  return rovingControlCandidates(container).filter(
+    (element) => !element.closest('[aria-disabled="true"]'),
+  );
 }
 
 /**
@@ -27,6 +33,9 @@ export function useRovingControls<T extends HTMLElement = HTMLElement>(
   const activeControlRef = useRef<HTMLElement | null>(null);
 
   const syncTabStops = (container: HTMLElement, next?: HTMLElement) => {
+    for (const control of rovingControlCandidates(container)) {
+      if (control.closest('[aria-disabled="true"]')) control.tabIndex = -1;
+    }
     const controls = rovingControls(container);
     let active: HTMLElement | null = next ?? activeControlRef.current;
     if (!active || !controls.includes(active)) active = controls[0] ?? null;

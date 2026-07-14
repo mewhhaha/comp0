@@ -10,6 +10,7 @@ import {
 import {
   addMonths,
   clampISODate,
+  dataAttr,
   isValidISODate,
   todayISODate,
   useControllableState,
@@ -33,6 +34,7 @@ export type CalendarProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "
   max?: string | undefined;
   /** BCP 47 tag for month and weekday names; defaults to the browser locale. */
   locale?: string | undefined;
+  disabled?: boolean | undefined;
 };
 
 export function Calendar({
@@ -45,12 +47,14 @@ export function Calendar({
   min,
   max,
   locale,
+  disabled,
   ref,
   ...props
 }: CalendarProps & RefProp<HTMLElement>) {
   const generatedId = useId();
   const picker = useDatePickerContext();
   const popover = usePopoverContext();
+  const resolvedDisabled = Boolean(disabled || picker?.disabled);
   const [ownValue, setOwnValue] = useControllableState({
     value,
     defaultValue: defaultValue ?? "",
@@ -71,8 +75,11 @@ export function Calendar({
   // selection while the grid is closed or unfocused; follow it so the visible
   // month always contains the selection.
   useEffect(() => {
-    if (!isValidISODate(selected)) return;
-    setFocusedDate(clampISODate(selected, min, max));
+    if (isValidISODate(selected)) {
+      setFocusedDate(clampISODate(selected, min, max));
+      return;
+    }
+    setFocusedDate((current) => clampISODate(current, min, max));
   }, [selected, min, max]);
 
   const setValue = (iso: string) => {
@@ -83,17 +90,20 @@ export function Calendar({
     setOwnValue(iso);
   };
   const selectDate = (iso: string) => {
+    if (resolvedDisabled) return;
     setValue(iso);
     setFocusedDate(clampISODate(iso, min, max));
     if (picker && popover) popover.requestClose();
   };
   const focusDate = (iso: string) => {
+    if (resolvedDisabled) return;
     const next = clampISODate(iso, min, max);
     if (next === focusedDate) return;
     focusRequested.current = true;
     setFocusedDate(next);
   };
   const moveMonth = (amount: number) => {
+    if (resolvedDisabled) return;
     setFocusedDate(clampISODate(addMonths(focusedDate, amount), min, max));
   };
   const takeFocusRequest = () => {
@@ -102,6 +112,7 @@ export function Calendar({
     return requested;
   };
   const context = {
+    disabled: resolvedDisabled,
     focusedDate,
     headerId: `${id ?? generatedId}-calendar-header`,
     locale,
@@ -119,7 +130,14 @@ export function Calendar({
 
   return (
     <CalendarContext value={context}>
-      <ProviderRoot as={as} {...props} id={id} ref={ref} data-value={selected || undefined}>
+      <ProviderRoot
+        as={as}
+        {...props}
+        id={id}
+        ref={ref}
+        data-disabled={dataAttr(resolvedDisabled)}
+        data-value={selected || undefined}
+      >
         {children}
       </ProviderRoot>
     </CalendarContext>

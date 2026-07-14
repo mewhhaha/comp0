@@ -5,7 +5,7 @@ import {
   type ElementType,
   type MouseEvent,
 } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field.js";
 import { type RefProp } from "../shared.js";
 import { Button } from "./Button.js";
@@ -32,6 +32,7 @@ export function DatePickerTrigger({
   if (!popover) throw new Error("DatePickerTrigger must be rendered inside DatePicker.");
   const resolvedDisabled = Boolean(disabled || picker?.disabled);
   const description = describedBy(field, props["aria-describedby"]);
+  const composedRef = useComposedRefs(ref, popover.setTriggerElement);
   let ariaLabel = props["aria-label"];
   if (ariaLabel === undefined && props["aria-labelledby"] === undefined) {
     ariaLabel = "Choose date";
@@ -40,7 +41,7 @@ export function DatePickerTrigger({
   return createElement(Button as ElementType, {
     ...props,
     as,
-    ref: composeRefs(ref, popover.setTriggerElement),
+    ref: composedRef,
     disabled: resolvedDisabled,
     id: props.id ?? popover.triggerId,
     style: triggerAnchorStyle(popover.triggerId, style),

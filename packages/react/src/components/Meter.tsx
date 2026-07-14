@@ -43,10 +43,11 @@ export function Meter({
 }: MeterProps & RefProp<HTMLDivElement>) {
   const field = useFieldContext();
   const description = describedBy(field, ariaDescribedBy);
-  const minValue = min ?? 0;
-  let maxValue = max ?? 1;
+  const minValue = min !== undefined && Number.isFinite(min) ? min : 0;
+  let maxValue = max !== undefined && Number.isFinite(max) ? max : 1;
   if (maxValue <= minValue) maxValue = minValue + 1;
-  const resolvedValue = Math.min(Math.max(value, minValue), maxValue);
+  const finiteValue = Number.isFinite(value) ? value : minValue;
+  const resolvedValue = Math.min(Math.max(finiteValue, minValue), maxValue);
   const fraction = (resolvedValue - minValue) / (maxValue - minValue);
   const state: MeterState = {
     value: resolvedValue,

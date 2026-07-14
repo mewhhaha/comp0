@@ -34,11 +34,12 @@ export function ComboboxInput({
   return (
     <input
       {...props}
-      ref={composeRefs(ref, popover.setTriggerElement)}
+      ref={composeRefs(ref, popover.setTriggerElement, combobox.inputRef)}
       id={props.id ?? combobox.inputId}
       role={props.role ?? "combobox"}
       style={triggerAnchorStyle(combobox.inputId, style)}
       value={combobox.displayValue}
+      form={props.form ?? combobox.form}
       disabled={disabled}
       required={required}
       aria-activedescendant={activeDescendant}
@@ -67,7 +68,7 @@ export function ComboboxInput({
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
         const options = [
-          ...(document
+          ...(event.currentTarget.ownerDocument
             .getElementById(combobox.listBoxId)
             ?.querySelectorAll<HTMLElement>("[role='option']") ?? []),
         ].filter((option) => option.getAttribute("aria-disabled") !== "true");

@@ -80,7 +80,7 @@ export function Example() {
               <Checkbox
                 aria-label={`Select ${person.name}`}
                 className="group"
-                selected={selected.includes(person.id)}
+                checked={selected.includes(person.id)}
                 onChange={(on) => toggle(person.id, on)}
               >
                 <span className="block size-4 rounded-sm border border-zinc-950/20 bg-white ring-2 ring-transparent group-data-focused:ring-teal-600 group-data-selected:border-teal-600 group-data-selected:bg-teal-600 dark:border-white/20 dark:bg-zinc-900 dark:group-data-focused:ring-teal-400" />

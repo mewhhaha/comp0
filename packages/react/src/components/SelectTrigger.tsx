@@ -5,7 +5,7 @@ import {
   type ElementType,
   type MouseEvent,
 } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field.js";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { Button } from "./Button.js";
@@ -31,6 +31,7 @@ export function SelectTrigger({
   if (!select || !popover) throw new Error("SelectTrigger must be rendered inside Select.");
   const resolvedDisabled = Boolean(disabled || select.disabled);
   const description = describedBy(field, props["aria-describedby"]);
+  const composedRef = useComposedRefs(ref, popover.setTriggerElement);
   let ariaLabelledBy = props["aria-labelledby"];
   if (ariaLabelledBy === undefined && props["aria-label"] === undefined) {
     ariaLabelledBy = `${select.labelId} ${select.triggerId}`;
@@ -39,7 +40,7 @@ export function SelectTrigger({
   return createElement(Button as ElementType, {
     ...props,
     as,
-    ref: composeRefs(ref, popover.setTriggerElement),
+    ref: composedRef,
     disabled: resolvedDisabled,
     id: props.id ?? select.triggerId,
     style: triggerAnchorStyle(select.triggerId, style),

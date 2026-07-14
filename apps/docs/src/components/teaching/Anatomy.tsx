@@ -51,6 +51,8 @@ type DiagramNode =
       glyph?: typeof XMarkIcon | undefined;
     }
   | { type: "row"; owner?: undefined; children: DiagramNode[] }
+  | { type: "number-stepper"; owner: Numbered; buttons: Numbered[] }
+  | { type: "color-area"; owner: Numbered; thumb: Numbered }
   | { type: "chip"; owner: Numbered }
   | { type: "feedback"; owner: Numbered }
   | { type: "panel"; owner: Numbered; children: DiagramNode[] }
@@ -128,14 +130,25 @@ function parseParts(list: Numbered[]): DiagramNode[] {
       nodes.push({ type: "chip", owner: entry });
       i += 1;
     } else if (kind === "input") {
+      const inputControlShape = inputShape(entry.part.name);
       const control: DiagramNode = {
         type: "control",
         owner: entry,
-        shape: inputShape(entry.part.name),
+        shape: inputControlShape,
         chevron: false,
       };
       const next = list[i + 1];
-      if (next && next.part.kind === "trigger") {
+      const afterNext = list[i + 2];
+      const hasStepperButtons =
+        inputControlShape === "stepper" &&
+        next?.part.kind === "trigger" &&
+        afterNext?.part.kind === "trigger" &&
+        /increment|increase/i.test(next.part.name) &&
+        /decrement|decrease/i.test(afterNext.part.name);
+      if (hasStepperButtons) {
+        nodes.push({ type: "number-stepper", owner: entry, buttons: [next, afterNext] });
+        i += 3;
+      } else if (next && next.part.kind === "trigger") {
         nodes.push({ type: "row", children: [control, triggerNode(next, list.slice(i + 2))] });
         i += 2;
       } else {
@@ -177,6 +190,13 @@ function parseParts(list: Numbered[]): DiagramNode[] {
         ],
       });
       i = list.length;
+    } else if (
+      kind === "region" &&
+      /color ?area/i.test(entry.part.name) &&
+      /thumb/i.test(list[i + 1]?.part.name ?? "")
+    ) {
+      nodes.push({ type: "color-area", owner: entry, thumb: list[i + 1]! });
+      i += 2;
     } else if (kind === "region") {
       let j = i + 1;
       while (j < list.length) {
@@ -586,6 +606,58 @@ function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
           return (
             <div key={key} className="flex flex-wrap items-start gap-3">
               <DiagramNodes nodes={node.children} />
+            </div>
+          );
+        }
+        if (node.type === "number-stepper") {
+          return (
+            <div
+              key={key}
+              className="flex w-full max-w-64 rounded-lg border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800"
+            >
+              <div className="relative flex min-h-10 min-w-0 flex-1 items-center gap-2 px-3">
+                <Pin number={node.owner.number} />
+                <span
+                  className="h-4 w-px shrink-0 bg-teal-600 dark:bg-teal-400"
+                  aria-hidden="true"
+                />
+                <PartName>{node.owner.part.name}</PartName>
+              </div>
+              <div className="grid w-10 shrink-0 grid-rows-2 border-l border-zinc-300 dark:border-zinc-600">
+                {node.buttons.map((button, buttonIndex) => (
+                  <span
+                    key={button.part.name}
+                    className={cn(
+                      "relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-700",
+                      buttonIndex === 0 && "border-b border-zinc-300 dark:border-zinc-600",
+                    )}
+                  >
+                    <Pin number={button.number} />
+                    {buttonIndex === 0 ? (
+                      <PlusIcon className="size-3 text-zinc-500 dark:text-zinc-400" />
+                    ) : (
+                      <MinusIcon className="size-3 text-zinc-500 dark:text-zinc-400" />
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        if (node.type === "color-area") {
+          return (
+            <div
+              key={key}
+              className="relative flex h-28 w-full max-w-64 items-start overflow-visible rounded-lg bg-[linear-gradient(to_top,#18181b,transparent),linear-gradient(to_right,#fff,transparent)] p-3 ring-1 ring-zinc-950/10 dark:ring-white/15"
+              style={{ backgroundColor: "#0d9488" }}
+            >
+              <Pin number={node.owner.number} />
+              <PartName className="text-zinc-700/70 dark:text-zinc-200/70">
+                {node.owner.part.name}
+              </PartName>
+              <span className="absolute top-8 right-12 size-5 rounded-full border-2 border-white shadow ring-1 ring-zinc-950/40">
+                <Pin number={node.thumb.number} />
+              </span>
             </div>
           );
         }

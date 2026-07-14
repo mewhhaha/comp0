@@ -27,6 +27,16 @@ function renderGridList(onChange = vi.fn()) {
   return { ...result, onChange, rows };
 }
 
+function thrownEvidence(callback: () => void) {
+  try {
+    callback();
+  } catch (error) {
+    if (error instanceof AggregateError) return error.errors.map(String).join("\n");
+    return String(error);
+  }
+  return "";
+}
+
 function GroupedLists({
   initial,
   spy,
@@ -875,16 +885,19 @@ describe("grid list composition", () => {
       ),
     ).toThrow('GridListReorderGroup value "duplicate" appears in both "first" and "second"');
 
-    expect(() =>
+    const duplicateItemEvidence = thrownEvidence(() => {
       render(
         <GridList aria-label="Files">
           <GridListItem value="duplicate">First</GridListItem>
           <GridListItem value="duplicate">Second</GridListItem>
         </GridList>,
-      ),
-    ).toThrow('GridListItem value "duplicate" is rendered more than once inside GridList.');
+      );
+    });
+    expect(duplicateItemEvidence).toContain(
+      'GridListItem value "duplicate" is rendered more than once inside GridList.',
+    );
 
-    expect(() =>
+    const duplicateOwnerEvidence = thrownEvidence(() =>
       render(
         <GridListReorderGroup value={{ first: ["duplicate"], second: [] }} onChange={() => {}}>
           <GridList name="first" aria-label="First">
@@ -895,7 +908,8 @@ describe("grid list composition", () => {
           </GridList>
         </GridListReorderGroup>,
       ),
-    ).toThrow(
+    );
+    expect(duplicateOwnerEvidence).toContain(
       'GridListItem value "duplicate" is rendered more than once inside GridListReorderGroup (in "first" and "second").',
     );
 
@@ -907,14 +921,17 @@ describe("grid list composition", () => {
       ),
     ).toThrow('GridList "first" cannot use onReorder or canReorder');
 
-    expect(() =>
+    const duplicateListEvidence = thrownEvidence(() =>
       render(
         <GridListReorderGroup value={{ first: [] }} onChange={() => {}}>
           <GridList name="first" aria-label="First copy" />
           <GridList name="first" aria-label="Second copy" />
         </GridListReorderGroup>,
       ),
-    ).toThrow('GridList name "first" is rendered more than once inside GridListReorderGroup.');
+    );
+    expect(duplicateListEvidence).toContain(
+      'GridList name "first" is rendered more than once inside GridListReorderGroup.',
+    );
 
     expect(() =>
       render(

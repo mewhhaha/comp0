@@ -1,8 +1,9 @@
-import { dataAttr, useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
+import { dataAttr } from "@comp0/core";
+import { fieldFeedback, FieldProvider, useFieldIds } from "../field.js";
 import { type RefProp } from "../shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
 import { ProviderRoot } from "./provider-root.js";
+import { useFormControlState } from "./form-control-state.js";
 import { type TextFieldProps } from "./text-field-shared.js";
 export type { TextFieldProps } from "./text-field-shared.js";
 export function TextField({
@@ -20,15 +21,15 @@ export function TextField({
 }: TextFieldProps & RefProp<HTMLElement>) {
   const autocomplete = useAutocompleteContext();
   const ids = useFieldIds(id);
-  const feedback = useFieldFeedback();
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
     props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
+  const feedback = fieldFeedback(children, resolvedInvalid);
   const resolvedValue = value ?? autocomplete?.inputValue;
   const controlsValue =
     resolvedValue !== undefined || defaultValue !== undefined || onChange !== undefined;
-  const [fieldValue, setFieldValue] = useControllableState({
+  const fieldState = useFormControlState({
     value: resolvedValue,
     defaultValue: defaultValue ?? "",
     onChange,
@@ -42,8 +43,11 @@ export function TextField({
     disabled: resolvedDisabled,
     invalid: resolvedInvalid,
     required: resolvedRequired,
-    value: controlsValue ? fieldValue : undefined,
-    setValue: controlsValue ? setFieldValue : undefined,
+    value: controlsValue ? fieldState.value : undefined,
+    setValue: controlsValue ? fieldState.setValue : undefined,
+    valueControlled: controlsValue ? fieldState.controlled : undefined,
+    resetValue: controlsValue ? fieldState.resetValue : undefined,
+    restoreValue: controlsValue ? fieldState.restoreValue : undefined,
     ...feedback,
   };
 

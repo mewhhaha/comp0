@@ -1,9 +1,10 @@
 import { type RefProp } from "../shared.js";
-import { useId } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
-import { describedBy, FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
+import { useId, useRef } from "react";
+import { composeRefs, dataAttr } from "@comp0/core";
+import { describedBy, fieldFeedback, FieldProvider, useFieldIds } from "../field.js";
 import { RadioGroupContext } from "./choices-shared.js";
 import { type RadioGroupProps } from "./choices-shared.js";
+import { useFormControlState, useFormReset } from "./form-control-state.js";
 export type { RadioGroupProps } from "./choices-shared.js";
 export function RadioGroup({
   children,
@@ -19,14 +20,16 @@ export function RadioGroup({
 }: RadioGroupProps & RefProp<HTMLFieldSetElement>) {
   const generatedName = useId();
   const ids = useFieldIds(id);
-  const feedback = useFieldFeedback();
-  const [selected, setSelected] = useControllableState({
+  const fieldsetRef = useRef<HTMLFieldSetElement>(null);
+  const selectedState = useFormControlState({
     value,
     defaultValue,
     onChange,
   });
+  const selected = selectedState.value;
   const disabled = Boolean(props.disabled);
   const resolvedInvalid = Boolean(invalid);
+  const feedback = fieldFeedback(children, resolvedInvalid);
   const resolvedRequired = Boolean(required);
   const { controlId, descriptionId, errorId, labelId } = ids;
   const fieldContext = {
@@ -39,15 +42,31 @@ export function RadioGroup({
     required: resolvedRequired,
     ...feedback,
   };
+  useFormReset({
+    controlRef: fieldsetRef,
+    controlled: selectedState.controlled,
+    form: props.form,
+    resetValue: selectedState.resetValue,
+    restoreValue: selectedState.restoreValue,
+    readValue: (element) =>
+      element.querySelector<HTMLInputElement>("input[type=radio]:checked")?.value ?? "",
+  });
 
   return (
     <FieldProvider value={fieldContext}>
       <RadioGroupContext
-        value={{ name: name ?? generatedName, value: selected, disabled, onChange: setSelected }}
+        value={{
+          name: name ?? generatedName,
+          form: props.form,
+          value: selected,
+          disabled,
+          required: resolvedRequired,
+          onChange: selectedState.setValue,
+        }}
       >
         <fieldset
           {...props}
-          ref={ref}
+          ref={composeRefs(fieldsetRef, ref)}
           id={id}
           name={name}
           disabled={disabled}

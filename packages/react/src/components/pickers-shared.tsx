@@ -18,7 +18,6 @@ export type PickerCollectionContextValue = {
   unregister: (value: string) => void;
 };
 export const SelectCollectionContext = createContext<PickerCollectionContextValue | null>(null);
-export const ComboboxCollectionContext = createContext<PickerCollectionContextValue | null>(null);
 
 export type SelectProps = Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -38,6 +37,7 @@ export type SelectProps = Omit<
   invalid?: boolean | undefined;
   required?: boolean | undefined;
   name?: string | undefined;
+  form?: string | undefined;
 };
 
 export type SelectValueProps = HTMLAttributes<HTMLSpanElement> & {
@@ -68,6 +68,7 @@ export type ComboboxProps = Omit<
   invalid?: boolean | undefined;
   required?: boolean | undefined;
   name?: string | undefined;
+  form?: string | undefined;
   filter?: ((textValue: string, inputValue: string) => boolean) | undefined;
   allowsEmptyCollection?: boolean | undefined;
 };

@@ -81,7 +81,7 @@ export function Autocomplete({
       return;
     }
     if (event.key === "Enter" && activeId) {
-      const activeItem = document.getElementById(activeId);
+      const activeItem = event.currentTarget.ownerDocument.getElementById(activeId);
       if (!activeItem || !collectionRef.current?.contains(activeItem)) {
         pendingAutoFocusValue.current = null;
         clearActive();

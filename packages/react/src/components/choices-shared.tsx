@@ -22,6 +22,7 @@ export const visuallyHiddenInputStyle: CSSProperties = {
 
 export interface CheckboxGroupContextValue {
   name?: string | undefined;
+  form?: string | undefined;
   value: string[];
   disabled?: boolean | undefined;
   onChange: (value: string, selected: boolean) => void;
@@ -41,14 +42,11 @@ export type CheckboxGroupProps = Omit<
   required?: boolean | undefined;
 };
 
-export type CheckboxProps = Omit<
-  LabelHTMLAttributes<HTMLLabelElement>,
-  "onChange" | "children" | "defaultChecked"
-> & {
+export type CheckboxProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChange" | "children"> & {
   name?: string | undefined;
   value?: string | undefined;
-  selected?: boolean | undefined;
-  defaultSelected?: boolean | undefined;
+  checked?: boolean | undefined;
+  defaultChecked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
   onChange?: (selected: boolean) => void;
@@ -68,8 +66,10 @@ export interface ChoiceState {
 
 export interface RadioGroupContextValue {
   name: string;
+  form?: string | undefined;
   value: string;
   disabled?: boolean | undefined;
+  required?: boolean | undefined;
   onChange: (value: string) => void;
 }
 
@@ -90,8 +90,8 @@ export type RadioGroupProps = Omit<
 export type RadioProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChange" | "children"> & {
   name?: string | undefined;
   value: string;
-  selected?: boolean | undefined;
-  defaultSelected?: boolean | undefined;
+  checked?: boolean | undefined;
+  defaultChecked?: boolean | undefined;
   disabled?: boolean | undefined;
   onChange?: ((selected: boolean) => void) | undefined;
   inputProps?: Omit<

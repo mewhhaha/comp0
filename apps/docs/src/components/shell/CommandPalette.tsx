@@ -107,7 +107,7 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
           >
             {entries.map((entry) => (
               <ComboboxOption
-                className="flex cursor-default items-center justify-between gap-4 rounded-lg px-3 py-2 text-base/7 text-zinc-700 data-active:bg-teal-600/10 data-active:text-teal-800 sm:text-sm/6 dark:text-zinc-300 dark:data-active:bg-teal-400/10 dark:data-active:text-teal-200"
+                className="flex cursor-default items-center justify-between gap-4 rounded-lg px-3 py-2 text-base/7 text-zinc-700 select-none data-active:bg-teal-600/10 data-active:text-teal-800 sm:text-sm/6 dark:text-zinc-300 dark:data-active:bg-teal-400/10 dark:data-active:text-teal-200"
                 key={entry.route}
                 textValue={entry.title}
                 value={entry.route}

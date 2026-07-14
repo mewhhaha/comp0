@@ -1,9 +1,12 @@
 import {
+  type ButtonHTMLAttributes,
   createContext,
   type HTMLAttributes,
   type InputHTMLAttributes,
   type RefObject,
+  useContext,
 } from "react";
+import { type InputProps } from "./text-field-shared.js";
 export type NumberFieldProps = Omit<HTMLAttributes<HTMLDivElement>, "onChange"> & {
   id?: string | undefined;
   name?: string | undefined;
@@ -17,6 +20,49 @@ export type NumberFieldProps = Omit<HTMLAttributes<HTMLDivElement>, "onChange"> 
   max?: number | undefined;
   step?: number | undefined;
 };
+
+export type NumberFieldInputProps = Omit<
+  InputProps,
+  | "type"
+  | "value"
+  | "defaultValue"
+  | "id"
+  | "name"
+  | "min"
+  | "max"
+  | "step"
+  | "disabled"
+  | "required"
+>;
+
+export type NumberFieldIncrementProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type">;
+
+export type NumberFieldDecrementProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type">;
+
+export type NumberFieldContextValue = {
+  controlId: string;
+  disabled: boolean;
+  inputRef: RefObject<HTMLInputElement | null>;
+  max: number | undefined;
+  min: number | undefined;
+  name: string | undefined;
+  required: boolean;
+  step: number | undefined;
+  value: number;
+  controlled: boolean;
+  announceValue: (value: string) => void;
+  setValue: (value: number) => void;
+  resetValue: () => void;
+  restoreValue: (value: number) => void;
+};
+
+export const NumberFieldContext = createContext<NumberFieldContextValue | null>(null);
+
+export function useNumberFieldContext(part: string) {
+  const context = useContext(NumberFieldContext);
+  if (!context) throw new Error(`${part} must be rendered inside NumberField.`);
+  return context;
+}
 
 export type SliderProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -44,6 +90,8 @@ export type RangeSliderProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValu
   orientation?: "horizontal" | "vertical" | undefined;
   /** Submits two hidden inputs named `${name}-start` and `${name}-end`. */
   name?: string | undefined;
+  /** Associates the hidden form controls with a form by id. */
+  form?: string | undefined;
 };
 
 export type RangeSliderTrackProps = HTMLAttributes<HTMLDivElement>;
@@ -61,7 +109,8 @@ export interface RangeSliderContextValue {
   disabled: boolean;
   orientation: "horizontal" | "vertical";
   trackRef: RefObject<HTMLDivElement | null>;
-  thumbRefs: RefObject<Record<RangeSliderThumbKind, HTMLElement | null>>;
+  registerThumb: (thumb: RangeSliderThumbKind, element: HTMLElement | null) => void;
+  focusThumb: (thumb: RangeSliderThumbKind) => void;
   setThumbValue: (thumb: RangeSliderThumbKind, next: number) => void;
 }
 

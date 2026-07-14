@@ -1,7 +1,7 @@
 import { type RefProp } from "../shared.js";
 import { dataAttr } from "@comp0/core";
 import { FieldProvider } from "./FieldProvider.js";
-import { useFieldFeedback, useFieldIds, describedBy } from "./field-shared.js";
+import { describedBy, fieldFeedback, useFieldIds } from "./field-shared.js";
 import { type FieldsetProps } from "./field-shared.js";
 export type { FieldsetProps } from "./field-shared.js";
 export function Fieldset({
@@ -14,9 +14,9 @@ export function Fieldset({
   ...props
 }: FieldsetProps & RefProp<HTMLFieldSetElement>) {
   const ids = useFieldIds(id);
-  const feedback = useFieldFeedback();
   const fieldDisabled = Boolean(disabled);
   const fieldInvalid = Boolean(invalid);
+  const feedback = fieldFeedback(children, fieldInvalid);
   const fieldRequired = Boolean(required);
   const { controlId, descriptionId, errorId, labelId } = ids;
   const fieldContext = {

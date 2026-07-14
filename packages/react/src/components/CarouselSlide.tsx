@@ -32,6 +32,8 @@ export function CarouselSlide({ ref, ...props }: CarouselSlideProps & RefProp<HT
       role="group"
       aria-roledescription="slide"
       aria-label={label}
+      aria-hidden={!current || undefined}
+      inert={!current}
       data-current={dataAttr(current)}
     />
   );

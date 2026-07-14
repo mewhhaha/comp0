@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createRef, type ReactElement, useEffect, useState } from "react";
+import { createRef, type ReactElement, useEffect, useRef, useState } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -10,6 +10,7 @@ import {
   mergeProps,
   sortByDocumentPosition,
   useControllableState,
+  useComposedRefs,
   useFocusRing,
 } from "./index.js";
 import { findTypeaheadMatch } from "./typeahead.js";
@@ -61,6 +62,69 @@ describe("shared utilities", () => {
     expect(callbackRef).toHaveBeenCalledWith(element);
   });
 
+  it("preserves callback ref cleanups", () => {
+    const objectRef = createRef<HTMLButtonElement>();
+    const cleanup = vi.fn();
+    const callbackRef = vi.fn(() => cleanup);
+    const ref = composeRefs(objectRef, callbackRef);
+    const element = document.createElement("button");
+
+    const composedCleanup = ref(element);
+    if (typeof composedCleanup === "function") composedCleanup();
+
+    expect(cleanup).toHaveBeenCalledOnce();
+    expect(callbackRef).toHaveBeenCalledTimes(1);
+    expect(objectRef.current).toBeNull();
+  });
+
+  it("updates changing refs without remounting the element", () => {
+    const firstCleanup = vi.fn();
+    const secondCleanup = vi.fn();
+    let assignedElement: HTMLButtonElement | null = null;
+    const firstRef = vi.fn((element: HTMLButtonElement | null) => {
+      assignedElement = element;
+      return () => {
+        firstCleanup();
+        assignedElement = null;
+      };
+    });
+    const secondRef = vi.fn((element: HTMLButtonElement | null) => {
+      assignedElement = element;
+      return () => {
+        secondCleanup();
+        assignedElement = null;
+      };
+    });
+
+    function Example() {
+      const [alternate, setAlternate] = useState(false);
+      const elementRef = useRef<HTMLButtonElement>(null);
+      const ref = useComposedRefs(elementRef, alternate ? secondRef : firstRef);
+      return (
+        <>
+          <button ref={ref}>Example</button>
+          <button type="button" onClick={() => setAlternate(true)}>
+            Change ref
+          </button>
+        </>
+      );
+    }
+
+    const result = render(<Example />);
+    const [element, changeRef] = result.container.querySelectorAll("button");
+    expect(firstRef).toHaveBeenCalledWith(element);
+
+    act(() => changeRef?.click());
+
+    expect(firstCleanup).toHaveBeenCalledOnce();
+    expect(secondRef).toHaveBeenCalledWith(element);
+    expect(assignedElement).toBe(element);
+
+    result.unmount();
+    expect(secondCleanup).toHaveBeenCalledOnce();
+    expect(assignedElement).toBeNull();
+  });
+
   it("creates presence-based data attributes", () => {
     expect(dataAttr(true)).toBe("");
     expect(dataAttr(false)).toBeUndefined();
@@ -87,6 +151,70 @@ describe("state utilities", () => {
     });
 
     expect(button?.textContent).toBe("1");
+  });
+
+  it("composes sequential uncontrolled functional updates", () => {
+    function Counter() {
+      const [value, setValue] = useControllableState({ defaultValue: 0 });
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            setValue((current) => current + 1);
+            setValue((current) => current + 1);
+          }}
+        >
+          {value}
+        </button>
+      );
+    }
+
+    const { container } = render(<Counter />);
+    const button = container.querySelector("button");
+    act(() => button?.click());
+    expect(button?.textContent).toBe("2");
+  });
+
+  it("keeps the controllable state setter stable across value changes", () => {
+    const setters: Array<(next: number | ((current: number) => number)) => void> = [];
+    function Counter() {
+      const [value, setValue] = useControllableState({ defaultValue: 0 });
+      setters.push(setValue);
+      return <button onClick={() => setValue(value + 1)}>{value}</button>;
+    }
+
+    const { container } = render(<Counter />);
+    act(() => container.querySelector("button")?.click());
+
+    expect(setters.at(-1)).toBe(setters[0]);
+  });
+
+  it("composes controlled functional update proposals", () => {
+    const changed = vi.fn();
+    function Counter() {
+      const [value, setValue] = useControllableState({
+        value: 0,
+        defaultValue: 0,
+        onChange: changed,
+      });
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            setValue((current) => current + 1);
+            setValue((current) => current + 1);
+          }}
+        >
+          {value}
+        </button>
+      );
+    }
+
+    const { container } = render(<Counter />);
+    const button = container.querySelector("button");
+    act(() => button?.click());
+    expect(button?.textContent).toBe("0");
+    expect(changed.mock.calls).toEqual([[1], [2]]);
   });
 
   it("keeps controlled state external", () => {

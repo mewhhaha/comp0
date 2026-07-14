@@ -12,6 +12,7 @@ import {
   SelectPopover,
   SelectOption,
   SelectTrigger,
+  SelectValue,
   TextField,
 } from "./index.js";
 
@@ -23,7 +24,9 @@ function HydrationFixture() {
         <Input defaultValue="Ada" />
       </TextField>
       <Select id="hydrated-select" defaultValue="one">
-        <SelectTrigger>Choose</SelectTrigger>
+        <SelectTrigger>
+          <SelectValue placeholder="Choose" />
+        </SelectTrigger>
         <SelectPopover>
           <SelectOption value="one">One</SelectOption>
         </SelectPopover>
@@ -41,6 +44,7 @@ function HydrationFixture() {
 describe("SSR contracts", () => {
   it("hydrates generated relationships and fragment roots without mismatches", async () => {
     const markup = renderToString(<HydrationFixture />);
+    expect(markup).toContain(">one<");
     const container = document.createElement("div");
     container.innerHTML = markup;
     document.body.append(container);

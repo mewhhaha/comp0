@@ -42,7 +42,7 @@ export function RangeSliderThumb({
     <div
       {...props}
       ref={composeRefs(ref, (element) => {
-        context.thumbRefs.current[thumb] = element;
+        context.registerThumb(thumb, element);
       })}
       role="slider"
       tabIndex={0}

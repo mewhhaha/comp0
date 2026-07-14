@@ -152,9 +152,6 @@ export function GridList({
     if (reorderGroup && name) {
       reorderGroup.registerRow(name, key, textValue, element, Boolean(disabled));
     }
-    if (!activeKeyRef.current && !disabled) {
-      activateRow(key);
-    }
   };
 
   const items = () => sortItems([...itemMap.current.values()]);

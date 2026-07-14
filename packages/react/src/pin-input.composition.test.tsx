@@ -72,6 +72,18 @@ describe("pin input composition", () => {
     expect(document.activeElement).toBe(fields[2]);
   });
 
+  it("fills the first empty slot when a later empty field is focused", () => {
+    const onChange = vi.fn();
+    const { fields } = renderPin({ onChange });
+
+    focus(fields[3]!);
+    fireInput(fields[3]!, "4");
+
+    expect(onChange).toHaveBeenLastCalledWith("4");
+    expect(fields.map((field) => field.value)).toEqual(["4", "", "", ""]);
+    expect(document.activeElement).toBe(fields[1]);
+  });
+
   it("filters characters by type", () => {
     const numeric = renderPin();
     focus(numeric.fields[0]!);

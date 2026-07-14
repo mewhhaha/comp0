@@ -1,9 +1,10 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
+import { dataAttr, useIsoLayoutEffect } from "@comp0/core";
+import { fieldFeedback, FieldProvider, useFieldIds } from "../field.js";
 import { ComboBoxRootContext, type RefProp } from "../shared.js";
 import { PopoverContext, usePopoverState } from "./overlay-shared.js";
 import { defaultFilter, type ComboboxProps } from "./pickers-shared.js";
+import { useFormControlState, useFormReset } from "./form-control-state.js";
 export type { ComboboxProps } from "./pickers-shared.js";
 export function Combobox({
   value,
@@ -21,6 +22,7 @@ export function Combobox({
   invalid,
   required,
   name,
+  form,
   as,
   id,
   children,
@@ -28,7 +30,6 @@ export function Combobox({
   ...props
 }: ComboboxProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
-  const feedback = useFieldFeedback();
   const popover = usePopoverState({
     open,
     defaultOpen,
@@ -38,23 +39,46 @@ export function Combobox({
   });
   const [activeKey, setActiveKey] = useState("");
   const [activeId, setActiveId] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const hiddenInputRef = useRef<HTMLInputElement | null>(null);
   const itemTextRef = useRef(new Map<string, ReactNode>());
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
     props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
-  const [inputValue, setInputValue] = useControllableState({
+  const feedback = fieldFeedback(children, resolvedInvalid);
+  const inputState = useFormControlState({
     value: inputValueProp,
     defaultValue: defaultInputValue,
     onChange: onInputChange,
   });
-  const [selected, setSelected] = useControllableState({
+  const inputValue = inputState.value;
+  const selectedState = useFormControlState({
     value,
     defaultValue: defaultValue ?? "",
     onChange,
   });
+  const selected = selectedState.value;
+  useFormReset({
+    controlRef: inputRef,
+    controlled: inputState.controlled,
+    form,
+    resetValue: inputState.resetValue,
+    restoreValue: inputState.restoreValue,
+    readValue: (element) => element.value,
+  });
+  useFormReset({
+    controlRef: hiddenInputRef,
+    controlled: selectedState.controlled,
+    form,
+    resetValue: selectedState.resetValue,
+    restoreValue: selectedState.restoreValue,
+    readValue: (element) => element.value,
+  });
   const selectedRef = useRef(selected);
-  selectedRef.current = selected;
+  useIsoLayoutEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
   const [selectedText, setSelectedText] = useState(selected);
   useEffect(() => {
     const text = itemTextRef.current.get(selected);
@@ -70,10 +94,10 @@ export function Combobox({
     itemTextRef.current.delete(key);
   }, []);
   const setSelectedKey = (key: string) => {
-    setSelected(key);
+    selectedState.setValue(key);
     const text = itemTextRef.current.get(key);
     setSelectedText(typeof text === "string" ? text : key);
-    if (typeof text === "string") setInputValue(text);
+    if (typeof text === "string") inputState.setValue(text);
   };
   const isItemVisible = (textValue: string) =>
     allowsEmptyCollection || inputValue === "" || filter(textValue, inputValue);
@@ -103,9 +127,11 @@ export function Combobox({
     listBoxId: `${controlId}-listbox`,
     labelId,
     descriptionId,
+    form,
+    inputRef,
     setActiveKey,
     setActiveId,
-    setInputValue,
+    setInputValue: inputState.setValue,
     setSelectedKey,
     registerItem,
     unregisterItem,
@@ -114,14 +140,14 @@ export function Combobox({
 
   const content = (
     <>
-      {name && (
-        <input
-          type="hidden"
-          name={name}
-          value={selected || inputValue}
-          disabled={resolvedDisabled}
-        />
-      )}
+      <input
+        ref={hiddenInputRef}
+        type="hidden"
+        form={form}
+        name={name}
+        value={selected || inputValue}
+        disabled={resolvedDisabled}
+      />
       {children}
     </>
   );

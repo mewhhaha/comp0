@@ -11,7 +11,7 @@ export type DocsNavigationProps = {
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return [
-    "flex min-w-0 items-center rounded-lg px-3 py-2.5 text-base/7 text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 sm:text-sm/6 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400",
+    "flex min-w-0 items-center rounded-lg px-3 py-2.5 text-base/7 text-zinc-600 select-none outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 sm:text-sm/6 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400",
     isActive ? "bg-zinc-950/5 text-zinc-950 dark:bg-white/5 dark:text-white" : "",
   ]
     .filter(Boolean)

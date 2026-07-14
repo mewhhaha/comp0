@@ -52,7 +52,7 @@ export function ComboboxTrigger({
       if (event.defaultPrevented) return;
       const nextOpen = !popover.open;
       popover.setOpen(nextOpen);
-      if (nextOpen) document.getElementById(combobox.inputId)?.focus();
+      if (nextOpen) event.currentTarget.ownerDocument.getElementById(combobox.inputId)?.focus();
     },
   });
 }

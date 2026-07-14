@@ -202,6 +202,33 @@ describe("picker composition", () => {
     expect(new FormData(container.querySelector("form")!).get("size")).toBe("large");
   });
 
+  it("navigates select options in their current document order after reordering", () => {
+    function ReorderedSelect({ reversed }: { reversed: boolean }) {
+      let options = [
+        <SelectOption key="free" value="free">
+          Free
+        </SelectOption>,
+        <SelectOption key="pro" value="pro">
+          Pro
+        </SelectOption>,
+      ];
+      if (reversed) options = [...options].reverse();
+      return (
+        <Select>
+          <SelectTrigger>Plan</SelectTrigger>
+          <SelectPopover>{options}</SelectPopover>
+        </Select>
+      );
+    }
+
+    const { container, rerender } = render(<ReorderedSelect reversed={false} />);
+    rerender(<ReorderedSelect reversed />);
+    fireClick(container.querySelector("button")!);
+    expect(document.activeElement?.textContent).toBe("Pro");
+    fireKeyDown(document.activeElement!, "ArrowDown");
+    expect(document.activeElement?.textContent).toBe("Free");
+  });
+
   it("navigates labelled combobox opt groups and serializes a committed option", () => {
     const { container } = render(
       <form>
@@ -325,6 +352,29 @@ describe("picker composition", () => {
     expect(changed).toHaveBeenLastCalledWith("solid");
     fireKeyDown(items[1]!, "ArrowUp");
     expect(items[0]?.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("keeps an enabled option reachable when the selected value is missing or disabled", () => {
+    const { container, rerender } = render(
+      <ListBox aria-label="Libraries" value="missing">
+        <ListBoxItem value="react">React</ListBoxItem>
+        <ListBoxItem value="solid">Solid</ListBoxItem>
+      </ListBox>,
+    );
+    let options = container.querySelectorAll<HTMLElement>("[role='option']");
+    expect(options[0]!.tabIndex).toBe(0);
+
+    rerender(
+      <ListBox aria-label="Libraries" value="react">
+        <ListBoxItem value="react" disabled>
+          React
+        </ListBoxItem>
+        <ListBoxItem value="solid">Solid</ListBoxItem>
+      </ListBox>,
+    );
+    options = container.querySelectorAll<HTMLElement>("[role='option']");
+    expect(options[0]!.hasAttribute("tabindex")).toBe(false);
+    expect(options[1]!.tabIndex).toBe(0);
   });
 
   it("preserves explicit trigger labels and enforces required picker values", () => {

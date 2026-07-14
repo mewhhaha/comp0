@@ -78,6 +78,25 @@ describe("tag group composition", () => {
     expect(document.activeElement).toBe(tags[1]);
   });
 
+  it("moves focus to the grid when removing its only tag", () => {
+    const onRemove = vi.fn();
+    const { container } = render(
+      <TagGroup onRemove={onRemove}>
+        <TagList aria-label="Filters">
+          <Tag value="news">News</Tag>
+        </TagList>
+      </TagGroup>,
+    );
+    const grid = container.querySelector<HTMLElement>("[role='grid']")!;
+    const tag = container.querySelector<HTMLElement>("[role='row']")!;
+    tag.focus();
+
+    fireKeyDown(tag, "Delete");
+
+    expect(onRemove).toHaveBeenLastCalledWith("news");
+    expect(document.activeElement).toBe(grid);
+  });
+
   it("selects on tag click but not when clicking a control inside", () => {
     const { onChange, tags } = renderTags();
     fireClick(tags[1]!);

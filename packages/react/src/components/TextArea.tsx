@@ -6,11 +6,14 @@ import {
   useFocusRing,
   useHover,
 } from "@comp0/core";
+import { useRef } from "react";
 import { describedBy, useFieldContext } from "../field.js";
 import { type RefProp } from "../shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
 import { type TextAreaProps } from "./text-field-shared.js";
+import { useFormReset } from "./form-control-state.js";
 export type { TextAreaProps } from "./text-field-shared.js";
+const ignoreReset = () => undefined;
 export function TextArea({
   id,
   disabled: disabledProp,
@@ -23,6 +26,7 @@ export function TextArea({
 }: TextAreaProps & RefProp<HTMLTextAreaElement>) {
   const autocomplete = useAutocompleteContext();
   const field = useFieldContext();
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const disabled = Boolean(disabledProp ?? field?.disabled);
   const required = Boolean(requiredProp ?? field?.required);
   const { focusProps, isFocused, isFocusVisible } = useFocusRing<HTMLTextAreaElement>({ disabled });
@@ -30,11 +34,19 @@ export function TextArea({
   const description = describedBy(field, ariaDescribedBy);
   const textValue = field?.value ?? props.value ?? autocomplete?.inputValue;
   const invalid = props["aria-invalid"] ?? (field?.invalid || undefined);
+  useFormReset({
+    controlRef: textAreaRef,
+    controlled: field?.valueControlled ?? true,
+    form: props.form,
+    resetValue: field?.resetValue ?? ignoreReset,
+    restoreValue: field?.restoreValue ?? ignoreReset,
+    readValue: (element) => element.value,
+  });
 
   return (
     <textarea
       {...mergeProps(props, mergeInteractionProps(focusProps, hoverProps))}
-      ref={composeRefs(ref, autocomplete?.inputRef)}
+      ref={composeRefs(ref, autocomplete?.inputRef, textAreaRef)}
       id={id ?? field?.controlId}
       value={textValue}
       disabled={disabled}

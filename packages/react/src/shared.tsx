@@ -105,6 +105,8 @@ export type ComboBoxRootContextValue = {
   listBoxId: string;
   labelId: string;
   descriptionId: string;
+  form: string | undefined;
+  inputRef: RefObject<HTMLInputElement | null>;
   setActiveKey: (key: string) => void;
   setActiveId: (id: string) => void;
   setInputValue: (value: string) => void;
@@ -123,8 +125,11 @@ export function useComboBoxRootContext() {
 export interface SearchFieldContextValue {
   value: string;
   disabled: boolean;
+  controlled: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   clear: () => void;
+  resetValue: () => void;
+  restoreValue: (value: string) => void;
   submit: (value?: string) => void;
   setValue: (value: string) => void;
 }

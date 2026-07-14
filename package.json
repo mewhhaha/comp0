@@ -1,8 +1,31 @@
 {
   "name": "comp0",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Reserved package name for the comp0 headless React component library.",
+  "keywords": [
+    "accessibility",
+    "components",
+    "headless",
+    "react",
+    "ui"
+  ],
+  "homepage": "https://comp0-docs.horrible.workers.dev",
+  "bugs": {
+    "url": "https://github.com/mewhhaha/comp0/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mewhhaha/comp0.git"
+  },
+  "files": [
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm -r --if-present build",
     "dev": "pnpm --filter @comp0/docs dev",

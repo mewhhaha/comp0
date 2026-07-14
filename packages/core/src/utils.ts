@@ -13,30 +13,41 @@ import {
 export type AnyEventHandler = (event: { defaultPrevented?: boolean }) => void;
 /** A callback ref, object ref, or omitted ref. */
 export type PossibleRef<T> = Ref<T> | undefined;
+type RefCleanup = () => void;
 
 /** Whether DOM globals are available in the current runtime. */
 export const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
 /** Uses a layout effect in the browser and an effect during server rendering. */
 export const useIsoLayoutEffect = isBrowser ? useLayoutEffect : useEffect;
 
-/** Assigns a value to either form of React ref. */
-export function assignRef<T>(ref: PossibleRef<T>, value: T | null) {
+/** Assigns a value to either form of React ref and returns its React 19 cleanup. */
+export function assignRef<T>(ref: PossibleRef<T>, value: T | null): RefCleanup | undefined {
   if (typeof ref === "function") {
-    ref(value);
-    return;
+    const cleanup = ref(value);
+    if (typeof cleanup === "function") return cleanup;
+    if (value !== null) return () => ref(null);
+    return undefined;
   }
 
   if (ref) {
     (ref as MutableRefObject<T | null>).current = value;
+    if (value !== null) {
+      return () => {
+        if (ref.current === value) ref.current = null;
+      };
+    }
   }
+  return undefined;
 }
 
-/** Combines refs into one stable callback ref. */
+/** Combines refs into one callback ref that preserves every ref cleanup. */
 export function composeRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T> {
   return (value) => {
-    for (const ref of refs) {
-      assignRef(ref, value);
-    }
+    const cleanups = refs.flatMap((ref) => assignRef(ref, value) ?? []);
+    if (value === null || cleanups.length === 0) return undefined;
+    return () => {
+      for (const cleanup of cleanups) cleanup();
+    };
   };
 }
 
@@ -44,15 +55,45 @@ export function composeRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T> {
 export function useComposedRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T>;
 export function useComposedRefs(...refs: PossibleRef<unknown>[]): RefCallback<unknown> {
   const refsRef = useRef(refs);
+  const valueRef = useRef<unknown | null>(null);
+  const assignmentsRef = useRef<
+    Array<{ ref: PossibleRef<unknown>; cleanup: RefCleanup | undefined }>
+  >([]);
 
   useIsoLayoutEffect(() => {
+    const value = valueRef.current;
     refsRef.current = refs;
+    if (value === null) return;
+
+    const previousAssignments = [...assignmentsRef.current];
+    const nextAssignments = refs.map((ref) => {
+      const previousIndex = previousAssignments.findIndex((assignment) => assignment.ref === ref);
+      if (previousIndex === -1) return { ref, cleanup: undefined, pending: true };
+      const [previous] = previousAssignments.splice(previousIndex, 1);
+      return { ...previous!, pending: false };
+    });
+    for (const assignment of previousAssignments) assignment.cleanup?.();
+    assignmentsRef.current = nextAssignments.map(({ ref, cleanup, pending }) => ({
+      ref,
+      cleanup: pending ? assignRef(ref, value) : cleanup,
+    }));
   });
 
   return useCallback((value: unknown | null) => {
-    for (const ref of refsRef.current) {
-      assignRef(ref, value);
-    }
+    for (const assignment of assignmentsRef.current) assignment.cleanup?.();
+    assignmentsRef.current = [];
+    valueRef.current = value;
+    if (value === null) return undefined;
+
+    assignmentsRef.current = refsRef.current.map((ref) => ({
+      ref,
+      cleanup: assignRef(ref, value),
+    }));
+    return () => {
+      for (const assignment of assignmentsRef.current) assignment.cleanup?.();
+      assignmentsRef.current = [];
+      valueRef.current = null;
+    };
   }, []);
 }
 

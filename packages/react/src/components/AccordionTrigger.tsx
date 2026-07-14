@@ -16,7 +16,7 @@ export function AccordionTrigger({
   const item = useContext(AccordionItemContext);
   const resolvedDisabled = Boolean(disabled || item?.disabled);
   const open = item?.open ?? false;
-  const itemValue = item?.value ?? props.id ?? "";
+  const itemValue = item?.value ?? "";
 
   const triggerRef = (element: HTMLButtonElement | null) => {
     if (item) accordion?.registerTrigger(item.value, element, resolvedDisabled);
@@ -27,7 +27,7 @@ export function AccordionTrigger({
     <button
       {...props}
       ref={triggerRef}
-      id={props.id ?? item?.triggerId}
+      id={item?.triggerId}
       type={props.type ?? "button"}
       aria-expanded={open}
       aria-controls={item?.panelId}

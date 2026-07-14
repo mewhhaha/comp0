@@ -1,5 +1,5 @@
 import { createElement, Fragment } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { dataSlot, Slot, type RefProp } from "../shared.js";
 import {
   triggerAnchorStyle,
@@ -19,18 +19,16 @@ export function TooltipTrigger({
   ...props
 }: TooltipTriggerProps & RefProp<HTMLButtonElement>) {
   const tooltip = useTooltipContext();
-  const triggerRef = (element: HTMLButtonElement | null) => {
-    tooltip?.setTriggerElement(element);
-    composeRefs(ref)(element);
-  };
+  const triggerRef = useComposedRefs(ref, tooltip?.setTriggerElement);
   const Trigger = as === Fragment ? Slot : (as ?? "button");
+  const isNativeButton = Trigger === "button";
   let ariaDescribedBy = props["aria-describedby"];
   if (tooltip?.open) ariaDescribedBy = ariaDescribedBy ?? tooltip.contentId;
   return createElement(Trigger, {
     ...props,
     ref: triggerRef,
     id: props.id ?? tooltip?.triggerId,
-    type: as ? undefined : (props.type ?? "button"),
+    type: isNativeButton ? (props.type ?? "button") : undefined,
     style: triggerAnchorStyle(tooltip?.triggerId, style),
     "aria-describedby": ariaDescribedBy,
     "data-open": dataAttr(tooltip?.open),

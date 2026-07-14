@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import { parseISODate } from "@comp0/core";
 
 export type CalendarContextValue = {
+  disabled: boolean;
   /** The date whose grid cell holds the roving tabIndex, as "YYYY-MM-DD". */
   focusedDate: string;
   headerId: string;

@@ -69,6 +69,22 @@ describe("split button composition", () => {
     expect(menuTrigger.tabIndex).toBe(0);
   });
 
+  it("drops an aria-disabled polymorphic action from the tab stop", () => {
+    const { container } = render(
+      <SplitButton aria-label="Save">
+        <Button as="a" href="/save" disabled>
+          Save
+        </Button>
+        <Button>More</Button>
+      </SplitButton>,
+    );
+    const primary = container.querySelector<HTMLAnchorElement>("a")!;
+    const secondary = container.querySelector<HTMLButtonElement>("button")!;
+
+    expect(primary.tabIndex).toBe(-1);
+    expect(secondary.tabIndex).toBe(0);
+  });
+
   it("opens the menu from its own button and restores focus on Escape", () => {
     const { menuTrigger, surface } = renderSplit();
     expect(surface.hidden).toBe(true);

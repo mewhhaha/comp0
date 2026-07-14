@@ -1,4 +1,11 @@
-import { Fragment, useLayoutEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import { composeRefs } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import { ToastRegionContext, useToastContext, type ToastRecord } from "./toast-shared.js";
@@ -23,6 +30,10 @@ export function ToastRegion({
   const context = useToastContext();
   const regionRef = useRef<HTMLDivElement | null>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const contextRef = useRef(context);
+  const pointerPauseRef = useRef(false);
+  const focusPauseRef = useRef(false);
+  contextRef.current = context;
   const toasts = context?.toasts ?? [];
   const mounted = Boolean(forceMount || toasts.length > 0);
 
@@ -41,6 +52,16 @@ export function ToastRegion({
     }
   }, [mounted]);
 
+  useEffect(() => {
+    if (!mounted) return;
+    return () => {
+      if (pointerPauseRef.current) contextRef.current?.resume();
+      if (focusPauseRef.current) contextRef.current?.resume();
+      pointerPauseRef.current = false;
+      focusPauseRef.current = false;
+    };
+  }, [mounted]);
+
   if (!mounted) return null;
   return (
     <ToastRegionContext value={{ regionRef, restoreFocusRef }}>
@@ -53,11 +74,15 @@ export function ToastRegion({
         data-slot={dataSlot(props, "toast-region")}
         onPointerEnter={(event) => {
           onPointerEnter?.(event);
-          if (!event.defaultPrevented) context?.pause();
+          if (event.defaultPrevented || pointerPauseRef.current) return;
+          pointerPauseRef.current = true;
+          context?.pause();
         }}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);
-          if (!event.defaultPrevented) context?.resume();
+          if (event.defaultPrevented || !pointerPauseRef.current) return;
+          pointerPauseRef.current = false;
+          context?.resume();
         }}
         onFocus={(event) => {
           onFocus?.(event);
@@ -66,6 +91,8 @@ export function ToastRegion({
           // Focus moves inside the region keep the existing pause.
           if (from && regionRef.current?.contains(from)) return;
           if (from) restoreFocusRef.current = from;
+          if (focusPauseRef.current) return;
+          focusPauseRef.current = true;
           context?.pause();
         }}
         onBlur={(event) => {
@@ -73,6 +100,8 @@ export function ToastRegion({
           if (event.defaultPrevented) return;
           const to = event.relatedTarget as Node | null;
           if (to && regionRef.current?.contains(to)) return;
+          if (!focusPauseRef.current) return;
+          focusPauseRef.current = false;
           context?.resume();
         }}
       >

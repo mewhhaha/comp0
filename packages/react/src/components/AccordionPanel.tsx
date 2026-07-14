@@ -6,7 +6,6 @@ import { type AccordionPanelProps } from "./accordion-shared.js";
 export type { AccordionPanelProps } from "./accordion-shared.js";
 
 export function AccordionPanel({
-  id,
   role = "region",
   ref,
   ...props
@@ -18,7 +17,7 @@ export function AccordionPanel({
     <div
       {...props}
       ref={ref}
-      id={id ?? item?.panelId}
+      id={item?.panelId}
       role={role}
       hidden={!open}
       aria-labelledby={item?.triggerId}

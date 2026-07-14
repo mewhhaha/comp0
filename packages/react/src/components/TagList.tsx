@@ -54,6 +54,7 @@ export function TagList({
         ref={ref}
         id={id ?? field?.controlId}
         role="grid"
+        tabIndex={-1}
         aria-describedby={describedBy(field, ariaDescribedBy) || undefined}
         aria-label={ariaLabel}
         aria-labelledby={labelledBy}
@@ -74,6 +75,8 @@ export function TagList({
             if (neighbor) {
               setActiveKey(neighbor.key);
               neighbor.element?.focus();
+            } else {
+              event.currentTarget.focus();
             }
             return;
           }

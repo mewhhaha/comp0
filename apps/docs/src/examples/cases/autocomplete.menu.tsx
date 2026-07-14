@@ -54,7 +54,7 @@ export function Example() {
               {commands.map((command) => (
                 <MenuItem
                   key={command}
-                  className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 data-active:bg-teal-100 data-active:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800 dark:data-active:bg-teal-950 dark:data-active:text-teal-50"
+                  className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 data-active:bg-teal-100 data-active:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800 dark:data-active:bg-teal-950 dark:data-active:text-teal-50"
                   onClick={() => setLastCommand(command)}
                   value={command}
                 >

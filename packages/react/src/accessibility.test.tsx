@@ -8,6 +8,13 @@ import {
   AccordionTrigger,
   Autocomplete,
   Checkbox,
+  ColorArea,
+  ColorAreaThumb,
+  ColorPicker,
+  ColorPickerInput,
+  ColorPickerPopover,
+  ColorPickerTrigger,
+  ColorSlider,
   Combobox,
   ComboboxPopover,
   ComboboxInput,
@@ -22,6 +29,10 @@ import {
   Label,
   ListBox,
   ListBoxItem,
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
   PasswordField,
   PasswordFieldInput,
   PasswordFieldToggle,
@@ -55,6 +66,23 @@ describe("retained accessibility contracts", () => {
           <PasswordFieldInput autoComplete="current-password" />
           <PasswordFieldToggle />
         </PasswordField>
+        <NumberField id="tickets" defaultValue={2} min={1} max={10}>
+          <Label>Tickets</Label>
+          <NumberFieldDecrement aria-label="Decrease tickets" />
+          <NumberFieldInput />
+          <NumberFieldIncrement aria-label="Increase tickets" />
+        </NumberField>
+        <ColorPicker id="accent-color" defaultValue="#0d9488" defaultOpen>
+          <Label>Accent color</Label>
+          <ColorPickerTrigger />
+          <ColorPickerPopover>
+            <ColorArea aria-label="Accent saturation and brightness">
+              <ColorAreaThumb />
+            </ColorArea>
+            <ColorSlider channel="hue" />
+            <ColorPickerInput />
+          </ColorPickerPopover>
+        </ColorPicker>
         <Checkbox name="updates">Product updates</Checkbox>
         <RadioGroup name="plan" defaultValue="free">
           <legend>Plan</legend>

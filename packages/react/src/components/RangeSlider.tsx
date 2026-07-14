@@ -1,6 +1,7 @@
 import { useRef, type CSSProperties } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
+import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
+import { useFormControlState, useFormReset } from "./form-control-state.js";
 import {
   RangeSliderContext,
   snapToStep,
@@ -28,29 +29,33 @@ export function RangeSlider({
   disabled,
   orientation = "horizontal",
   name,
+  form,
   style,
   children,
   ref,
   ...props
 }: RangeSliderProps & RefProp<HTMLDivElement>) {
-  const [range, setRange] = useControllableState<RangeSliderValue>({
+  const rangeState = useFormControlState<RangeSliderValue>({
     value,
     defaultValue: defaultValue ?? [min, max],
     onChange,
   });
+  const range = rangeState.value;
   const resolvedDisabled = Boolean(disabled);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const thumbRefs = useRef<Record<RangeSliderThumbKind, HTMLElement | null>>({
     start: null,
     end: null,
   });
+  const startInputRef = useRef<HTMLInputElement | null>(null);
+  const endInputRef = useRef<HTMLInputElement | null>(null);
   const [start, end] = range;
   const span = max - min;
   const fraction = (thumbValue: number) => (span === 0 ? 0 : (thumbValue - min) / span);
 
   const setThumbValue = (thumb: RangeSliderThumbKind, next: number) => {
     if (resolvedDisabled) return;
-    setRange((current) => {
+    rangeState.setValue((current) => {
       const [currentStart, currentEnd] = current;
       const snapped = snapToStep(next, min, max, step);
       let nextStart = currentStart;
@@ -62,6 +67,17 @@ export function RangeSlider({
       return [nextStart, nextEnd];
     });
   };
+  useFormReset({
+    controlRef: startInputRef,
+    controlled: rangeState.controlled,
+    form,
+    resetValue: rangeState.resetValue,
+    restoreValue: rangeState.restoreValue,
+    readValue: (element): RangeSliderValue => [
+      Number(element.value),
+      Number(endInputRef.current?.value ?? end),
+    ],
+  });
 
   return (
     <RangeSliderContext
@@ -73,7 +89,12 @@ export function RangeSlider({
         disabled: resolvedDisabled,
         orientation,
         trackRef,
-        thumbRefs,
+        registerThumb(thumb, element) {
+          thumbRefs.current[thumb] = element;
+        },
+        focusThumb(thumb) {
+          thumbRefs.current[thumb]?.focus();
+        },
         setThumbValue,
       }}
     >
@@ -94,8 +115,22 @@ export function RangeSlider({
         {children}
         {name && (
           <>
-            <input type="hidden" name={`${name}-start`} value={start} disabled={resolvedDisabled} />
-            <input type="hidden" name={`${name}-end`} value={end} disabled={resolvedDisabled} />
+            <input
+              ref={startInputRef}
+              type="hidden"
+              form={form}
+              name={`${name}-start`}
+              value={start}
+              disabled={resolvedDisabled}
+            />
+            <input
+              ref={endInputRef}
+              type="hidden"
+              form={form}
+              name={`${name}-end`}
+              value={end}
+              disabled={resolvedDisabled}
+            />
           </>
         )}
       </div>

@@ -1,7 +1,7 @@
 export {
   describedBy,
+  fieldFeedback,
   useFieldContext,
-  useFieldFeedback,
   useFieldIds,
 } from "./components/field-shared.js";
 export * from "./components/FieldProvider.js";

@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import {
   placementSurfaceStyle,
@@ -26,10 +26,11 @@ export function TooltipPopover({
   // Manual mode keeps the tooltip in the top layer without light dismiss;
   // the trigger's hover and focus handlers own the open state.
   const { onNativeToggle, surfaceRef } = usePopoverSurface<HTMLDivElement>("manual");
+  const composedRef = useComposedRefs(surfaceRef, ref);
   const Content = as ?? "div";
   return createElement(Content, {
     ...props,
-    ref: composeRefs(surfaceRef, ref),
+    ref: composedRef,
     id: props.id ?? tooltip?.contentId,
     role: props.role ?? "tooltip",
     popover: "manual",

@@ -39,7 +39,7 @@ export function RangeSliderTrack({
         let nearest: "start" | "end" = "end";
         if (Math.abs(next - start) < Math.abs(next - end)) nearest = "start";
         context.setThumbValue(nearest, next);
-        context.thumbRefs.current[nearest]?.focus();
+        context.focusThumb(nearest);
       }}
     />
   );

@@ -28,7 +28,7 @@ export function ListBoxItem({
   const registerListBoxItem = listBox?.register;
   const resolvedDisabled = Boolean(disabled);
   const selected = listBox?.selectedKey === value;
-  const collectionActive = !listBox?.selectedKey && listBox?.activeKey === value;
+  const collectionActive = listBox?.activeKey === value;
   const virtualActive = autocomplete?.activeId === id;
   const active = autocomplete?.disableVirtualFocus === false ? virtualActive : collectionActive;
   let tabIndex: number | undefined = -1;

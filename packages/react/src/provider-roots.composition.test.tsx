@@ -58,7 +58,7 @@ describe("provider roots", () => {
           <Input />
         </TextField>
         <Accordion defaultValue="first">
-          <AccordionItem value="first">
+          <AccordionItem id="shipping" value="first">
             <AccordionHeader>
               <AccordionTrigger>First</AccordionTrigger>
             </AccordionHeader>
@@ -86,6 +86,10 @@ describe("provider roots", () => {
 
     expect(container.querySelector("section")?.dataset.testid).toBe("field");
     expect(container.querySelectorAll("[data-slot='accordion']")).toHaveLength(0);
+    const firstPanel = container.querySelector<HTMLElement>("#shipping-panel")!;
+    expect(accordionTriggers[0]!.id).toBe("shipping-trigger");
+    expect(accordionTriggers[0]!.getAttribute("aria-controls")).toBe(firstPanel.id);
+    expect(firstPanel.getAttribute("aria-labelledby")).toBe(accordionTriggers[0]!.id);
     fireKeyDown(accordionTriggers[0]!, "ArrowDown");
     expect(document.activeElement).toBe(accordionTriggers[1]);
     fireClick(accordionTriggers[1]!);

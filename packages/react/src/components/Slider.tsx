@@ -1,7 +1,8 @@
 import { type RefProp } from "../shared.js";
-import { type CSSProperties } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
+import { useRef, type CSSProperties } from "react";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type SliderProps } from "./range-shared.js";
+import { useFormControlState, useFormReset } from "./form-control-state.js";
 export type { SliderProps } from "./range-shared.js";
 export function Slider({
   value,
@@ -15,17 +16,28 @@ export function Slider({
   ref,
   ...props
 }: SliderProps & RefProp<HTMLInputElement>) {
-  const [sliderValue, setSliderValue] = useControllableState({
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const composedRef = useComposedRefs(inputRef, ref);
+  const sliderState = useFormControlState({
     value,
     defaultValue,
     onChange,
   });
+  const sliderValue = sliderState.value;
   const resolvedDisabled = Boolean(disabled);
+  useFormReset({
+    controlRef: inputRef,
+    controlled: sliderState.controlled,
+    form: props.form,
+    resetValue: sliderState.resetValue,
+    restoreValue: sliderState.restoreValue,
+    readValue: (element) => element.valueAsNumber,
+  });
 
   return (
     <input
       {...props}
-      ref={ref}
+      ref={composedRef}
       type="range"
       min={min}
       max={max}
@@ -35,7 +47,7 @@ export function Slider({
       data-disabled={dataAttr(resolvedDisabled)}
       data-orientation="horizontal"
       style={{ ...style, "--comp0-slider-value": `${sliderValue}` } as CSSProperties}
-      onChange={(event) => setSliderValue(event.currentTarget.valueAsNumber)}
+      onChange={(event) => sliderState.setValue(event.currentTarget.valueAsNumber)}
     />
   );
 }

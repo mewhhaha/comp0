@@ -243,6 +243,23 @@ describe("calendar", () => {
     expect(header.textContent).toBe("March 2024");
     expect(next.disabled).toBe(true);
   });
+
+  it("clamps keyboard focus when bounds change without a selection", () => {
+    const view = (min?: string) => (
+      <Calendar locale="en-GB" min={min}>
+        <CalendarHeader />
+        <CalendarGrid />
+      </Calendar>
+    );
+    const { container, rerender } = render(view());
+
+    rerender(view("2099-01-01"));
+
+    const firstAllowed = dayButton(container, "2099-01-01");
+    expect(firstAllowed.disabled).toBe(false);
+    expect(firstAllowed.tabIndex).toBe(0);
+    expect(container.querySelector("button[tabindex='0']:disabled")).toBeNull();
+  });
 });
 
 describe("date picker composition", () => {
@@ -288,6 +305,42 @@ describe("date picker composition", () => {
     expect(document.activeElement).toBe(dayButton(container, "2024-02-15"));
   });
 
+  it("keeps the explicit id on the field when the picker renders a wrapper", () => {
+    const { container } = render(
+      <DatePicker as="div" id="trip">
+        <DateField />
+        <DatePickerTrigger />
+      </DatePicker>,
+    );
+
+    expect(container.querySelectorAll("#trip")).toHaveLength(1);
+    expect(container.querySelector("#trip")?.tagName).toBe("INPUT");
+  });
+
+  it("disables the open calendar from the picker root", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <DatePicker disabled defaultOpen defaultValue="2024-02-15" onChange={onChange}>
+        <DatePickerTrigger />
+        <DatePickerPopover>
+          <Calendar locale="en-GB">
+            <CalendarPreviousButton />
+            <CalendarNextButton />
+            <CalendarGrid />
+          </Calendar>
+        </DatePickerPopover>
+      </DatePicker>,
+    );
+
+    const selectedDay = dayButton(container, "2024-02-15");
+    expect(selectedDay.disabled).toBe(true);
+    expect(
+      container.querySelector<HTMLButtonElement>("[aria-label='Previous month']")?.disabled,
+    ).toBe(true);
+    fireClick(selectedDay);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("closes on selection, updates the DateField, and restores trigger focus", () => {
     const { container, input, onChange, surface, trigger } = renderPicker();
 
@@ -298,6 +351,33 @@ describe("date picker composition", () => {
     expect(surface.hidden).toBe(true);
     expect(input.value).toBe("2024-02-16");
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("serializes and resets an uncontrolled date picker", async () => {
+    const { container } = render(
+      <form>
+        <DatePicker name="trip" defaultValue="2024-02-15">
+          <DateField />
+          <DatePickerPopover>
+            <Calendar locale="en-GB">
+              <CalendarGrid />
+            </Calendar>
+          </DatePickerPopover>
+        </DatePicker>
+      </form>,
+    );
+    const form = container.querySelector("form")!;
+    const field = container.querySelector<HTMLInputElement>("input:not([aria-hidden])")!;
+
+    fireClick(dayButton(container, "2024-02-16"));
+    expect(new FormData(form).get("trip")).toBe("2024-02-16");
+
+    await act(async () => {
+      form.reset();
+      await Promise.resolve();
+    });
+    expect(field.value).toBe("2024-02-15");
+    expect(new FormData(form).get("trip")).toBe("2024-02-15");
   });
 
   it("closes on Escape without changing the value", () => {

@@ -9,15 +9,28 @@ import {
 
 export type AccordionValue = string | string[];
 
-export type AccordionProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "onChange"> & {
+type AccordionBaseProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "onChange"> & {
   as?: ElementType | typeof Fragment | undefined;
-  type?: "single" | "multiple" | undefined;
-  value?: AccordionValue | undefined;
-  defaultValue?: AccordionValue | undefined;
+};
+
+type SingleAccordionProps = {
+  type?: "single" | undefined;
+  value?: string | undefined;
+  defaultValue?: string | undefined;
   /** Receives the next expanded item value rather than a DOM ChangeEvent. */
-  onChange?: ((value: AccordionValue) => void) | undefined;
+  onChange?: ((value: string) => void) | undefined;
   collapsible?: boolean | undefined;
 };
+
+type MultipleAccordionProps = {
+  type: "multiple";
+  value?: string[] | undefined;
+  defaultValue?: string[] | undefined;
+  onChange?: ((value: string[]) => void) | undefined;
+  collapsible?: never;
+};
+
+export type AccordionProps = AccordionBaseProps & (SingleAccordionProps | MultipleAccordionProps);
 
 export interface AccordionTriggerRecord {
   key: string;
@@ -55,9 +68,9 @@ export type AccordionHeaderProps = HTMLAttributes<HTMLHeadingElement> & {
   level?: 1 | 2 | 3 | 4 | 5 | 6 | undefined;
 };
 
-export type AccordionTriggerProps = ButtonHTMLAttributes<HTMLButtonElement>;
+export type AccordionTriggerProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "id">;
 
-export type AccordionPanelProps = HTMLAttributes<HTMLDivElement> & {
+export type AccordionPanelProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   role?: "region" | "group" | undefined;
   children?: ReactNode;
 };

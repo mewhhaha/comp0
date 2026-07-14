@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { useEventCallback } from "./utils.js";
+import { useCallback, useRef, useState } from "react";
+import { useEventCallback, useIsoLayoutEffect } from "./utils.js";
 
 /** Options for a controlled or uncontrolled state value. */
 export interface ControllableStateOptions<T> {
@@ -26,18 +26,25 @@ export function useControllableState({
   const isControlled = value !== undefined;
   const currentValue = isControlled ? value : uncontrolledValue;
   const onChangeStable = useEventCallback(onChange);
+  const currentValueRef = useRef(currentValue);
+  const isControlledRef = useRef(isControlled);
+  useIsoLayoutEffect(() => {
+    currentValueRef.current = currentValue;
+    isControlledRef.current = isControlled;
+  }, [currentValue, isControlled]);
 
   const setValue = useCallback(
     (next: unknown | ((current: unknown) => unknown)) => {
+      const previousValue = currentValueRef.current;
       const resolvedValue =
-        typeof next === "function" ? (next as (current: unknown) => unknown)(currentValue) : next;
+        typeof next === "function" ? (next as (current: unknown) => unknown)(previousValue) : next;
 
-      if (!Object.is(resolvedValue, currentValue)) {
-        if (!isControlled) setUncontrolledValue(resolvedValue);
-        onChangeStable(resolvedValue);
-      }
+      if (Object.is(resolvedValue, previousValue)) return;
+      currentValueRef.current = resolvedValue;
+      if (!isControlledRef.current) setUncontrolledValue(resolvedValue);
+      onChangeStable(resolvedValue);
     },
-    [currentValue, isControlled, onChangeStable],
+    [onChangeStable],
   );
 
   return [currentValue, setValue] as const;

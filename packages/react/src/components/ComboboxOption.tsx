@@ -1,15 +1,6 @@
-import {
-  useContext,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type HTMLAttributes,
-} from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type HTMLAttributes } from "react";
 import { dataAttr } from "@comp0/core";
 import { useComboBoxRootContext, type RefProp } from "../shared.js";
-import { ComboboxCollectionContext } from "./pickers-shared.js";
 import { usePopoverContext } from "./overlay-shared.js";
 export type ComboboxOptionProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value: string;
@@ -41,7 +32,6 @@ export function ComboboxOption({
     setSelectedKey,
     unregisterItem,
   } = combo;
-  const collection = useContext(ComboboxCollectionContext);
   const element = useRef<HTMLDivElement>(null);
   const generatedId = useId().replace(/:/g, "");
   const id = idProp ?? `${combo?.listBoxId ?? "combobox"}-option-${generatedId}`;
@@ -61,18 +51,10 @@ export function ComboboxOption({
   useEffect(() => {
     if (!visible) return;
     registerItem(value, label);
-    collection?.register({
-      value,
-      id,
-      text: label,
-      disabled: resolvedDisabled,
-      element: element.current,
-    });
     return () => {
       unregisterItem(value);
-      collection?.unregister(value);
     };
-  }, [collection, id, label, registerItem, resolvedDisabled, unregisterItem, value, visible]);
+  }, [label, registerItem, unregisterItem, value, visible]);
   useLayoutEffect(() => {
     if (!visible && (activeId === id || activeKey === value)) {
       setActiveId("");

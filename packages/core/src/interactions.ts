@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from "react";
+import { useEffect, useRef, useState, type HTMLAttributes } from "react";
 import { chainHandlers } from "./utils.js";
 
 type FocusVisibleDocumentState = {
@@ -77,27 +77,24 @@ export function useFocusRing<TElement extends HTMLElement = HTMLElement>(
     });
   }, [isFocused, ownerDocument]);
 
-  const focusProps = useMemo<HTMLAttributes<TElement>>(
-    () => ({
-      onFocus(event) {
-        if (options.disabled) return;
-        const document = event.currentTarget.ownerDocument;
-        isFocusedRef.current = true;
-        setOwnerDocument(document);
-        setFocused(true);
-        setFocusVisible(
-          getFocusVisibleDocumentState(document).hadKeyboardEvent ||
-            event.currentTarget.matches(":focus-visible"),
-        );
-      },
-      onBlur() {
-        isFocusedRef.current = false;
-        setFocused(false);
-        setFocusVisible(false);
-      },
-    }),
-    [options.disabled],
-  );
+  const focusProps: HTMLAttributes<TElement> = {
+    onFocus(event) {
+      if (options.disabled) return;
+      const document = event.currentTarget.ownerDocument;
+      isFocusedRef.current = true;
+      setOwnerDocument(document);
+      setFocused(true);
+      setFocusVisible(
+        getFocusVisibleDocumentState(document).hadKeyboardEvent ||
+          event.currentTarget.matches(":focus-visible"),
+      );
+    },
+    onBlur() {
+      isFocusedRef.current = false;
+      setFocused(false);
+      setFocusVisible(false);
+    },
+  };
 
   return { focusProps, isFocused, isFocusVisible };
 }
@@ -107,18 +104,15 @@ export function useHover<TElement extends HTMLElement = HTMLElement>(
   options: { disabled?: boolean } = {},
 ) {
   const [isHovered, setHovered] = useState(false);
-  const hoverProps = useMemo<HTMLAttributes<TElement>>(
-    () => ({
-      onPointerEnter(event) {
-        if (options.disabled || event.pointerType === "touch") return;
-        setHovered(true);
-      },
-      onPointerLeave() {
-        setHovered(false);
-      },
-    }),
-    [options.disabled],
-  );
+  const hoverProps: HTMLAttributes<TElement> = {
+    onPointerEnter(event) {
+      if (options.disabled || event.pointerType === "touch") return;
+      setHovered(true);
+    },
+    onPointerLeave() {
+      setHovered(false);
+    },
+  };
 
   return { hoverProps, isHovered };
 }
@@ -128,31 +122,28 @@ export function usePress<TElement extends HTMLElement = HTMLElement>(
   options: { disabled?: boolean } = {},
 ) {
   const [isPressed, setPressed] = useState(false);
-  const pressProps = useMemo<HTMLAttributes<TElement>>(
-    () => ({
-      onPointerDown(event) {
-        if (options.disabled || event.button !== 0) return;
-        setPressed(true);
-      },
-      onPointerUp() {
-        setPressed(false);
-      },
-      onPointerCancel() {
-        setPressed(false);
-      },
-      onPointerLeave() {
-        setPressed(false);
-      },
-      onKeyDown(event) {
-        if (options.disabled) return;
-        if (event.key === " " || event.key === "Enter") setPressed(true);
-      },
-      onKeyUp() {
-        setPressed(false);
-      },
-    }),
-    [options.disabled],
-  );
+  const pressProps: HTMLAttributes<TElement> = {
+    onPointerDown(event) {
+      if (options.disabled || event.button !== 0) return;
+      setPressed(true);
+    },
+    onPointerUp() {
+      setPressed(false);
+    },
+    onPointerCancel() {
+      setPressed(false);
+    },
+    onPointerLeave() {
+      setPressed(false);
+    },
+    onKeyDown(event) {
+      if (options.disabled) return;
+      if (event.key === " " || event.key === "Enter") setPressed(true);
+    },
+    onKeyUp() {
+      setPressed(false);
+    },
+  };
 
   return { pressProps, isPressed };
 }

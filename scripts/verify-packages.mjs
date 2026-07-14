@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -10,6 +10,11 @@ const consumerDirectory = join(temporaryDirectory, "consumer");
 const storeDirectory =
   process.env.COMP0_PNPM_STORE_DIR ??
   execFileSync("pnpm", ["store", "path"], { cwd: root, encoding: "utf8" }).trim();
+const packageSources = {
+  comp0: JSON.parse(readFileSync(join(root, "package.json"), "utf8")),
+  core: JSON.parse(readFileSync(join(root, "packages/core/package.json"), "utf8")),
+  react: JSON.parse(readFileSync(join(root, "packages/react/package.json"), "utf8")),
+};
 
 function run(command, args, cwd = root) {
   return execFileSync(command, args, { cwd, encoding: "utf8", stdio: "pipe" });
@@ -23,16 +28,19 @@ function readArchiveFile(archive, path) {
   return run("tar", ["-xOf", archive, `package/${path}`]);
 }
 
-function inspectArchive(archive, packageName) {
+function inspectArchive(archive, sourceManifest, expectedDirectory) {
   const entries = run("tar", ["-tzf", archive]).trim().split("\n");
   const manifest = JSON.parse(readArchiveFile(archive, "package.json"));
-  const expectedDirectory = packageName === "@comp0/core" ? "packages/core" : "packages/react";
+  const packageName = sourceManifest.name;
 
   assert(
     manifest.name === packageName,
     `Expected ${packageName} manifest, received ${manifest.name}.`,
   );
-  assert(manifest.version === "0.1.0", `${packageName} must pack version 0.1.0.`);
+  assert(
+    manifest.version === sourceManifest.version,
+    `${packageName} must pack version ${sourceManifest.version}.`,
+  );
   assert(manifest.license === "MIT", `${packageName} must pack with the MIT license.`);
   assert(typeof manifest.description === "string", `${packageName} must pack with a description.`);
   assert(
@@ -51,13 +59,31 @@ function inspectArchive(archive, packageName) {
     manifest.repository?.url === "git+https://github.com/mewhhaha/comp0.git",
     `${packageName} must link to the source repository.`,
   );
-  assert(
-    manifest.repository?.directory === expectedDirectory,
-    `${packageName} must identify its repository directory.`,
-  );
+  if (expectedDirectory) {
+    assert(
+      manifest.repository?.directory === expectedDirectory,
+      `${packageName} must identify its repository directory.`,
+    );
+  } else {
+    assert(
+      manifest.repository?.directory === undefined,
+      `${packageName} must identify the repository root as its source directory.`,
+    );
+  }
   assert(manifest.publishConfig?.access === "public", `${packageName} must publish publicly.`);
   assert(entries.includes("package/README.md"), `${packageName} tarball is missing README.md.`);
   assert(entries.includes("package/LICENSE"), `${packageName} tarball is missing LICENSE.`);
+
+  if (!expectedDirectory) {
+    assert(
+      entries.every((entry) =>
+        ["package/package.json", "package/README.md", "package/LICENSE"].includes(entry),
+      ),
+      `${packageName} tarball must contain only its manifest, README, and license.`,
+    );
+    return manifest;
+  }
+
   assert(
     entries.includes("package/dist/index.js"),
     `${packageName} tarball is missing dist/index.js.`,
@@ -78,19 +104,24 @@ mkdirSync(packageDirectory, { recursive: true });
 mkdirSync(consumerDirectory, { recursive: true });
 run("pnpm", ["--filter", "@comp0/core", "pack", "--pack-destination", packageDirectory]);
 run("pnpm", ["--filter", "@comp0/react", "pack", "--pack-destination", packageDirectory]);
+run("pnpm", ["pack", "--pack-destination", packageDirectory]);
 
 const archives = readdirSync(packageDirectory).filter((entry) => entry.endsWith(".tgz"));
 const coreArchive = archives.find((entry) => entry.includes("comp0-core"));
 const reactArchive = archives.find((entry) => entry.includes("comp0-react"));
+const comp0Archive = archives.find((entry) => /^comp0-\d/.test(entry));
 
-if (!coreArchive || !reactArchive) {
-  throw new Error(`Expected packed core and react archives, received: ${archives.join(", ")}`);
+if (!comp0Archive || !coreArchive || !reactArchive) {
+  throw new Error(
+    `Expected packed comp0, core, and react archives, received: ${archives.join(", ")}`,
+  );
 }
 
 const coreArchivePath = join(packageDirectory, coreArchive);
 const reactArchivePath = join(packageDirectory, reactArchive);
-const coreManifest = inspectArchive(coreArchivePath, "@comp0/core");
-const reactManifest = inspectArchive(reactArchivePath, "@comp0/react");
+inspectArchive(join(packageDirectory, comp0Archive), packageSources.comp0);
+const coreManifest = inspectArchive(coreArchivePath, packageSources.core, "packages/core");
+const reactManifest = inspectArchive(reactArchivePath, packageSources.react, "packages/react");
 
 assert(
   coreManifest.peerDependencies?.react === "^19.0.0",
@@ -101,8 +132,8 @@ assert(
   "@comp0/core must not peer-depend on react-dom.",
 );
 assert(
-  reactManifest.dependencies?.["@comp0/core"] === "0.1.0",
-  "Packed @comp0/react must depend on @comp0/core 0.1.0.",
+  reactManifest.dependencies?.["@comp0/core"] === packageSources.core.version,
+  `Packed @comp0/react must depend on @comp0/core ${packageSources.core.version}.`,
 );
 assert(
   reactManifest.peerDependencies?.react === "^19.0.0" &&
@@ -196,4 +227,4 @@ run("pnpm", ["install", "--ignore-scripts", "--store-dir", storeDirectory], cons
 run(resolve(root, "node_modules/.bin/tsgo"), ["-p", "tsconfig.json"], consumerDirectory);
 run(process.execPath, ["runtime.mjs"], consumerDirectory);
 
-console.log("Packed @comp0/core and @comp0/react passed runtime and type consumer checks.");
+console.log("Packed comp0, @comp0/core, and @comp0/react passed artifact and consumer checks.");

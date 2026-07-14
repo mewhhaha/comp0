@@ -15,6 +15,7 @@ export type PinInputProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" 
   mask?: boolean | undefined;
   /** Submits one hidden input carrying the joined code. */
   name?: string | undefined;
+  form?: string | undefined;
   disabled?: boolean | undefined;
 };
 

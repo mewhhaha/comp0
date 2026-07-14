@@ -25,7 +25,7 @@ export function CalendarCell({
   const isFocusedDate = date === calendar.focusedDate;
   const selected = date === calendar.value;
   const isToday = date === calendar.today;
-  let disabled = false;
+  let disabled = calendar.disabled;
   if (calendar.min && isBefore(date, calendar.min)) disabled = true;
   if (calendar.max && isAfter(date, calendar.max)) disabled = true;
   const parsed = parseISODate(date);

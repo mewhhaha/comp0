@@ -35,6 +35,7 @@ export interface TabsContextValue {
   selectedKey: string;
   setSelectedKey: (key: string) => void;
   registerTab: (key: string, element: HTMLButtonElement | null, disabled?: boolean) => void;
+  hasEnabledTab: (key: string) => boolean;
   tabs: () => { key: string; disabled?: boolean | undefined; element: HTMLButtonElement | null }[];
 }
 
@@ -57,12 +58,11 @@ export type TabListProps = HTMLAttributes<HTMLDivElement> & {
   orientation?: "horizontal" | "vertical" | undefined;
 };
 
-export type TabProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "value"> & {
-  id?: string | undefined;
+export type TabProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "id" | "value"> & {
   tab: string;
 };
 
-export type TabPanelProps = HTMLAttributes<HTMLDivElement> & {
+export type TabPanelProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   tab: string;
 };
 

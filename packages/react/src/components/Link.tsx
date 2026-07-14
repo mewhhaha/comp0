@@ -49,6 +49,8 @@ export function Link<TElement extends ElementType = "a">({
   let resolvedTabIndex = tabIndex;
   if (disabled) resolvedTabIndex = -1;
   else if (!isNativeAnchor) resolvedTabIndex = tabIndex ?? 0;
+  let role = (props as Record<string, unknown>).role;
+  if (!isNativeAnchor || disabled || !href) role = role ?? "link";
   const mergedProps = mergeProps<Record<string, unknown>>(
     props as Record<string, unknown>,
     mergeInteractionProps(focusProps, hoverProps) as Record<string, unknown>,
@@ -56,7 +58,7 @@ export function Link<TElement extends ElementType = "a">({
       ref,
       href: disabled ? undefined : href,
       tabIndex: resolvedTabIndex,
-      role: isNativeAnchor ? undefined : ((props as Record<string, unknown>).role ?? "link"),
+      role,
       "aria-disabled": disabled || undefined,
       "data-disabled": dataAttr(disabled),
       "data-focused": dataAttr(isFocused),

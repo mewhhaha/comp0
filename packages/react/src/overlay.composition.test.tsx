@@ -39,6 +39,17 @@ describe("popover placement styles", () => {
 });
 
 describe("overlay composition", () => {
+  it("defaults polymorphic native button triggers to type button", () => {
+    const { container } = render(
+      <Popover>
+        <PopoverTrigger as="button">Open</PopoverTrigger>
+        <PopoverOverlay>Content</PopoverOverlay>
+      </Popover>,
+    );
+
+    expect(container.querySelector("button")?.getAttribute("type")).toBe("button");
+  });
+
   it("keeps provider roots wrapper-free and connects dialog parts with stable ids", () => {
     const { container } = render(
       <Dialog>

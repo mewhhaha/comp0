@@ -38,14 +38,14 @@ export function Example() {
             <MenuItem
               onClick={saveAs}
               value="save-as"
-              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
             >
               Save as…
             </MenuItem>
             <MenuItem
               onClick={saveCopy}
               value="save-copy"
-              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
             >
               Save a copy…
             </MenuItem>

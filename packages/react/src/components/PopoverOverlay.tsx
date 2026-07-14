@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import {
   placementSurfaceStyle,
@@ -28,11 +28,12 @@ export function PopoverOverlay({
   // render in normal flow instead.
   const popoverMode = popoverProp === "none" ? undefined : popoverProp;
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>(popoverMode);
+  const composedRef = useComposedRefs(surfaceRef, ref);
   const Content = as ?? "div";
 
   return createElement(Content, {
     ...props,
-    ref: composeRefs(surfaceRef, ref),
+    ref: composedRef,
     id: props.id ?? popover?.contentId,
     role: props.role ?? "dialog",
     popover: popoverMode,

@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
+import { fieldFeedback, FieldProvider, useFieldIds } from "../field.js";
 import { TagGroupContext } from "./tag-shared.js";
 
 export type TagGroupProps = {
@@ -16,7 +16,7 @@ export type TagGroupProps = {
 
 export function TagGroup({ children, defaultValue, id, onChange, onRemove, value }: TagGroupProps) {
   const ids = useFieldIds(id);
-  const feedback = useFieldFeedback();
+  const feedback = fieldFeedback(children);
   const selectionEnabled =
     value !== undefined || defaultValue !== undefined || onChange !== undefined;
   const [selected, setSelected] = useControllableState<string[]>({

@@ -160,9 +160,22 @@ describe("real-browser interaction contracts", () => {
     await vi.waitFor(() => expect(content.matches(":popover-open")).toBe(true));
 
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    unmount();
+  });
+
+  it("keeps a controlled picker open when its owner rejects Escape", () => {
+    const onToggle = vi.fn();
+    const { container, unmount } = render(
+      <Select open onToggle={onToggle}>
+        <SelectTrigger>Choose</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="one">One</SelectOption>
+        </SelectPopover>
+      </Select>,
+    );
+    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
     const option = container.querySelector<HTMLElement>("[role='option']")!;
-    option.focus();
-    onToggle.mockClear();
+
     fireKeyDown(option, "Escape");
 
     expect(onToggle).toHaveBeenCalledWith(false);

@@ -7,11 +7,12 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { dataAttr, useControllableState } from "@comp0/core";
-import { FieldProvider, useFieldFeedback, useFieldIds } from "../field.js";
+import { dataAttr } from "@comp0/core";
+import { fieldFeedback, FieldProvider, useFieldIds } from "../field.js";
 import { SelectRootContext, type RefProp } from "../shared.js";
 import { PopoverContext, usePopoverState } from "./overlay-shared.js";
 import { type SelectProps } from "./pickers-shared.js";
+import { useFormControlState, useFormReset } from "./form-control-state.js";
 export type { SelectProps } from "./pickers-shared.js";
 
 const nativeSelectStyle: CSSProperties = {
@@ -38,13 +39,13 @@ export function Select({
   invalid,
   required,
   name,
+  form,
   as,
   children,
   ref,
   ...props
 }: SelectProps & RefProp<HTMLDivElement>) {
   const ids = useFieldIds(id);
-  const feedback = useFieldFeedback();
   const popover = usePopoverState({
     open,
     defaultOpen,
@@ -53,16 +54,28 @@ export function Select({
     contentId: `${ids.controlId}-listbox`,
   });
   const itemTextRef = useRef(new Map<string, ReactNode>());
+  const selectRef = useRef<HTMLSelectElement | null>(null);
   const selectedRef = useRef("");
   const [selectedText, setSelectedText] = useState<ReactNode>();
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
   const resolvedInvalid =
     props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
-  const [selected, setSelected] = useControllableState({
+  const feedback = fieldFeedback(children, resolvedInvalid);
+  const selectedState = useFormControlState({
     value,
     defaultValue: defaultValue ?? "",
     onChange,
+  });
+  const selected = selectedState.value;
+  const setSelected = selectedState.setValue;
+  useFormReset({
+    controlRef: selectRef,
+    controlled: selectedState.controlled,
+    form,
+    resetValue: selectedState.resetValue,
+    restoreValue: selectedState.restoreValue,
+    readValue: (element) => element.value,
   });
   useEffect(() => {
     selectedRef.current = selected;
@@ -104,26 +117,26 @@ export function Select({
 
   const content = (
     <>
-      {(name || resolvedRequired) && (
-        <select
-          aria-hidden="true"
-          aria-labelledby={labelId}
-          disabled={resolvedDisabled}
-          name={name}
-          onChange={() => undefined}
-          onInvalid={(event) => {
-            event.preventDefault();
-            document.getElementById(controlId)?.focus();
-          }}
-          required={resolvedRequired}
-          style={nativeSelectStyle}
-          tabIndex={-1}
-          value={selected}
-        >
-          <option aria-label="No selection" value="" />
-          {selected && <option value={selected}>{selected}</option>}
-        </select>
-      )}
+      <select
+        ref={selectRef}
+        aria-hidden="true"
+        aria-labelledby={labelId}
+        disabled={resolvedDisabled}
+        form={form}
+        name={name}
+        onChange={() => undefined}
+        onInvalid={(event) => {
+          event.preventDefault();
+          document.getElementById(controlId)?.focus();
+        }}
+        required={resolvedRequired}
+        style={nativeSelectStyle}
+        tabIndex={-1}
+        value={selected}
+      >
+        <option aria-label="No selection" value="" />
+        {selected && <option value={selected}>{selected}</option>}
+      </select>
       {children}
     </>
   );

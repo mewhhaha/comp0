@@ -6,6 +6,7 @@ import {
   FileTrigger,
   Input,
   Label,
+  Link,
   Radio,
   Select,
   SelectPopover,
@@ -68,6 +69,22 @@ describe("foundation components", () => {
     expect(content.hidden).toBe(false);
   });
 
+  it("keeps disabled anchors exposed as links without an activation target", () => {
+    const clicked = vi.fn();
+    const { container } = render(
+      <Link href="/account" disabled onClick={clicked}>
+        Account
+      </Link>,
+    );
+    const link = container.querySelector<HTMLAnchorElement>("a")!;
+
+    expect(link.getAttribute("role")).toBe("link");
+    expect(link.hasAttribute("href")).toBe(false);
+    expect(link.getAttribute("aria-disabled")).toBe("true");
+    fireClick(link);
+    expect(clicked).not.toHaveBeenCalled();
+  });
+
   it("forwards explicit field validity and presence-based state attributes", () => {
     const { container } = render(
       <TextField id="email">
@@ -88,7 +105,7 @@ describe("foundation components", () => {
     const checkboxChanged = vi.fn();
     const { container } = render(
       <form>
-        <Radio name="density" value="compact" defaultSelected onChange={radioChanged}>
+        <Radio name="density" value="compact" defaultChecked onChange={radioChanged}>
           Compact
         </Radio>
         <Checkbox name="alerts" value="email" onChange={checkboxChanged}>
