@@ -6,6 +6,7 @@ import { ContextMenuTrigger } from "./components/ContextMenuTrigger.js";
 import { Menu } from "./components/Menu.js";
 import { Menubar } from "./components/Menubar.js";
 import { MenuItem } from "./components/MenuItem.js";
+import { MenuList } from "./components/MenuList.js";
 import { MenuPopover } from "./components/MenuPopover.js";
 import { MenuTrigger } from "./components/MenuTrigger.js";
 
@@ -15,20 +16,26 @@ function renderMenubar() {
       <Menu id="file">
         <MenuTrigger>File</MenuTrigger>
         <MenuPopover>
-          <MenuItem value="new">New</MenuItem>
-          <MenuItem value="open">Open</MenuItem>
+          <MenuList>
+            <MenuItem value="new">New</MenuItem>
+            <MenuItem value="open">Open</MenuItem>
+          </MenuList>
         </MenuPopover>
       </Menu>
       <Menu id="edit">
         <MenuTrigger>Edit</MenuTrigger>
         <MenuPopover>
-          <MenuItem value="undo">Undo</MenuItem>
+          <MenuList>
+            <MenuItem value="undo">Undo</MenuItem>
+          </MenuList>
         </MenuPopover>
       </Menu>
       <Menu id="view">
         <MenuTrigger>View</MenuTrigger>
         <MenuPopover>
-          <MenuItem value="zoom">Zoom</MenuItem>
+          <MenuList>
+            <MenuItem value="zoom">Zoom</MenuItem>
+          </MenuList>
         </MenuPopover>
       </Menu>
     </Menubar>,
@@ -37,8 +44,8 @@ function renderMenubar() {
   const file = document.getElementById("file-trigger")!;
   const edit = document.getElementById("edit-trigger")!;
   const view = document.getElementById("view-trigger")!;
-  const popovers = [...result.container.querySelectorAll<HTMLElement>("[role='menu']")];
-  return { ...result, bar, file, edit, view, popovers };
+  const surfaces = [...result.container.querySelectorAll<HTMLElement>("[popover]")];
+  return { ...result, bar, file, edit, view, surfaces };
 }
 
 function fireContextMenu(element: Element, init?: MouseEventInit) {
@@ -51,7 +58,7 @@ function fireContextMenu(element: Element, init?: MouseEventInit) {
 
 describe("menubar composition", () => {
   it("renders menubar semantics with menuitem triggers and a single tab stop", () => {
-    const { bar, file, edit, view, popovers } = renderMenubar();
+    const { bar, file, edit, view, surfaces } = renderMenubar();
     expect(bar.getAttribute("aria-label")).toBe("Notes");
     for (const trigger of [file, edit, view]) {
       expect(trigger.getAttribute("role")).toBe("menuitem");
@@ -60,7 +67,7 @@ describe("menubar composition", () => {
     }
     expect(file.getAttribute("aria-controls")).toBe("file-content");
     expect([file.tabIndex, edit.tabIndex, view.tabIndex]).toEqual([0, -1, -1]);
-    expect(popovers.every((popover) => popover.hidden)).toBe(true);
+    expect(surfaces.every((surface) => surface.hidden)).toBe(true);
   });
 
   it("roves with ArrowRight and ArrowLeft, wrapping at both ends", () => {
@@ -86,70 +93,70 @@ describe("menubar composition", () => {
   });
 
   it("keeps the bar's arrows away from menus while closed", () => {
-    const { file, popovers } = renderMenubar();
+    const { file, surfaces } = renderMenubar();
     act(() => file.focus());
     fireKeyDown(file, "ArrowRight");
-    expect(popovers.every((popover) => popover.hidden)).toBe(true);
+    expect(surfaces.every((surface) => surface.hidden)).toBe(true);
   });
 
   it("opens with ArrowDown and focuses the first item", () => {
-    const { container, file, popovers } = renderMenubar();
+    const { container, file, surfaces } = renderMenubar();
     act(() => file.focus());
     fireKeyDown(file, "ArrowDown");
-    expect(popovers[0]!.hidden).toBe(false);
+    expect(surfaces[0]!.hidden).toBe(false);
     expect(file.getAttribute("aria-expanded")).toBe("true");
     const first = container.querySelector<HTMLElement>("[data-value='new']")!;
     expect(document.activeElement).toBe(first);
   });
 
   it("moves openness to the neighbor menu with horizontal arrows while open", () => {
-    const { container, file, popovers } = renderMenubar();
+    const { container, file, surfaces } = renderMenubar();
     act(() => file.focus());
     fireKeyDown(file, "ArrowDown");
     const newItem = container.querySelector<HTMLElement>("[data-value='new']")!;
 
     fireKeyDown(newItem, "ArrowRight");
-    expect(popovers[0]!.hidden).toBe(true);
-    expect(popovers[1]!.hidden).toBe(false);
+    expect(surfaces[0]!.hidden).toBe(true);
+    expect(surfaces[1]!.hidden).toBe(false);
     const undo = container.querySelector<HTMLElement>("[data-value='undo']")!;
     expect(document.activeElement).toBe(undo);
 
     fireKeyDown(undo, "ArrowLeft");
-    expect(popovers[1]!.hidden).toBe(true);
-    expect(popovers[0]!.hidden).toBe(false);
+    expect(surfaces[1]!.hidden).toBe(true);
+    expect(surfaces[0]!.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("New");
   });
 
   it("carries openness when focus lands on another item while a menu is open", () => {
-    const { file, view, popovers } = renderMenubar();
+    const { file, view, surfaces } = renderMenubar();
     act(() => file.focus());
     fireKeyDown(file, "ArrowDown");
-    expect(popovers[0]!.hidden).toBe(false);
+    expect(surfaces[0]!.hidden).toBe(false);
 
     act(() => view.focus());
-    expect(popovers[0]!.hidden).toBe(true);
-    expect(popovers[2]!.hidden).toBe(false);
+    expect(surfaces[0]!.hidden).toBe(true);
+    expect(surfaces[2]!.hidden).toBe(false);
   });
 
   it("closes with Escape, restores focus to the item, and stays closed", () => {
-    const { edit, popovers } = renderMenubar();
+    const { edit, surfaces } = renderMenubar();
     act(() => edit.focus());
     fireKeyDown(edit, "ArrowDown");
-    expect(popovers[1]!.hidden).toBe(false);
+    expect(surfaces[1]!.hidden).toBe(false);
 
     fireKeyDown(document.activeElement!, "Escape");
-    expect(popovers[1]!.hidden).toBe(true);
+    expect(surfaces[1]!.hidden).toBe(true);
     expect(document.activeElement).toBe(edit);
     expect(edit.tabIndex).toBe(0);
   });
 
   it("closes an open sibling when another item's menu opens by click", () => {
-    const { file, edit, popovers } = renderMenubar();
+    const { file, edit, surfaces } = renderMenubar();
     fireClick(file);
-    expect(popovers[0]!.hidden).toBe(false);
+    expect(surfaces[0]!.hidden).toBe(false);
     fireClick(edit);
-    expect(popovers[0]!.hidden).toBe(true);
-    expect(popovers[1]!.hidden).toBe(false);
+    expect(surfaces[0]!.hidden).toBe(true);
+    expect(surfaces[1]!.hidden).toBe(false);
   });
 });
 
@@ -159,19 +166,22 @@ function renderContextMenu(onToggle?: (open: boolean) => void) {
       <button type="button">Before</button>
       <ContextMenu id="attachment" onToggle={onToggle}>
         <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>
-        <MenuPopover aria-label="Attachment actions">
-          <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
-            Download
-          </MenuItem>
-          <MenuItem value="remove">Remove</MenuItem>
+        <MenuPopover>
+          <MenuList aria-label="Attachment actions">
+            <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
+              Download
+            </MenuItem>
+            <MenuItem value="remove">Remove</MenuItem>
+          </MenuList>
         </MenuPopover>
       </ContextMenu>
     </>,
   );
   const before = result.container.querySelector<HTMLButtonElement>("button")!;
   const area = document.getElementById("attachment-trigger")!;
-  const popover = result.container.querySelector<HTMLElement>("[role='menu']")!;
-  return { ...result, before, area, popover };
+  const popover = result.container.querySelector<HTMLElement>("[popover]")!;
+  const menuList = result.container.querySelector<HTMLElement>("[role='menu']")!;
+  return { ...result, before, area, popover, menuList };
 }
 
 describe("context menu composition", () => {
@@ -191,9 +201,10 @@ describe("context menu composition", () => {
     expect(document.activeElement).toBe(first);
   });
 
-  it("labels the popover itself instead of borrowing a trigger label", () => {
-    const { popover } = renderContextMenu();
-    expect(popover.getAttribute("aria-label")).toBe("Attachment actions");
+  it("labels the menu list instead of borrowing a trigger label", () => {
+    const { popover, menuList } = renderContextMenu();
+    expect(menuList.getAttribute("aria-label")).toBe("Attachment actions");
+    expect(popover.hasAttribute("aria-label")).toBe(false);
     expect(popover.hasAttribute("aria-labelledby")).toBe(false);
   });
 

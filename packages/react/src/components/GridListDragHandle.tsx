@@ -1,23 +1,17 @@
-import { useContext, useLayoutEffect, type ButtonHTMLAttributes } from "react";
+import { useContext, type ButtonHTMLAttributes } from "react";
 import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { GridListDndContext, GridListItemContext } from "./grid-list-shared.js";
 
 export type GridListDragHandleProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
-/**
- * Optional drag affordance inside a GridListItem. While one is mounted, drags
- * start from the handle instead of the whole row, keeping the row body free
- * for scrolling and text selection; Alt+Arrow moves keep working everywhere
- * in the row.
- */
+/** Optional labelled drag affordance and keyboard reorder control inside a GridListItem. */
 export function GridListDragHandle({
   ref,
   ...props
 }: GridListDragHandleProps & RefProp<HTMLButtonElement>) {
   const item = useContext(GridListItemContext);
   const dnd = useContext(GridListDndContext);
-  useLayoutEffect(() => item?.registerHandle(), [item]);
   if (!dnd || !item?.reorderable) return null;
 
   return (

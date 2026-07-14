@@ -72,7 +72,7 @@ export default defineConfig({
         "packages/react/src/components/ListBox.tsx",
         "packages/react/src/components/TabList.tsx",
         "packages/react/src/components/GridList.tsx",
-        "packages/react/src/components/TagGroup.tsx",
+        "packages/react/src/components/TagList.tsx",
         "packages/react/src/components/Toolbar.tsx",
       ],
       rules: {
@@ -138,8 +138,25 @@ export default defineConfig({
     {
       files: ["packages/react/src/components/MenuPopover.tsx"],
       rules: {
-        // The role is customizable in props but defaults to menu at runtime.
+        // The role-less floating surface owns dismissal keyboard and blur interactions.
         "jsx-a11y/no-static-element-interactions": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/MenuList.tsx"],
+      rules: {
+        // Focus is roved among the owned menuitems, not placed on the menu container.
+        "jsx-a11y/interactive-supports-focus": "off",
+      },
+    },
+    {
+      files: [
+        "packages/react/src/components/ComboboxOptGroup.tsx",
+        "packages/react/src/components/SelectOptGroup.tsx",
+      ],
+      rules: {
+        // Native optgroup is only valid inside select; custom listboxes use an ARIA group.
+        "jsx-a11y/prefer-tag-over-role": "off",
       },
     },
     {

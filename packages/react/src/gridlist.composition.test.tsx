@@ -239,7 +239,7 @@ describe("grid list composition", () => {
       >
         {files.map((name) => (
           <GridListItem key={name} value={name} textValue={name}>
-            {name}
+            <span data-slot="row-label">{name}</span>
             {withHandle && <GridListDragHandle>⋮⋮</GridListDragHandle>}
           </GridListItem>
         ))}
@@ -323,15 +323,25 @@ describe("grid list composition", () => {
     expect(rows[0]!.hasAttribute("aria-keyshortcuts")).toBe(false);
   });
 
-  it("moves drag initiation from the row to a mounted drag handle", () => {
+  it("keeps the whole row draggable when it has a drag handle", () => {
     const spy = vi.fn();
     const { container } = render(<ReorderableList spy={spy} withHandle />);
     const row = container.querySelector<HTMLElement>("[role='row']")!;
+    const cell = row.querySelector<HTMLElement>("[role='gridcell']")!;
+    const label = row.querySelector<HTMLElement>("[data-slot='row-label']")!;
     const handle = row.querySelector<HTMLButtonElement>("[data-slot='grid-list-drag-handle']")!;
 
-    expect(row.draggable).toBe(false);
+    expect(row.draggable).toBe(true);
     expect(handle.draggable).toBe(true);
     expect(handle.getAttribute("aria-label")).toBe("Reorder report.pdf");
+
+    fireDrag(cell, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(true);
+    fireDrag(row, "dragend");
+
+    fireDrag(label, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(true);
+    fireDrag(row, "dragend");
 
     fireDrag(handle, "dragstart");
     expect(row.hasAttribute("data-dragging")).toBe(true);
@@ -340,6 +350,46 @@ describe("grid list composition", () => {
     handle.focus();
     fireKeyDown(handle, "ArrowDown", { altKey: true });
     expect(spy).toHaveBeenLastCalledWith(["photos.zip", "report.pdf", "notes.txt"]);
+  });
+
+  it("does not start row dragging from nested interactive controls", () => {
+    const { container } = render(
+      <GridList aria-label="Files" onReorder={() => {}}>
+        <GridListItem value="report" textValue="Report">
+          <GridListDragHandle>Move</GridListDragHandle>
+          <span data-slot="row-body">Report</span>
+          <button type="button">
+            Share
+            <svg aria-hidden="true">
+              <circle />
+            </svg>
+          </button>
+          <a href="#report" draggable>
+            Open
+          </a>
+        </GridListItem>
+      </GridList>,
+    );
+    const row = container.querySelector<HTMLElement>("[role='row']")!;
+    const button = row.querySelector<HTMLButtonElement>("button:not([data-slot])")!;
+    const icon = button.querySelector("svg")!;
+    const link = row.querySelector("a")!;
+
+    fireDrag(button, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(false);
+    fireDrag(icon, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(false);
+    fireDrag(link, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(false);
+
+    act(() => {
+      button.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+    });
+    fireDrag(row, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(false);
+
+    fireDrag(row.querySelector("[data-slot='row-body']")!, "dragstart");
+    expect(row.hasAttribute("data-dragging")).toBe(true);
   });
 
   it("blocks vetoed orders: no drop preview, no move, and a spoken explanation", () => {

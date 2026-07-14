@@ -50,7 +50,7 @@ describe("Separator", () => {
 describe("ProgressBar", () => {
   it("exposes progress semantics and a value fraction to a custom fill", () => {
     const { container } = render(
-      <ProgressBar aria-label="Upload" value={25} max={100}>
+      <ProgressBar aria-label="Upload" aria-valuetext="1 of 4 files" value={25} max={100}>
         {({ percentage }) => <span data-fill>{percentage}%</span>}
       </ProgressBar>,
     );
@@ -61,6 +61,7 @@ describe("ProgressBar", () => {
     expect(progress.getAttribute("aria-valuemin")).toBe("0");
     expect(progress.getAttribute("aria-valuemax")).toBe("100");
     expect(progress.getAttribute("aria-label")).toBe("Upload");
+    expect(progress.getAttribute("aria-valuetext")).toBe("1 of 4 files");
     expect(progress.hasAttribute("data-indeterminate")).toBe(false);
     expect(progress.querySelector("[data-fill]")?.textContent).toBe("25%");
     expect(progress.style.getPropertyValue("--comp0-progress-value")).toBe("0.25");
@@ -96,7 +97,16 @@ describe("ProgressBar", () => {
 describe("Meter", () => {
   it("exposes meter semantics, thresholds, and a value fraction to a custom fill", () => {
     const { container } = render(
-      <Meter aria-label="Storage" value={30} min={0} max={100} low={20} high={80} optimum={10}>
+      <Meter
+        aria-label="Storage"
+        aria-valuetext="30 GB used"
+        value={30}
+        min={0}
+        max={100}
+        low={20}
+        high={80}
+        optimum={10}
+      >
         {({ percentage }) => <span data-fill>{percentage}%</span>}
       </Meter>,
     );
@@ -106,6 +116,7 @@ describe("Meter", () => {
     expect(meter.getAttribute("aria-valuenow")).toBe("30");
     expect(meter.getAttribute("aria-valuemin")).toBe("0");
     expect(meter.getAttribute("aria-valuemax")).toBe("100");
+    expect(meter.getAttribute("aria-valuetext")).toBe("30 GB used");
     expect(meter.getAttribute("data-low")).toBe("20");
     expect(meter.getAttribute("data-high")).toBe("80");
     expect(meter.getAttribute("data-optimum")).toBe("10");

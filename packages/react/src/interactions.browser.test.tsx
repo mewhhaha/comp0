@@ -19,8 +19,11 @@ import {
   GridListReorderGroup,
   ListBox,
   ListBoxItem,
+  Menu,
   MenuItem,
+  MenuList,
   MenuPopover,
+  MenuTrigger,
   Popover,
   PopoverOverlay,
   PopoverTrigger,
@@ -34,19 +37,63 @@ import {
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 
 describe("real-browser interaction contracts", () => {
+  it("keeps a searchable menu editor inside the native popover and restores its trigger", () => {
+    const activated = vi.fn();
+    const { container, unmount } = render(
+      <Autocomplete disableAutoFocusFirst>
+        <Menu>
+          <MenuTrigger aria-controls="browser-command-search" aria-haspopup="dialog">
+            Commands
+          </MenuTrigger>
+          <MenuPopover id="browser-command-search" role="dialog" aria-label="Command search">
+            <SearchField>
+              <SearchFieldInput aria-label="Find a command" />
+            </SearchField>
+            <MenuList aria-label="Matching commands">
+              <MenuItem id="browser-archive-command" onClick={activated} value="archive">
+                Archive
+              </MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      </Autocomplete>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const input = container.querySelector<HTMLInputElement>("input")!;
+    const surface = container.querySelector<HTMLElement>("[popover]")!;
+    const menu = container.querySelector<HTMLElement>("[role='menu']")!;
+
+    fireClick(trigger);
+    expect(surface.matches(":popover-open")).toBe(true);
+    expect(surface.contains(input)).toBe(true);
+    expect(menu.contains(input)).toBe(false);
+    expect(document.activeElement).toBe(input);
+
+    fireKeyDown(input, "ArrowDown");
+    expect(input.getAttribute("aria-activedescendant")).toBe("browser-archive-command");
+    fireKeyDown(input, "Enter");
+
+    expect(activated).toHaveBeenCalledOnce();
+    expect(surface.matches(":popover-open")).toBe(false);
+    expect(document.activeElement).toBe(trigger);
+    unmount();
+  });
+
   it("suppresses the native context menu after a keyboard opener transfers focus", () => {
     const { container, unmount } = render(
       <ContextMenu id="browser-context-menu">
         <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>
-        <MenuPopover aria-label="Attachment actions">
-          <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
-            Download
-          </MenuItem>
+        <MenuPopover>
+          <MenuList aria-label="Attachment actions">
+            <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
+              Download
+            </MenuItem>
+          </MenuList>
         </MenuPopover>
       </ContextMenu>,
     );
     const trigger = container.querySelector<HTMLElement>("[tabindex='0']")!;
-    const popover = container.querySelector<HTMLElement>("[role='menu']")!;
+    const popover = container.querySelector<HTMLElement>("[popover]")!;
     const keydown = new KeyboardEvent("keydown", {
       key: "F10",
       shiftKey: true,
@@ -307,7 +354,7 @@ describe("real-browser interaction contracts", () => {
     unmount();
   });
 
-  it("moves a row from its handle and ignores native drags from row descendants", async () => {
+  it("drags from a row or its handle without taking over nested controls", async () => {
     function Board() {
       const [order, setOrder] = useState<Record<string, string[]>>({
         todo: ["review", "later"],
@@ -319,8 +366,10 @@ describe("real-browser interaction contracts", () => {
             {order["todo"]!.map((rowValue) => (
               <GridListItem key={rowValue} value={rowValue} textValue={rowValue}>
                 <GridListDragHandle>Move</GridListDragHandle>
+                <span data-slot="row-body">{rowValue}</span>
+                <button type="button">Share</button>
                 <a href="#review" draggable>
-                  {rowValue}
+                  Open
                 </a>
               </GridListItem>
             ))}
@@ -340,6 +389,8 @@ describe("real-browser interaction contracts", () => {
     const { container, unmount } = render(<Board />);
     const handle = container.querySelector<HTMLElement>("[data-slot='grid-list-drag-handle']")!;
     const source = container.querySelector<HTMLElement>("[data-value='review']")!;
+    const body = source.querySelector<HTMLElement>("[data-slot='row-body']")!;
+    const button = source.querySelector<HTMLButtonElement>("button:not([data-slot])")!;
     const link = source.querySelector<HTMLAnchorElement>("a")!;
     const destination = container.querySelector<HTMLElement>("[aria-label='Done']")!;
     const transfer = new DataTransfer();
@@ -350,6 +401,25 @@ describe("real-browser interaction contracts", () => {
       );
     });
     expect(source.hasAttribute("data-dragging")).toBe(false);
+
+    act(() => {
+      button.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      source.dispatchEvent(
+        new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+      button.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+    });
+    expect(source.hasAttribute("data-dragging")).toBe(false);
+
+    act(() => {
+      body.dispatchEvent(
+        new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }),
+      );
+    });
+    expect(source.hasAttribute("data-dragging")).toBe(true);
+    act(() => {
+      source.dispatchEvent(new DragEvent("dragend", { bubbles: true, dataTransfer: transfer }));
+    });
 
     act(() => {
       handle.dispatchEvent(

@@ -200,10 +200,10 @@ const lessons: Record<string, LessonCopy> = {
     "A row of removable, selectable little labels.",
     "Like luggage tags: keep the ones that apply, pull off the rest.",
     "Use it for filters, keywords, and picked options.",
-    "Start TagGroup with an aria-label.",
-    "Add a Tag with a value for each label.",
-    "Wire onRemove for removal with Delete, and value/onChange for selection.",
-    '<TagGroup aria-label="Filters" onRemove={remove}><Tag value="news">News</Tag></TagGroup>',
+    "Start TagGroup with selection and removal callbacks.",
+    "Add a visible Label, then put the tags inside TagList.",
+    "Give every Tag a value; wire onRemove for Delete and value/onChange for selection.",
+    '<TagGroup onRemove={remove}><Label>Filters</Label><TagList><Tag value="news">News</Tag></TagList></TagGroup>',
   ),
   resizer: lesson(
     "A separator you drag or arrow to resize the thing beside it.",
@@ -220,7 +220,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it when rows need buttons or fields inside them; use ListBox for plain options.",
     "Start GridList with an aria-label.",
     "Add a GridListItem with a value for each row.",
-    "For a board, wrap named lists in GridListReorderGroup and add GridListMoveButton controls beside the drag handle.",
+    "For a board, wrap named lists in GridListReorderGroup and add GridListMoveButton controls alongside an optional labelled drag grip.",
     '<GridList aria-label="Files"><GridListItem value="report">report.pdf</GridListItem></GridList>',
   ),
   table: lesson(
@@ -246,16 +246,16 @@ const lessons: Record<string, LessonCopy> = {
     "Like a restaurant menu: choose an action, then the menu goes away.",
     "Use it for actions, not choosing a persistent form value.",
     "Start Menu with MenuTrigger.",
-    "Place MenuPopover and MenuItem after the trigger.",
-    "Give MenuPopover an aria-label when its purpose is not obvious.",
-    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover aria-label="Actions"><MenuItem>Archive</MenuItem></MenuPopover></Menu>',
+    "Place MenuPopover after the trigger, then put MenuItem children inside MenuList.",
+    "Give MenuList an aria-label when its purpose is not obvious.",
+    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover><MenuList aria-label="Actions"><MenuItem>Archive</MenuItem></MenuList></MenuPopover></Menu>',
   ),
   select: lesson(
     "A button that opens a list and keeps one chosen value.",
     "Like a closed box that shows the label of the thing inside.",
     "Use it for one form choice from a known list.",
     "Start Select with a value or defaultValue.",
-    "Put SelectValue inside SelectTrigger, then add SelectPopover beside it.",
+    "Put SelectValue inside SelectTrigger, then add SelectPopover beside it; wrap related options in a labelled SelectOptGroup.",
     "Select owns its value, field, form serialization, and open state; control the list with open, defaultOpen, and onToggle.",
     '<Select name="size" defaultValue="small"><Label>Size</Label><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover><SelectOption value="small">Small</SelectOption></SelectPopover></Select>',
   ),
@@ -264,7 +264,7 @@ const lessons: Record<string, LessonCopy> = {
     "Like a librarian who listens while you type and suggests books.",
     "Use it when people may type to narrow a long set of choices.",
     "Start Combobox with a labelled ComboboxInput.",
-    "Place ComboboxTrigger beside the input, then add ComboboxPopover as the listbox of results.",
+    "Place ComboboxTrigger beside the input, then add ComboboxPopover as the listbox of results; group related results with ComboboxOptGroup.",
     "Combobox owns the selected value, field, form serialization, and open state; control the results with open, defaultOpen, and onToggle.",
     '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxTrigger aria-label="Show suggestions" /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
   ),
@@ -383,25 +383,25 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap a Button and a Menu in SplitButton and give it an aria-label.",
     "Put the default action on the Button; give the MenuTrigger its own name such as More options.",
     "Arrow keys move between the two segments as one tab stop; the menu opens from its own button.",
-    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuItem onClick={saveAs}>Save as…</MenuItem></MenuPopover></Menu></SplitButton>',
+    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuList><MenuItem onClick={saveAs}>Save as…</MenuItem></MenuList></MenuPopover></Menu></SplitButton>',
   ),
   "context-menu": lesson(
     "A menu opened from a right click instead of a button.",
     "Like flipping something over at a workbench: the tools for that exact spot appear under your hand.",
     "Use it for secondary actions on an object that already has a primary interaction.",
     "Wrap the right-clickable area in ContextMenuTrigger inside a ContextMenu.",
-    "Put the items in a MenuPopover with an aria-label; no button labels it for you.",
+    "Put a labelled MenuList inside MenuPopover; no button labels the list for you.",
     "Anchor the popover at the pointer yourself: position: fixed with left/top from the exposed --comp0-context-menu-x/y variables.",
-    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger><MenuPopover aria-label="Attachment actions" style={{ position: "fixed", inset: "auto", margin: 0, left: "var(--comp0-context-menu-x)", top: "var(--comp0-context-menu-y)" }}><MenuItem>Download</MenuItem></MenuPopover></ContextMenu>',
+    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger><MenuPopover style={{ position: "fixed", inset: "auto", margin: 0, left: "var(--comp0-context-menu-x)", top: "var(--comp0-context-menu-y)" }}><MenuList aria-label="Attachment actions"><MenuItem>Download</MenuItem></MenuList></MenuPopover></ContextMenu>',
   ),
   menubar: lesson(
     "A horizontal bar of menus that behaves like one desktop-style menu strip.",
     "Like the File / Edit / View strip at the top of a desktop app: one reach, many drawers.",
     "Use it when an application area offers several persistent groups of commands.",
     "Wrap your Menu components in Menubar and give the bar an aria-label.",
-    "Each Menu keeps its usual MenuTrigger and MenuPopover; the trigger becomes the bar's menuitem automatically.",
+    "Each Menu keeps its usual MenuTrigger, MenuPopover, and MenuList; the trigger becomes the bar's menuitem automatically.",
     "Arrow keys rove the bar with one tab stop, and once a menu is open the openness follows focus to its neighbors.",
-    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover><MenuItem>New note</MenuItem></MenuPopover></Menu></Menubar>',
+    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover><MenuList><MenuItem>New note</MenuItem></MenuList></MenuPopover></Menu></Menubar>',
   ),
   "pin-input": lesson(
     "A row of one-character fields for entering a short code.",
@@ -596,7 +596,7 @@ const accessibility: Record<string, string[]> = {
     "Keep trail labels concise.",
   ],
   "tag-group": [
-    "Give the group an aria-label when it has no visible heading.",
+    "Use a visible Label for the tag list, or give TagList an aria-label when no label is shown.",
     "Keep remove controls reachable by pointer; Delete removes from the keyboard.",
     "Show selection with more than color.",
   ],
@@ -623,22 +623,24 @@ const accessibility: Record<string, string[]> = {
     "Do not put buttons or links inside an option.",
   ],
   menu: [
-    "Give MenuPopover an aria-label when trigger text is vague.",
+    "Give MenuList an aria-label when trigger text is vague.",
     "Use MenuItem for actions, not a form selection.",
     "Return focus to the trigger when the menu closes.",
   ],
   select: [
     "Use a visible Label so the trigger and its listbox share a clear name; without one, name both parts explicitly.",
+    "Give every SelectOptGroup a native label so grouped options have a name.",
     "Make the chosen value readable in SelectValue.",
     "Use native required feedback or FieldError to explain a missing choice.",
   ],
   combobox: [
     "Use a visible Label so the input and results list share a clear name; without one, name both parts explicitly.",
+    "Give every ComboboxOptGroup a native label so grouped results have a name.",
     "Keep option text specific enough to distinguish matches.",
     "Do not hide required instructions only in the result list.",
   ],
   autocomplete: [
-    "Give the text field a visible Label and give an adjacent ListBox or MenuPopover its own clear name when its purpose is not evident.",
+    "Give the text field a visible Label and give its ListBox or MenuList a clear name when the purpose is not evident.",
     "Keep the active matching item mounted while virtual focus refers to it; use disableVirtualFocus when the collection should move DOM focus instead.",
     "Make empty and loading messages non-selectable, and do not use a completion as the only way to enter a value.",
   ],
@@ -703,7 +705,7 @@ const accessibility: Record<string, string[]> = {
     "Offer the menu's actions somewhere else too; a hidden menu is easy to miss.",
   ],
   "context-menu": [
-    "Give the MenuPopover an aria-label; a context menu has no trigger button to borrow a name from.",
+    "Give the MenuList an aria-label; a context menu has no trigger button to borrow a name from.",
     "Keep the trigger area keyboard-reachable (tabIndex={0}) so Shift+F10 can open the menu without a mouse.",
     "Offer the same actions somewhere visible; right-click alone is not discoverable.",
   ],
@@ -1013,6 +1015,11 @@ const action = [
           ),
           prop("aria-label", "string", "Names the gauge when it is not labelled by visible text."),
           prop("aria-labelledby", "string", "Points to the visible text that names the gauge."),
+          prop(
+            "aria-valuetext",
+            "string",
+            "Explains the value when the number alone is not meaningful, such as “64 GB used”.",
+          ),
         ],
       ),
     ],
@@ -1069,6 +1076,11 @@ const action = [
           ),
           prop("aria-label", "string", "Names the bar when it is not labelled by visible text."),
           prop("aria-labelledby", "string", "Points to the visible text that names the bar."),
+          prop(
+            "aria-valuetext",
+            "string",
+            "Explains a determinate value when the number alone is not meaningful, such as “3 of 5 files”.",
+          ),
         ],
       ),
     ],
@@ -1297,8 +1309,8 @@ const action = [
     "split-button",
     "Split Button",
     "actions",
-    ["Button", "Menu", "MenuItem", "MenuPopover", "MenuTrigger", "SplitButton"],
-    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuItem onClick={saveAs}>Save as…</MenuItem><MenuItem onClick={saveCopy}>Save a copy…</MenuItem></MenuPopover></Menu></SplitButton>',
+    ["Button", "Menu", "MenuItem", "MenuList", "MenuPopover", "MenuTrigger", "SplitButton"],
+    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuList><MenuItem onClick={saveAs}>Save as…</MenuItem><MenuItem onClick={saveCopy}>Save a copy…</MenuItem></MenuList></MenuPopover></Menu></SplitButton>',
     [
       p(
         "SplitButton",
@@ -1322,7 +1334,11 @@ const action = [
       p("MenuTrigger", "trigger", "The menu button that opens the alternatives.", true, false, [
         prop("aria-label", "string", "Names the menu segment, distinct from the default action."),
       ]),
-      p("MenuPopover / MenuItem", "content", "The alternative actions, from the Menu family."),
+      p(
+        "MenuPopover / MenuList / MenuItem",
+        "content",
+        "The floating surface, action list, and alternative actions from the Menu family.",
+      ),
     ],
     [
       {
@@ -1577,6 +1593,13 @@ const field = [
     ],
     "The selected radio submits RadioGroup.name and its value.",
     ["checkbox", "select"],
+    [
+      {
+        id: "cards",
+        title: "Plan cards",
+        description: "Turn each radio into a full-width card with supporting details and price.",
+      },
+    ],
   ),
   common(
     "switch",
@@ -2140,8 +2163,8 @@ const navigation = [
     "menu",
     "Menu",
     "navigation",
-    ["Menu", "MenuPopover", "MenuItem", "MenuSection", "MenuSeparator", "MenuTrigger"],
-    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover aria-label="Actions"><MenuItem>Archive</MenuItem></MenuPopover></Menu>',
+    ["Menu", "MenuPopover", "MenuList", "MenuItem", "MenuSection", "MenuSeparator", "MenuTrigger"],
+    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover><MenuList aria-label="Actions"><MenuItem>Archive</MenuItem></MenuList></MenuPopover></Menu>',
     [
       p(
         "Menu",
@@ -2169,14 +2192,17 @@ const navigation = [
           ),
         ],
       ),
-      p("MenuPopover", "content", "Menu container.", true, false, [
-        prop("aria-label", "string", "Names the menu when the trigger text is vague."),
+      p("MenuPopover", "content", "Role-less floating surface around the menu.", true, false, [
         prop(
           "placement",
           "PopoverPlacement",
           'Trigger side to open on, such as "bottom start" or "right top" for submenus; flips when there is no room.',
         ),
         prop("offset", "number", "Pixel gap between the trigger and the menu."),
+      ]),
+      p("MenuList", "root", "Menu collection and keyboard interaction boundary.", true, true, [
+        prop("aria-label", "string", "Names the menu when the trigger text is vague."),
+        prop("id", "string", "Overrides the collection id targeted by the trigger."),
       ]),
       p("MenuSection", "root", "Optional labelled section.", true, true, [
         prop("aria-label", "string", "Names the group of items."),
@@ -2227,11 +2253,10 @@ const navigation = [
     "tag-group",
     "Tag Group",
     "navigation",
-    ["Button", "Tag", "TagGroup"],
-    '<TagGroup aria-label="Filters" onRemove={remove}><Tag value="news">News</Tag></TagGroup>',
+    ["Button", "Label", "Tag", "TagGroup", "TagList"],
+    '<TagGroup onRemove={remove}><Label>Filters</Label><TagList><Tag value="news">News</Tag></TagList></TagGroup>',
     [
-      p("TagGroup", "root", "Grid of tags and the group's single tab stop.", true, false, [
-        prop("aria-label", "string", "Names the group; nothing labels it automatically."),
+      p("TagGroup", "root", "Selection and removal provider.", false, false, [
         prop("value / defaultValue", "string[]", "Controlled or initial selected tags."),
         prop("onChange", "(value: string[]) => void", "Receives the next selected tags."),
         prop(
@@ -2239,6 +2264,10 @@ const navigation = [
           "(value: string) => void",
           "Receives a tag removed with Delete or Backspace.",
         ),
+      ]),
+      p("Label", "label", "Visible name connected to TagList.", true, false),
+      p("TagList", "root", "Grid container and the tags' keyboard boundary.", true, false, [
+        prop("aria-label", "string", "Names the tag list when no visible Label is shown."),
       ]),
       p("Tag", "item", "Removable, selectable label that can hold a control.", true, false, [
         prop("value", "string", "This tag’s identity."),
@@ -2378,7 +2407,7 @@ const navigation = [
       p(
         "GridListDragHandle",
         "trigger",
-        "Optional labelled button inside a row; while present, native drags start from it instead of the row body.",
+        "Optional labelled button that gives a row an explicit drag affordance; pointer drags can also start on non-interactive parts of the row body.",
         true,
         true,
       ),
@@ -2450,15 +2479,21 @@ const navigation = [
     [
       {
         id: "reorder",
-        title: "Reorder with a drag handle",
+        title: "Reorder a list",
         description:
-          "onReorder makes rows movable; the handle keeps drags off the row body, canReorder pins notes.txt to the end (blocked positions show no drop preview), and Alt+Arrow moves each row without a pointer.",
+          "onReorder makes rows movable; drag any non-interactive part of a row, use the labelled grip as an explicit affordance, or press Alt+Arrow. canReorder pins notes.txt to the end, and blocked positions show no preview.",
       },
       {
         id: "kanban",
         title: "Kanban board",
         description:
-          "GridListReorderGroup owns one controlled order for all columns. Drag for precise placement, use Alt+Arrow within a column, or activate the arrow buttons to move without dragging.",
+          "GridListReorderGroup owns one controlled order for all columns. Drag cards for precise placement, use Alt+Arrow within a column, or activate the arrow buttons to move without dragging.",
+      },
+      {
+        id: "files",
+        title: "File rows with actions",
+        description:
+          "Use Grid List when a selectable row needs its own link and controls. ArrowRight enters those interactive elements without turning the collection into a plain list of options.",
       },
     ],
   ),
@@ -2574,8 +2609,8 @@ const navigation = [
     "context-menu",
     "Context Menu",
     "navigation",
-    ["ContextMenu", "ContextMenuTrigger", "MenuItem", "MenuPopover"],
-    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Right-click here</ContextMenuTrigger><MenuPopover aria-label="Attachment actions" className="context-menu"><MenuItem>Download</MenuItem></MenuPopover></ContextMenu>',
+    ["ContextMenu", "ContextMenuTrigger", "MenuItem", "MenuList", "MenuPopover"],
+    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Right-click here</ContextMenuTrigger><MenuPopover className="context-menu"><MenuList aria-label="Attachment actions"><MenuItem>Download</MenuItem></MenuList></MenuPopover></ContextMenu>',
     [
       p(
         "ContextMenu",
@@ -2605,15 +2640,10 @@ const navigation = [
       p(
         "MenuPopover",
         "content",
-        "Menu container. The recorded position arrives as --comp0-context-menu-x/y px values on this element; anchor it yourself with position: fixed; left: var(--comp0-context-menu-x); top: var(--comp0-context-menu-y).",
+        "Floating surface. The recorded position arrives as --comp0-context-menu-x/y px values on this element; anchor it yourself with position: fixed; left: var(--comp0-context-menu-x); top: var(--comp0-context-menu-y).",
         true,
         false,
         [
-          prop(
-            "aria-label",
-            "string",
-            "Names the menu; required because no trigger button labels it.",
-          ),
           prop(
             "className / style",
             "string | CSSProperties",
@@ -2621,6 +2651,13 @@ const navigation = [
           ),
         ],
       ),
+      p("MenuList", "root", "Menu collection inside the positioned surface.", true, true, [
+        prop(
+          "aria-label",
+          "string",
+          "Names the menu; required because no trigger button labels it.",
+        ),
+      ]),
       p("MenuItem", "item", "Action item.", true, false, [
         prop("onClick", "(event) => void", "Runs the action; preventDefault keeps the menu open."),
         prop("value", "string", "Optional identity for typeahead and data-value."),
@@ -2673,8 +2710,8 @@ const navigation = [
     "menubar",
     "Menubar",
     "navigation",
-    ["Menu", "MenuItem", "MenuPopover", "MenuSeparator", "MenuTrigger", "Menubar"],
-    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover placement="bottom start"><MenuItem>New note</MenuItem></MenuPopover></Menu><Menu><MenuTrigger>Edit</MenuTrigger><MenuPopover placement="bottom start"><MenuItem>Undo</MenuItem></MenuPopover></Menu></Menubar>',
+    ["Menu", "MenuItem", "MenuList", "MenuPopover", "MenuSeparator", "MenuTrigger", "Menubar"],
+    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover placement="bottom start"><MenuList><MenuItem>New note</MenuItem></MenuList></MenuPopover></Menu><Menu><MenuTrigger>Edit</MenuTrigger><MenuPopover placement="bottom start"><MenuList><MenuItem>Undo</MenuItem></MenuList></MenuPopover></Menu></Menubar>',
     [
       p(
         "Menubar",
@@ -2709,7 +2746,7 @@ const navigation = [
         false,
         [prop("disabled", "boolean", "Disables opening and skips the item when arrowing.")],
       ),
-      p("MenuPopover", "content", "Menu container, opened below its bar item.", true, false, [
+      p("MenuPopover", "content", "Floating surface opened below its bar item.", true, false, [
         prop(
           "placement",
           "PopoverPlacement",
@@ -2717,6 +2754,7 @@ const navigation = [
         ),
         prop("offset", "number", "Pixel gap between the bar item and the menu."),
       ]),
+      p("MenuList", "root", "Menu collection inside the surface.", true, true),
       p("MenuSeparator", "label", "Rule between groups of items.", true, true),
       p("MenuItem", "item", "Action item.", true, false, [
         prop("onClick", "(event) => void", "Runs the action; preventDefault keeps the menu open."),
@@ -3083,8 +3121,16 @@ const picker = [
     "select",
     "Select",
     "pickers",
-    ["Label", "Select", "SelectPopover", "SelectOption", "SelectTrigger", "SelectValue"],
-    '<Select name="size" defaultValue="small"><Label>Size</Label><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover><SelectOption value="small">Small</SelectOption></SelectPopover></Select>',
+    [
+      "Label",
+      "Select",
+      "SelectOptGroup",
+      "SelectPopover",
+      "SelectOption",
+      "SelectTrigger",
+      "SelectValue",
+    ],
+    '<Select name="size" defaultValue="small"><Label>Size</Label><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover><SelectOptGroup label="Standard sizes"><SelectOption value="small">Small</SelectOption></SelectOptGroup></SelectPopover></Select>',
     [
       p(
         "Select",
@@ -3118,6 +3164,9 @@ const picker = [
           'Trigger side to open on, such as "bottom"; flips when there is no room.',
         ),
         prop("offset", "number", "Pixel gap between the trigger and the listbox."),
+      ]),
+      p("SelectOptGroup", "region", "Optional native-style group of related options.", true, true, [
+        prop("label", "string", "Names the group before its options."),
       ]),
       p("SelectOption", "item", "Selectable option.", true, false, [
         prop("value", "string", "This option’s value."),
@@ -3156,8 +3205,16 @@ const picker = [
     "combobox",
     "Combobox",
     "pickers",
-    ["Combobox", "ComboboxInput", "ComboboxOption", "ComboboxPopover", "ComboboxTrigger", "Label"],
-    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxTrigger aria-label="Show suggestions" /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
+    [
+      "Combobox",
+      "ComboboxInput",
+      "ComboboxOptGroup",
+      "ComboboxOption",
+      "ComboboxPopover",
+      "ComboboxTrigger",
+      "Label",
+    ],
+    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxTrigger aria-label="Show suggestions" /><ComboboxPopover><ComboboxOptGroup label="Europe"><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxOptGroup></ComboboxPopover></Combobox>',
     [
       p(
         "Combobox",
@@ -3213,6 +3270,14 @@ const picker = [
         ),
         prop("offset", "number", "Pixel gap between the input and the listbox."),
       ]),
+      p(
+        "ComboboxOptGroup",
+        "region",
+        "Optional native-style group of related results.",
+        true,
+        true,
+        [prop("label", "string", "Names the group before its results.")],
+      ),
       p("ComboboxOption", "item", "Selectable result.", true, false, [
         prop("value", "string", "This result’s value."),
         prop("disabled", "boolean", "Disables the result."),
@@ -3269,6 +3334,7 @@ const picker = [
       "ListBoxItem",
       "Menu",
       "MenuItem",
+      "MenuList",
       "MenuPopover",
       "MenuTrigger",
       "SearchField",

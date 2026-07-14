@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Menu } from "./components/Menu.js";
 import { MenuItem } from "./components/MenuItem.js";
+import { MenuList } from "./components/MenuList.js";
 import { MenuPopover } from "./components/MenuPopover.js";
 import { MenuTrigger } from "./components/MenuTrigger.js";
 import { Select } from "./components/Select.js";
@@ -17,15 +18,17 @@ describe("collection item labels", () => {
       <Menu defaultOpen>
         <MenuTrigger>Actions</MenuTrigger>
         <MenuPopover>
-          <MenuItem value="archive">
-            <span>Archive</span>
-          </MenuItem>
-          <MenuItem value="copy">
-            <span>Copy</span>
-          </MenuItem>
-          <MenuItem value="zebra" textValue="Zebra">
-            <span aria-hidden="true">🦓</span>
-          </MenuItem>
+          <MenuList>
+            <MenuItem value="archive">
+              <span>Archive</span>
+            </MenuItem>
+            <MenuItem value="copy">
+              <span>Copy</span>
+            </MenuItem>
+            <MenuItem value="zebra" textValue="Zebra">
+              <span aria-hidden="true">🦓</span>
+            </MenuItem>
+          </MenuList>
         </MenuPopover>
       </Menu>,
     );

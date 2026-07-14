@@ -22,6 +22,7 @@ export function MenuItem({
 }: MenuItemProps & RefProp<HTMLDivElement>) {
   const autocomplete = useAutocompleteContext();
   const menu = useContext(MenuContext);
+  if (!menu) throw new Error("MenuItem must be rendered inside MenuList.");
   const generatedId = useId().replace(/:/g, "");
   // The id prop is only ever the DOM id; the item key is value alone so the
   // two concepts cannot silently stand in for each other.

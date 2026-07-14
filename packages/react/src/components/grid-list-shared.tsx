@@ -99,8 +99,6 @@ export type GridListItemContextValue = {
   label: string;
   listName?: string | undefined;
   reorderable: boolean;
-  /** Called by a mounted GridListDragHandle; returns its cleanup. While one is registered the row itself stops being draggable. */
-  registerHandle: () => () => void;
 };
 
 export const GridListItemContext = createContext<GridListItemContextValue | null>(null);

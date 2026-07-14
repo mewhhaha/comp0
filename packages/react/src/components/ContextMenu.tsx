@@ -28,7 +28,7 @@ export type ContextMenuProps = Omit<HTMLAttributes<HTMLElement>, "onToggle"> & {
 /**
  * A menu opened from a right click (or Shift+F10 / the ContextMenu key)
  * instead of a trigger button. Wrap the right-clickable area in
- * ContextMenuTrigger and put the items in a MenuPopover; the recorded
+ * ContextMenuTrigger and put a MenuList inside MenuPopover; the recorded
  * pointer position is exposed on the popover element as the CSS variables
  * --comp0-context-menu-x and --comp0-context-menu-y (px values), so anchor
  * it yourself with `position: fixed; left: var(--comp0-context-menu-x);
@@ -48,6 +48,7 @@ export function ContextMenu({
   const generatedId = useId().replace(/:/g, "");
   const areaElement = useRef<HTMLElement | null>(null);
   const restoreElement = useRef<HTMLElement | null>(null);
+  const initialFocus = useRef<() => void>(() => undefined);
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
@@ -55,6 +56,7 @@ export function ContextMenu({
   });
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const menuId = id ?? `context-menu-${generatedId}`;
+  const [listId, setListId] = useState<string>();
   const restoreFocus = () => {
     const target = restoreElement.current ?? areaElement.current;
     target?.focus();
@@ -63,8 +65,9 @@ export function ContextMenu({
     open,
     isSubmenu: false,
     triggerId: `${menuId}-trigger`,
-    contentId: `${menuId}-content`,
+    contentId: listId ?? `${menuId}-content`,
     setOpen,
+    setListId,
     closeAll() {
       setOpen(false);
       restoreFocus();
@@ -72,9 +75,16 @@ export function ContextMenu({
     focusTrigger() {
       restoreFocus();
     },
+    focusInitial() {
+      initialFocus.current();
+    },
+    setInitialFocus(focus) {
+      initialFocus.current = focus ?? (() => undefined);
+    },
     setTriggerElement(element) {
       areaElement.current = element;
     },
+    setSurfaceElement() {},
   };
   const contextMenu: ContextMenuContextValue = {
     contentId: context.contentId,

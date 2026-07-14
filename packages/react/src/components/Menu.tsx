@@ -1,4 +1,4 @@
-import { createElement, Fragment, useContext, useId, useRef } from "react";
+import { createElement, Fragment, useContext, useId, useRef, useState } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
@@ -21,39 +21,64 @@ export function Menu({
   const generatedId = useId().replace(/:/g, "");
   const parentMenu = useContext(MenuRootContext);
   const triggerElement = useRef<HTMLElement | null>(null);
+  const surfaceElement = useRef<HTMLDivElement | null>(null);
+  const initialFocus = useRef<() => void>(() => undefined);
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
     onChange: onToggle,
   });
   const menuId = id ?? `menu-${generatedId}`;
+  const [listId, setListId] = useState<string>();
+  const focusAfterClose = () => {
+    const input = autocomplete?.inputRef.current;
+    if (
+      autocomplete &&
+      !autocomplete.disableVirtualFocus &&
+      input &&
+      !surfaceElement.current?.contains(input)
+    ) {
+      input.focus();
+      return;
+    }
+    triggerElement.current?.focus();
+  };
   const context = {
     open,
     isSubmenu: parentMenu !== null,
     triggerId: `${menuId}-trigger`,
-    contentId:
-      autocomplete?.collectionId ?? autocomplete?.defaultCollectionId ?? `${menuId}-content`,
+    contentId: listId ?? autocomplete?.defaultCollectionId ?? `${menuId}-content`,
     setOpen,
+    setListId,
     closeAll() {
       if (autocomplete && !autocomplete.disableVirtualFocus) autocomplete.clearActive();
       setOpen(false);
       if (parentMenu) parentMenu.closeAll();
-      else if (autocomplete && !autocomplete.disableVirtualFocus) {
-        autocomplete.inputRef.current?.focus();
-      } else {
-        triggerElement.current?.focus();
-      }
+      else focusAfterClose();
     },
     focusTrigger() {
-      if (autocomplete && !autocomplete.disableVirtualFocus) {
+      if (
+        autocomplete &&
+        !autocomplete.disableVirtualFocus &&
+        !surfaceElement.current?.contains(autocomplete.inputRef.current)
+      ) {
         autocomplete.clearActive();
         autocomplete.inputRef.current?.focus();
       } else {
         triggerElement.current?.focus();
       }
     },
+    focusInitial() {
+      initialFocus.current();
+    },
+    setInitialFocus(focus: (() => void) | null) {
+      initialFocus.current = focus ?? (() => undefined);
+    },
     setTriggerElement(element: HTMLElement | null) {
       triggerElement.current = element;
+    },
+    setSurfaceElement(element: HTMLDivElement | null) {
+      surfaceElement.current = element;
     },
   };
   // The menu composes with the popover system internally: providing

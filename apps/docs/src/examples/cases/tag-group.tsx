@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Tag, TagGroup } from "@comp0/react";
+import { Button, Label, Tag, TagGroup, TagList } from "@comp0/react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
@@ -11,29 +11,26 @@ export function Example() {
   };
 
   return (
-    <TagGroup
-      aria-label="Topics"
-      className="flex max-w-sm flex-wrap gap-2"
-      value={selected}
-      onChange={setSelected}
-      onRemove={remove}
-    >
-      {tags.map((tag) => (
-        <Tag
-          key={tag}
-          value={tag}
-          className="group cursor-pointer rounded-full bg-zinc-100 outline-teal-600 focus-visible:outline-2 data-selected:bg-teal-100 dark:bg-zinc-800 dark:outline-teal-400 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-1.5 [&>[role=gridcell]]:px-3 [&>[role=gridcell]]:py-1.5"
-        >
-          <span className="text-base capitalize sm:text-sm">{tag}</span>
-          <Button
-            aria-label={`Remove ${tag}`}
-            className="rounded-full p-0.5 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
-            onClick={() => remove(tag)}
+    <TagGroup value={selected} onChange={setSelected} onRemove={remove}>
+      <Label>Topics</Label>
+      <TagList className="flex max-w-sm flex-wrap gap-2">
+        {tags.map((tag) => (
+          <Tag
+            key={tag}
+            value={tag}
+            className="group cursor-pointer rounded-full bg-zinc-100 outline-teal-600 focus-visible:outline-2 data-selected:bg-teal-100 dark:bg-zinc-800 dark:outline-teal-400 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-1.5 [&>[role=gridcell]]:px-3 [&>[role=gridcell]]:py-1.5"
           >
-            <XMarkIcon className="size-3.5" aria-hidden="true" />
-          </Button>
-        </Tag>
-      ))}
+            <span className="text-base capitalize sm:text-sm">{tag}</span>
+            <Button
+              aria-label={`Remove ${tag}`}
+              className="rounded-full p-0.5 text-zinc-500 hover:bg-zinc-950/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+              onClick={() => remove(tag)}
+            >
+              <XMarkIcon className="size-3.5" aria-hidden="true" />
+            </Button>
+          </Tag>
+        ))}
+      </TagList>
     </TagGroup>
   );
 }

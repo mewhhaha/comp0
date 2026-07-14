@@ -31,6 +31,8 @@ export function GridListItem({
   onDragOver,
   onDragStart,
   onDrop,
+  onPointerDownCapture,
+  onPointerUpCapture,
   ref,
   ...props
 }: GridListItemProps & RefProp<HTMLDivElement>) {
@@ -47,30 +49,18 @@ export function GridListItem({
   if (label === undefined && typeof children === "string") label = children;
   if (label === undefined && crawledLabel) label = crawledLabel;
   if (label === undefined) label = ariaLabel ?? value;
-  // A mounted GridListDragHandle takes over drag initiation so the row body
-  // stays free for scrolling and text selection.
-  const handleCount = useRef(0);
-  const [hasHandle, setHasHandle] = useState(false);
-  const registerHandle = () => {
-    handleCount.current += 1;
-    if (handleCount.current === 1) setHasHandle(true);
-    return () => {
-      handleCount.current -= 1;
-      if (handleCount.current === 0) setHasHandle(false);
-    };
-  };
   const itemContext: GridListItemContextValue = {
     value,
     label,
     listName: dnd?.listName,
     reorderable,
-    registerHandle,
   };
   const selected = gridList?.selectedKey === value;
   const active = gridList?.activeKey === value;
   const dragging = dnd?.dragValue === value;
   const dropEdge = dnd?.dropTarget?.value === value ? dnd.dropTarget.edge : undefined;
   const rowRef = useRef<HTMLDivElement | null>(null);
+  const pointerStartedOnControl = useRef(false);
   const registeredRow = useRef<{
     gridList: GridListContextValue;
     value: string;
@@ -150,7 +140,7 @@ export function GridListItem({
       id={id}
       role="row"
       tabIndex={tabIndex}
-      draggable={(reorderable && !hasHandle) || undefined}
+      draggable={reorderable || undefined}
       aria-selected={selected}
       aria-disabled={resolvedDisabled || undefined}
       aria-keyshortcuts={reorderable ? "Alt+ArrowUp Alt+ArrowDown" : undefined}
@@ -178,13 +168,36 @@ export function GridListItem({
         gridList?.setActiveKey(value);
         gridList?.setSelectedKey(value);
       }}
+      onPointerDownCapture={(event) => {
+        onPointerDownCapture?.(event);
+        const target = event.target instanceof Element ? event.target : null;
+        const dragHandle = target?.closest("[data-slot='grid-list-drag-handle']");
+        const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
+        pointerStartedOnControl.current = Boolean(
+          !startsFromHandle &&
+          target &&
+          rowFocusables(event.currentTarget).some((element) => element.contains(target)),
+        );
+      }}
+      onPointerUpCapture={(event) => {
+        onPointerUpCapture?.(event);
+        pointerStartedOnControl.current = false;
+      }}
       onDragStart={(event) => {
         onDragStart?.(event);
         if (event.defaultPrevented || !reorderable || !dnd) return;
         const eventTarget = event.target instanceof Element ? event.target : null;
         const dragHandle = eventTarget?.closest("[data-slot='grid-list-drag-handle']");
         const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
-        if (hasHandle ? !startsFromHandle : event.target !== event.currentTarget) return;
+        const startsFromControl = rowFocusables(event.currentTarget).some((element) =>
+          eventTarget ? element.contains(eventTarget) : false,
+        );
+        if (!startsFromHandle && startsFromControl) return;
+        if (!startsFromHandle && pointerStartedOnControl.current) {
+          event.preventDefault();
+          pointerStartedOnControl.current = false;
+          return;
+        }
         if (event.dataTransfer) {
           event.dataTransfer.effectAllowed = "move";
           event.dataTransfer.setData("text/plain", label);
@@ -212,6 +225,7 @@ export function GridListItem({
       }}
       onDragEnd={(event) => {
         onDragEnd?.(event);
+        pointerStartedOnControl.current = false;
         // Fires on the source row after both drops and cancelled drags.
         dnd?.endDrag();
       }}

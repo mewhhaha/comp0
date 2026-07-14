@@ -136,11 +136,8 @@ export function ServerComponent({ params }: ComponentRouteProps) {
             {keyboardLesson}
           </ComponentSection>
 
-          <ComponentSection id="contract" title="Forms and accessibility">
-            <p className="max-w-[66ch] text-base/7 text-pretty text-zinc-600 dark:text-zinc-300">
-              {doc.form}
-            </p>
-            <h3 className="mt-8 text-base font-semibold text-zinc-950 dark:text-white">
+          <ComponentSection description={doc.form} id="contract" title="Forms and accessibility">
+            <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
               Accessibility checklist
             </h3>
             <ul className="mt-3 grid gap-3" role="list">

@@ -7,6 +7,7 @@ import {
   ListBoxItem,
   Menu,
   MenuItem,
+  MenuList,
   MenuPopover,
   MenuTrigger,
   SearchField,
@@ -107,10 +108,12 @@ describe("Autocomplete composition", () => {
           <SearchFieldInput aria-label="City" />
         </SearchField>
         <Menu defaultOpen>
-          <MenuPopover aria-label="City actions">
-            <MenuItem value="tokyo" onClick={clicked}>
-              Tokyo
-            </MenuItem>
+          <MenuPopover>
+            <MenuList aria-label="City actions">
+              <MenuItem value="tokyo" onClick={clicked}>
+                Tokyo
+              </MenuItem>
+            </MenuList>
           </MenuPopover>
         </Menu>
       </Autocomplete>,
@@ -133,15 +136,17 @@ describe("Autocomplete composition", () => {
         <Menu defaultOpen>
           <MenuTrigger>Commands</MenuTrigger>
           <MenuPopover>
-            <MenuItem id="archive-command" value="archive" onClick={clicked}>
-              Archive
-            </MenuItem>
+            <MenuList>
+              <MenuItem id="archive-command" value="archive" onClick={clicked}>
+                Archive
+              </MenuItem>
+            </MenuList>
           </MenuPopover>
         </Menu>
       </Autocomplete>,
     );
     const input = container.querySelector<HTMLInputElement>("input")!;
-    const menu = container.querySelector<HTMLElement>("[role='menu']")!;
+    const surface = container.querySelector<HTMLElement>("[popover]")!;
 
     input.focus();
     fireKeyDown(input, "ArrowDown");
@@ -149,9 +154,59 @@ describe("Autocomplete composition", () => {
     fireKeyDown(input, "Enter");
 
     expect(clicked).toHaveBeenCalledOnce();
-    expect(menu.hidden).toBe(true);
+    expect(surface.hidden).toBe(true);
     expect(input.hasAttribute("aria-activedescendant")).toBe(false);
     expect(document.activeElement).toBe(input);
+  });
+
+  it("keeps a searchable menu editor inside the popover but outside the menu list", () => {
+    const clicked = vi.fn();
+    const { container } = render(
+      <Autocomplete disableAutoFocusFirst>
+        <Menu defaultOpen>
+          <MenuTrigger aria-controls="command-search" aria-haspopup="dialog">
+            Commands
+          </MenuTrigger>
+          <MenuPopover id="command-search" role="dialog" aria-label="Command search">
+            <SearchField>
+              <SearchFieldInput aria-label="Find a command" />
+            </SearchField>
+            <MenuList aria-label="Matching commands">
+              <MenuItem id="archive-command" value="archive" onClick={clicked}>
+                Archive
+              </MenuItem>
+              <MenuItem id="print-command" value="print">
+                Print
+              </MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      </Autocomplete>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const input = container.querySelector<HTMLInputElement>("input")!;
+    const surface = container.querySelector<HTMLElement>("[popover]")!;
+    const menu = container.querySelector<HTMLElement>("[role='menu']")!;
+
+    expect(surface.contains(input)).toBe(true);
+    expect(menu.contains(input)).toBe(false);
+    expect(trigger.getAttribute("aria-haspopup")).toBe("dialog");
+    expect(trigger.getAttribute("aria-controls")).toBe("command-search");
+    expect(document.activeElement).toBe(input);
+
+    fireKeyDown(input, "Home");
+    expect(document.activeElement).toBe(input);
+    fireInput(input, "ar");
+    fireKeyDown(input, "Escape");
+    expect(input.value).toBe("");
+    expect(surface.hidden).toBe(false);
+    fireKeyDown(input, "ArrowDown");
+    expect(input.getAttribute("aria-activedescendant")).toBe("archive-command");
+    fireKeyDown(input, "Enter");
+
+    expect(clicked).toHaveBeenCalledOnce();
+    expect(surface.hidden).toBe(true);
+    expect(document.activeElement).toBe(trigger);
   });
 
   it("only exposes the effective ListBox id while the collection is mounted", () => {
@@ -187,7 +242,7 @@ describe("Autocomplete composition", () => {
     expect(input.hasAttribute("aria-controls")).toBe(false);
   });
 
-  it("uses a mounted MenuPopover id for TextArea controls and removes it on unmount", () => {
+  it("uses a mounted MenuList id for TextArea controls and removes it on unmount", () => {
     const { container, rerender } = render(
       <Autocomplete>
         <TextField>
@@ -196,8 +251,10 @@ describe("Autocomplete composition", () => {
         </TextField>
         <Menu defaultOpen>
           <MenuTrigger>Commands</MenuTrigger>
-          <MenuPopover id="command-results" aria-label="Commands">
-            <MenuItem value="archive">Archive</MenuItem>
+          <MenuPopover>
+            <MenuList id="command-results" aria-label="Commands">
+              <MenuItem value="archive">Archive</MenuItem>
+            </MenuList>
           </MenuPopover>
         </Menu>
       </Autocomplete>,
@@ -456,15 +513,17 @@ describe("Autocomplete composition", () => {
           <SearchFieldInput aria-label="City action" />
         </SearchField>
         <Menu defaultOpen>
-          <MenuPopover aria-label="Cities">
-            <MenuItem value="nyc">
-              <span>
-                New <strong>York</strong>
-              </span>
-            </MenuItem>
-            <MenuItem value="warsaw">
-              <span>Warsaw</span>
-            </MenuItem>
+          <MenuPopover>
+            <MenuList aria-label="Cities">
+              <MenuItem value="nyc">
+                <span>
+                  New <strong>York</strong>
+                </span>
+              </MenuItem>
+              <MenuItem value="warsaw">
+                <span>Warsaw</span>
+              </MenuItem>
+            </MenuList>
           </MenuPopover>
         </Menu>
       </Autocomplete>,

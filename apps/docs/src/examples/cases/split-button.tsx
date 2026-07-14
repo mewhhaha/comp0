@@ -1,4 +1,12 @@
-import { Button, Menu, MenuItem, MenuPopover, MenuTrigger, SplitButton } from "@comp0/react";
+import {
+  Button,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
+  SplitButton,
+} from "@comp0/react";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
@@ -26,20 +34,22 @@ export function Example() {
           offset={8}
           className="w-44 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:shadow-none dark:ring-white/10"
         >
-          <MenuItem
-            onClick={saveAs}
-            value="save-as"
-            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
-          >
-            Save as…
-          </MenuItem>
-          <MenuItem
-            onClick={saveCopy}
-            value="save-copy"
-            className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
-          >
-            Save a copy…
-          </MenuItem>
+          <MenuList>
+            <MenuItem
+              onClick={saveAs}
+              value="save-as"
+              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+            >
+              Save as…
+            </MenuItem>
+            <MenuItem
+              onClick={saveCopy}
+              value="save-copy"
+              className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
+            >
+              Save a copy…
+            </MenuItem>
+          </MenuList>
         </MenuPopover>
       </Menu>
     </SplitButton>

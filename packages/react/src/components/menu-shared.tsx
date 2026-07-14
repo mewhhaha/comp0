@@ -18,12 +18,14 @@ export type MenuProps = Omit<HTMLAttributes<HTMLElement>, "onToggle"> & {
 
 export type MenuTriggerProps = Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
-  "aria-expanded" | "aria-controls"
+  "aria-expanded"
 > & {
   as?: ElementType | typeof Fragment | undefined;
 } & Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "download" | "href" | "rel" | "target">;
 
 export type MenuPopoverProps = HTMLAttributes<HTMLDivElement> & PopoverPlacementProps;
+
+export type MenuListProps = Omit<HTMLAttributes<HTMLDivElement>, "role">;
 
 export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;
@@ -41,10 +43,14 @@ export type MenuRootContextValue = {
   triggerId: string;
   contentId: string;
   setOpen: (open: boolean) => void;
+  setListId: (id: string | undefined) => void;
   /** Closes this menu and every ancestor, focusing the topmost trigger. */
   closeAll: () => void;
   focusTrigger: () => void;
+  focusInitial: () => void;
+  setInitialFocus: (focus: (() => void) | null) => void;
   setTriggerElement: (element: HTMLElement | null) => void;
+  setSurfaceElement: (element: HTMLDivElement | null) => void;
 };
 
 export const MenuRootContext = createContext<MenuRootContextValue | null>(null);

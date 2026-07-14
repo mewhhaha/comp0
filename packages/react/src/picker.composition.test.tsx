@@ -4,6 +4,7 @@ import {
   Combobox,
   ComboboxPopover,
   ComboboxInput,
+  ComboboxOptGroup,
   ComboboxOption,
   ComboboxTrigger,
   Description,
@@ -12,6 +13,7 @@ import {
   ListBox,
   ListBoxItem,
   Select,
+  SelectOptGroup,
   SelectPopover,
   SelectOption,
   SelectTrigger,
@@ -165,6 +167,72 @@ describe("picker composition", () => {
     expect(container.querySelector("[data-value='pro']")?.getAttribute("aria-selected")).toBe(
       "true",
     );
+  });
+
+  it("navigates labelled select opt groups and submits the selected option", () => {
+    const { container } = render(
+      <form>
+        <Select name="size" defaultValue="medium">
+          <SelectTrigger>Size</SelectTrigger>
+          <SelectPopover>
+            <SelectOptGroup label="Standard sizes">
+              <SelectOption value="small">Small</SelectOption>
+              <SelectOption value="medium">Medium</SelectOption>
+            </SelectOptGroup>
+            <SelectOptGroup label="Extended sizes">
+              <SelectOption value="large">Large</SelectOption>
+            </SelectOptGroup>
+          </SelectPopover>
+        </Select>
+      </form>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const groups = container.querySelectorAll<HTMLElement>("[role='group']");
+
+    expect([...groups].map((group) => group.getAttribute("aria-label"))).toEqual([
+      "Standard sizes",
+      "Extended sizes",
+    ]);
+    fireClick(trigger);
+    expect(document.activeElement?.textContent).toBe("Medium");
+    fireKeyDown(document.activeElement!, "ArrowDown");
+    expect(document.activeElement?.textContent).toBe("Large");
+    fireKeyDown(document.activeElement!, "Enter");
+
+    expect(new FormData(container.querySelector("form")!).get("size")).toBe("large");
+  });
+
+  it("navigates labelled combobox opt groups and serializes a committed option", () => {
+    const { container } = render(
+      <form>
+        <Combobox name="city">
+          <ComboboxInput aria-label="City" />
+          <ComboboxPopover>
+            <ComboboxOptGroup label="Poland">
+              <ComboboxOption value="krakow">Kraków</ComboboxOption>
+            </ComboboxOptGroup>
+            <ComboboxOptGroup label="Portugal">
+              <ComboboxOption value="lisbon">Lisbon</ComboboxOption>
+            </ComboboxOptGroup>
+          </ComboboxPopover>
+        </Combobox>
+      </form>,
+    );
+    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
+    const groups = container.querySelectorAll<HTMLElement>("[role='group']");
+
+    expect([...groups].map((group) => group.getAttribute("aria-label"))).toEqual([
+      "Poland",
+      "Portugal",
+    ]);
+    fireKeyDown(input, "ArrowDown");
+    fireKeyDown(input, "ArrowDown");
+    expect(input.getAttribute("aria-activedescendant")).toBe(
+      container.querySelector<HTMLElement>("[data-value='lisbon']")?.id,
+    );
+    fireKeyDown(input, "Enter");
+
+    expect(new FormData(container.querySelector("form")!).get("city")).toBe("lisbon");
   });
 
   it("preserves native combobox onChange and supports navigation and commit keys", () => {

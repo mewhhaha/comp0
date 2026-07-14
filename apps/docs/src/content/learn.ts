@@ -164,7 +164,7 @@ export const learnDocs = [
         title: "Keep familiar key symbols",
         explanation:
           "Enter and Space activate buttons. Arrow keys move through menus, list boxes, radio groups, and tabs; Escape closes overlays. Let the component handle these familiar keys instead of giving them surprising new jobs.",
-        code: '<Menu>\n  <MenuTrigger>Actions</MenuTrigger>\n  <MenuPopover aria-label="Actions">...</MenuPopover>\n</Menu>',
+        code: '<Menu>\n  <MenuTrigger>Actions</MenuTrigger>\n  <MenuPopover>\n    <MenuList aria-label="Actions">...</MenuList>\n  </MenuPopover>\n</Menu>',
         language: "tsx",
       },
       {

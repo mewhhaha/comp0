@@ -3,7 +3,7 @@ import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { resolveItemLabel } from "./collection-shared.js";
 import { rowFocusables } from "./grid-list-shared.js";
-import { TagGroupContext } from "./tag-shared.js";
+import { TagGroupContext, TagListContext } from "./tag-shared.js";
 
 export type TagProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
   value?: string | undefined;
@@ -24,12 +24,14 @@ export function Tag({
   ...props
 }: TagProps & RefProp<HTMLDivElement>) {
   const group = useContext(TagGroupContext);
+  const list = useContext(TagListContext);
+  if (!list) throw new Error("Tag must be rendered inside TagList.");
   const generatedId = useId().replace(/:/g, "");
   const value = valueProp ?? generatedId;
   const id = idProp ?? `tag-${generatedId}`;
   const resolvedDisabled = Boolean(disabled);
   const selected = group?.selectionEnabled === true && group.selected.includes(value);
-  const active = group?.activeKey === value;
+  const active = list.activeKey === value;
   const ariaLabel = props["aria-label"];
   const rowRef = useRef<HTMLDivElement | null>(null);
   let tabIndex: number | undefined = -1;
@@ -38,7 +40,7 @@ export function Tag({
 
   const itemRef = (element: HTMLDivElement | null) => {
     rowRef.current = element;
-    group?.register(
+    list.register(
       value,
       resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
       element,
@@ -53,7 +55,7 @@ export function Tag({
     const row = rowRef.current;
     if (!row) return;
     for (const element of rowFocusables(row)) element.tabIndex = -1;
-    group?.register(
+    list.register(
       value,
       resolveItemLabel({ textValue, children, element: row, ariaLabel, fallback: value }),
       row,
@@ -82,7 +84,7 @@ export function Tag({
         if (event.defaultPrevented) return;
         const target = event.target instanceof HTMLElement ? event.target : null;
         if (target && rowFocusables(event.currentTarget).some((el) => el.contains(target))) return;
-        group?.setActiveKey(value);
+        list.setActiveKey(value);
         if (group?.selectionEnabled) group.toggle(value);
       }}
     >

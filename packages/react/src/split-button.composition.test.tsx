@@ -3,6 +3,7 @@ import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Button } from "./components/Button.js";
 import { Menu } from "./components/Menu.js";
 import { MenuItem } from "./components/MenuItem.js";
+import { MenuList } from "./components/MenuList.js";
 import { MenuPopover } from "./components/MenuPopover.js";
 import { MenuTrigger } from "./components/MenuTrigger.js";
 import { SplitButton } from "./components/SplitButton.js";
@@ -18,8 +19,10 @@ function renderSplit(primaryProps: { disabled?: boolean } = {}) {
       <Menu id="save-menu">
         <MenuTrigger aria-label="More save options">More</MenuTrigger>
         <MenuPopover>
-          <MenuItem onClick={onSaveAs}>Save as</MenuItem>
-          <MenuItem>Save a copy</MenuItem>
+          <MenuList>
+            <MenuItem onClick={onSaveAs}>Save as</MenuItem>
+            <MenuItem>Save a copy</MenuItem>
+          </MenuList>
         </MenuPopover>
       </Menu>
     </SplitButton>,
@@ -28,7 +31,8 @@ function renderSplit(primaryProps: { disabled?: boolean } = {}) {
   const primary = result.container.querySelector<HTMLButtonElement>("button")!;
   const menuTrigger = result.container.querySelector<HTMLButtonElement>("[aria-haspopup='menu']")!;
   const content = result.container.querySelector<HTMLElement>("[role='menu']")!;
-  return { ...result, group, primary, menuTrigger, content, onSave, onSaveAs };
+  const surface = result.container.querySelector<HTMLElement>("[popover]")!;
+  return { ...result, group, primary, menuTrigger, content, surface, onSave, onSaveAs };
 }
 
 describe("split button composition", () => {
@@ -66,14 +70,14 @@ describe("split button composition", () => {
   });
 
   it("opens the menu from its own button and restores focus on Escape", () => {
-    const { menuTrigger, content } = renderSplit();
-    expect(content.hidden).toBe(true);
+    const { menuTrigger, surface } = renderSplit();
+    expect(surface.hidden).toBe(true);
     menuTrigger.focus();
     fireKeyDown(menuTrigger, "ArrowDown");
-    expect(content.hidden).toBe(false);
+    expect(surface.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("Save as");
     fireKeyDown(document.activeElement!, "Escape");
-    expect(content.hidden).toBe(true);
+    expect(surface.hidden).toBe(true);
     expect(document.activeElement).toBe(menuTrigger);
   });
 

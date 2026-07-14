@@ -1,19 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
+import { Label } from "./components/Label.js";
 import { Tag } from "./components/Tag.js";
 import { TagGroup } from "./components/TagGroup.js";
+import { TagList } from "./components/TagList.js";
 
 function renderTags(overrides: { onRemove?: (value: string) => void } = {}) {
   const onChange = vi.fn();
   const result = render(
-    <TagGroup aria-label="Filters" defaultValue={["news"]} onChange={onChange} {...overrides}>
-      <Tag value="news">
-        News <button type="button">Remove news</button>
-      </Tag>
-      <Tag value="sports">
-        Sports <button type="button">Remove sports</button>
-      </Tag>
-      <Tag value="arts">Arts</Tag>
+    <TagGroup defaultValue={["news"]} onChange={onChange} {...overrides}>
+      <Label>Filters</Label>
+      <TagList>
+        <Tag value="news">
+          News <button type="button">Remove news</button>
+        </Tag>
+        <Tag value="sports">
+          Sports <button type="button">Remove sports</button>
+        </Tag>
+        <Tag value="arts">Arts</Tag>
+      </TagList>
     </TagGroup>,
   );
   const tags = [...result.container.querySelectorAll<HTMLElement>("[role='row']")];
@@ -21,9 +26,25 @@ function renderTags(overrides: { onRemove?: (value: string) => void } = {}) {
 }
 
 describe("tag group composition", () => {
-  it("renders a grid of tag rows with one tab stop and hidden remove buttons", () => {
+  it("requires TagList inside TagGroup and tags inside TagList", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      expect(() => render(<TagList />)).toThrow("TagList must be rendered inside TagGroup.");
+      expect(() => render(<Tag value="news">News</Tag>)).toThrow(
+        "Tag must be rendered inside TagList.",
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
+  it("renders a labelled grid of tag rows with one tab stop and hidden remove buttons", () => {
     const { container, tags } = renderTags();
-    expect(container.querySelector("[role='grid']")).toBeTruthy();
+    const grid = container.querySelector<HTMLElement>("[role='grid']")!;
+    const label = container.querySelector<HTMLLabelElement>("label")!;
+    expect(label.textContent).toBe("Filters");
+    expect(grid.id).toBe(label.htmlFor);
+    expect(grid.getAttribute("aria-labelledby")).toBe(label.id);
     expect(tags).toHaveLength(3);
     expect(tags[0]!.tabIndex).toBe(0);
     expect(tags[1]!.tabIndex).toBe(-1);
