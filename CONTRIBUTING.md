@@ -27,7 +27,7 @@ pnpm test:compiler-smoke
 
 Pushing a change to either library's `package.json` on `main` runs `pnpm -r publish --tag next`, publishing every workspace version that is not already in the registry to the prerelease channel. Push an exact version tag such as `v0.2.0` to publish the current unpublished versions under `latest` instead. Keep `@comp0/core` and `@comp0/react` on the same version and bump every prerelease version before publishing because npm versions are immutable.
 
-Publishing authenticates with the required `NPM_TOKEN` repository secret and records npm provenance. The workspace root and documentation app are private, so recursive publishing considers only `@comp0/core` and `@comp0/react`.
+Publishing uses npm trusted publishing: both packages authorize the GitHub Actions workflow `release.yml`, and the workflow exchanges its OIDC identity for a short-lived registry credential. No npm token is stored in GitHub. npm records provenance automatically; the explicit publish flag keeps that requirement visible in the workflow. The workspace root and documentation app are private, so recursive publishing considers only `@comp0/core` and `@comp0/react`.
 
 ## React Compiler
 
