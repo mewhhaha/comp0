@@ -7,7 +7,7 @@
     "build": "react-router build && node ../../scripts/verify-docs-client-bundle.mjs",
     "dev": "react-router dev --host 0.0.0.0",
     "preview": "pnpm run build && vite preview --host 0.0.0.0",
-    "deploy": "pnpm run build && wrangler deploy",
+    "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "react-router typegen && tsgo -p tsconfig.json"
   },
