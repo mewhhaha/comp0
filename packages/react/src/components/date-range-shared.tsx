@@ -22,6 +22,8 @@ export function useDateRangePickerContext(part?: string) {
 
 export type RangeCalendarContextValue = {
   value: DateRange;
+  previewDate: string;
+  setPreviewDate: (value: string) => void;
 };
 
 export const RangeCalendarContext = createContext<RangeCalendarContextValue | null>(null);

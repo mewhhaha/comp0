@@ -44,23 +44,15 @@ export function Example() {
             name="password"
             onInvalid={() => setHasValidationError(true)}
           />
-          <PasswordFieldToggle className="absolute top-1/2 right-1 flex h-8 -translate-y-1/2 items-center justify-center gap-1.5 rounded px-2 text-sm font-medium text-zinc-500 outline-teal-600 hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-2 dark:text-zinc-400 dark:outline-teal-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100">
-            {({ passwordVisible }) => {
-              if (passwordVisible) {
-                return (
-                  <>
-                    <EyeSlashIcon className="size-4" aria-hidden="true" />
-                    Hide
-                  </>
-                );
-              }
-              return (
-                <>
-                  <EyeIcon className="size-4" aria-hidden="true" />
-                  Show
-                </>
-              );
-            }}
+          <PasswordFieldToggle className="group absolute top-1/2 right-1 flex h-8 -translate-y-1/2 items-center justify-center gap-1.5 rounded px-2 text-sm font-medium text-zinc-500 outline-teal-600 hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-2 dark:text-zinc-400 dark:outline-teal-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100">
+            <span className="flex items-center gap-1.5 group-data-visible:hidden">
+              <EyeIcon className="size-4" aria-hidden="true" />
+              Show
+            </span>
+            <span className="hidden items-center gap-1.5 group-data-visible:flex">
+              <EyeSlashIcon className="size-4" aria-hidden="true" />
+              Hide
+            </span>
           </PasswordFieldToggle>
         </div>
         <Description className="text-base text-zinc-600 sm:text-sm dark:text-zinc-400">

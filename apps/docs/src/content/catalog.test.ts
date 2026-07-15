@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { componentBySlug, components } from "./catalog.js";
 import { learnDocs } from "./learn.js";
 import { getExample, exampleRegistry } from "../examples/registry.js";
+import { getExampleSource } from "../examples/sources.js";
 
 const publicComponents = Object.keys(api).sort();
 
@@ -37,6 +38,19 @@ describe("docs content catalog", () => {
         const key = `${component.slug}.${variant.id}`;
         expect(getExample(key), key).toBeDefined();
       }
+    }
+  });
+
+  it("documents one visible trigger for custom date and time pickers", () => {
+    for (const slug of ["date-picker", "time-picker", "date-range-picker"]) {
+      const component = componentBySlug.get(slug)!;
+      expect(getExampleSource(slug), slug).toContain(
+        "[&::-webkit-calendar-picker-indicator]:hidden",
+      );
+      expect(
+        component.accessibility.some((note) => note.includes("must hide")),
+        slug,
+      ).toBe(true);
     }
   });
 

@@ -79,6 +79,7 @@ export function RangeCalendar({
     else if (isValidISODate(start)) initial = start;
     return clampISODate(initial, min, max);
   });
+  const [previewDate, setPreviewDate] = useState("");
   const focusRequested = useRef(false);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export function RangeCalendar({
   };
   const selectDate = (iso: string) => {
     if (resolvedDisabled) return;
+    setPreviewDate("");
     let next: DateRange = [iso, ""];
     if (start && !end) {
       if (isBefore(iso, start)) next = [iso, start];
@@ -146,7 +148,7 @@ export function RangeCalendar({
 
   return (
     <CalendarContext value={calendarContext}>
-      <RangeCalendarContext value={{ value: range }}>
+      <RangeCalendarContext value={{ previewDate, value: range, setPreviewDate }}>
         <ProviderRoot
           as={as}
           {...props}

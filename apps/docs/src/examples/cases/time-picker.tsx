@@ -31,13 +31,15 @@ export function Example() {
         Meeting time
       </Label>
       <div className="flex gap-1.5">
-        <TimeField
-          id="meeting-time"
-          name="meetingTime"
-          value={time}
-          onChange={(event) => setTime(event.currentTarget.value)}
-          className="w-full rounded border border-zinc-950/10 bg-white px-3 py-2.5 text-base text-zinc-950 outline-teal-600 focus-visible:outline-2 sm:py-2 sm:text-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:outline-teal-400"
-        />
+        <div className="w-full overflow-hidden rounded border border-zinc-950/10 bg-white outline-teal-600 focus-within:outline-2 dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400">
+          <TimeField
+            id="meeting-time"
+            name="meetingTime"
+            value={time}
+            onChange={(event) => setTime(event.currentTarget.value)}
+            className="w-[calc(100%+2.5rem)] border-0 bg-transparent px-3 py-2.5 text-base text-zinc-950 outline-none sm:py-2 sm:text-sm dark:text-zinc-50 [&::-webkit-calendar-picker-indicator]:hidden"
+          />
+        </div>
         <Popover open={open} onToggle={setOpen}>
           <PopoverTrigger
             aria-label="Choose time"

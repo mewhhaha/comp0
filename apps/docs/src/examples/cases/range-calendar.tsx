@@ -20,14 +20,8 @@ export function Example() {
           <ChevronRightIcon className="size-4" aria-hidden="true" />
         </CalendarNextButton>
       </div>
-      <RangeCalendarGrid className="text-sm">
-        {(cell) => (
-          <RangeCalendarCell
-            date={cell.iso}
-            outsideMonth={cell.outsideMonth}
-            className="[&_button]:size-9 [&_button]:rounded [&_button]:data-in-range:bg-teal-50 [&_button]:data-range-end:bg-teal-600 [&_button]:data-range-end:text-white [&_button]:data-range-start:bg-teal-600 [&_button]:data-range-start:text-white dark:[&_button]:data-in-range:bg-teal-950"
-          />
-        )}
+      <RangeCalendarGrid className="border-separate border-spacing-0 text-sm [&_button]:size-9 [&_button]:outline-teal-600 [&_button:focus-visible]:rounded [&_button:focus-visible]:outline-2 [&_button:hover]:rounded [&_button:hover]:bg-zinc-100 [&_td]:p-0 [&_td[data-in-range]]:bg-teal-50 [&_td[data-range-end]]:bg-teal-600 [&_td[data-range-end]_button]:text-white [&_td[data-range-preview]]:bg-teal-100 [&_td[data-range-start]]:bg-teal-600 [&_td[data-range-start]_button]:text-white dark:[&_button]:outline-teal-400 dark:[&_button:hover]:bg-zinc-800 dark:[&_td[data-in-range]]:bg-teal-950 dark:[&_td[data-range-preview]]:bg-teal-900">
+        {(cell) => <RangeCalendarCell date={cell.iso} outsideMonth={cell.outsideMonth} />}
       </RangeCalendarGrid>
     </RangeCalendar>
   );

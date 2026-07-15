@@ -80,6 +80,51 @@ describe("range calendar", () => {
     ).toBe(true);
   });
 
+  it("previews an incomplete range toward the hovered date and clears after pointer exit", () => {
+    const { container } = render(
+      <RangeCalendar defaultValue={["2024-02-12", ""]} locale="en-GB">
+        <RangeCalendarGrid />
+      </RangeCalendar>,
+    );
+    const previewEnd = dayButton(container, "2024-02-15");
+
+    act(() => {
+      previewEnd.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
+    });
+    expect(container.querySelectorAll("td[data-range-preview]")).toHaveLength(4);
+    expect(
+      container.querySelector("td[data-value='2024-02-13']")?.hasAttribute("data-range-preview"),
+    ).toBe(true);
+    expect(previewEnd.hasAttribute("data-range-preview")).toBe(true);
+
+    act(() => {
+      previewEnd.dispatchEvent(new MouseEvent("pointerout", { bubbles: true }));
+    });
+    expect(container.querySelectorAll("td[data-range-preview]")).toHaveLength(0);
+  });
+
+  it("orders a backwards range preview chronologically", () => {
+    const { container } = render(
+      <RangeCalendar defaultValue={["2024-02-15", ""]} locale="en-GB">
+        <RangeCalendarGrid />
+      </RangeCalendar>,
+    );
+
+    act(() => {
+      dayButton(container, "2024-02-12").dispatchEvent(
+        new MouseEvent("pointerover", { bubbles: true }),
+      );
+    });
+
+    expect(container.querySelectorAll("td[data-range-preview]")).toHaveLength(4);
+    expect(
+      container.querySelector("td[data-value='2024-02-12']")?.hasAttribute("data-range-preview"),
+    ).toBe(true);
+    expect(
+      container.querySelector("td[data-value='2024-02-15']")?.hasAttribute("data-range-preview"),
+    ).toBe(true);
+  });
+
   it("uses the calendar grid keyboard contract and respects controlled state", () => {
     const onChange = vi.fn();
     const { container } = render(
