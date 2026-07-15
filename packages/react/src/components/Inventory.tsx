@@ -88,11 +88,36 @@ export function Inventory({
     source: InventoryLayout,
     value: string,
     label: string,
+    interaction: InventoryInteraction,
     change: (entry: InventoryLayoutEntry) => InventoryLayoutEntry,
   ) => {
     const current = source.find((entry) => entry.value === value);
     if (!current) return undefined;
-    const resolved = resolveInventoryLayout(source, value, change(current), columns, rows);
+    const proposed = change(current);
+    let constrained = proposed;
+    if (interaction === "move") {
+      constrained = {
+        ...proposed,
+        column: Math.min(Math.max(1, proposed.column), columns - proposed.columnSpan + 1),
+        row: Math.min(Math.max(1, proposed.row), rows - proposed.rowSpan + 1),
+      };
+    } else {
+      constrained = {
+        ...proposed,
+        columnSpan: Math.min(Math.max(1, proposed.columnSpan), columns - proposed.column + 1),
+        rowSpan: Math.min(Math.max(1, proposed.rowSpan), rows - proposed.row + 1),
+      };
+    }
+    if (
+      constrained.column === current.column &&
+      constrained.row === current.row &&
+      constrained.columnSpan === current.columnSpan &&
+      constrained.rowSpan === current.rowSpan
+    ) {
+      setInvalidValue("");
+      return undefined;
+    }
+    const resolved = resolveInventoryLayout(source, value, constrained, columns, rows);
     if (!resolved || (canChange && !canChange(resolved, value))) {
       setInvalidValue(value);
       setAnnouncement(`${label} cannot fit there.`);
@@ -117,7 +142,7 @@ export function Inventory({
     else if (event.key === "ArrowDown") rowDelta = 1;
     else return;
     event.preventDefault();
-    const next = updateEntry(layout, itemValue, label, (entry) => {
+    const next = updateEntry(layout, itemValue, label, kind, (entry) => {
       if (kind === "move") {
         return { ...entry, column: entry.column + columnDelta, row: entry.row + rowDelta };
       }
@@ -173,20 +198,26 @@ export function Inventory({
     if (!current || current.pointerId !== event.pointerId) return;
     const columnDelta = Math.round((event.clientX - current.startX) / current.columnStep);
     const rowDelta = Math.round((event.clientY - current.startY) / current.rowStep);
-    const next = updateEntry(current.layout, current.value, current.label, (entry) => {
-      if (current.interaction === "move") {
+    const next = updateEntry(
+      current.layout,
+      current.value,
+      current.label,
+      current.interaction,
+      (entry) => {
+        if (current.interaction === "move") {
+          return {
+            ...entry,
+            column: current.entry.column + columnDelta,
+            row: current.entry.row + rowDelta,
+          };
+        }
         return {
           ...entry,
-          column: current.entry.column + columnDelta,
-          row: current.entry.row + rowDelta,
+          columnSpan: current.entry.columnSpan + columnDelta,
+          rowSpan: current.entry.rowSpan + rowDelta,
         };
-      }
-      return {
-        ...entry,
-        columnSpan: Math.max(1, current.entry.columnSpan + columnDelta),
-        rowSpan: Math.max(1, current.entry.rowSpan + rowDelta),
-      };
-    });
+      },
+    );
     if (next) current.latestEntry = next;
   };
 

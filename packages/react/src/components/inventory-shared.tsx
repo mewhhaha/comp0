@@ -81,7 +81,8 @@ function firstAvailablePosition(
   rows: number,
 ) {
   const firstIndex = (entry.row - 1) * columns + entry.column - 1;
-  for (let index = firstIndex; index < columns * rows; index += 1) {
+  for (let offset = 0; offset < columns * rows; offset += 1) {
+    const index = (firstIndex + offset) % (columns * rows);
     const candidate = {
       ...entry,
       column: (index % columns) + 1,

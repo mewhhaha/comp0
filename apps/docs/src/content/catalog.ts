@@ -229,7 +229,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for customizable dashboards and boards where position and size must persist as grid units.",
     "Start Inventory with its column count, row count, and a complete layout.",
     "Render one InventoryItem per layout value, with optional move and resize handles inside each card.",
-    "Give the root a visible size; pointer and arrow-key changes emit the complete next layout, and collisions push obstructed items forward.",
+    "Give the root a visible size; pointer and arrow-key changes emit the complete next layout, and collisions move obstructed items to available tracks.",
     '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    <InventoryResizeHandle />\n    Sales\n  </InventoryItem>\n</Inventory>;',
   ),
   "grid-list": lesson(

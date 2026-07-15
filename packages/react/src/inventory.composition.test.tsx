@@ -50,6 +50,19 @@ function thrownEvidence(callback: () => void) {
   return "";
 }
 
+function mockPointerGeometry(
+  inventory: HTMLOListElement,
+  control: HTMLButtonElement,
+  size: { width: number; height: number },
+) {
+  Object.defineProperties(inventory, {
+    clientWidth: { value: size.width },
+    clientHeight: { value: size.height },
+  });
+  control.setPointerCapture = vi.fn();
+  control.hasPointerCapture = vi.fn(() => false);
+}
+
 describe("inventory composition", () => {
   it("renders a semantic list with grid placement and named controls", () => {
     const { container } = renderInventory();
@@ -87,7 +100,7 @@ describe("inventory composition", () => {
     );
   });
 
-  it("resizes in row and column spans and marks rejected placements", () => {
+  it("resizes in row and column spans without marking a grid edge invalid", () => {
     const { container } = renderInventory();
     const alerts = container.querySelector<HTMLElement>('[data-value="alerts"]')!;
     const resize = alerts.querySelector("[data-slot='inventory-resize-handle']")!;
@@ -97,9 +110,8 @@ describe("inventory composition", () => {
 
     fireKeyDown(resize, "ArrowRight");
     expect(alerts.dataset.columnSpan).toBe("1");
-    expect(alerts.hasAttribute("data-invalid-placement")).toBe(true);
-    expect(resize.hasAttribute("data-invalid-placement")).toBe(true);
-    expect(container.querySelector("output")?.textContent).toContain("Alerts cannot fit there");
+    expect(alerts.hasAttribute("data-invalid-placement")).toBe(false);
+    expect(resize.hasAttribute("data-invalid-placement")).toBe(false);
   });
 
   it("reports controlled changes without moving until its owner responds", () => {
@@ -127,12 +139,7 @@ describe("inventory composition", () => {
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
-    Object.defineProperties(inventory, {
-      clientWidth: { value: 600 },
-      clientHeight: { value: 480 },
-    });
-    move.setPointerCapture = vi.fn();
-    move.hasPointerCapture = vi.fn(() => false);
+    mockPointerGeometry(inventory, move, { width: 600, height: 480 });
 
     act(() => {
       move.dispatchEvent(
@@ -156,6 +163,144 @@ describe("inventory composition", () => {
     expect(revenue.dataset.column).toBe("1");
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
     expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("clamps pointer movement to the nearest grid edge", () => {
+    const { container } = render(
+      <Inventory
+        columns={3}
+        rows={3}
+        defaultValue={[{ value: "card", column: 2, row: 2, columnSpan: 1, rowSpan: 1 }]}
+      >
+        <InventoryItem value="card" textValue="Card">
+          <InventoryMoveHandle />
+        </InventoryItem>
+      </Inventory>,
+    );
+    const inventory = container.querySelector<HTMLOListElement>("ol")!;
+    const card = container.querySelector<HTMLElement>('[data-value="card"]')!;
+    const move = card.querySelector<HTMLButtonElement>("button")!;
+    mockPointerGeometry(inventory, move, { width: 300, height: 300 });
+
+    act(() => {
+      move.dispatchEvent(
+        new MouseEvent("pointerdown", { bubbles: true, cancelable: true, clientX: 0, clientY: 0 }),
+      );
+      move.dispatchEvent(
+        new MouseEvent("pointermove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 1000,
+          clientY: -1000,
+        }),
+      );
+    });
+
+    expect(card.dataset.column).toBe("3");
+    expect(card.dataset.row).toBe("1");
+    expect(card.hasAttribute("data-invalid-placement")).toBe(false);
+  });
+
+  it("clamps pointer resizing to the available grid tracks", () => {
+    const { container } = render(
+      <Inventory
+        columns={3}
+        rows={3}
+        defaultValue={[{ value: "card", column: 1, row: 1, columnSpan: 1, rowSpan: 1 }]}
+      >
+        <InventoryItem value="card" textValue="Card">
+          <InventoryResizeHandle />
+        </InventoryItem>
+      </Inventory>,
+    );
+    const inventory = container.querySelector<HTMLOListElement>("ol")!;
+    const card = container.querySelector<HTMLElement>('[data-value="card"]')!;
+    const resize = card.querySelector<HTMLButtonElement>("button")!;
+    mockPointerGeometry(inventory, resize, { width: 300, height: 300 });
+
+    act(() => {
+      resize.dispatchEvent(
+        new MouseEvent("pointerdown", { bubbles: true, cancelable: true, clientX: 0, clientY: 0 }),
+      );
+      resize.dispatchEvent(
+        new MouseEvent("pointermove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 1000,
+          clientY: 1000,
+        }),
+      );
+    });
+
+    expect(card.dataset.columnSpan).toBe("3");
+    expect(card.dataset.rowSpan).toBe("3");
+    expect(card.hasAttribute("data-invalid-placement")).toBe(false);
+  });
+
+  it("reuses vacated tracks when displaced items cannot move forward", () => {
+    const { container } = render(
+      <Inventory
+        columns={2}
+        rows={1}
+        defaultValue={[
+          { value: "first", column: 1, row: 1, columnSpan: 1, rowSpan: 1 },
+          { value: "second", column: 2, row: 1, columnSpan: 1, rowSpan: 1 },
+        ]}
+      >
+        <InventoryItem value="first" textValue="First">
+          <InventoryMoveHandle />
+        </InventoryItem>
+        <InventoryItem value="second">Second</InventoryItem>
+      </Inventory>,
+    );
+    const first = container.querySelector<HTMLElement>('[data-value="first"]')!;
+    const second = container.querySelector<HTMLElement>('[data-value="second"]')!;
+
+    fireKeyDown(first.querySelector("button")!, "ArrowRight");
+
+    expect(first.dataset.column).toBe("2");
+    expect(second.dataset.column).toBe("1");
+    expect(first.hasAttribute("data-invalid-placement")).toBe(false);
+  });
+
+  it("marks resizing invalid when displaced items cannot fit anywhere", () => {
+    const { container } = render(
+      <Inventory
+        columns={2}
+        rows={1}
+        defaultValue={[
+          { value: "first", column: 1, row: 1, columnSpan: 1, rowSpan: 1 },
+          { value: "second", column: 2, row: 1, columnSpan: 1, rowSpan: 1 },
+        ]}
+      >
+        <InventoryItem value="first" textValue="First">
+          <InventoryResizeHandle />
+        </InventoryItem>
+        <InventoryItem value="second">Second</InventoryItem>
+      </Inventory>,
+    );
+    const inventory = container.querySelector<HTMLOListElement>("ol")!;
+    const first = container.querySelector<HTMLElement>('[data-value="first"]')!;
+    const resize = first.querySelector<HTMLButtonElement>("button")!;
+    mockPointerGeometry(inventory, resize, { width: 200, height: 100 });
+
+    act(() => {
+      resize.dispatchEvent(
+        new MouseEvent("pointerdown", { bubbles: true, cancelable: true, clientX: 0, clientY: 0 }),
+      );
+      resize.dispatchEvent(
+        new MouseEvent("pointermove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 100,
+          clientY: 0,
+        }),
+      );
+    });
+
+    expect(first.dataset.columnSpan).toBe("1");
+    expect(first.hasAttribute("data-invalid-placement")).toBe(true);
+    expect(container.querySelector("output")?.textContent).toContain("First cannot fit there");
   });
 
   it("rejects malformed, duplicate, overlapping, and missing layout entries with evidence", () => {
