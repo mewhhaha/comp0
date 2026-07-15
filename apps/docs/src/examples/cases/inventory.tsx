@@ -3,6 +3,7 @@ import {
   Inventory,
   InventoryItem,
   InventoryMoveHandle,
+  InventoryPreview,
   InventoryResizeHandle,
   type InventoryLayout,
 } from "@comp0/react";
@@ -84,6 +85,7 @@ export function Example() {
               />
             ))}
           </li>
+          <InventoryPreview className="pointer-events-none z-20 rounded-lg border-2 border-teal-500 bg-teal-500/10 data-invalid-placement:border-red-500 data-invalid-placement:bg-red-500/10" />
           {layout.map((entry) => {
             const card = cards[entry.value as keyof typeof cards];
             return (
@@ -91,7 +93,7 @@ export function Example() {
                 key={entry.value}
                 value={entry.value}
                 textValue={card.title}
-                className="relative z-10 min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 bg-white p-3 shadow-sm data-dragging:opacity-70 data-invalid-placement:ring-2 data-invalid-placement:ring-red-500 data-resizing:ring-2 data-resizing:ring-teal-500 dark:border-white/10 dark:bg-zinc-900"
+                className="relative z-10 min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 bg-white p-3 shadow-sm data-dragging:opacity-70 data-resizing:ring-2 data-resizing:ring-teal-500 dark:border-white/10 dark:bg-zinc-900"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

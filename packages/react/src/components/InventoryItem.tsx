@@ -22,7 +22,6 @@ export function InventoryItem({
   const label = textValue ?? value;
   const dragging = inventory.activeValue === value && inventory.interaction === "move";
   const resizing = inventory.activeValue === value && inventory.interaction === "resize";
-  const invalidPlacement = inventory.invalidValue === value;
 
   return (
     <InventoryItemContext value={{ label, value }}>
@@ -32,7 +31,6 @@ export function InventoryItem({
         data-column={entry.column}
         data-column-span={entry.columnSpan}
         data-dragging={dataAttr(dragging)}
-        data-invalid-placement={dataAttr(invalidPlacement)}
         data-resizing={dataAttr(resizing)}
         data-row={entry.row}
         data-row-span={entry.rowSpan}

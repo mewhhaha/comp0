@@ -29,6 +29,12 @@ type PointerInteraction = {
   entry: InventoryLayoutEntry;
   layout: InventoryLayout;
   latestEntry: InventoryLayoutEntry;
+  previewInvalid: boolean;
+};
+
+type InventoryUpdate = {
+  entry: InventoryLayoutEntry;
+  status: "changed" | "invalid" | "unchanged";
 };
 
 export type InventoryProps = Omit<
@@ -73,7 +79,8 @@ export function Inventory({
   const pointerInteraction = useRef<PointerInteraction | null>(null);
   const [interaction, setInteraction] = useState<InventoryInteraction | "">("");
   const [activeValue, setActiveValue] = useState("");
-  const [invalidValue, setInvalidValue] = useState("");
+  const [previewEntry, setPreviewEntry] = useState<InventoryLayoutEntry | null>(null);
+  const [previewInvalid, setPreviewInvalid] = useState(false);
   const [announcement, setAnnouncement] = useState("");
 
   const announce = (entry: InventoryLayoutEntry, label: string, kind: InventoryInteraction) => {
@@ -87,10 +94,9 @@ export function Inventory({
   const updateEntry = (
     source: InventoryLayout,
     value: string,
-    label: string,
     interaction: InventoryInteraction,
     change: (entry: InventoryLayoutEntry) => InventoryLayoutEntry,
-  ) => {
+  ): InventoryUpdate | undefined => {
     const current = source.find((entry) => entry.value === value);
     if (!current) return undefined;
     const proposed = change(current);
@@ -114,18 +120,15 @@ export function Inventory({
       constrained.columnSpan === current.columnSpan &&
       constrained.rowSpan === current.rowSpan
     ) {
-      setInvalidValue("");
-      return undefined;
+      return { entry: constrained, status: "unchanged" };
     }
     const resolved = resolveInventoryLayout(source, value, constrained, columns, rows);
     if (!resolved || (canChange && !canChange(resolved, value))) {
-      setInvalidValue(value);
-      setAnnouncement(`${label} cannot fit there.`);
-      return undefined;
+      return { entry: constrained, status: "invalid" };
     }
-    setInvalidValue("");
     setLayout(resolved);
-    return resolved.find((entry) => entry.value === value);
+    const entry = resolved.find((entry) => entry.value === value);
+    return entry ? { entry, status: "changed" } : undefined;
   };
 
   const handleKeyboardInteraction = (
@@ -142,7 +145,7 @@ export function Inventory({
     else if (event.key === "ArrowDown") rowDelta = 1;
     else return;
     event.preventDefault();
-    const next = updateEntry(layout, itemValue, label, kind, (entry) => {
+    const update = updateEntry(layout, itemValue, kind, (entry) => {
       if (kind === "move") {
         return { ...entry, column: entry.column + columnDelta, row: entry.row + rowDelta };
       }
@@ -152,7 +155,8 @@ export function Inventory({
         rowSpan: Math.max(1, entry.rowSpan + rowDelta),
       };
     });
-    if (next) announce(next, label, kind);
+    if (update?.status === "changed") announce(update.entry, label, kind);
+    if (update?.status === "invalid") setAnnouncement(`${label} cannot fit there.`);
   };
 
   const startPointerInteraction = (
@@ -186,10 +190,12 @@ export function Inventory({
       entry,
       layout,
       latestEntry: entry,
+      previewInvalid: false,
     };
     setActiveValue(itemValue);
     setInteraction(kind);
-    setInvalidValue("");
+    setPreviewEntry(entry);
+    setPreviewInvalid(false);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -198,34 +204,43 @@ export function Inventory({
     if (!current || current.pointerId !== event.pointerId) return;
     const columnDelta = Math.round((event.clientX - current.startX) / current.columnStep);
     const rowDelta = Math.round((event.clientY - current.startY) / current.rowStep);
-    const next = updateEntry(
-      current.layout,
-      current.value,
-      current.label,
-      current.interaction,
-      (entry) => {
-        if (current.interaction === "move") {
-          return {
-            ...entry,
-            column: current.entry.column + columnDelta,
-            row: current.entry.row + rowDelta,
-          };
-        }
+    const update = updateEntry(current.layout, current.value, current.interaction, (entry) => {
+      if (current.interaction === "move") {
         return {
           ...entry,
-          columnSpan: current.entry.columnSpan + columnDelta,
-          rowSpan: current.entry.rowSpan + rowDelta,
+          column: current.entry.column + columnDelta,
+          row: current.entry.row + rowDelta,
         };
-      },
-    );
-    if (next) current.latestEntry = next;
+      }
+      return {
+        ...entry,
+        columnSpan: current.entry.columnSpan + columnDelta,
+        rowSpan: current.entry.rowSpan + rowDelta,
+      };
+    });
+    if (!update) return;
+    current.previewInvalid = update.status === "invalid";
+    setPreviewEntry(update.entry);
+    setPreviewInvalid(current.previewInvalid);
+    if (update.status === "changed") current.latestEntry = update.entry;
+    if (
+      update.status === "unchanged" &&
+      (current.latestEntry.column !== update.entry.column ||
+        current.latestEntry.row !== update.entry.row ||
+        current.latestEntry.columnSpan !== update.entry.columnSpan ||
+        current.latestEntry.rowSpan !== update.entry.rowSpan)
+    ) {
+      setLayout(current.layout);
+      current.latestEntry = update.entry;
+    }
   };
 
   const clearPointerInteraction = (event: PointerEvent<HTMLButtonElement>) => {
     pointerInteraction.current = null;
     setInteraction("");
     setActiveValue("");
-    setInvalidValue("");
+    setPreviewEntry(null);
+    setPreviewInvalid(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -235,7 +250,11 @@ export function Inventory({
     const current = pointerInteraction.current;
     if (!current || current.pointerId !== event.pointerId) return;
     clearPointerInteraction(event);
-    announce(current.latestEntry, current.label, current.interaction);
+    if (current.previewInvalid) {
+      setAnnouncement(`${current.label} cannot fit there.`);
+    } else {
+      announce(current.latestEntry, current.label, current.interaction);
+    }
   };
 
   const cancelPointerInteraction = (event: PointerEvent<HTMLButtonElement>) => {
@@ -250,8 +269,9 @@ export function Inventory({
     activeValue,
     columns,
     interaction,
-    invalidValue,
     layout,
+    previewEntry,
+    previewInvalid,
     rows,
     cancelPointerInteraction,
     continuePointerInteraction,

@@ -78,6 +78,7 @@ const publicComponents = [
   "Inventory",
   "InventoryItem",
   "InventoryMoveHandle",
+  "InventoryPreview",
   "InventoryResizeHandle",
   "Label",
   "Legend",

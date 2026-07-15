@@ -18,7 +18,6 @@ export function InventoryResizeHandle({
   const inventory = useInventoryContext("InventoryResizeHandle");
   const item = useInventoryItemContext("InventoryResizeHandle");
   const resizing = inventory.activeValue === item.value && inventory.interaction === "resize";
-  const invalidPlacement = inventory.invalidValue === item.value;
 
   return (
     <button
@@ -28,7 +27,6 @@ export function InventoryResizeHandle({
       disabled={disabled}
       aria-label={props["aria-label"] ?? `Resize ${item.label}`}
       aria-keyshortcuts={props["aria-keyshortcuts"] ?? "ArrowLeft ArrowRight ArrowUp ArrowDown"}
-      data-invalid-placement={dataAttr(invalidPlacement)}
       data-resizing={dataAttr(resizing)}
       data-slot={dataSlot(props, "inventory-resize-handle")}
       onKeyDown={(event) => {

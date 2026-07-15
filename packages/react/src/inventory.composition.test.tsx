@@ -4,6 +4,7 @@ import { fireKeyDown, render } from "../test/render.js";
 import { Inventory, type InventoryLayout } from "./components/Inventory.js";
 import { InventoryItem } from "./components/InventoryItem.js";
 import { InventoryMoveHandle } from "./components/InventoryMoveHandle.js";
+import { InventoryPreview } from "./components/InventoryPreview.js";
 import { InventoryResizeHandle } from "./components/InventoryResizeHandle.js";
 
 const initialLayout: InventoryLayout = [
@@ -35,6 +36,7 @@ function renderInventory(onChange = vi.fn()) {
         Alerts
         <InventoryResizeHandle />
       </InventoryItem>
+      <InventoryPreview />
     </Inventory>,
   );
   return { ...result, onChange };
@@ -81,6 +83,7 @@ describe("inventory composition", () => {
     expect(revenue.style.gridColumn).toBe("1 / span 3");
     expect(move.getAttribute("aria-label")).toBe("Move Revenue");
     expect(resize.getAttribute("aria-label")).toBe("Resize Revenue");
+    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
   });
 
   it("moves by grid units and pushes obstructing items forward", () => {
@@ -156,12 +159,55 @@ describe("inventory composition", () => {
     });
     expect(revenue.dataset.column).toBe("2");
     expect(revenue.hasAttribute("data-dragging")).toBe(true);
+    expect(
+      container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
+    ).toBe("2");
 
     act(() => {
       move.dispatchEvent(new MouseEvent("pointercancel", { bubbles: true, cancelable: true }));
     });
     expect(revenue.dataset.column).toBe("1");
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
+    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("restores the starting layout when the pointer returns to its starting cell", () => {
+    const { container, onChange } = renderInventory();
+    const inventory = container.querySelector<HTMLOListElement>("ol")!;
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+    mockPointerGeometry(inventory, move, { width: 600, height: 480 });
+
+    act(() => {
+      move.dispatchEvent(
+        new MouseEvent("pointerdown", { bubbles: true, cancelable: true, clientX: 0, clientY: 0 }),
+      );
+      move.dispatchEvent(
+        new MouseEvent("pointermove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 110,
+          clientY: 0,
+        }),
+      );
+      move.dispatchEvent(
+        new MouseEvent("pointermove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
+    });
+
+    expect(revenue.dataset.column).toBe("1");
+    expect(conversion.dataset.column).toBe("4");
+    expect(conversion.dataset.row).toBe("1");
+    expect(
+      container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
+    ).toBe("1");
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
@@ -175,6 +221,7 @@ describe("inventory composition", () => {
         <InventoryItem value="card" textValue="Card">
           <InventoryMoveHandle />
         </InventoryItem>
+        <InventoryPreview />
       </Inventory>,
     );
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
@@ -198,7 +245,10 @@ describe("inventory composition", () => {
 
     expect(card.dataset.column).toBe("3");
     expect(card.dataset.row).toBe("1");
-    expect(card.hasAttribute("data-invalid-placement")).toBe(false);
+    const preview = container.querySelector<HTMLElement>("[data-slot='inventory-preview']")!;
+    expect(preview.dataset.column).toBe("3");
+    expect(preview.dataset.row).toBe("1");
+    expect(preview.hasAttribute("data-invalid-placement")).toBe(false);
   });
 
   it("clamps pointer resizing to the available grid tracks", () => {
@@ -211,6 +261,7 @@ describe("inventory composition", () => {
         <InventoryItem value="card" textValue="Card">
           <InventoryResizeHandle />
         </InventoryItem>
+        <InventoryPreview />
       </Inventory>,
     );
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
@@ -234,10 +285,13 @@ describe("inventory composition", () => {
 
     expect(card.dataset.columnSpan).toBe("3");
     expect(card.dataset.rowSpan).toBe("3");
-    expect(card.hasAttribute("data-invalid-placement")).toBe(false);
+    const preview = container.querySelector<HTMLElement>("[data-slot='inventory-preview']")!;
+    expect(preview.dataset.columnSpan).toBe("3");
+    expect(preview.dataset.rowSpan).toBe("3");
+    expect(preview.hasAttribute("data-invalid-placement")).toBe(false);
   });
 
-  it("reuses vacated tracks when displaced items cannot move forward", () => {
+  it("keeps the prior layout when displaced items cannot move forward", () => {
     const { container } = render(
       <Inventory
         columns={2}
@@ -258,12 +312,13 @@ describe("inventory composition", () => {
 
     fireKeyDown(first.querySelector("button")!, "ArrowRight");
 
-    expect(first.dataset.column).toBe("2");
-    expect(second.dataset.column).toBe("1");
+    expect(first.dataset.column).toBe("1");
+    expect(second.dataset.column).toBe("2");
     expect(first.hasAttribute("data-invalid-placement")).toBe(false);
+    expect(container.querySelector("output")?.textContent).toContain("First cannot fit there");
   });
 
-  it("marks resizing invalid when displaced items cannot fit anywhere", () => {
+  it("marks only the preview invalid when displaced items cannot fit anywhere", () => {
     const { container } = render(
       <Inventory
         columns={2}
@@ -277,6 +332,7 @@ describe("inventory composition", () => {
           <InventoryResizeHandle />
         </InventoryItem>
         <InventoryItem value="second">Second</InventoryItem>
+        <InventoryPreview />
       </Inventory>,
     );
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
@@ -299,7 +355,16 @@ describe("inventory composition", () => {
     });
 
     expect(first.dataset.columnSpan).toBe("1");
-    expect(first.hasAttribute("data-invalid-placement")).toBe(true);
+    expect(first.hasAttribute("data-invalid-placement")).toBe(false);
+    const preview = container.querySelector<HTMLElement>("[data-slot='inventory-preview']")!;
+    expect(preview.dataset.columnSpan).toBe("2");
+    expect(preview.hasAttribute("data-invalid-placement")).toBe(true);
+    expect(container.querySelector("output")?.textContent).toBe("");
+
+    act(() => {
+      resize.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, cancelable: true }));
+    });
+
     expect(container.querySelector("output")?.textContent).toContain("First cannot fit there");
   });
 

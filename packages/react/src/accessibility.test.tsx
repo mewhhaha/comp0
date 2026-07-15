@@ -53,6 +53,7 @@ import {
   Inventory,
   InventoryItem,
   InventoryMoveHandle,
+  InventoryPreview,
   InventoryResizeHandle,
 } from "./index.js";
 import { render } from "../test/render.js";
@@ -137,6 +138,7 @@ describe("retained accessibility contracts", () => {
             <InventoryMoveHandle />
             <InventoryResizeHandle />
           </InventoryItem>
+          <InventoryPreview />
         </Inventory>
         <Accordion defaultValue="one">
           <AccordionItem value="one">

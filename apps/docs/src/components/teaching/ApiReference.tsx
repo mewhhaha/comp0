@@ -8,27 +8,26 @@ type ApiReferenceProps = {
   className?: string | undefined;
 };
 
-const controlledPropNames: Record<string, readonly [string, string]> = {
-  "selected / defaultSelected": ["selected", "defaultSelected"],
-  "value / defaultValue": ["value", "defaultValue"],
-};
+function splitPartProp(partProp: PartProp): PartProp[] {
+  const names = partProp.name.split(" / ");
+  if (names.length === 1) return [partProp];
+  const types = partProp.type.split(" / ");
 
-function splitControlledProp(partProp: PartProp): PartProp[] {
-  const names = controlledPropNames[partProp.name];
-  if (!names) return [partProp];
-  const [controlledName, initialName] = names;
-  return [
-    {
+  return names.map((name, index) => {
+    let description = partProp.description;
+    if (index === 0 && names[1]?.startsWith("default")) {
+      description = description.replace("Controlled or initial", "Controlled");
+    }
+    if (name.startsWith("default")) {
+      description = description.replace("Controlled or initial", "Initial");
+    }
+    return {
       ...partProp,
-      name: controlledName,
-      description: partProp.description.replace("Controlled or initial", "Controlled"),
-    },
-    {
-      ...partProp,
-      name: initialName,
-      description: partProp.description.replace("Controlled or initial", "Initial"),
-    },
-  ];
+      name,
+      type: types.length === names.length ? types[index]! : partProp.type,
+      description,
+    };
+  });
 }
 
 export function ApiReference({ imports, parts, className }: ApiReferenceProps) {
@@ -75,7 +74,7 @@ export function ApiReference({ imports, parts, className }: ApiReferenceProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-950/5 dark:divide-white/5">
-                    {part.props.flatMap(splitControlledProp).map((partProp) => (
+                    {part.props.flatMap(splitPartProp).map((partProp) => (
                       <tr key={partProp.name}>
                         <td className="px-3 py-2.5 align-top text-sm/6 whitespace-nowrap">
                           <code className="font-mono font-medium text-teal-800 dark:text-teal-200">

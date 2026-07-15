@@ -18,7 +18,6 @@ export function InventoryMoveHandle({
   const inventory = useInventoryContext("InventoryMoveHandle");
   const item = useInventoryItemContext("InventoryMoveHandle");
   const dragging = inventory.activeValue === item.value && inventory.interaction === "move";
-  const invalidPlacement = inventory.invalidValue === item.value;
 
   return (
     <button
@@ -29,7 +28,6 @@ export function InventoryMoveHandle({
       aria-label={props["aria-label"] ?? `Move ${item.label}`}
       aria-keyshortcuts={props["aria-keyshortcuts"] ?? "ArrowLeft ArrowRight ArrowUp ArrowDown"}
       data-dragging={dataAttr(dragging)}
-      data-invalid-placement={dataAttr(invalidPlacement)}
       data-slot={dataSlot(props, "inventory-move-handle")}
       onKeyDown={(event) => {
         onKeyDown?.(event);

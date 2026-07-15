@@ -229,8 +229,8 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for customizable dashboards and boards where position and size must persist as grid units.",
     "Start Inventory with its column count, row count, and a complete layout.",
     "Render one InventoryItem per layout value, with optional move and resize handles inside each card.",
-    "Give the root a visible size; pointer and arrow-key changes emit the complete next layout, and collisions move obstructed items to available tracks.",
-    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    <InventoryResizeHandle />\n    Sales\n  </InventoryItem>\n</Inventory>;',
+    "Add InventoryPreview for a styleable pointer landing overlay; blocked placements stay put and only the preview becomes invalid.",
+    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryPreview />\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    <InventoryResizeHandle />\n    Sales\n  </InventoryItem>\n</Inventory>;',
   ),
   "grid-list": lesson(
     "A list of rows where each row can hold its own controls.",
@@ -713,6 +713,7 @@ const accessibility: Record<string, string[]> = {
   inventory: [
     "Give Inventory an aria-label or aria-labelledby; it renders a native ordered list rather than claiming ARIA grid behavior.",
     "Keep both handles visible and clearly named. Arrow keys provide the same move and resize operations without dragging.",
+    "InventoryPreview is aria-hidden; use its valid and invalid styling only as visual reinforcement for the live announcements.",
     "Keep item DOM order meaningful even when visual positions change, and announce saved ordering separately when reading order must also change.",
     "A fixed spatial grid may need horizontal scrolling on narrow screens; do not silently rewrite persisted coordinates for visual responsiveness.",
   ],
@@ -2830,8 +2831,14 @@ const navigation = [
     "inventory",
     "Inventory",
     "navigation",
-    ["Inventory", "InventoryItem", "InventoryMoveHandle", "InventoryResizeHandle"],
-    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}><InventoryItem value="sales" textValue="Sales"><InventoryMoveHandle />Sales<InventoryResizeHandle /></InventoryItem></Inventory>',
+    [
+      "Inventory",
+      "InventoryItem",
+      "InventoryMoveHandle",
+      "InventoryPreview",
+      "InventoryResizeHandle",
+    ],
+    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}><InventoryPreview /><InventoryItem value="sales" textValue="Sales"><InventoryMoveHandle />Sales<InventoryResizeHandle /></InventoryItem></Inventory>',
     [
       p(
         "Inventory",
@@ -2872,6 +2879,13 @@ const navigation = [
             "Readable card name used by default handle labels and announcements.",
           ),
         ],
+      ),
+      p(
+        "InventoryPreview",
+        "item",
+        "Optional aria-hidden list item placed over the current pointer target.",
+        true,
+        true,
       ),
       p(
         "InventoryMoveHandle",
@@ -2917,6 +2931,16 @@ const navigation = [
         meaning: "The number of grid tracks occupied by the item.",
       },
       {
+        attribute: "[data-column] / [data-row]",
+        on: "InventoryPreview",
+        meaning: "The proposed landing position.",
+      },
+      {
+        attribute: "[data-column-span] / [data-row-span]",
+        on: "InventoryPreview",
+        meaning: "The proposed landing size.",
+      },
+      {
         attribute: "[data-dragging]",
         on: "Inventory, InventoryItem, InventoryMoveHandle",
         meaning: "A pointer move is in progress.",
@@ -2928,8 +2952,8 @@ const navigation = [
       },
       {
         attribute: "[data-invalid-placement]",
-        on: "InventoryItem, InventoryMoveHandle, InventoryResizeHandle",
-        meaning: "The current proposed position cannot fit or was vetoed.",
+        on: "InventoryPreview",
+        meaning: "The proposed pointer position cannot fit or was vetoed.",
       },
     ],
     "Inventory does not create a form value; persist its layout in application state or storage.",
@@ -3345,7 +3369,7 @@ const navigation = [
         [
           prop(
             "className / style",
-            "string | CSSProperties",
+            "string / CSSProperties",
             "Position the popover from the exposed CSS variables; no placement is applied for you.",
           ),
         ],

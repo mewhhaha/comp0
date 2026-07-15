@@ -24,6 +24,12 @@ export function StateHooks({ hooks, parts, className }: StateHooksProps) {
             return partNames.some((partName) => hookOwnerNames.includes(partName));
           });
           if (partHooks.length === 0) return null;
+          const hookRows = partHooks.flatMap((hook) =>
+            hook.attribute.split(" / ").map((attribute) => ({
+              ...hook,
+              attribute: attribute as StateHook["attribute"],
+            })),
+          );
 
           return (
             <section
@@ -46,7 +52,7 @@ export function StateHooks({ hooks, parts, className }: StateHooksProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-950/5 dark:divide-white/5">
-                    {partHooks.map((hook) => (
+                    {hookRows.map((hook) => (
                       <tr key={hook.attribute}>
                         <td className="px-3 py-2.5 align-top text-sm/6 whitespace-nowrap">
                           <code className="font-mono font-medium text-teal-800 dark:text-teal-200">

@@ -16,8 +16,9 @@ export type InventoryContextValue = {
   activeValue: string;
   columns: number;
   interaction: InventoryInteraction | "";
-  invalidValue: string;
   layout: InventoryLayout;
+  previewEntry: InventoryLayoutEntry | null;
+  previewInvalid: boolean;
   rows: number;
   cancelPointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
   continuePointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
@@ -81,8 +82,7 @@ function firstAvailablePosition(
   rows: number,
 ) {
   const firstIndex = (entry.row - 1) * columns + entry.column - 1;
-  for (let offset = 0; offset < columns * rows; offset += 1) {
-    const index = (firstIndex + offset) % (columns * rows);
+  for (let index = firstIndex; index < columns * rows; index += 1) {
     const candidate = {
       ...entry,
       column: (index % columns) + 1,
