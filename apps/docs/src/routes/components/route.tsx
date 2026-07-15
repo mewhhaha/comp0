@@ -79,7 +79,9 @@ export function ServerComponent({ params }: ComponentRouteProps) {
       <p>This component does not add a custom state hook. Style its native element directly.</p>
     </Callout>
   );
-  if (doc.stateHooks.length > 0) stylingLesson = <StateHooks hooks={doc.stateHooks} />;
+  if (doc.stateHooks.length > 0) {
+    stylingLesson = <StateHooks hooks={doc.stateHooks} parts={doc.parts} />;
+  }
 
   return (
     <div className="mx-auto grid max-w-6xl gap-12 px-4 py-12 sm:px-6 sm:py-16 lg:px-10 xl:grid-cols-[minmax(0,1fr)_13rem]">

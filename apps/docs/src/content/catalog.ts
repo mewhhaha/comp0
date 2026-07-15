@@ -41,7 +41,7 @@ const lessons: Record<string, LessonCopy> = {
     "Put Button where the action happens.",
     "Write a short verb such as Save.",
     'Connect onClick, or use type="submit" in a form.',
-    "<Button onClick={save}>Save</Button>",
+    "<Button onClick={save}>Save</Button>;",
   ),
   "toggle-button": lesson(
     "A button that stays on or off after a press.",
@@ -50,7 +50,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start with one ToggleButton.",
     "Wrap related toggles in ToggleButtonGroup; give each button a value when the group should manage the selection.",
     'Pass type="single" or type="multiple" with value/defaultValue and onChange on the group, or keep defaultSelected per button when the group only organizes them.',
-    '<ToggleButtonGroup type="multiple" defaultValue={["bold"]} aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton></ToggleButtonGroup>',
+    '<ToggleButtonGroup type="multiple" defaultValue={["bold"]} aria-label="Text style">\n  <ToggleButton value="bold">Bold</ToggleButton>\n</ToggleButtonGroup>;',
   ),
   link: lesson(
     "A real anchor for travelling to another URL.",
@@ -59,7 +59,7 @@ const lessons: Record<string, LessonCopy> = {
     "Add Link at the place people need to leave from.",
     "Set href to the real destination.",
     "Use words that say where the destination is.",
-    '<Link href="/settings">Settings</Link>',
+    '<Link href="/settings">Settings</Link>;',
   ),
   "file-trigger": lesson(
     "A visible label that asks the browser for files.",
@@ -68,7 +68,7 @@ const lessons: Record<string, LessonCopy> = {
     "Style FileTrigger itself and give it clear words such as Upload photo.",
     "Pass native file props such as accept, multiple, name, and onChange directly.",
     "The native input stays visually hidden but focusable by default, so keyboard users can reach it.",
-    '<FileTrigger name="photo">Upload photo</FileTrigger>',
+    '<FileTrigger name="photo">Upload photo</FileTrigger>;',
   ),
   "visually-hidden": lesson(
     "Extra words that screen readers can hear but sighted people do not see.",
@@ -77,7 +77,7 @@ const lessons: Record<string, LessonCopy> = {
     "Write the missing context first.",
     "Wrap only that extra text.",
     "Keep the visible control and its normal label visible.",
-    "<VisuallyHidden>Loading messages</VisuallyHidden>",
+    "<VisuallyHidden>Loading messages</VisuallyHidden>;",
   ),
   "text-field": lesson(
     "A shared field brain that connects a label, one text input, help, and errors.",
@@ -86,7 +86,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start TextField with Label and Input.",
     "Add Description for a useful hint and FieldError for validation feedback.",
     "Give Input a native name so a form can send its value.",
-    '<TextField><Label>Email</Label><Input name="email" /></TextField>',
+    '<TextField>\n  <Label>Email</Label>\n  <Input name="email" />\n</TextField>;',
   ),
   "password-field": lesson(
     "A hidden-first password input with a built-in show and hide action.",
@@ -95,7 +95,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start PasswordField with a Label and PasswordFieldInput.",
     "Add PasswordFieldToggle plus Description and FieldError when people need help or validation feedback.",
     "Choose current-password for sign-in or new-password for a new credential; the field starts hidden and manages revealing itself.",
-    '<PasswordField required><Label>Password</Label><PasswordFieldInput name="password" autoComplete="current-password" /><PasswordFieldToggle /><Description>Use a password manager if you have one.</Description><FieldError>Enter your password.</FieldError></PasswordField>',
+    '<PasswordField required>\n  <Label>Password</Label>\n  <PasswordFieldInput name="password" autoComplete="current-password" />\n  <PasswordFieldToggle />\n  <Description>Use a password manager if you have one.</Description>\n  <FieldError>Enter your password.</FieldError>\n</PasswordField>;',
   ),
   "text-area": lesson(
     "A multi-line native text box with the same label and feedback pieces.",
@@ -104,7 +104,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start a TextField with Label.",
     "Put TextArea inside it instead of Input.",
     "Give TextArea a name so the full text submits.",
-    '<TextField><Label>Notes</Label><TextArea name="notes" /></TextField>',
+    '<TextField>\n  <Label>Notes</Label>\n  <TextArea name="notes" />\n</TextField>;',
   ),
   fieldset: lesson(
     "A native border and name for a related set of controls.",
@@ -113,7 +113,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap related controls in Fieldset.",
     "Put one short Legend first to name the group.",
     "Use disabled, invalid, or required on the group when that rule applies to all children.",
-    "<Fieldset><Legend>Contact choices</Legend></Fieldset>",
+    "<Fieldset>\n  <Legend>Contact choices</Legend>\n</Fieldset>;",
   ),
   "search-field": lesson(
     "A labelled search box with an optional erase button.",
@@ -122,7 +122,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start with SearchField, Label, and SearchFieldInput.",
     "Add SearchFieldClear if clearing a query is useful; it appears only while the query has text.",
     "Name the input when the query should be submitted.",
-    '<SearchField><Label>Search</Label><SearchFieldInput name="q" /><SearchFieldClear aria-label="Clear search" /></SearchField>',
+    '<SearchField>\n  <Label>Search</Label>\n  <SearchFieldInput name="q" />\n  <SearchFieldClear aria-label="Clear search" />\n</SearchField>;',
   ),
   checkbox: lesson(
     "One tick box or a collection that can have several ticks.",
@@ -131,7 +131,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start with a labelled Checkbox.",
     "Wrap related boxes in CheckboxGroup and give each value.",
     "Give the group a name when selected values should submit.",
-    '<CheckboxGroup name="topics"><Checkbox value="news">News</Checkbox></CheckboxGroup>',
+    '<CheckboxGroup name="topics">\n  <Checkbox value="news">News</Checkbox>\n</CheckboxGroup>;',
   ),
   radio: lesson(
     "A set of choices where one choice wins.",
@@ -140,7 +140,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start RadioGroup with a name.",
     "Add one Radio per choice, each with a different value.",
     "Use defaultValue to show the starting choice.",
-    '<RadioGroup name="plan" defaultValue="pro"><Radio value="pro">Pro</Radio></RadioGroup>',
+    '<RadioGroup name="plan" defaultValue="pro">\n  <Radio value="pro">Pro</Radio>\n</RadioGroup>;',
   ),
   switch: lesson(
     "An on/off setting backed by a native checkbox.",
@@ -149,7 +149,7 @@ const lessons: Record<string, LessonCopy> = {
     "Add Switch beside its setting words.",
     "Choose defaultChecked when it needs a starting state.",
     "Give it a name if a form must send the setting.",
-    '<Switch name="alerts">Email alerts</Switch>',
+    '<Switch name="alerts">Email alerts</Switch>;',
   ),
   "number-field": lesson(
     "A native number box with fully styleable step buttons.",
@@ -158,7 +158,7 @@ const lessons: Record<string, LessonCopy> = {
     "Compose NumberFieldInput with increment and decrement buttons.",
     "Set min, max, and step on NumberField when the range matters.",
     "Name NumberField so its native input submits.",
-    '<NumberField name="guests" defaultValue={2} min={1}><NumberFieldInput /><NumberFieldIncrement /><NumberFieldDecrement /></NumberField>',
+    '<NumberField name="guests" defaultValue={2} min={1}>\n  <NumberFieldInput />\n  <NumberFieldIncrement />\n  <NumberFieldDecrement />\n</NumberField>;',
   ),
   slider: lesson(
     "A native range control for a value along a track.",
@@ -167,7 +167,7 @@ const lessons: Record<string, LessonCopy> = {
     "Add Slider with a visible label.",
     "Set min, max, and step to make the range honest.",
     "Name it if the chosen value belongs in a form.",
-    '<Slider name="volume" defaultValue={30} min={0} max={100} />',
+    '<Slider name="volume" defaultValue={30} min={0} max={100} />;',
   ),
   accordion: lesson(
     "A stack of expandable answers.",
@@ -176,7 +176,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Accordion with one AccordionItem and value.",
     "Put Header and Trigger before the matching Panel.",
     "Use defaultValue for the item that should begin open.",
-    '<Accordion defaultValue="one"><AccordionItem value="one"><AccordionHeader><AccordionTrigger>Details</AccordionTrigger></AccordionHeader><AccordionPanel>More information.</AccordionPanel></AccordionItem></Accordion>',
+    '<Accordion defaultValue="one">\n  <AccordionItem value="one">\n    <AccordionHeader>\n      <AccordionTrigger>Details</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>More information.</AccordionPanel>\n  </AccordionItem>\n</Accordion>;',
   ),
   disclosure: lesson(
     "One button that shows or hides its own extra content.",
@@ -185,7 +185,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Disclosure with DisclosureTrigger.",
     "Put DisclosurePanel immediately after the trigger.",
     "Use defaultOpen when the detail should start visible.",
-    "<Disclosure><DisclosureTrigger>Details</DisclosureTrigger><DisclosurePanel>More information.</DisclosurePanel></Disclosure>",
+    "<Disclosure>\n  <DisclosureTrigger>Details</DisclosureTrigger>\n  <DisclosurePanel>More information.</DisclosurePanel>\n</Disclosure>;",
   ),
   tabs: lesson(
     "A set of headings that swaps one panel at a time.",
@@ -194,7 +194,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Tabs with a starting value.",
     "Give each Tab and its TabPanel the same tab id.",
     "Put the Tab elements together inside TabList.",
-    '<Tabs defaultValue="one"><TabList><Tab tab="one">One</Tab></TabList><TabPanel tab="one">Panel one</TabPanel></Tabs>',
+    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab tab="one">One</Tab>\n  </TabList>\n  <TabPanel tab="one">Panel one</TabPanel>\n</Tabs>;',
   ),
   breadcrumbs: lesson(
     "A trail of links showing where this page sits.",
@@ -203,7 +203,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Breadcrumbs around the trail.",
     "Add BreadcrumbLink for each place people can return to.",
     "Mark the current page as current instead of making it a misleading link.",
-    '<Breadcrumbs><BreadcrumbLink href="/">Home</BreadcrumbLink></Breadcrumbs>',
+    '<Breadcrumbs>\n  <BreadcrumbLink href="/">Home</BreadcrumbLink>\n</Breadcrumbs>;',
   ),
   "tag-group": lesson(
     "A row of removable, selectable little labels.",
@@ -212,7 +212,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start TagGroup with selection and removal callbacks.",
     "Add a visible Label, then put the tags inside TagList.",
     "Give every Tag a value; wire onRemove for Delete and value/onChange for selection.",
-    '<TagGroup onRemove={remove}><Label>Filters</Label><TagList><Tag value="news">News</Tag></TagList></TagGroup>',
+    '<TagGroup onRemove={remove}>\n  <Label>Filters</Label>\n  <TagList>\n    <Tag value="news">News</Tag>\n  </TagList>\n</TagGroup>;',
   ),
   resizer: lesson(
     "A separator you drag or arrow to resize the thing beside it.",
@@ -221,7 +221,16 @@ const lessons: Record<string, LessonCopy> = {
     "Place Resizer inside the element it should resize.",
     "Keep the size in your state: pass size and apply it back as a style.",
     "Set min and max so dragging and End or Home stay inside sane bounds.",
-    "<Resizer size={width} min={120} max={320} onResize={setWidth} />",
+    "<Resizer size={width} min={120} max={320} onResize={setWidth} />;",
+  ),
+  inventory: lesson(
+    "A uniform spatial grid whose cards can move and span more rows or columns.",
+    "Like arranging labeled crates on warehouse shelving: every crate occupies known slots, and larger crates reserve several together.",
+    "Use it for customizable dashboards and boards where position and size must persist as grid units.",
+    "Start Inventory with its column count, row count, and a complete layout.",
+    "Render one InventoryItem per layout value, with optional move and resize handles inside each card.",
+    "Give the root a visible size; pointer and arrow-key changes emit the complete next layout, and collisions push obstructed items forward.",
+    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    <InventoryResizeHandle />\n    Sales\n  </InventoryItem>\n</Inventory>;',
   ),
   "grid-list": lesson(
     "A list of rows where each row can hold its own controls.",
@@ -230,7 +239,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start GridList with an aria-label.",
     "Add a GridListItem with a value for each row.",
     "For a board, wrap named lists in GridListReorderGroup and add GridListMoveButton controls alongside an optional labelled drag grip.",
-    '<GridList aria-label="Files"><GridListItem value="report">report.pdf</GridListItem></GridList>',
+    '<GridList aria-label="Files">\n  <GridListItem value="report">report.pdf</GridListItem>\n</GridList>;',
   ),
   table: lesson(
     "A native table you can walk cell by cell from the keyboard.",
@@ -239,7 +248,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Table with TableHeader and one TableColumn per column.",
     "Add a TableRow of TableCell parts to TableBody for each record.",
     "Arrow keys move one cell; Home and End travel the row; Ctrl jumps to the corners.",
-    '<Table aria-label="People"><TableHeader><TableRow><TableColumn>Name</TableColumn></TableRow></TableHeader><TableBody><TableRow><TableCell>Ada</TableCell></TableRow></TableBody></Table>',
+    '<Table aria-label="People">\n  <TableHeader>\n    <TableRow>\n      <TableColumn>Name</TableColumn>\n    </TableRow>\n  </TableHeader>\n  <TableBody>\n    <TableRow>\n      <TableCell>Ada</TableCell>\n    </TableRow>\n  </TableBody>\n</Table>;',
   ),
   "tree-grid": lesson(
     "A hierarchical table where each row can expand, select, and reveal more columns.",
@@ -248,7 +257,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start TreeGrid with an aria-label, then add a header TreeGridRowGroup with TreeGridColumn cells.",
     "Render data rows flat in a second TreeGridRowGroup; give each TreeGridRow a unique value and use parentValue to describe its parent.",
     "Use value/onChange for selection and defaultExpanded, or expanded with onExpandedChange, for branches. Arrow keys move through visible rows, then into their cells.",
-    '<TreeGrid aria-label="Project files" defaultExpanded={["src"]}><TreeGridRowGroup as="thead"><TreeGridRow><TreeGridColumn>Name</TreeGridColumn></TreeGridRow></TreeGridRowGroup><TreeGridRowGroup><TreeGridRow value="src"><TreeGridCell>src</TreeGridCell></TreeGridRow><TreeGridRow value="index" parentValue="src"><TreeGridCell>index.ts</TreeGridCell></TreeGridRow></TreeGridRowGroup></TreeGrid>',
+    '<TreeGrid aria-label="Project files" defaultExpanded={["src"]}>\n  <TreeGridRowGroup as="thead">\n    <TreeGridRow>\n      <TreeGridColumn>Name</TreeGridColumn>\n    </TreeGridRow>\n  </TreeGridRowGroup>\n  <TreeGridRowGroup>\n    <TreeGridRow value="src">\n      <TreeGridCell>src</TreeGridCell>\n    </TreeGridRow>\n    <TreeGridRow value="index" parentValue="src">\n      <TreeGridCell>index.ts</TreeGridCell>\n    </TreeGridRow>\n  </TreeGridRowGroup>\n</TreeGrid>;',
   ),
   "list-box": lesson(
     "A keyboard-friendly list for selecting an item.",
@@ -257,7 +266,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start ListBox with an aria-label.",
     "Add ListBoxItem for each selectable item.",
     "Use ListBoxSection when a long list needs labelled groups.",
-    '<ListBox aria-label="Color"><ListBoxItem value="red">Red</ListBoxItem></ListBox>',
+    '<ListBox aria-label="Color">\n  <ListBoxItem value="red">Red</ListBoxItem>\n</ListBox>;',
   ),
   menu: lesson(
     "A compact list of actions opened by a button.",
@@ -266,7 +275,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Menu with MenuTrigger.",
     "Place MenuPopover after the trigger, then put MenuItem children inside MenuList.",
     "Give MenuList an aria-label when its purpose is not obvious.",
-    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover><MenuList aria-label="Actions"><MenuItem>Archive</MenuItem></MenuList></MenuPopover></Menu>',
+    '<Menu>\n  <MenuTrigger>Actions</MenuTrigger>\n  <MenuPopover>\n    <MenuList aria-label="Actions">\n      <MenuItem>Archive</MenuItem>\n    </MenuList>\n  </MenuPopover>\n</Menu>;',
   ),
   select: lesson(
     "A button that opens a list and keeps one chosen value.",
@@ -275,7 +284,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Select with a value or defaultValue.",
     "Put SelectValue inside SelectTrigger, then add SelectPopover beside it; wrap related options in a labelled SelectOptGroup.",
     "Select owns its value, field, form serialization, and open state; control the list with open, defaultOpen, and onToggle.",
-    '<Select name="size" defaultValue="small"><Label>Size</Label><SelectTrigger><SelectValue /></SelectTrigger><SelectPopover><SelectOption value="small">Small</SelectOption></SelectPopover></Select>',
+    '<Select name="size" defaultValue="small">\n  <Label>Size</Label>\n  <SelectTrigger>\n    <SelectValue />\n  </SelectTrigger>\n  <SelectPopover>\n    <SelectOption value="small">Small</SelectOption>\n  </SelectPopover>\n</Select>;',
   ),
   combobox: lesson(
     "A text box that can also offer matching choices.",
@@ -284,7 +293,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Combobox with a labelled ComboboxInput.",
     "Place ComboboxTrigger beside the input, then add ComboboxPopover as the listbox of results; group related results with ComboboxOptGroup.",
     "Combobox owns the selected value, field, form serialization, and open state; control the results with open, defaultOpen, and onToggle.",
-    '<Combobox name="city"><Label>City</Label><ComboboxInput /><ComboboxTrigger aria-label="Show suggestions" /><ComboboxPopover><ComboboxOption value="Paris">Paris</ComboboxOption></ComboboxPopover></Combobox>',
+    '<Combobox name="city">\n  <Label>City</Label>\n  <ComboboxInput />\n  <ComboboxTrigger aria-label="Show suggestions" />\n  <ComboboxPopover>\n    <ComboboxOption value="Paris">Paris</ComboboxOption>\n  </ComboboxPopover>\n</Combobox>;',
   ),
   autocomplete: lesson(
     "A provider that gives an existing text field a filtered collection of completions.",
@@ -293,7 +302,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap the field and its result collection in Autocomplete; it adds no DOM element.",
     "Compose the field from SearchField and SearchFieldInput, then render results with ListBox and ListBoxItem.",
     "Pass filter to match item text. Handle collection selection or menu actions yourself—choosing a result never overwrites the query.",
-    '<Autocomplete filter={contains}><SearchField><Label>Destination</Label><SearchFieldInput name="destination" /><ListBox aria-label="Destinations"><ListBoxItem value="paris">Paris</ListBoxItem></ListBox></SearchField></Autocomplete>',
+    '<Autocomplete filter={contains}>\n  <SearchField>\n    <Label>Destination</Label>\n    <SearchFieldInput name="destination" />\n    <ListBox aria-label="Destinations">\n      <ListBoxItem value="paris">Paris</ListBoxItem>\n    </ListBox>\n  </SearchField>\n</Autocomplete>;',
   ),
   dialog: lesson(
     "A modal layer that asks people to finish or dismiss a focused task.",
@@ -302,7 +311,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Dialog with DialogTrigger.",
     "Put a labelled DialogContent after the trigger.",
     "Keep a clear close or finish action inside the content.",
-    '<Dialog><DialogTrigger>Open details</DialogTrigger><DialogContent aria-label="Details">Details</DialogContent></Dialog>',
+    '<Dialog>\n  <DialogTrigger>Open details</DialogTrigger>\n  <DialogContent aria-label="Details">Details</DialogContent>\n</Dialog>;',
   ),
   modal: lesson(
     "A complete modal task composed from the Dialog primitives.",
@@ -311,7 +320,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start with Dialog and a DialogTrigger.",
     "Compose the heading, content, and actions inside DialogContent.",
     "Name the content from its visible heading and provide an explicit close action.",
-    '<Dialog><DialogTrigger>Edit profile</DialogTrigger><DialogContent aria-labelledby="profile-title"><h2 id="profile-title">Edit profile</h2></DialogContent></Dialog>',
+    '<Dialog>\n  <DialogTrigger>Edit profile</DialogTrigger>\n  <DialogContent aria-labelledby="profile-title">\n    <h2 id="profile-title">Edit profile</h2>\n  </DialogContent>\n</Dialog>;',
   ),
   "alert-dialog": lesson(
     "A modal layer for a serious decision that needs attention.",
@@ -320,7 +329,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start AlertDialog with the button that begins the decision.",
     "Put plain consequences and clear choices in AlertDialogContent.",
     "Make the safe or cancel choice easy to find.",
-    '<AlertDialog><DialogTrigger>Delete</DialogTrigger><AlertDialogContent aria-label="Delete item">This cannot be undone.</AlertDialogContent></AlertDialog>',
+    '<AlertDialog>\n  <DialogTrigger>Delete</DialogTrigger>\n  <AlertDialogContent aria-label="Delete item">This cannot be undone.</AlertDialogContent>\n</AlertDialog>;',
   ),
   popover: lesson(
     "A small non-modal layer attached to a trigger.",
@@ -329,7 +338,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Popover with PopoverTrigger.",
     "Put PopoverOverlay after it and pick a placement such as bottom start.",
     "Use a visible label for the trigger.",
-    '<Popover><PopoverTrigger>More</PopoverTrigger><PopoverOverlay placement="bottom start" offset={8}><PopoverArrow />Extra choices</PopoverOverlay></Popover>',
+    '<Popover>\n  <PopoverTrigger>More</PopoverTrigger>\n  <PopoverOverlay placement="bottom start" offset={8}>\n    <PopoverArrow />\n    Extra choices\n  </PopoverOverlay>\n</Popover>;',
   ),
   tooltip: lesson(
     "A short description revealed from an existing control.",
@@ -338,7 +347,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Tooltip with the control people already use.",
     "Add TooltipPopover with one short explanation, placed on the side you want, and a TooltipArrow caret styled to point back at the trigger.",
     "Give an icon-only trigger its own aria-label too.",
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
+    '<Tooltip>\n  <TooltipTrigger aria-label="More information">i</TooltipTrigger>\n  <TooltipPopover placement="top" offset={6}>\n    Helpful detail\n    <TooltipArrow />\n  </TooltipPopover>\n</Tooltip>;',
   ),
   meter: lesson(
     "A fully styleable gauge for a measurement within a known range.",
@@ -347,7 +356,7 @@ const lessons: Record<string, LessonCopy> = {
     "Add Meter where the measurement belongs and pass value with min and max.",
     "Name it with a wired Label or an aria-label.",
     "Add your own fill inside Meter and size it with --comp0-meter-value; low, high, and optimum remain available as data attributes.",
-    '<Meter aria-label="Storage used" value={64} min={0} max={100} low={50} high={85}><span className="fill" /></Meter>',
+    '<Meter aria-label="Storage used" value={64} min={0} max={100} low={50} high={85}>\n  <span className="fill" />\n</Meter>;',
   ),
   "progress-bar": lesson(
     "A fully styleable progress indicator for how much of a task is done.",
@@ -356,7 +365,7 @@ const lessons: Record<string, LessonCopy> = {
     "Add ProgressBar where the task's status belongs.",
     "Name it with a wired Label or an aria-label.",
     "Pass value as the completed fraction of max, or omit value while the total is unknown; add your own fill and size it with --comp0-progress-value.",
-    '<ProgressBar aria-label="Uploading photos" value={0.4}><span className="fill" /></ProgressBar>',
+    '<ProgressBar aria-label="Uploading photos" value={0.4}>\n  <span className="fill" />\n</ProgressBar>;',
   ),
   separator: lesson(
     "A native rule that divides content into visually distinct groups.",
@@ -365,7 +374,7 @@ const lessons: Record<string, LessonCopy> = {
     "Place Separator between the groups it divides.",
     'Set orientation="vertical" between items in a horizontal row and give it a width and height.',
     'Pass role="presentation" when the line is purely decorative so nothing extra is announced.',
-    '<Separator orientation="vertical" />',
+    '<Separator orientation="vertical" />;',
   ),
   "skip-link": lesson(
     "A hidden link that lets keyboard users jump past repeated content.",
@@ -374,7 +383,7 @@ const lessons: Record<string, LessonCopy> = {
     "Put SkipLink first inside body, before the repeated navigation.",
     'Point href at the main content, such as "#main".',
     "Give the target element the matching id and tabIndex={-1} so focus lands there.",
-    '<SkipLink href="#main">Skip to main content</SkipLink>',
+    '<SkipLink href="#main">Skip to main content</SkipLink>;',
   ),
   toast: lesson(
     "A short status message that appears, announces itself, and leaves on its own.",
@@ -383,7 +392,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap the app in ToastProvider and call notify from useToast where results happen.",
     "Add one ToastRegion whose render prop returns a Toast with a ToastDismiss inside.",
     'Use kind "alert" plus timeout null for urgent messages people must not miss.',
-    "<ToastRegion>{(toast) => <Toast toast={toast}>{toast.content}<ToastDismiss /></Toast>}</ToastRegion>",
+    "<ToastRegion>\n  {(toast) => (\n    <Toast toast={toast}>\n      {toast.content}\n      <ToastDismiss />\n    </Toast>\n  )}\n</ToastRegion>;",
   ),
   toolbar: lesson(
     "A labelled strip of controls that share one tab stop.",
@@ -392,7 +401,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap the controls in Toolbar and give it an aria-label.",
     "Group related toggles in ToggleButtonGroup so their relationship is announced.",
     "Pick orientation to match the layout; arrow keys follow it automatically.",
-    '<Toolbar aria-label="Text formatting"><ToggleButtonGroup type="multiple" aria-label="Text style"><ToggleButton value="bold">Bold</ToggleButton></ToggleButtonGroup></Toolbar>',
+    '<Toolbar aria-label="Text formatting">\n  <ToggleButtonGroup type="multiple" aria-label="Text style">\n    <ToggleButton value="bold">Bold</ToggleButton>\n  </ToggleButtonGroup>\n</Toolbar>;',
   ),
   "split-button": lesson(
     "A default-action button paired with a menu of alternatives.",
@@ -401,7 +410,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap a Button and a Menu in SplitButton and give it an aria-label.",
     "Put the default action on the Button; give the MenuTrigger its own name such as More options.",
     "Arrow keys move between the two segments as one tab stop; the menu opens from its own button.",
-    '<SplitButton aria-label="Save"><Button onClick={save}>Save</Button><Menu><MenuTrigger aria-label="More save options">▾</MenuTrigger><MenuPopover><MenuList><MenuItem onClick={saveAs}>Save as…</MenuItem></MenuList></MenuPopover></Menu></SplitButton>',
+    '<SplitButton aria-label="Save">\n  <Button onClick={save}>Save</Button>\n  <Menu>\n    <MenuTrigger aria-label="More save options">▾</MenuTrigger>\n    <MenuPopover>\n      <MenuList>\n        <MenuItem onClick={saveAs}>Save as…</MenuItem>\n      </MenuList>\n    </MenuPopover>\n  </Menu>\n</SplitButton>;',
   ),
   "context-menu": lesson(
     "A menu opened from a right click instead of a button.",
@@ -410,7 +419,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap the right-clickable area in ContextMenuTrigger inside a ContextMenu.",
     "Put a labelled MenuList inside MenuPopover; no button labels the list for you.",
     "Anchor the popover at the pointer yourself: position: fixed with left/top from the exposed --comp0-context-menu-x/y variables.",
-    '<ContextMenu><ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger><MenuPopover style={{ position: "fixed", inset: "auto", margin: 0, left: "var(--comp0-context-menu-x)", top: "var(--comp0-context-menu-y)" }}><MenuList aria-label="Attachment actions"><MenuItem>Download</MenuItem></MenuList></MenuPopover></ContextMenu>',
+    '<ContextMenu>\n  <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>\n  <MenuPopover\n    style={{\n      position: "fixed",\n      inset: "auto",\n      margin: 0,\n      left: "var(--comp0-context-menu-x)",\n      top: "var(--comp0-context-menu-y)",\n    }}\n  >\n    <MenuList aria-label="Attachment actions">\n      <MenuItem>Download</MenuItem>\n    </MenuList>\n  </MenuPopover>\n</ContextMenu>;',
   ),
   menubar: lesson(
     "A horizontal bar of menus that behaves like one desktop-style menu strip.",
@@ -419,7 +428,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap your Menu components in Menubar and give the bar an aria-label.",
     "Each Menu keeps its usual MenuTrigger, MenuPopover, and MenuList; the trigger becomes the bar's menuitem automatically.",
     "Arrow keys rove the bar with one tab stop, and once a menu is open the openness follows focus to its neighbors.",
-    '<Menubar aria-label="Notes"><Menu><MenuTrigger>File</MenuTrigger><MenuPopover><MenuList><MenuItem>New note</MenuItem></MenuList></MenuPopover></Menu></Menubar>',
+    '<Menubar aria-label="Notes">\n  <Menu>\n    <MenuTrigger>File</MenuTrigger>\n    <MenuPopover>\n      <MenuList>\n        <MenuItem>New note</MenuItem>\n      </MenuList>\n    </MenuPopover>\n  </Menu>\n</Menubar>;',
   ),
   "pin-input": lesson(
     "A row of one-character fields for entering a short code.",
@@ -428,7 +437,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap one PinInputField per character in PinInput with an aria-label.",
     "Give each field its own aria-label; typing fills and advances, and pasting distributes the whole code.",
     "Wire onComplete to submit or verify as soon as the last field fills; pass name for form posts and mask for secret PINs.",
-    '<PinInput name="otp" onComplete={verify} aria-label="Verification code"><PinInputField aria-label="Digit 1" /><PinInputField aria-label="Digit 2" /><PinInputField aria-label="Digit 3" /><PinInputField aria-label="Digit 4" /></PinInput>',
+    '<PinInput name="otp" onComplete={verify} aria-label="Verification code">\n  <PinInputField aria-label="Digit 1" />\n  <PinInputField aria-label="Digit 2" />\n  <PinInputField aria-label="Digit 3" />\n  <PinInputField aria-label="Digit 4" />\n</PinInput>;',
   ),
   "range-slider": lesson(
     "A two-thumb slider for choosing a range between bounds.",
@@ -437,7 +446,7 @@ const lessons: Record<string, LessonCopy> = {
     'Wrap a RangeSliderTrack and two RangeSliderThumbs (thumb="start" and thumb="end") in RangeSlider with an aria-label.',
     "Give each thumb its own aria-label; the thumbs clamp at each other so the range cannot cross.",
     "Position the parts with the --comp0-range-slider-start and --comp0-range-slider-end fractions; pass name to submit both ends.",
-    '<RangeSlider name="price" defaultValue={[20, 60]} aria-label="Price range"><RangeSliderTrack /><RangeSliderThumb thumb="start" aria-label="Minimum price" /><RangeSliderThumb thumb="end" aria-label="Maximum price" /></RangeSlider>',
+    '<RangeSlider name="price" defaultValue={[20, 60]} aria-label="Price range">\n  <RangeSliderTrack />\n  <RangeSliderThumb thumb="start" aria-label="Minimum price" />\n  <RangeSliderThumb thumb="end" aria-label="Maximum price" />\n</RangeSlider>;',
   ),
   tree: lesson(
     "A nested list where branches expand and collapse behind one tab stop.",
@@ -446,7 +455,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap top-level TreeItems in Tree and give it an aria-label.",
     "Nest a TreeGroup of child TreeItems inside an item to make it an expandable branch.",
     "Read the selection from onChange; pass defaultExpanded, or expanded with onExpandedChange, to manage the open branches. Clicking an expandable row selects it and toggles its branch.",
-    '<Tree aria-label="Files" defaultExpanded={["src"]}><TreeItem value="src">src<TreeGroup><TreeItem value="index">index.ts</TreeItem></TreeGroup></TreeItem></Tree>',
+    '<Tree aria-label="Files" defaultExpanded={["src"]}>\n  <TreeItem value="src">\n    src\n    <TreeGroup>\n      <TreeItem value="index">index.ts</TreeItem>\n    </TreeGroup>\n  </TreeItem>\n</Tree>;',
   ),
   calendar: lesson(
     "A month grid for choosing one day with the keyboard or a click.",
@@ -455,7 +464,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap CalendarHeader and CalendarGrid in Calendar; the grid renders the month on its own.",
     "Add CalendarPreviousButton and CalendarNextButton around the header for month paging.",
     "Read the choice from onChange as an ISO date, and fence the range with min/max; arrow keys walk days, PageUp/PageDown walk months.",
-    '<Calendar defaultValue="2026-07-14" onChange={setDate}><CalendarHeader /><CalendarGrid /></Calendar>',
+    '<Calendar defaultValue="2026-07-14" onChange={setDate}>\n  <CalendarHeader />\n  <CalendarGrid />\n</Calendar>;',
   ),
   carousel: lesson(
     "A labelled strip of slides shown one at a time with previous and next controls.",
@@ -464,7 +473,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap everything in Carousel with an aria-label, and put the slides in CarouselViewport.",
     "Add CarouselPrevious and CarouselNext, plus CarouselAutoplayToggle when autoplay is set.",
     "Pass autoplay in milliseconds only with the toggle present; rotation pauses on hover or focus and the toggle stops it for good.",
-    '<Carousel aria-label="Featured recipes" autoplay={5000}><CarouselAutoplayToggle /><CarouselPrevious /><CarouselNext /><CarouselViewport><CarouselSlide>Soup</CarouselSlide></CarouselViewport></Carousel>',
+    '<Carousel aria-label="Featured recipes" autoplay={5000}>\n  <CarouselAutoplayToggle />\n  <CarouselPrevious />\n  <CarouselNext />\n  <CarouselViewport>\n    <CarouselSlide>Soup</CarouselSlide>\n  </CarouselViewport>\n</Carousel>;',
   ),
   "color-field": lesson(
     "A labelled native color swatch that opens the browser's picker.",
@@ -473,7 +482,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start a TextField with a Label naming what the color is for.",
     "Put ColorField inside it instead of Input, with a name so the value submits.",
     'The native value is hex sRGB without alpha, such as "#0d9488"; say so in a Description when transparency might be expected.',
-    '<TextField defaultValue="#0d9488"><Label>Accent color</Label><ColorField name="accent" /></TextField>',
+    '<TextField defaultValue="#0d9488">\n  <Label>Accent color</Label>\n  <ColorField name="accent" />\n</TextField>;',
   ),
   "color-picker": lesson(
     "A custom color picker with a swatch, two-dimensional color area, hue slider, and editable hex value.",
@@ -482,7 +491,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start ColorPicker with a ColorPickerTrigger containing ColorSwatch and ColorPickerValue.",
     "Put ColorArea with ColorAreaThumb, a hue ColorSlider, and ColorPickerInput inside ColorPickerPopover.",
     'Use a lowercase opaque hex value such as "#0d9488". Keep the picker value immediate and defer only expensive previews derived from it; pass name to ColorPicker when the value belongs in a form. This release has no alpha or wide-gamut color support.',
-    '<ColorPicker defaultValue="#0d9488"><ColorPickerTrigger><ColorSwatch /><ColorPickerValue /></ColorPickerTrigger><ColorPickerPopover><ColorArea><ColorAreaThumb /></ColorArea><ColorSlider channel="hue" /><ColorPickerInput /></ColorPickerPopover></ColorPicker>',
+    '<ColorPicker defaultValue="#0d9488">\n  <ColorPickerTrigger>\n    <ColorSwatch />\n    <ColorPickerValue />\n  </ColorPickerTrigger>\n  <ColorPickerPopover>\n    <ColorArea>\n      <ColorAreaThumb />\n    </ColorArea>\n    <ColorSlider channel="hue" />\n    <ColorPickerInput />\n  </ColorPickerPopover>\n</ColorPicker>;',
   ),
   "date-field": lesson(
     "Native date and time inputs with the shared label and feedback pieces.",
@@ -491,7 +500,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start a TextField with a Label and put DateField (or TimeField) inside it.",
     "Add Description for a hint, FieldError for validation, and min/max ISO bounds.",
     "Give each input a name so the form submits its ISO value; the browser handles parsing and the platform picker.",
-    '<TextField><Label>Departure</Label><DateField name="departure" min="2026-07-01" /></TextField>',
+    '<TextField>\n  <Label>Departure</Label>\n  <DateField name="departure" min="2026-07-01" />\n</TextField>;',
   ),
   "date-picker": lesson(
     "A typed date input with a calendar popover sharing one value.",
@@ -500,7 +509,7 @@ const lessons: Record<string, LessonCopy> = {
     "Put a Label, DateField, and DatePickerTrigger inside DatePicker; hide the browser-owned indicator so only the custom trigger is visible.",
     "Put a Calendar with CalendarHeader and CalendarGrid inside DatePickerPopover; it adopts the shared value automatically.",
     "Read the value from onChange as an ISO date; picking a day closes the popover and refills the DateField, and typing updates the calendar.",
-    '<DatePicker defaultValue="2026-07-14"><Label>Reservation</Label><DateField /><DatePickerTrigger /><DatePickerPopover><Calendar><CalendarHeader /><CalendarGrid /></Calendar></DatePickerPopover></DatePicker>',
+    '<DatePicker defaultValue="2026-07-14">\n  <Label>Reservation</Label>\n  <DateField />\n  <DatePickerTrigger />\n  <DatePickerPopover>\n    <Calendar>\n      <CalendarHeader />\n      <CalendarGrid />\n    </Calendar>\n  </DatePickerPopover>\n</DatePicker>;',
   ),
   "time-picker": lesson(
     "A typed time input with a custom list of useful times.",
@@ -509,7 +518,7 @@ const lessons: Record<string, LessonCopy> = {
     "Keep a labelled TimeField as the editable source of truth, and hide its browser-owned indicator when adding the custom trigger.",
     "Open a ListBox of times from a PopoverTrigger beside the field.",
     "Synchronize list selection with the field and close the popover after a choice.",
-    '<Popover><PopoverTrigger aria-label="Choose time" /><PopoverOverlay><ListBox aria-label="Available times"><ListBoxItem value="09:00">9:00 AM</ListBoxItem></ListBox></PopoverOverlay></Popover>',
+    '<Popover>\n  <PopoverTrigger aria-label="Choose time" />\n  <PopoverOverlay>\n    <ListBox aria-label="Available times">\n      <ListBoxItem value="09:00">9:00 AM</ListBoxItem>\n    </ListBox>\n  </PopoverOverlay>\n</Popover>;',
   ),
   feed: lesson(
     "An infinite-scroll list of articles that keyboard users can page through and escape.",
@@ -518,7 +527,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap the stream in Feed with an aria-label.",
     "Render one FeedArticle per story with aria-labelledby pointing at its title.",
     "Set busy while loading more, and total when you know how many articles exist beyond the rendered ones.",
-    '<Feed aria-label="Recipe stories" busy={loading}><FeedArticle aria-labelledby="story-1"><h3 id="story-1">Roasted tomato soup</h3></FeedArticle></Feed>',
+    '<Feed aria-label="Recipe stories" busy={loading}>\n  <FeedArticle aria-labelledby="story-1">\n    <h3 id="story-1">Roasted tomato soup</h3>\n  </FeedArticle>\n</Feed>;',
   ),
   messages: lesson(
     "A named message history that politely announces new messages appended at the end.",
@@ -527,7 +536,7 @@ const lessons: Record<string, LessonCopy> = {
     "Add Messages with an aria-label or aria-labelledby.",
     "Append each complete message at the end, with visible sender and time context.",
     "Keep the composer outside the history and set busy while a streamed message is being assembled.",
-    '<Messages aria-label="Conversation with Ada"><p>Ada: Hello.</p></Messages>',
+    '<Messages aria-label="Conversation with Ada">\n  <p>Ada: Hello.</p>\n</Messages>;',
   ),
   "drop-zone": lesson(
     "A surface that accepts files dropped from the desktop.",
@@ -536,7 +545,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start with a DropZone and explain which files it accepts in visible text.",
     "Add a FileTrigger inside it so keyboard and touch users can choose the same files.",
     "Use accept on both parts and handle accepted and rejected drops separately when the distinction matters.",
-    '<DropZone accept="image/*" onDrop={upload}><FileTrigger accept="image/*">Choose images</FileTrigger></DropZone>',
+    '<DropZone accept="image/*" onDrop={upload}>\n  <FileTrigger accept="image/*">Choose images</FileTrigger>\n</DropZone>;',
   ),
   "tag-picker": lesson(
     "An editable collection that turns chosen options into removable tags.",
@@ -545,7 +554,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start TagPicker with a TagList that renders its value as Tag children.",
     "Add a TagPickerInput inside TextField and offer TagPickerOption children in a ListBox.",
     "Pass name when every selected value should submit; selecting an option clears the input and removes that option from the list.",
-    '<TagPicker name="framework">{({ value }) => <><TagList aria-label="Selected frameworks">{value.map((value) => <Tag key={value} value={value}>{value}</Tag>)}</TagList><TextField><TagPickerInput aria-label="Add framework" /></TextField><ListBox aria-label="Frameworks"><TagPickerOption value="react">React</TagPickerOption></ListBox></>}</TagPicker>',
+    '<TagPicker name="framework">\n  {({ value }) => (\n    <>\n      <TagList aria-label="Selected frameworks">\n        {value.map((value) => (\n          <Tag key={value} value={value}>\n            {value}\n          </Tag>\n        ))}\n      </TagList>\n      <TextField>\n        <TagPickerInput aria-label="Add framework" />\n      </TextField>\n      <ListBox aria-label="Frameworks">\n        <TagPickerOption value="react">React</TagPickerOption>\n      </ListBox>\n    </>\n  )}\n</TagPicker>;',
   ),
   "color-swatch-picker": lesson(
     "A compact radio group for choosing one named color chip.",
@@ -554,7 +563,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start ColorSwatchPicker with a Legend that says what the color controls.",
     "Add one ColorSwatchPickerItem for each valid hex color.",
     "Give the picker a name when it belongs in a form; selected colors are normalized to lowercase six-digit hex values.",
-    '<ColorSwatchPicker name="accent" defaultValue="#2563eb"><Legend>Accent color</Legend><ColorSwatchPickerItem color="#2563eb" aria-label="Blue" /></ColorSwatchPicker>',
+    '<ColorSwatchPicker name="accent" defaultValue="#2563eb">\n  <Legend>Accent color</Legend>\n  <ColorSwatchPickerItem color="#2563eb" aria-label="Blue" />\n</ColorSwatchPicker>;',
   ),
   "range-calendar": lesson(
     "A month grid that selects a start and end date as one range.",
@@ -563,7 +572,7 @@ const lessons: Record<string, LessonCopy> = {
     "Wrap RangeCalendarGrid and the shared calendar header controls in RangeCalendar.",
     "Use RangeCalendarCell when custom day styling needs range start, end, and interior states.",
     "Read onChange as a [start, end] ISO pair; the first selection starts the range and the second completes it.",
-    '<RangeCalendar defaultValue={["2026-07-14", "2026-07-18"]}><CalendarHeader /><RangeCalendarGrid /></RangeCalendar>',
+    '<RangeCalendar defaultValue={["2026-07-14", "2026-07-18"]}>\n  <CalendarHeader />\n  <RangeCalendarGrid />\n</RangeCalendar>;',
   ),
   "date-range-picker": lesson(
     "Two typed date inputs and a range calendar sharing one date span.",
@@ -572,7 +581,7 @@ const lessons: Record<string, LessonCopy> = {
     "Put a Label, both date fields, and a trigger inside DateRangePicker; hide both browser-owned indicators so only the custom trigger is visible.",
     "Place a RangeCalendar inside DateRangePickerPopover so it adopts the same range.",
     "Pass name to submit `${name}-start` and `${name}-end`; choosing a second day closes the popover and returns focus to the trigger.",
-    '<DateRangePicker name="stay"><Label>Stay dates</Label><DateRangePickerStartField /><DateRangePickerEndField /><DateRangePickerTrigger /><DateRangePickerPopover><RangeCalendar><RangeCalendarGrid /></RangeCalendar></DateRangePickerPopover></DateRangePicker>',
+    '<DateRangePicker name="stay">\n  <Label>Stay dates</Label>\n  <DateRangePickerStartField />\n  <DateRangePickerEndField />\n  <DateRangePickerTrigger />\n  <DateRangePickerPopover>\n    <RangeCalendar>\n      <RangeCalendarGrid />\n    </RangeCalendar>\n  </DateRangePickerPopover>\n</DateRangePicker>;',
   ),
   pagination: lesson(
     "A navigation landmark that exposes the current page and page controls.",
@@ -581,7 +590,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Pagination with totalPages and render its pages state in a PaginationList.",
     "Wrap every control or generated page in PaginationItem; render ellipsis entries with PaginationEllipsis.",
     "Use page and onChange for controlled navigation, or defaultPage for an initial page; previous and next controls disable at their bounds.",
-    '<Pagination totalPages={20}>{({ pages }) => <PaginationList>{pages.map((page) => <PaginationItem key={page}>{typeof page === "number" ? <PaginationPage page={page}>{page}</PaginationPage> : <PaginationEllipsis />}</PaginationItem>)}</PaginationList>}</Pagination>',
+    '<Pagination totalPages={20}>\n  {({ pages }) => (\n    <PaginationList>\n      {pages.map((page) => (\n        <PaginationItem key={page}>\n          {typeof page === "number" ? (\n            <PaginationPage page={page}>{page}</PaginationPage>\n          ) : (\n            <PaginationEllipsis />\n          )}\n        </PaginationItem>\n      ))}\n    </PaginationList>\n  )}\n</Pagination>;',
   ),
   timeline: lesson(
     "A semantic ordered list of events in chronological order.",
@@ -590,7 +599,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Timeline with an aria-label that names the sequence.",
     "Add one TimelineItem per event and put TimelineTime beside the event summary.",
     "Use dateTime for the machine-readable timestamp and format the visible time for people.",
-    '<Timeline aria-label="Release history"><TimelineItem><TimelineTime dateTime="2026-07-14T09:15:00Z">09:15</TimelineTime>Deployed</TimelineItem></Timeline>',
+    '<Timeline aria-label="Release history">\n  <TimelineItem>\n    <TimelineTime dateTime="2026-07-14T09:15:00Z">09:15</TimelineTime>Deployed\n  </TimelineItem>\n</Timeline>;',
   ),
 };
 const accessibility: Record<string, string[]> = {
@@ -700,6 +709,12 @@ const accessibility: Record<string, string[]> = {
     "Keep the handle large enough to grab; style the drag state via data-dragging.",
     "Pass size so assistive technology hears the separator position.",
     "Inside a resizable TableColumn the handle hides itself; keyboard resizing stays on the header.",
+  ],
+  inventory: [
+    "Give Inventory an aria-label or aria-labelledby; it renders a native ordered list rather than claiming ARIA grid behavior.",
+    "Keep both handles visible and clearly named. Arrow keys provide the same move and resize operations without dragging.",
+    "Keep item DOM order meaningful even when visual positions change, and announce saved ordering separately when reading order must also change.",
+    "A fixed spatial grid may need horizontal scrolling on narrow screens; do not silently rewrite persisted coordinates for visual responsiveness.",
   ],
   "grid-list": [
     "Give the grid an aria-label when it has no visible heading.",
@@ -975,7 +990,7 @@ const action = [
     "Button",
     "actions",
     ["Button"],
-    "<Button onClick={save}>Save</Button>",
+    "<Button onClick={save}>Save</Button>;",
     [
       p("Button", "root", "Native button and press target.", true, false, [
         prop("onClick", "(event: MouseEvent) => void", "Runs the action on press."),
@@ -1053,7 +1068,7 @@ const action = [
     "Link",
     "actions",
     ["Link"],
-    '<Link href="/settings">Settings</Link>',
+    '<Link href="/settings">Settings</Link>;',
     [
       p("Link", "root", "Native anchor element.", true, false, [
         prop("href", "string", "Destination URL; removed while disabled."),
@@ -1075,7 +1090,7 @@ const action = [
     "File Trigger",
     "actions",
     ["FileTrigger"],
-    '<FileTrigger name="photo">Upload photo</FileTrigger>',
+    '<FileTrigger name="photo">Upload photo</FileTrigger>;',
     [
       p(
         "FileTrigger",
@@ -1109,7 +1124,7 @@ const action = [
     "Visually Hidden",
     "actions",
     ["VisuallyHidden"],
-    "<VisuallyHidden>Loading messages</VisuallyHidden>",
+    "<VisuallyHidden>Loading messages</VisuallyHidden>;",
     [
       p(
         "VisuallyHidden",
@@ -1198,7 +1213,7 @@ const action = [
     "Progress Bar",
     "actions",
     ["ProgressBar"],
-    '<ProgressBar aria-label="Uploading photos" value={0.4}><span className="fill" /></ProgressBar>',
+    '<ProgressBar aria-label="Uploading photos" value={0.4}>\n  <span className="fill" />\n</ProgressBar>;',
     [
       p(
         "ProgressBar",
@@ -1559,7 +1574,7 @@ const field = [
     "Text Area",
     "fields",
     ["Description", "FieldError", "Label", "TextArea", "TextField"],
-    '<TextField><Label>Notes</Label><TextArea name="notes" /></TextField>',
+    '<TextField>\n  <Label>Notes</Label>\n  <TextArea name="notes" />\n</TextField>;',
     [
       p("TextField", "root", "Optional field provider; it owns no DOM by default.", false, false, [
         prop("value / defaultValue", "string", "Controlled or initial field value."),
@@ -1696,7 +1711,7 @@ const field = [
       "PasswordFieldInput",
       "PasswordFieldToggle",
     ],
-    '<PasswordField required><Label>Password</Label><PasswordFieldInput name="password" autoComplete="current-password" /><PasswordFieldToggle /><Description>Use a password manager if you have one.</Description><FieldError>Enter your password.</FieldError></PasswordField>',
+    '<PasswordField required>\n  <Label>Password</Label>\n  <PasswordFieldInput name="password" autoComplete="current-password" />\n  <PasswordFieldToggle />\n  <Description>Use a password manager if you have one.</Description>\n  <FieldError>Enter your password.</FieldError>\n</PasswordField>;',
     [
       p(
         "PasswordField",
@@ -1842,7 +1857,7 @@ const field = [
     "Checkbox",
     "fields",
     ["Checkbox", "CheckboxGroup"],
-    '<CheckboxGroup name="topics"><Checkbox value="news">News</Checkbox></CheckboxGroup>',
+    '<CheckboxGroup name="topics">\n  <Checkbox value="news">News</Checkbox>\n</CheckboxGroup>;',
     [
       p("CheckboxGroup", "root", "Optional shared name and value provider.", false, true, [
         prop("value / defaultValue", "string[]", "Controlled or initial selected values."),
@@ -1877,7 +1892,7 @@ const field = [
     "Radio",
     "fields",
     ["Radio", "RadioGroup"],
-    '<RadioGroup name="plan" defaultValue="pro"><Radio value="pro">Pro</Radio></RadioGroup>',
+    '<RadioGroup name="plan" defaultValue="pro">\n  <Radio value="pro">Pro</Radio>\n</RadioGroup>;',
     [
       p("RadioGroup", "root", "Selected-value provider; no DOM by default.", false, false, [
         prop("value / defaultValue", "string", "Controlled or initial choice."),
@@ -1915,7 +1930,7 @@ const field = [
     "Switch",
     "fields",
     ["Switch"],
-    '<Switch name="alerts">Email alerts</Switch>',
+    '<Switch name="alerts">Email alerts</Switch>;',
     [
       p("Switch", "input", "Label with a hidden native checkbox.", true, false, [
         prop("name", "string", "Submission name for the setting."),
@@ -1937,7 +1952,7 @@ const field = [
     "Number Field",
     "fields",
     ["NumberField", "NumberFieldInput", "NumberFieldIncrement", "NumberFieldDecrement"],
-    '<NumberField name="guests" defaultValue={2} min={1}><NumberFieldInput /><NumberFieldIncrement /><NumberFieldDecrement /></NumberField>',
+    '<NumberField name="guests" defaultValue={2} min={1}>\n  <NumberFieldInput />\n  <NumberFieldIncrement />\n  <NumberFieldDecrement />\n</NumberField>;',
     [
       p("NumberField", "root", "Field provider and wrapper div.", true, false, [
         prop("value / defaultValue", "number", "Controlled or initial number."),
@@ -1991,7 +2006,7 @@ const field = [
     "Slider",
     "fields",
     ["Slider"],
-    '<Slider name="volume" defaultValue={30} min={0} max={100} />',
+    '<Slider name="volume" defaultValue={30} min={0} max={100} />;',
     [
       p("Slider", "input", "Native range input.", true, false, [
         prop("value / defaultValue", "number", "Controlled or initial position."),
@@ -2016,7 +2031,7 @@ const field = [
     "Pin Input",
     "fields",
     ["PinInput", "PinInputField"],
-    '<PinInput name="otp" onComplete={verify} aria-label="Verification code"><PinInputField aria-label="Digit 1" /><PinInputField aria-label="Digit 2" /><PinInputField aria-label="Digit 3" /><PinInputField aria-label="Digit 4" /></PinInput>',
+    '<PinInput name="otp" onComplete={verify} aria-label="Verification code">\n  <PinInputField aria-label="Digit 1" />\n  <PinInputField aria-label="Digit 2" />\n  <PinInputField aria-label="Digit 3" />\n  <PinInputField aria-label="Digit 4" />\n</PinInput>;',
     [
       p(
         "PinInput",
@@ -2087,7 +2102,7 @@ const field = [
     "Range Slider",
     "fields",
     ["RangeSlider", "RangeSliderThumb", "RangeSliderTrack"],
-    '<RangeSlider name="price" defaultValue={[20, 60]} aria-label="Price range"><RangeSliderTrack /><RangeSliderThumb thumb="start" aria-label="Minimum price" /><RangeSliderThumb thumb="end" aria-label="Maximum price" /></RangeSlider>',
+    '<RangeSlider name="price" defaultValue={[20, 60]} aria-label="Price range">\n  <RangeSliderTrack />\n  <RangeSliderThumb thumb="start" aria-label="Minimum price" />\n  <RangeSliderThumb thumb="end" aria-label="Maximum price" />\n</RangeSlider>;',
     [
       p(
         "RangeSlider",
@@ -2457,7 +2472,7 @@ const navigation = [
     "Accordion",
     "navigation",
     ["Accordion", "AccordionHeader", "AccordionItem", "AccordionPanel", "AccordionTrigger"],
-    '<Accordion defaultValue="one"><AccordionItem value="one"><AccordionHeader><AccordionTrigger>Details</AccordionTrigger></AccordionHeader><AccordionPanel>More information.</AccordionPanel></AccordionItem></Accordion>',
+    '<Accordion defaultValue="one">\n  <AccordionItem value="one">\n    <AccordionHeader>\n      <AccordionTrigger>Details</AccordionTrigger>\n    </AccordionHeader>\n    <AccordionPanel>More information.</AccordionPanel>\n  </AccordionItem>\n</Accordion>;',
     [
       p("Accordion", "root", "Open-item state provider.", false, false, [
         prop("type", '"single" | "multiple"', "How many items may stay open."),
@@ -2505,7 +2520,7 @@ const navigation = [
     "Disclosure",
     "navigation",
     ["Disclosure", "DisclosurePanel", "DisclosureTrigger"],
-    "<Disclosure><DisclosureTrigger>Details</DisclosureTrigger><DisclosurePanel>More information.</DisclosurePanel></Disclosure>",
+    "<Disclosure>\n  <DisclosureTrigger>Details</DisclosureTrigger>\n  <DisclosurePanel>More information.</DisclosurePanel>\n</Disclosure>;",
     [
       p("Disclosure", "root", "Open-state provider.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -2534,7 +2549,7 @@ const navigation = [
     "Tabs",
     "navigation",
     ["Tab", "TabList", "TabPanel", "Tabs"],
-    '<Tabs defaultValue="one"><TabList><Tab tab="one">One</Tab></TabList><TabPanel tab="one">Panel one</TabPanel></Tabs>',
+    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab tab="one">One</Tab>\n  </TabList>\n  <TabPanel tab="one">Panel one</TabPanel>\n</Tabs>;',
     [
       p("Tabs", "root", "Selected-tab provider.", false, false, [
         prop("value / defaultValue", "string", "Controlled or initial selected tab."),
@@ -2573,7 +2588,7 @@ const navigation = [
     "Breadcrumbs",
     "navigation",
     ["BreadcrumbLink", "Breadcrumbs"],
-    '<Breadcrumbs><BreadcrumbLink href="/">Home</BreadcrumbLink></Breadcrumbs>',
+    '<Breadcrumbs>\n  <BreadcrumbLink href="/">Home</BreadcrumbLink>\n</Breadcrumbs>;',
     [
       p("Breadcrumbs", "root", "Navigation landmark and list.", true, false, [
         prop("aria-label", "string", 'Names the landmark; defaults to "Breadcrumbs".'),
@@ -2593,7 +2608,7 @@ const navigation = [
     "List Box",
     "navigation",
     ["ListBox", "ListBoxItem", "ListBoxSection", "ListBoxSeparator"],
-    '<ListBox aria-label="Color"><ListBoxItem value="red">Red</ListBoxItem></ListBox>',
+    '<ListBox aria-label="Color">\n  <ListBoxItem value="red">Red</ListBoxItem>\n</ListBox>;',
     [
       p("ListBox", "root", "Selectable list container.", true, false, [
         prop("aria-label", "string", "Names the list; nothing labels it automatically."),
@@ -2638,7 +2653,7 @@ const navigation = [
     "Menu",
     "navigation",
     ["Menu", "MenuPopover", "MenuList", "MenuItem", "MenuSection", "MenuSeparator", "MenuTrigger"],
-    '<Menu><MenuTrigger>Actions</MenuTrigger><MenuPopover><MenuList aria-label="Actions"><MenuItem>Archive</MenuItem></MenuList></MenuPopover></Menu>',
+    '<Menu>\n  <MenuTrigger>Actions</MenuTrigger>\n  <MenuPopover>\n    <MenuList aria-label="Actions">\n      <MenuItem>Archive</MenuItem>\n    </MenuList>\n  </MenuPopover>\n</Menu>;',
     [
       p(
         "Menu",
@@ -2728,7 +2743,7 @@ const navigation = [
     "Tag Group",
     "navigation",
     ["Button", "Label", "Tag", "TagGroup", "TagList"],
-    '<TagGroup onRemove={remove}><Label>Filters</Label><TagList><Tag value="news">News</Tag></TagList></TagGroup>',
+    '<TagGroup onRemove={remove}>\n  <Label>Filters</Label>\n  <TagList>\n    <Tag value="news">News</Tag>\n  </TagList>\n</TagGroup>;',
     [
       p("TagGroup", "root", "Selection and removal provider.", false, false, [
         prop("value / defaultValue", "string[]", "Controlled or initial selected tags."),
@@ -2774,7 +2789,7 @@ const navigation = [
     "Resizer",
     "navigation",
     ["Resizer"],
-    "<Resizer size={width} min={120} max={320} onResize={setWidth} />",
+    "<Resizer size={width} min={120} max={320} onResize={setWidth} />;",
     [
       p("Resizer", "root", "Native separator that resizes its target.", true, false, [
         prop(
@@ -2810,6 +2825,115 @@ const navigation = [
     ],
     "No native form behavior.",
     ["table"],
+  ),
+  common(
+    "inventory",
+    "Inventory",
+    "navigation",
+    ["Inventory", "InventoryItem", "InventoryMoveHandle", "InventoryResizeHandle"],
+    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}><InventoryItem value="sales" textValue="Sales"><InventoryMoveHandle />Sales<InventoryResizeHandle /></InventoryItem></Inventory>',
+    [
+      p(
+        "Inventory",
+        "root",
+        "Controlled or uncontrolled owner for one spatial list layout.",
+        true,
+        false,
+        [
+          prop("columns / rows", "number", "Positive integer bounds for the uniform grid."),
+          prop(
+            "value / defaultValue",
+            "InventoryLayout",
+            "Complete positions and spans as one-based grid units.",
+          ),
+          prop(
+            "onChange",
+            "(value: InventoryLayout) => void",
+            "Receives the complete next layout during movement and resizing.",
+          ),
+          prop(
+            "canChange",
+            "(value, changedValue) => boolean",
+            "Vetoes a proposed complete layout before it is emitted.",
+          ),
+        ],
+      ),
+      p(
+        "InventoryItem",
+        "item",
+        "Native list item placed from its matching layout entry.",
+        true,
+        false,
+        [
+          prop("value", "string", "Unique key matching one Inventory layout entry."),
+          prop(
+            "textValue",
+            "string",
+            "Readable card name used by default handle labels and announcements.",
+          ),
+        ],
+      ),
+      p(
+        "InventoryMoveHandle",
+        "trigger",
+        "Native button that moves its item by whole grid cells.",
+        true,
+        true,
+      ),
+      p(
+        "InventoryResizeHandle",
+        "trigger",
+        "Native button that changes its item's row and column spans.",
+        true,
+        true,
+      ),
+    ],
+    [
+      {
+        keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Moves the item one cell in that direction.",
+        scope: "on InventoryMoveHandle",
+      },
+      {
+        keys: ["ArrowLeft", "ArrowRight"],
+        action: "Shrinks or grows the column span.",
+        scope: "on InventoryResizeHandle",
+      },
+      {
+        keys: ["ArrowUp", "ArrowDown"],
+        action: "Shrinks or grows the row span.",
+        scope: "on InventoryResizeHandle",
+      },
+    ],
+    [
+      {
+        attribute: "[data-column] / [data-row]",
+        on: "InventoryItem",
+        meaning: "The item's one-based grid position.",
+      },
+      {
+        attribute: "[data-column-span] / [data-row-span]",
+        on: "InventoryItem",
+        meaning: "The number of grid tracks occupied by the item.",
+      },
+      {
+        attribute: "[data-dragging]",
+        on: "Inventory, InventoryItem, InventoryMoveHandle",
+        meaning: "A pointer move is in progress.",
+      },
+      {
+        attribute: "[data-resizing]",
+        on: "Inventory, InventoryItem, InventoryResizeHandle",
+        meaning: "A pointer resize is in progress.",
+      },
+      {
+        attribute: "[data-invalid-placement]",
+        on: "InventoryItem, InventoryMoveHandle, InventoryResizeHandle",
+        meaning: "The current proposed position cannot fit or was vetoed.",
+      },
+    ],
+    "Inventory does not create a form value; persist its layout in application state or storage.",
+    ["grid-list", "resizer"],
   ),
   common(
     "grid-list",
@@ -2944,7 +3068,7 @@ const navigation = [
       },
       {
         attribute: ":focus-visible",
-        on: "GridListItem and its controls",
+        on: "GridListItem, GridListDragHandle, GridListMoveButton",
         meaning: "The row or a control in it has keyboard focus.",
       },
     ],
@@ -3147,7 +3271,7 @@ const navigation = [
     "Skip Link",
     "navigation",
     ["SkipLink"],
-    '<SkipLink href="#main">Skip to main content</SkipLink>',
+    '<SkipLink href="#main">Skip to main content</SkipLink>;',
     [
       p(
         "SkipLink",
@@ -4033,7 +4157,7 @@ const picker = [
       "TextArea",
       "TextField",
     ],
-    '<Autocomplete filter={contains}><SearchField><Label>Destination</Label><SearchFieldInput name="destination" /><ListBox aria-label="Destinations"><ListBoxItem value="paris">Paris</ListBoxItem></ListBox></SearchField></Autocomplete>',
+    '<Autocomplete filter={contains}>\n  <SearchField>\n    <Label>Destination</Label>\n    <SearchFieldInput name="destination" />\n    <ListBox aria-label="Destinations">\n      <ListBoxItem value="paris">Paris</ListBoxItem>\n    </ListBox>\n  </SearchField>\n</Autocomplete>;',
     [
       p(
         "Autocomplete",
@@ -4180,7 +4304,7 @@ const picker = [
     "Modal",
     "pickers",
     ["Dialog", "DialogContent", "DialogTrigger"],
-    '<Dialog><DialogTrigger>Edit profile</DialogTrigger><DialogContent aria-labelledby="profile-title"><h2 id="profile-title">Edit profile</h2></DialogContent></Dialog>',
+    '<Dialog>\n  <DialogTrigger>Edit profile</DialogTrigger>\n  <DialogContent aria-labelledby="profile-title">\n    <h2 id="profile-title">Edit profile</h2>\n  </DialogContent>\n</Dialog>;',
     [
       p("Dialog", "root", "Wrapper-free provider for the composed modal state.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -4230,7 +4354,7 @@ const picker = [
     "Dialog",
     "pickers",
     ["Dialog", "DialogContent", "DialogTrigger"],
-    '<Dialog><DialogTrigger>Open details</DialogTrigger><DialogContent aria-label="Details">Details</DialogContent></Dialog>',
+    '<Dialog>\n  <DialogTrigger>Open details</DialogTrigger>\n  <DialogContent aria-label="Details">Details</DialogContent>\n</Dialog>;',
     [
       p("Dialog", "root", "Modal open-state provider.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -4274,7 +4398,7 @@ const picker = [
     "Alert Dialog",
     "pickers",
     ["AlertDialog", "AlertDialogContent", "DialogTrigger"],
-    '<AlertDialog><DialogTrigger>Delete</DialogTrigger><AlertDialogContent aria-label="Delete item">This cannot be undone.</AlertDialogContent></AlertDialog>',
+    '<AlertDialog>\n  <DialogTrigger>Delete</DialogTrigger>\n  <AlertDialogContent aria-label="Delete item">This cannot be undone.</AlertDialogContent>\n</AlertDialog>;',
     [
       p("AlertDialog", "root", "Modal open-state provider for an urgent decision.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -4371,7 +4495,7 @@ const picker = [
     "Tooltip",
     "pickers",
     ["Tooltip", "TooltipArrow", "TooltipPopover", "TooltipTrigger"],
-    '<Tooltip><TooltipTrigger aria-label="More information">i</TooltipTrigger><TooltipPopover placement="top" offset={6}>Helpful detail<TooltipArrow /></TooltipPopover></Tooltip>',
+    '<Tooltip>\n  <TooltipTrigger aria-label="More information">i</TooltipTrigger>\n  <TooltipPopover placement="top" offset={6}>\n    Helpful detail\n    <TooltipArrow />\n  </TooltipPopover>\n</Tooltip>;',
     [
       p("Tooltip", "root", "Open-state provider.", false, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
@@ -4527,7 +4651,7 @@ const picker = [
       "ColorPickerValue",
       "ColorPickerInput",
     ],
-    '<ColorPicker defaultValue="#0d9488"><ColorPickerTrigger><ColorSwatch /><ColorPickerValue /></ColorPickerTrigger><ColorPickerPopover><ColorArea><ColorAreaThumb /></ColorArea><ColorSlider channel="hue" /><ColorPickerInput /></ColorPickerPopover></ColorPicker>',
+    '<ColorPicker defaultValue="#0d9488">\n  <ColorPickerTrigger>\n    <ColorSwatch />\n    <ColorPickerValue />\n  </ColorPickerTrigger>\n  <ColorPickerPopover>\n    <ColorArea>\n      <ColorAreaThumb />\n    </ColorArea>\n    <ColorSlider channel="hue" />\n    <ColorPickerInput />\n  </ColorPickerPopover>\n</ColorPicker>;',
     [
       p(
         "ColorPicker",
@@ -4666,7 +4790,7 @@ const picker = [
       "DatePickerTrigger",
       "Label",
     ],
-    '<DatePicker defaultValue="2026-07-14"><Label>Reservation</Label><DateField /><DatePickerTrigger /><DatePickerPopover><Calendar><CalendarHeader /><CalendarGrid /></Calendar></DatePickerPopover></DatePicker>',
+    '<DatePicker defaultValue="2026-07-14">\n  <Label>Reservation</Label>\n  <DateField />\n  <DatePickerTrigger />\n  <DatePickerPopover>\n    <Calendar>\n      <CalendarHeader />\n      <CalendarGrid />\n    </Calendar>\n  </DatePickerPopover>\n</DatePicker>;',
     [
       p(
         "DatePicker",
@@ -4753,7 +4877,7 @@ const picker = [
     "Time Picker",
     "pickers",
     ["Label", "ListBox", "ListBoxItem", "Popover", "PopoverOverlay", "PopoverTrigger", "TimeField"],
-    '<Popover><PopoverTrigger aria-label="Choose time" /><PopoverOverlay><ListBox aria-label="Available times"><ListBoxItem value="09:00">9:00 AM</ListBoxItem></ListBox></PopoverOverlay></Popover>',
+    '<Popover>\n  <PopoverTrigger aria-label="Choose time" />\n  <PopoverOverlay>\n    <ListBox aria-label="Available times">\n      <ListBoxItem value="09:00">9:00 AM</ListBoxItem>\n    </ListBox>\n  </PopoverOverlay>\n</Popover>;',
     [
       p("Label", "label", "Visible name connected to the TimeField."),
       p("TimeField", "input", "Native editable time input and form control.", true, false, [

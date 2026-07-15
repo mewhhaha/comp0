@@ -50,6 +50,10 @@ import {
   SearchFieldInput,
   TextField,
   Input,
+  Inventory,
+  InventoryItem,
+  InventoryMoveHandle,
+  InventoryResizeHandle,
 } from "./index.js";
 import { render } from "../test/render.js";
 
@@ -122,6 +126,18 @@ describe("retained accessibility contracts", () => {
           </GridList>
           <GridList name="done" aria-label="Done" />
         </GridListReorderGroup>
+        <Inventory
+          aria-label="Dashboard"
+          columns={2}
+          rows={2}
+          defaultValue={[{ value: "revenue", column: 1, row: 1, columnSpan: 1, rowSpan: 1 }]}
+        >
+          <InventoryItem value="revenue" textValue="Revenue">
+            Revenue
+            <InventoryMoveHandle />
+            <InventoryResizeHandle />
+          </InventoryItem>
+        </Inventory>
         <Accordion defaultValue="one">
           <AccordionItem value="one">
             <AccordionHeader>

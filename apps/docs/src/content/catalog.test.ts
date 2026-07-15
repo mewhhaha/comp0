@@ -8,9 +8,9 @@ import { getExampleSource } from "../examples/sources.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 62 unique component slugs", () => {
-    expect(components).toHaveLength(62);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(62);
+  it("contains 63 unique component slugs", () => {
+    expect(components).toHaveLength(63);
+    expect(new Set(components.map((component) => component.slug)).size).toBe(63);
   });
 
   it("resolves every related component link", () => {
@@ -37,6 +37,19 @@ describe("docs content catalog", () => {
       for (const variant of component.moreExamples ?? []) {
         const key = `${component.slug}.${variant.id}`;
         expect(getExample(key), key).toBeDefined();
+      }
+    }
+  });
+
+  it("assigns every style hook to a documented component part", () => {
+    for (const component of components) {
+      const partNames = component.parts.flatMap((part) => part.name.split(" / "));
+      for (const hook of component.stateHooks) {
+        const hookOwnerNames = hook.on.split(/[^A-Za-z0-9]+/);
+        expect(
+          partNames.some((partName) => hookOwnerNames.includes(partName)),
+          `${component.slug}: ${hook.attribute} on ${hook.on}`,
+        ).toBe(true);
       }
     }
   });
