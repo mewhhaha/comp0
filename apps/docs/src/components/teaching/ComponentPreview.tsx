@@ -19,7 +19,12 @@ export function ComponentPreview({ slug, className }: ComponentPreviewProps) {
       aria-hidden="true"
       inert
       className={cn(
-        "pointer-events-none flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-lg bg-zinc-50 ring-1 ring-zinc-950/5 select-none dark:bg-white/3 dark:ring-white/10",
+        `
+          pointer-events-none flex aspect-[16/10] w-full items-center
+          justify-center overflow-hidden rounded-lg bg-zinc-50 ring-1
+          ring-zinc-950/5 select-none
+          dark:bg-white/3 dark:ring-white/10
+        `,
         className,
       )}
     >

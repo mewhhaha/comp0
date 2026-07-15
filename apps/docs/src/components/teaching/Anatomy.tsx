@@ -285,7 +285,10 @@ function PartName({ children, className }: { children: ReactNode; className?: st
   return (
     <span
       className={cn(
-        "font-mono text-xs/5 whitespace-nowrap text-zinc-500 dark:text-zinc-400",
+        `
+          font-mono text-xs/5 whitespace-nowrap text-zinc-500
+          dark:text-zinc-400
+        `,
         className,
       )}
     >
@@ -298,7 +301,7 @@ function Skeleton({ className }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
-      className={cn("h-2 rounded-full bg-zinc-300 dark:bg-zinc-600", className)}
+      className={cn("h-2 rounded-full bg-zinc-300", "dark:bg-zinc-600", className)}
     />
   );
 }
@@ -370,7 +373,11 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
     return (
       <div
         className={cn(
-          "relative flex w-full max-w-64 gap-2 rounded-lg border border-zinc-300 bg-white px-3 dark:border-zinc-600 dark:bg-zinc-800",
+          `
+            relative flex w-full max-w-64 gap-2 rounded-lg border
+            border-zinc-300 bg-white px-3
+            dark:border-zinc-600 dark:bg-zinc-800
+          `,
           shape === "textarea" ? "min-h-20 items-start py-2.5" : "min-h-10 items-center",
         )}
       >
@@ -380,7 +387,10 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
         )}
         <span
           className={cn(
-            "h-4 w-px shrink-0 bg-teal-600 dark:bg-teal-400",
+            `
+              h-4 w-px shrink-0 bg-teal-600
+              dark:bg-teal-400
+            `,
             shape === "textarea" && "mt-0.5",
           )}
           aria-hidden="true"
@@ -400,9 +410,13 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
       className={cn(
         "relative flex min-h-10 items-center gap-2.5 rounded-lg px-4",
         wide ? "w-full max-w-64" : "self-start justify-self-start",
-        shape === "button" && "bg-zinc-800 dark:bg-zinc-200",
+        shape === "button" && "bg-zinc-800",
+        shape === "button" && "dark:bg-zinc-200",
         shape !== "button" &&
-          "bg-zinc-100 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/10",
+          `
+            bg-zinc-100 ring-1 ring-zinc-950/10
+            dark:bg-zinc-800 dark:ring-white/10
+          `,
       )}
     >
       <Pin number={owner.number} />
@@ -415,7 +429,8 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
           <PartName
             className={cn(
               "text-[0.6875rem]/4",
-              shape === "button" && "text-zinc-400 dark:text-zinc-500",
+              shape === "button" && "text-zinc-400",
+              shape === "button" && "dark:text-zinc-500",
             )}
           >
             {value.part.name}
@@ -447,9 +462,15 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
             className={cn(
               "relative flex h-20 items-center justify-center rounded-lg",
               index === 1 &&
-                "min-w-0 flex-1 bg-teal-600/10 px-3 ring-1 ring-teal-600/30 dark:bg-teal-400/10 dark:ring-teal-400/30",
+                `
+                  min-w-0 flex-1 bg-teal-600/10 px-3 ring-1 ring-teal-600/30
+                  dark:bg-teal-400/10 dark:ring-teal-400/30
+                `,
               index !== 1 &&
-                "w-8 shrink-0 bg-zinc-100 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/10",
+                `
+                  w-8 shrink-0 bg-zinc-100 ring-1 ring-zinc-950/10
+                  dark:bg-zinc-800 dark:ring-white/10
+                `,
             )}
           >
             {index === 1 && <Pin number={owner.number} />}
@@ -475,9 +496,13 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
               key={index}
               className={cn(
                 "aspect-square rounded",
-                index === 9 && "bg-teal-600/80 dark:bg-teal-400/80",
+                index === 9 && "bg-teal-600/80",
+                index === 9 && "dark:bg-teal-400/80",
                 index !== 9 &&
-                  "bg-zinc-100 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/10",
+                  `
+                    bg-zinc-100 ring-1 ring-zinc-950/10
+                    dark:bg-zinc-800 dark:ring-white/10
+                  `,
               )}
             />
           ))}
@@ -495,11 +520,20 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
             )}
             <span
               className={cn(
-                "relative inline-flex min-h-8 items-center gap-2 rounded-md px-3",
+                `
+                  relative inline-flex min-h-8 items-center gap-2 rounded-md
+                  px-3
+                `,
                 index === 0 &&
-                  "bg-teal-600/10 ring-1 ring-teal-600/30 dark:bg-teal-400/10 dark:ring-teal-400/30",
+                  `
+                    bg-teal-600/10 ring-1 ring-teal-600/30
+                    dark:bg-teal-400/10 dark:ring-teal-400/30
+                  `,
                 index !== 0 &&
-                  "bg-zinc-100 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/10",
+                  `
+                    bg-zinc-100 ring-1 ring-zinc-950/10
+                    dark:bg-zinc-800 dark:ring-white/10
+                  `,
               )}
             >
               {index === 0 && <Pin number={owner.number} />}
@@ -522,16 +556,22 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
           key={index}
           className={cn(
             "relative flex min-h-9 items-center gap-2.5 rounded-md px-3",
-            index === 1 && "bg-teal-600/10 dark:bg-teal-400/10",
+            index === 1 && "bg-teal-600/10",
+            index === 1 && "dark:bg-teal-400/10",
           )}
         >
           {index === 0 && <Pin number={owner.number} />}
           {shape === "radio" && (
             <span
               className={cn(
-                "flex size-4 shrink-0 items-center justify-center rounded-full border-2",
-                index === 1 && "border-teal-600 dark:border-teal-400",
-                index !== 1 && "border-zinc-400 dark:border-zinc-500",
+                `
+                  flex size-4 shrink-0 items-center justify-center rounded-full
+                  border-2
+                `,
+                index === 1 && "border-teal-600",
+                index === 1 && "dark:border-teal-400",
+                index !== 1 && "border-zinc-400",
+                index !== 1 && "dark:border-zinc-500",
               )}
             >
               {index === 1 && (
@@ -568,11 +608,20 @@ function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
             <div
               key={key}
               className={cn(
-                "relative grid grid-cols-[minmax(0,1fr)] gap-3 rounded-xl p-4 pt-2.5",
+                `
+                  relative grid grid-cols-[minmax(0,1fr)] gap-3 rounded-xl p-4
+                  pt-2.5
+                `,
                 node.variant === "provider" &&
-                  "border-2 border-dashed border-teal-600/40 dark:border-teal-400/30",
+                  `
+                    border-2 border-dashed border-teal-600/40
+                    dark:border-teal-400/30
+                  `,
                 node.variant === "container" &&
-                  "border border-zinc-300 bg-zinc-50/50 dark:border-zinc-600 dark:bg-white/2",
+                  `
+                    border border-zinc-300 bg-zinc-50/50
+                    dark:border-zinc-600 dark:bg-white/2
+                  `,
               )}
             >
               <Pin number={node.owner.number} />
@@ -628,7 +677,10 @@ function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
                   <span
                     key={button.part.name}
                     className={cn(
-                      "relative flex items-center justify-center bg-zinc-100 dark:bg-zinc-700",
+                      `
+                        relative flex items-center justify-center bg-zinc-100
+                        dark:bg-zinc-700
+                      `,
                       buttonIndex === 0 && "border-b border-zinc-300 dark:border-zinc-600",
                     )}
                   >

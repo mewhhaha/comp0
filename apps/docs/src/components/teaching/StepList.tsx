@@ -11,7 +11,10 @@ export function StepList({ steps, className }: StepListProps) {
   return (
     <ol
       className={cn(
-        "max-w-full min-w-0 divide-y divide-zinc-950/5 dark:divide-white/10",
+        `
+          max-w-full min-w-0 divide-y divide-zinc-950/5
+          dark:divide-white/10
+        `,
         className,
       )}
       role="list"

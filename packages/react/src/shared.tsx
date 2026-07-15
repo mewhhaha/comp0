@@ -8,7 +8,7 @@ import {
   type Ref,
   type RefObject,
 } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { composeRefs } from "@comp0/core";
 
 export type RefProp<TElement> = {
   ref?: Ref<TElement> | undefined;
@@ -41,23 +41,8 @@ export function resolveChildren<TState>(
   return typeof children === "function" ? children(state) : children;
 }
 
-export function disabledProps(disabled: boolean | undefined) {
-  return {
-    "aria-disabled": disabled || undefined,
-    "data-disabled": dataAttr(disabled),
-  };
-}
-
 export function dataSlot(props: Record<string, unknown>, fallback: string) {
   return (props["data-slot"] as string | undefined) ?? fallback;
-}
-
-export function useDataState(states: Record<string, boolean | undefined>) {
-  const attrs: Record<string, string> = {};
-  for (const [key, value] of Object.entries(states)) {
-    if (value) attrs[`data-${key}`] = "";
-  }
-  return attrs;
 }
 
 export type CommandAttributeProps = {

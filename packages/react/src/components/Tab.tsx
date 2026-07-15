@@ -16,6 +16,8 @@ export function Tab({
   const selected = tabs?.selectedKey === tab;
   const { tabId, panelId } = tabPairIds(tabs, tab);
   const registerTab = tabs?.registerTab;
+  // React detaches and reattaches callback refs when their identity changes;
+  // keep this registration ref stable across unrelated renders.
   const tabRef = useCallback(
     (element: HTMLButtonElement | null) => {
       registerTab?.(tab, element, resolvedDisabled);

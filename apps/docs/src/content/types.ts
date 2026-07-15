@@ -1,8 +1,8 @@
-export type ComponentGroupId = "actions" | "fields" | "navigation" | "pickers";
+type ComponentGroupId = "actions" | "fields" | "navigation" | "pickers";
 
 export type CodeLanguage = "bash" | "css" | "tsx";
 
-export type AnatomyKind =
+type AnatomyKind =
   | "root"
   | "label"
   | "trigger"
@@ -68,7 +68,7 @@ export type StateHook = {
   meaning: string;
 };
 
-export type ComponentExampleVariant = {
+type ComponentExampleVariant = {
   /** Registry key suffix; the example file lives at cases/<slug>.<id>.tsx. */
   id: string;
   title: string;
@@ -101,7 +101,7 @@ export type ComponentGroup = {
   components: ComponentDoc[];
 };
 
-export type LearnSection = {
+type LearnSection = {
   id: string;
   title: string;
   explanation: string;

@@ -27,12 +27,18 @@ type KeycapProps = {
   className?: string | undefined;
 };
 
-export function Keycap({ token, className }: KeycapProps) {
+function Keycap({ token, className }: KeycapProps) {
   const key = keyLabels[token];
   return (
     <kbd
       className={cn(
-        "inline-flex min-h-7 items-center justify-center rounded-md bg-zinc-50 px-2 font-mono text-base font-medium text-zinc-700 ring-1 ring-zinc-950/10 ring-inset sm:text-sm dark:bg-white/5 dark:text-zinc-100 dark:ring-white/10",
+        `
+          inline-flex min-h-7 items-center justify-center rounded-md bg-zinc-50
+          px-2 font-mono text-base font-medium text-zinc-700 ring-1
+          ring-zinc-950/10 ring-inset
+          sm:text-sm
+          dark:bg-white/5 dark:text-zinc-100 dark:ring-white/10
+        `,
         className,
       )}
       aria-label={key.spoken}
@@ -49,7 +55,7 @@ type KeyboardGuideProps = {
 
 export function KeyboardGuide({ actions, className }: KeyboardGuideProps) {
   return (
-    <dl className={cn("grid divide-y divide-zinc-950/5 dark:divide-white/10", className)}>
+    <dl className={cn("grid divide-y divide-zinc-950/5", "dark:divide-white/10", className)}>
       {actions.map((item) => (
         <div
           key={`${item.keys.join("-")}-${item.action}`}

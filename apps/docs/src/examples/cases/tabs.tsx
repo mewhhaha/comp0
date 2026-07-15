@@ -1,4 +1,4 @@
-import { Button, Tab, TabList, TabPanel, Tabs } from "@comp0/react";
+import { Tab, TabList, TabPanel, Tabs } from "@comp0/react";
 
 export function Example() {
   return (

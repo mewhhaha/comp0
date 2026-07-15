@@ -13,7 +13,7 @@ function rovingControlCandidates(container: HTMLElement) {
 }
 
 /** A container's enabled roving controls: visible focusables outside nested composites. */
-export function rovingControls(container: HTMLElement) {
+function rovingControls(container: HTMLElement) {
   return rovingControlCandidates(container).filter(
     (element) => !element.closest('[aria-disabled="true"]'),
   );

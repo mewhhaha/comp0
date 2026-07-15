@@ -19,7 +19,7 @@ export interface TableColumnContextValue {
 export const TableColumnContext = createContext<TableColumnContextValue | null>(null);
 
 /** The interactive elements inside a cell, in document order. */
-export function cellWidgets(cell: HTMLTableCellElement) {
+function cellWidgets(cell: HTMLTableCellElement) {
   return [...cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
     (element) => element.getAttribute("aria-hidden") !== "true",
   );
@@ -30,7 +30,7 @@ export function cellWidgets(cell: HTMLTableCellElement) {
  * (the checkbox-column case). Header cells always stay stops themselves so
  * sorting and resizing remain reachable.
  */
-export function delegatedWidget(cell: HTMLTableCellElement) {
+function delegatedWidget(cell: HTMLTableCellElement) {
   if (cell.tagName !== "TD") return undefined;
   const widgets = cellWidgets(cell);
   return widgets.length === 1 ? widgets[0] : undefined;

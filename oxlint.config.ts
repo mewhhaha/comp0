@@ -1,7 +1,7 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
-  ignorePatterns: ["dist", "node_modules", "apps/docs/dist"],
+  ignorePatterns: ["dist", "node_modules", "apps/docs/build"],
   plugins: ["typescript", "react", "jsx-a11y"],
   rules: {
     "react/jsx-key": "error",
@@ -95,6 +95,32 @@ export default defineConfig({
         // Focus is roved among the owned treeitems, not placed on the tree
         // container.
         "jsx-a11y/interactive-supports-focus": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/TreeGrid.tsx"],
+      rules: {
+        // A native table supplies the structure while treegrid supplies
+        // composite focus and hierarchy.
+        "jsx-a11y/no-noninteractive-element-to-interactive-role": "off",
+        // Registrations are ref-backed and may change on any commit; the
+        // effect bails out when hierarchy and roving focus are unchanged.
+        "react-hooks/exhaustive-deps": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/TreeGridCell.tsx"],
+      rules: {
+        // Cells need an explicit role inside a table promoted to treegrid.
+        "jsx-a11y/no-redundant-roles": "off",
+      },
+    },
+    {
+      files: ["packages/react/src/components/TreeGridRow.tsx"],
+      rules: {
+        // Rows need explicit treegrid semantics and a roving tab stop.
+        "jsx-a11y/no-interactive-element-to-noninteractive-role": "off",
+        "jsx-a11y/no-redundant-roles": "off",
       },
     },
     {
@@ -217,7 +243,59 @@ export default defineConfig({
       },
     },
     {
-      files: ["apps/docs/src/*.ts", "apps/docs/src/*.tsx"],
+      files: [
+        "apps/docs/src/components/shell/DocsNavigation.tsx",
+        "apps/docs/src/components/teaching/Anatomy.tsx",
+        "apps/docs/src/components/teaching/StepList.tsx",
+        "apps/docs/src/routes/_index/ComponentDirectory.tsx",
+        "apps/docs/src/routes/_index/LearningPath.tsx",
+        "apps/docs/src/routes/components-index/route.tsx",
+        "apps/docs/src/routes/components/ComponentOutline.tsx",
+        "apps/docs/src/routes/components/route.tsx",
+        "apps/docs/src/routes/learn/route.tsx",
+      ],
+      rules: {
+        // Tailwind's reset removes list markers; the explicit role preserves
+        // list semantics in browsers that otherwise drop them.
+        "jsx-a11y/no-redundant-roles": "off",
+      },
+    },
+    {
+      files: ["apps/docs/src/components/teaching/CodeBlock.tsx"],
+      rules: {
+        // Overflowing code is keyboard-scrollable, so the pre needs a tab stop.
+        "jsx-a11y/no-noninteractive-tabindex": "off",
+      },
+    },
+    {
+      files: ["apps/docs/src/examples/cases/autocomplete.menu.tsx"],
+      rules: {
+        // The popover combines a search editor and menu into an APG dialog;
+        // native dialog cannot provide the popover behavior.
+        "jsx-a11y/prefer-tag-over-role": "off",
+      },
+    },
+    {
+      files: [
+        "packages/react/src/autocomplete.composition.test.tsx",
+        "packages/react/src/interactions.browser.test.tsx",
+        "packages/react/src/toolbar.composition.test.tsx",
+      ],
+      rules: {
+        // These fixtures intentionally model composite ARIA roles that the
+        // components must recognize without imposing native element behavior.
+        "jsx-a11y/prefer-tag-over-role": "off",
+      },
+    },
+    {
+      files: ["apps/docs/src/routes/_index/HomeHero.tsx"],
+      rules: {
+        // The labelled DOM wireframe is exposed as one illustration.
+        "jsx-a11y/prefer-tag-over-role": "off",
+      },
+    },
+    {
+      files: ["apps/docs/src/**/*.ts", "apps/docs/src/**/*.tsx"],
       jsPlugins: ["eslint-plugin-better-tailwindcss"],
       rules: {
         "better-tailwindcss/enforce-consistent-line-wrapping": [

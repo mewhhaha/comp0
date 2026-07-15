@@ -1,5 +1,5 @@
 node_modules
 dist
-apps/docs/dist
+apps/docs/build
 pnpm-lock.yaml
 .agents

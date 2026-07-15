@@ -84,6 +84,8 @@ export function Combobox({
     const text = itemTextRef.current.get(selected);
     setSelectedText(typeof text === "string" ? text : selected);
   }, [selected]);
+  // Option registration effects depend on these identities, so root renders
+  // must not unregister options that are still mounted.
   const registerItem = useCallback((key: string, textValue: ReactNode) => {
     itemTextRef.current.set(key, textValue);
     if (key === selectedRef.current) {

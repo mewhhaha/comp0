@@ -2,13 +2,15 @@ import { useState } from "react";
 import {
   Checkbox,
   Resizer,
-  Select,
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableColumn,
+  TableFooter,
   TableHeader,
   TableRow,
+  TableRowHeader,
 } from "@comp0/react";
 
 export function Example() {
@@ -35,11 +37,13 @@ export function Example() {
 
   return (
     <Table
-      aria-label="People"
       aria-multiselectable="true"
       className="w-full max-w-md table-fixed border-collapse text-base sm:text-sm"
       onRangeSelect={setSelected}
     >
+      <TableCaption className="pb-3 text-left text-base font-semibold text-zinc-950 dark:text-zinc-50">
+        People directory
+      </TableCaption>
       <TableHeader>
         <TableRow>
           <TableColumn
@@ -86,7 +90,10 @@ export function Example() {
                 <span className="block size-4 rounded-sm border border-zinc-950/20 bg-white ring-2 ring-transparent group-data-focused:ring-teal-600 group-data-selected:border-teal-600 group-data-selected:bg-teal-600 dark:border-white/20 dark:bg-zinc-900 dark:group-data-focused:ring-teal-400" />
               </Checkbox>
             </TableCell>
-            {[person.name, person.role, person.city].map((cell) => (
+            <TableRowHeader className="truncate border-b border-zinc-950/5 px-2 py-1.5 text-left font-medium text-zinc-900 outline-teal-600 focus-visible:outline-2 dark:border-white/5 dark:text-zinc-100 dark:outline-teal-400">
+              {person.name}
+            </TableRowHeader>
+            {[person.role, person.city].map((cell) => (
               <TableCell
                 key={cell}
                 className="truncate border-b border-zinc-950/5 px-2 py-1.5 text-zinc-700 outline-teal-600 focus-visible:outline-2 dark:border-white/5 dark:text-zinc-200 dark:outline-teal-400"
@@ -97,6 +104,16 @@ export function Example() {
           </TableRow>
         ))}
       </TableBody>
+      <TableFooter>
+        <TableRow>
+          <TableRowHeader className="px-2 pt-2 text-left text-sm font-semibold">
+            Total
+          </TableRowHeader>
+          <TableCell className="px-2 pt-2 text-sm text-zinc-600 dark:text-zinc-400" colSpan={3}>
+            {people.length} people
+          </TableCell>
+        </TableRow>
+      </TableFooter>
     </Table>
   );
 }

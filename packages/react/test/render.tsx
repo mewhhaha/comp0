@@ -53,17 +53,3 @@ export function fireKeyDown(element: Element, key: string, init?: KeyboardEventI
     );
   });
 }
-
-export function firePointerEnter(element: Element) {
-  const EventCtor = typeof PointerEvent === "undefined" ? MouseEvent : PointerEvent;
-  act(() => {
-    element.dispatchEvent(new EventCtor("pointerenter", { bubbles: true }));
-  });
-}
-
-export function firePointerLeave(element: Element) {
-  const EventCtor = typeof PointerEvent === "undefined" ? MouseEvent : PointerEvent;
-  act(() => {
-    element.dispatchEvent(new EventCtor("pointerleave", { bubbles: true }));
-  });
-}

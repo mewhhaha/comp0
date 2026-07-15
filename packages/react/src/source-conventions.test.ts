@@ -4,12 +4,16 @@ import { describe, expect, it } from "vitest";
 
 const root = resolve(import.meta.dirname, "../../..");
 
-function sourceFiles(directory: string): string[] {
+function descendantFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
     const path = resolve(directory, entry);
-    if (statSync(path).isDirectory()) return sourceFiles(path);
-    return /\.(ts|tsx)$/.test(path) ? [path] : [];
+    if (statSync(path).isDirectory()) return descendantFiles(path);
+    return [path];
   });
+}
+
+function sourceFiles(directory: string) {
+  return descendantFiles(directory).filter((path) => /\.(ts|tsx)$/.test(path));
 }
 
 function readSources(paths: string[]) {
@@ -41,6 +45,21 @@ describe("source conventions", () => {
   const conventionSources = sources.filter(
     ({ relativePath }) => relativePath !== "packages/react/src/source-conventions.test.ts",
   );
+
+  it("keeps generated TypeScript artifacts out of package source and test directories", () => {
+    const packagesRoot = resolve(root, "packages");
+    const packageSourceDirectories = readdirSync(packagesRoot).flatMap((packageName) =>
+      ["src", "test"]
+        .map((directoryName) => resolve(packagesRoot, packageName, directoryName))
+        .filter((path) => statSync(path, { throwIfNoEntry: false })?.isDirectory()),
+    );
+    const generatedArtifacts = packageSourceDirectories
+      .flatMap((directory) => descendantFiles(directory))
+      .map((path) => relative(root, path))
+      .filter((path) => /(?:\.d\.ts(?:\.map)?|\.tsbuildinfo)$/.test(path));
+
+    expect(generatedArtifacts).toEqual([]);
+  });
 
   it("keeps boolean data attributes presence-based", () => {
     const directBooleanDataAttributes = conventionSources.flatMap(({ relativePath, source }) =>

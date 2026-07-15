@@ -3,10 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
 import { Table } from "./components/Table.js";
 import { TableBody } from "./components/TableBody.js";
+import { TableCaption } from "./components/TableCaption.js";
 import { TableCell } from "./components/TableCell.js";
 import { TableColumn } from "./components/TableColumn.js";
+import { TableFooter } from "./components/TableFooter.js";
 import { TableHeader } from "./components/TableHeader.js";
 import { TableRow } from "./components/TableRow.js";
+import { TableRowHeader } from "./components/TableRowHeader.js";
 
 function fireClickWith(element: Element, shiftKey: boolean) {
   act(() => {
@@ -49,6 +52,30 @@ function renderTable() {
 }
 
 describe("table composition", () => {
+  it("renders the complete native table anatomy", () => {
+    const { container } = render(
+      <Table>
+        <TableCaption>Quarterly revenue</TableCaption>
+        <TableBody>
+          <TableRow>
+            <TableRowHeader>First quarter</TableRowHeader>
+            <TableCell>$10</TableCell>
+          </TableRow>
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableRowHeader>Total</TableRowHeader>
+            <TableCell>$10</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>,
+    );
+
+    expect(container.querySelector("caption")?.textContent).toBe("Quarterly revenue");
+    expect(container.querySelectorAll("th[scope='row']")).toHaveLength(2);
+    expect(container.querySelector("tfoot")).not.toBeNull();
+  });
+
   it("renders native table semantics with the grid role and one tab stop", () => {
     const { table, cells } = renderTable();
     expect(table.getAttribute("role")).toBe("grid");
@@ -59,7 +86,7 @@ describe("table composition", () => {
   });
 
   it("moves between cells in two dimensions with the arrow keys", () => {
-    const { table, cells } = renderTable();
+    const { cells } = renderTable();
     cells[0]!.focus();
     fireKey(cells[0]!, "ArrowRight");
     expect(document.activeElement).toBe(cells[1]);
@@ -74,7 +101,7 @@ describe("table composition", () => {
   });
 
   it("supports Home, End, and Ctrl edges, and moves the roving tab stop", () => {
-    const { table, cells } = renderTable();
+    const { cells } = renderTable();
     cells[0]!.focus();
     fireKey(cells[0]!, "End");
     expect(document.activeElement).toBe(cells[1]);

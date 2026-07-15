@@ -1,9 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": false,
     "emitDeclarationOnly": true,
     "noEmit": false,
-    "declarationMap": false,
     "tsBuildInfoFile": "./tsconfig.build.tsbuildinfo",
     "paths": {
       "@comp0/core": ["../core/dist/index.d.ts"]

@@ -3,8 +3,7 @@ node_modules
 apps/docs/.react-router
 apps/docs/.wrangler
 apps/docs/build
-dist
-apps/docs/dist
+packages/*/dist
 .agents
 .claude
 .vite

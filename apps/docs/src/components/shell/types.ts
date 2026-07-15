@@ -1,14 +1,14 @@
-export type NavigationLesson = {
+type NavigationLesson = {
   slug: string;
   title: string;
 };
 
-export type NavigationComponent = {
+type NavigationComponent = {
   slug: string;
   title: string;
 };
 
-export type NavigationGroup = {
+type NavigationGroup = {
   id: string;
   title: string;
   components: NavigationComponent[];

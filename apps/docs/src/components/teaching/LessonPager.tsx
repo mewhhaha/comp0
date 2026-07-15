@@ -17,7 +17,11 @@ export function LessonPager({ previous, next, className }: LessonPagerProps) {
   return (
     <nav
       className={cn(
-        "grid gap-3 border-t border-zinc-950/10 pt-6 sm:grid-cols-2 dark:border-white/10",
+        `
+          grid gap-3 border-t border-zinc-950/10 pt-6
+          sm:grid-cols-2
+          dark:border-white/10
+        `,
         className,
       )}
       aria-label="Lesson navigation"

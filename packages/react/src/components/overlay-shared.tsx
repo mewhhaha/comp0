@@ -14,7 +14,7 @@ import {
 } from "react";
 import { useControllableState } from "@comp0/core";
 
-export type OverlayRootProps = Omit<HTMLAttributes<HTMLElement>, "onToggle"> & {
+type OverlayRootProps = Omit<HTMLAttributes<HTMLElement>, "onToggle"> & {
   as?: ElementType | typeof Fragment | undefined;
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;

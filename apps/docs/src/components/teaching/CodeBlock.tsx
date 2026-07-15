@@ -45,7 +45,11 @@ export async function CodeBlock({ code, language = "tsx", title, className }: Co
   return (
     <figure
       className={cn(
-        "m-0 max-w-full min-w-0 overflow-hidden rounded-xl border border-zinc-950/10 bg-zinc-950 dark:border-white/10",
+        `
+          m-0 max-w-full min-w-0 overflow-hidden rounded-xl border
+          border-zinc-950/10 bg-zinc-950
+          dark:border-white/10
+        `,
         className,
       )}
     >

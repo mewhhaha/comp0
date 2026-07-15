@@ -80,9 +80,12 @@ export function Example() {
           channel="hue"
           className="mt-4 h-3 w-full cursor-pointer appearance-none rounded-full bg-[linear-gradient(to_right,#ef4444,#eab308,#22c55e,#06b6d4,#3b82f6,#a855f7,#ec4899,#ef4444)] outline-teal-600 focus-visible:outline-2 [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-zinc-950 [&::-moz-range-thumb]:shadow [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-zinc-950 [&::-webkit-slider-thumb]:shadow dark:outline-teal-400 dark:[&::-moz-range-thumb]:bg-white dark:[&::-webkit-slider-thumb]:bg-white"
         />
-        <label className="mt-4 flex items-center gap-2">
+        <label className="mt-4 flex items-center gap-2" htmlFor="accent-color-hex">
           <span className="text-base text-zinc-500 sm:text-sm dark:text-zinc-400">Hex</span>
-          <ColorPickerInput className="min-w-0 flex-1 rounded border border-zinc-950/10 bg-white px-2.5 py-2 font-mono text-base text-zinc-950 outline-teal-600 focus-visible:outline-2 sm:text-sm dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-50 dark:outline-teal-400" />
+          <ColorPickerInput
+            id="accent-color-hex"
+            className="min-w-0 flex-1 rounded border border-zinc-950/10 bg-white px-2.5 py-2 font-mono text-base text-zinc-950 outline-teal-600 focus-visible:outline-2 sm:text-sm dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-50 dark:outline-teal-400"
+          />
         </label>
       </ColorPickerPopover>
       <ThemePreview color={previewColor} />

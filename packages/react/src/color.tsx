@@ -8,3 +8,5 @@ export * from "./components/ColorPickerTrigger.js";
 export * from "./components/ColorPickerValue.js";
 export * from "./components/ColorSlider.js";
 export * from "./components/ColorSwatch.js";
+export * from "./components/ColorSwatchPicker.js";
+export * from "./components/ColorSwatchPickerItem.js";

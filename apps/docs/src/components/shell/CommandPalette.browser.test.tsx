@@ -96,7 +96,7 @@ describe("CommandPalette", () => {
       expect(visibleOptionTitles().length).toBeGreaterThan(47);
 
       await act(async () => userEvent.fill(paletteInput()!, "clnd"));
-      expect(visibleOptionTitles()).toEqual(["Calendar"]);
+      expect(visibleOptionTitles()).toEqual(["Calendar", "Range Calendar"]);
     } finally {
       app.unmount();
     }

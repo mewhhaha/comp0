@@ -87,6 +87,8 @@ export function Select({
     itemTextRef.current.set(key, textValue);
     if (key === selectedRef.current) setSelectedText(textValue);
   };
+  // Option cleanup effects depend on this identity, so root renders must not
+  // unregister options that are still mounted.
   const unregisterItem = useCallback((key: string) => {
     if (!itemTextRef.current.delete(key)) return;
     setSelectedText((current) => (key === selectedRef.current ? undefined : current));

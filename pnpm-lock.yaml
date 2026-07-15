@@ -87,9 +87,6 @@ importers:
       '@react-router/dev':
         specifier: 8.2.0
         version: 8.2.0(@vitejs/plugin-rsc@0.5.27(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)))(react-router@8.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0))(wrangler@4.110.0)
-      '@react-router/fs-routes':
-        specifier: 8.2.0
-        version: 8.2.0(@react-router/dev@8.2.0(@vitejs/plugin-rsc@0.5.27(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)))(react-router@8.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0))(wrangler@4.110.0))
       '@tailwindcss/vite':
         specifier: 4.3.2
         version: 4.3.2(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0))
@@ -1206,16 +1203,6 @@ packages:
       typescript:
         optional: true
       wrangler:
-        optional: true
-
-  '@react-router/fs-routes@8.2.0':
-    resolution: {integrity: sha512-QujjPJ4Yzf+UV0obx9CYb/ihiIJeElLDHImg7UnID3qFisJIv7fN9q15q14K3vkSHpyGq/CAwzyMPIhF2WMFNg==}
-    engines: {node: '>=22.22.0'}
-    peerDependencies:
-      '@react-router/dev': ^8.2.0
-      typescript: ^5.1.0 || ^6.0.0
-    peerDependenciesMeta:
-      typescript:
         optional: true
 
   '@react-router/node@8.2.0':
@@ -3551,11 +3538,6 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  '@react-router/fs-routes@8.2.0(@react-router/dev@8.2.0(@vitejs/plugin-rsc@0.5.27(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)))(react-router@8.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0))(wrangler@4.110.0))':
-    dependencies:
-      '@react-router/dev': 8.2.0(@vitejs/plugin-rsc@0.5.27(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)))(react-router@8.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0))(wrangler@4.110.0)
-      minimatch: 10.2.5
-
   '@react-router/node@8.2.0(react-router@8.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))':
     dependencies:
       '@remix-run/node-fetch-server': 0.13.3
@@ -3947,7 +3929,8 @@ snapshots:
       '@babel/types': 7.29.7
     optional: true
 
-  balanced-match@4.0.4: {}
+  balanced-match@4.0.4:
+    optional: true
 
   baseline-browser-mapping@2.10.42: {}
 
@@ -3960,6 +3943,7 @@ snapshots:
   brace-expansion@5.0.7:
     dependencies:
       balanced-match: 4.0.4
+    optional: true
 
   browserslist@4.28.5:
     dependencies:
@@ -4468,6 +4452,7 @@ snapshots:
   minimatch@10.2.5:
     dependencies:
       brace-expansion: 5.0.7
+    optional: true
 
   minimist@1.2.8: {}
 

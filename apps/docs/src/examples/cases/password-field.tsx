@@ -77,9 +77,9 @@ export function Example() {
         Sign in
       </button>
       {signedIn && (
-        <p className="text-base text-emerald-700 sm:text-sm dark:text-emerald-400" role="status">
+        <output className="text-base text-emerald-700 sm:text-sm dark:text-emerald-400">
           Signed in.
-        </p>
+        </output>
       )}
     </form>
   );
