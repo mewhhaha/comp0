@@ -109,21 +109,27 @@ describe("CommandPalette", () => {
       const input = paletteInput()!;
       await act(async () => userEvent.fill(input, "clnd"));
       await act(async () => userEvent.keyboard("{ArrowDown}"));
-      expect(input.getAttribute("aria-activedescendant")).toBeTruthy();
+      const activeId = input.getAttribute("aria-activedescendant");
+      expect(document.getElementById(activeId!)?.textContent).toContain("Range Calendar");
       await act(async () => userEvent.keyboard("{Enter}"));
 
-      expect(currentPath(app.container)).toBe("/components/calendar");
+      expect(currentPath(app.container)).toBe("/components/range-calendar");
       await vi.waitFor(() => expect(paletteDialog()?.open).not.toBe(true));
     } finally {
       app.unmount();
     }
   });
 
-  it("navigates to the first result with Enter when nothing is active", async () => {
+  it("automatically activates and navigates to the first filtered result", async () => {
     const app = mount();
     try {
       await openFromHeaderButton(app.container);
-      await act(async () => userEvent.fill(paletteInput()!, "instl"));
+      const input = paletteInput()!;
+      await act(async () => userEvent.fill(input, "instl"));
+      const activeId = input.getAttribute("aria-activedescendant");
+      expect(activeId).toBeTruthy();
+      expect(document.getElementById(activeId!)?.textContent).toContain("Installation");
+      expect(document.getElementById(activeId!)?.hasAttribute("data-active")).toBe(true);
       await act(async () => userEvent.keyboard("{Enter}"));
 
       expect(currentPath(app.container)).toBe("/learn/installation");

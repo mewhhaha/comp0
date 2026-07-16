@@ -4199,6 +4199,11 @@ const picker = [
           prop("open / defaultOpen", "boolean", "Controlled or initial open state of the results."),
           prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
           prop("filter", "(textValue, inputValue) => boolean", "Custom match rule for results."),
+          prop(
+            "autoHighlight",
+            "boolean",
+            "Activates the first visible enabled option whenever the editable text changes.",
+          ),
           prop("name", "string", "Submission name."),
           prop("form", "string", "Associates the combobox value with a form by id."),
         ],

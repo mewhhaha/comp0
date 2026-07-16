@@ -360,6 +360,34 @@ describe("picker composition", () => {
     expect(document.getElementById("mounted-paris")?.hasAttribute("data-active")).toBe(false);
   });
 
+  it("automatically highlights the first visible enabled option after editing", () => {
+    const { container } = render(
+      <Combobox autoHighlight defaultOpen>
+        <ComboboxInput aria-label="City" />
+        <ComboboxPopover>
+          <ComboboxOption value="disabled" id="disabled-city" disabled>
+            Prague disabled
+          </ComboboxOption>
+          <ComboboxOption value="paris" id="paris-option">
+            Paris
+          </ComboboxOption>
+          <ComboboxOption value="prague" id="prague-option">
+            Prague
+          </ComboboxOption>
+        </ComboboxPopover>
+      </Combobox>,
+    );
+    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
+
+    expect(input.getAttribute("aria-activedescendant")).toBe("paris-option");
+    fireInput(input, "prag");
+    expect(input.getAttribute("aria-activedescendant")).toBe("prague-option");
+    expect(container.querySelector("#prague-option")?.hasAttribute("data-active")).toBe(true);
+
+    fireInput(input, "missing");
+    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
+  });
+
   it("keeps generic ListBox and ListBoxItem selection functional", () => {
     const changed = vi.fn();
     const { container } = render(

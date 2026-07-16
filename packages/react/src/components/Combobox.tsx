@@ -18,6 +18,7 @@ export function Combobox({
   onInputChange,
   filter = defaultFilter,
   allowEmptyCollection = false,
+  autoHighlight = false,
   disabled,
   invalid,
   required,
@@ -39,6 +40,7 @@ export function Combobox({
   });
   const [activeKey, setActiveKey] = useState("");
   const [activeId, setActiveId] = useState("");
+  const [collectionVersion, setCollectionVersion] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
   const itemTextRef = useRef(new Map<string, ReactNode>());
@@ -88,12 +90,14 @@ export function Combobox({
   // must not unregister options that are still mounted.
   const registerItem = useCallback((key: string, textValue: ReactNode) => {
     itemTextRef.current.set(key, textValue);
+    setCollectionVersion((version) => version + 1);
     if (key === selectedRef.current) {
       setSelectedText(typeof textValue === "string" ? textValue : key);
     }
   }, []);
   const unregisterItem = useCallback((key: string) => {
     itemTextRef.current.delete(key);
+    setCollectionVersion((version) => version + 1);
   }, []);
   const setSelectedKey = (key: string) => {
     selectedState.setValue(key);
@@ -103,6 +107,16 @@ export function Combobox({
   };
   const isItemVisible = (textValue: string) =>
     allowEmptyCollection || inputValue === "" || filter(textValue, inputValue);
+  useIsoLayoutEffect(() => {
+    if (!autoHighlight || !popover.open) return;
+    const listBox = inputRef.current?.ownerDocument.getElementById(`${ids.controlId}-listbox`);
+    const firstOption = listBox?.querySelector<HTMLElement>(
+      "[role='option']:not([aria-disabled='true'])",
+    );
+    setActiveId(firstOption?.id ?? "");
+    setActiveKey(firstOption?.dataset.value ?? "");
+    firstOption?.scrollIntoView?.({ block: "nearest" });
+  }, [autoHighlight, collectionVersion, ids.controlId, inputValue, popover.open]);
   let displayValue = inputValue;
   if (displayValue === "" && selected) displayValue = selectedText;
   const { controlId, descriptionId, errorId, labelId } = ids;

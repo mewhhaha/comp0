@@ -66,6 +66,7 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
         className="mx-auto mt-[12vh] w-[min(38rem,calc(100vw-2rem))] rounded-2xl border border-zinc-950/10 bg-white p-0 text-zinc-950 shadow-2xl backdrop:bg-zinc-950/40 dark:border-white/10 dark:bg-zinc-900 dark:text-white dark:backdrop:bg-black/60"
       >
         <Combobox
+          autoHighlight
           filter={fuzzyMatch}
           inputValue={query}
           onChange={goto}
@@ -85,17 +86,6 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
                 // whole dialog in one press instead.
                 event.preventDefault();
                 onToggle(false);
-                return;
-              }
-              if (
-                event.key === "Enter" &&
-                !event.currentTarget.getAttribute("aria-activedescendant")
-              ) {
-                // Without an active option Enter is a no-op in the
-                // Combobox; a palette should jump to the top result.
-                event.preventDefault();
-                const first = results[0];
-                if (first) goto(first.route);
               }
             }}
           />
@@ -107,14 +97,20 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
           >
             {entries.map((entry) => (
               <ComboboxOption
-                className="flex cursor-default items-center justify-between gap-4 rounded-lg px-3 py-2 text-base/7 text-zinc-700 select-none data-active:bg-teal-600/10 data-active:text-teal-800 sm:text-sm/6 dark:text-zinc-300 dark:data-active:bg-teal-400/10 dark:data-active:text-teal-200"
+                className="group flex cursor-default items-center justify-between gap-4 rounded-lg px-3 py-2 text-base/7 text-zinc-700 ring-teal-600/30 select-none data-active:bg-teal-100 data-active:text-teal-950 data-active:ring-1 sm:text-sm/6 dark:text-zinc-300 dark:ring-teal-400/30 dark:data-active:bg-teal-950 dark:data-active:text-teal-50"
                 key={entry.route}
                 textValue={entry.title}
                 value={entry.route}
               >
                 <span className="truncate">{entry.title}</span>
-                <span className="shrink-0 text-sm/6 text-zinc-400 sm:text-xs/6 dark:text-zinc-500">
-                  {entry.group}
+                <span className="flex shrink-0 items-center gap-2 text-sm/6 text-zinc-400 sm:text-xs/6 dark:text-zinc-500">
+                  <span>{entry.group}</span>
+                  <span
+                    aria-hidden="true"
+                    className="hidden font-mono text-teal-700 group-data-active:inline dark:text-teal-300"
+                  >
+                    ↵
+                  </span>
                 </span>
               </ComboboxOption>
             ))}

@@ -71,6 +71,8 @@ export type ComboboxProps = Omit<
   form?: string | undefined;
   filter?: ((textValue: string, inputValue: string) => boolean) | undefined;
   allowEmptyCollection?: boolean | undefined;
+  /** Activates the first visible enabled option whenever the editable text changes. */
+  autoHighlight?: boolean | undefined;
 };
 
 export const defaultFilter = (textValue: string, inputValue: string) =>
