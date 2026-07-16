@@ -307,10 +307,13 @@ describe("grid list composition", () => {
     expect(first!.draggable).toBe(true);
     fireDrag(first!, "dragstart");
     expect(first!.hasAttribute("data-dragging")).toBe(true);
+    expect(first!.hasAttribute("data-drag-previewing")).toBe(false);
 
     fireDrag(last!, "dragover", 85);
+    expect(first!.hasAttribute("data-drag-previewing")).toBe(true);
     expect(last!.hasAttribute("data-drop-before")).toBe(true);
     expect(last!.hasAttribute("data-drop-after")).toBe(false);
+    expect(last!.dataset["dropPreview"]).toBe("report.pdf");
 
     fireDrag(last!, "dragover", 115);
     expect(last!.hasAttribute("data-drop-after")).toBe(true);
@@ -322,8 +325,10 @@ describe("grid list composition", () => {
     fireDrag(first!, "dragend");
     for (const row of container.querySelectorAll("[role='row']")) {
       expect(row.hasAttribute("data-dragging")).toBe(false);
+      expect(row.hasAttribute("data-drag-previewing")).toBe(false);
       expect(row.hasAttribute("data-drop-before")).toBe(false);
       expect(row.hasAttribute("data-drop-after")).toBe(false);
+      expect(row.hasAttribute("data-drop-preview")).toBe(false);
     }
   });
 
@@ -331,6 +336,32 @@ describe("grid list composition", () => {
     const { rows } = renderGridList();
     expect(rows[0]!.draggable).toBe(false);
     expect(rows[0]!.hasAttribute("aria-keyshortcuts")).toBe(false);
+  });
+
+  it("keeps a row selectable when draggable is false", () => {
+    const onChange = vi.fn();
+    const onReorder = vi.fn();
+    const { container } = render(
+      <GridList aria-label="Files" onChange={onChange} onReorder={onReorder}>
+        <GridListItem value="report">report.pdf</GridListItem>
+        <GridListItem value="notes" draggable={false}>
+          <GridListDragHandle>Move</GridListDragHandle>
+          notes.txt
+        </GridListItem>
+      </GridList>,
+    );
+    const notes = container.querySelector<HTMLElement>("[data-value='notes']")!;
+
+    expect(notes.draggable).toBe(false);
+    expect(notes.hasAttribute("aria-keyshortcuts")).toBe(false);
+    expect(notes.querySelector("[data-slot='grid-list-drag-handle']")).toBeNull();
+
+    fireClick(notes);
+    expect(onChange).toHaveBeenLastCalledWith("notes");
+
+    notes.focus();
+    fireKeyDown(notes, "ArrowUp", { altKey: true });
+    expect(onReorder).not.toHaveBeenCalled();
   });
 
   it("keeps the whole row draggable when it has a drag handle", () => {

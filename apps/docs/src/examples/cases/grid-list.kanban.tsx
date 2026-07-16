@@ -85,7 +85,7 @@ export function Example() {
             <section
               key={stage.name}
               aria-labelledby={`${stage.name}-title`}
-              className="min-w-0 rounded-xl border border-zinc-950/10 bg-zinc-100/80 p-2.5 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+              className="min-w-0 rounded-xl bg-zinc-100/80 p-2.5 dark:bg-zinc-900/80"
             >
               <header className="mb-2 flex items-center justify-between gap-2 px-1">
                 <div className="flex items-center gap-2">

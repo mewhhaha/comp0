@@ -23,6 +23,7 @@ export function GridListItem({
   id: idProp,
   value: valueProp,
   disabled,
+  draggable,
   textValue,
   children,
   onClick,
@@ -42,7 +43,7 @@ export function GridListItem({
   const value = valueProp ?? generatedId;
   const id = idProp ?? `grid-list-row-${generatedId}`;
   const resolvedDisabled = Boolean(disabled);
-  const reorderable = Boolean(dnd) && !resolvedDisabled;
+  const reorderable = Boolean(dnd) && !resolvedDisabled && draggable !== false;
   const ariaLabel = props["aria-label"];
   const [crawledLabel, setCrawledLabel] = useState("");
   let label = textValue;
@@ -147,8 +148,10 @@ export function GridListItem({
       data-selected={dataAttr(selected)}
       data-disabled={dataAttr(resolvedDisabled)}
       data-dragging={dataAttr(dragging)}
+      data-drag-previewing={dataAttr(dragging && dnd?.hasDropTarget)}
       data-drop-before={dataAttr(dropEdge === "before")}
       data-drop-after={dataAttr(dropEdge === "after")}
+      data-drop-preview={dropEdge ? dnd?.dragLabel : undefined}
       data-value={value}
       onFocus={(event) => {
         onFocus?.(event);

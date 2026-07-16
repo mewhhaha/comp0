@@ -82,6 +82,8 @@ export const GridListReorderGroupContext = createContext<GridListReorderGroupCon
 export type GridListDndContextValue = {
   listName?: string | undefined;
   dragValue: string;
+  dragLabel: string;
+  hasDropTarget: boolean;
   dropTarget: GridListDropTarget | null;
   listDropTarget: boolean;
   startDrag: (value: string, label: string) => void;

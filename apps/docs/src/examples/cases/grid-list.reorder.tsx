@@ -30,7 +30,9 @@ export function Example() {
             key={name}
             value={name}
             textValue={name}
-            className="relative cursor-grab select-none rounded-md px-2 py-1.5 outline-teal-600 transition-colors hover:bg-zinc-950/5 active:cursor-grabbing focus-visible:outline-2 data-dragging:cursor-grabbing data-dragging:opacity-45 data-selected:bg-teal-100 before:pointer-events-none before:absolute before:inset-x-3 before:-top-1 before:z-10 before:h-1 before:rounded-full before:bg-teal-500 before:opacity-0 before:ring-4 before:ring-teal-500/15 before:transition-opacity data-drop-before:before:opacity-100 after:pointer-events-none after:absolute after:inset-x-3 after:-bottom-1 after:z-10 after:h-1 after:rounded-full after:bg-teal-500 after:opacity-0 after:ring-4 after:ring-teal-500/15 after:transition-opacity data-drop-after:after:opacity-100 dark:outline-teal-400 dark:hover:bg-white/5 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-2"
+            draggable={name !== "notes.txt"}
+            data-pinned={name === "notes.txt" || undefined}
+            className="relative cursor-grab select-none rounded-md px-2 py-1.5 outline-teal-600 transition-colors hover:bg-zinc-950/5 active:cursor-grabbing focus-visible:outline-2 data-dragging:cursor-grabbing data-dragging:bg-teal-500/10 data-dragging:outline data-dragging:outline-1 data-dragging:outline-dashed data-dragging:outline-teal-500 data-drag-previewing:-mb-9 data-drag-previewing:bg-transparent data-drag-previewing:opacity-0 data-drag-previewing:outline-none data-pinned:cursor-default data-selected:bg-teal-100 before:pointer-events-none before:mx-1 before:my-1 before:hidden before:h-9 before:items-center before:rounded-md before:border before:border-dashed before:border-teal-500 before:bg-teal-500/10 before:px-9 before:text-sm before:text-teal-700 before:content-[attr(data-drop-preview)] data-drop-before:before:flex after:pointer-events-none after:mx-1 after:my-1 after:hidden after:h-9 after:items-center after:rounded-md after:border after:border-dashed after:border-teal-500 after:bg-teal-500/10 after:px-9 after:text-sm after:text-teal-700 after:content-[attr(data-drop-preview)] data-drop-after:after:flex dark:outline-teal-400 dark:hover:bg-white/5 dark:data-selected:bg-teal-950 dark:before:text-teal-300 dark:after:text-teal-300 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-2"
           >
             <GridListDragHandle
               aria-label={`Reorder ${name}`}
@@ -39,6 +41,11 @@ export function Example() {
               <DragGrip />
             </GridListDragHandle>
             <span className="text-base text-zinc-800 sm:text-sm dark:text-zinc-100">{name}</span>
+            {name === "notes.txt" && (
+              <span className="ml-auto rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                Pinned
+              </span>
+            )}
           </GridListItem>
         ))}
       </GridList>

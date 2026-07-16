@@ -3035,6 +3035,11 @@ const navigation = [
         prop("value", "string", "This row’s selection key."),
         prop("disabled", "boolean", "Disables the row."),
         prop(
+          "draggable",
+          "boolean",
+          "Set false to keep the row selectable while excluding it from reordering.",
+        ),
+        prop(
           "textValue",
           "string",
           "Overrides the text crawled from children when markup makes it ambiguous.",
@@ -3090,6 +3095,11 @@ const navigation = [
       { attribute: "[data-disabled]", on: "GridListItem", meaning: "The row is disabled." },
       { attribute: "[data-dragging]", on: "GridListItem", meaning: "The row is being dragged." },
       {
+        attribute: "[data-drag-previewing]",
+        on: "GridListItem",
+        meaning: "The dragged row has a valid destination preview elsewhere.",
+      },
+      {
         attribute: "[data-drop-target]",
         on: "GridList",
         meaning: "The dragged row will be inserted in this list, including when it is empty.",
@@ -3105,6 +3115,11 @@ const navigation = [
         meaning: "The dragged row will drop after this row; style it as the drop preview.",
       },
       {
+        attribute: "[data-drop-preview]",
+        on: "GridListItem",
+        meaning: "The dragged row label, available for an in-flow destination preview.",
+      },
+      {
         attribute: ":focus-visible",
         on: "GridListItem, GridListDragHandle, GridListMoveButton",
         meaning: "The row or a control in it has keyboard focus.",
@@ -3117,7 +3132,7 @@ const navigation = [
         id: "reorder",
         title: "Reorder a list",
         description:
-          "onReorder makes rows movable; drag any non-interactive part of a row, use the labelled grip as an explicit affordance, or press Alt+Arrow. canReorder pins notes.txt to the end, and blocked positions show no preview.",
+          "onReorder makes rows movable; drag any non-interactive part of a row, use the labelled grip as an explicit affordance, or press Alt+Arrow. draggable={false} excludes pinned notes.txt from reordering, while canReorder keeps other rows from displacing it.",
       },
       {
         id: "kanban",

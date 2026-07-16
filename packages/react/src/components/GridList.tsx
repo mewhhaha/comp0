@@ -76,6 +76,7 @@ export function GridList({
   const typeaheadSearch = useTypeaheadSearch();
   const [activeKey, setActiveKey] = useState(selected);
   const [dragValue, setDragValue] = useState("");
+  const [dragLabel, setDragLabel] = useState("");
   const [dropTarget, setDropTargetState] = useState<GridListDropTarget | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const activeKeyRef = useRef(activeKey);
@@ -219,6 +220,7 @@ export function GridList({
 
   const resetDrag = () => {
     setDragValue("");
+    setDragLabel("");
     setDropTargetState(null);
   };
 
@@ -303,6 +305,8 @@ export function GridList({
     dndContext = {
       listName: name,
       dragValue: reorderGroup.source?.value ?? "",
+      dragLabel: reorderGroup.source?.label ?? "",
+      hasDropTarget: Boolean(reorderGroup.target),
       dropTarget: groupDropTarget,
       listDropTarget: reorderGroup.target?.list === name,
       startDrag: (movedValue, label) => reorderGroup.startDrag(name, movedValue, label),
@@ -321,9 +325,14 @@ export function GridList({
   } else if (onReorder) {
     dndContext = {
       dragValue,
+      dragLabel,
+      hasDropTarget: Boolean(dropTarget),
       dropTarget,
       listDropTarget: Boolean(dropTarget),
-      startDrag: (movedValue) => setDragValue(movedValue),
+      startDrag: (movedValue, label) => {
+        setDragValue(movedValue);
+        setDragLabel(label);
+      },
       setDropTarget,
       setDropAtEnd: () => {
         const last = items().at(-1);
@@ -384,6 +393,7 @@ export function GridList({
             if (
               dndContext &&
               !rowRecord.disabled &&
+              rowRecord.element.draggable &&
               event.altKey &&
               (event.key === "ArrowUp" || event.key === "ArrowDown")
             ) {
