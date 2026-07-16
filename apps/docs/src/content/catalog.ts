@@ -229,7 +229,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for customizable dashboards and boards where position and size must persist as grid units.",
     "Start Inventory with its column count, row count, and a complete layout.",
     "Render one InventoryItem per layout value, with optional move and resize handles inside each card.",
-    "Add InventoryPreview for a styleable pointer landing overlay; blocked placements stay put and only the preview becomes invalid.",
+    "Add InventoryPreview for a styleable pointer or Shift-arrow landing overlay; blocked placements stay put and only the preview becomes invalid.",
     '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryPreview />\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    <InventoryResizeHandle />\n    Sales\n  </InventoryItem>\n</Inventory>;',
   ),
   "grid-list": lesson(
@@ -712,7 +712,7 @@ const accessibility: Record<string, string[]> = {
   ],
   inventory: [
     "Give Inventory an aria-label or aria-labelledby; it renders a native ordered list rather than claiming ARIA grid behavior.",
-    "Keep both handles visible and clearly named. Arrow keys provide the same move and resize operations without dragging.",
+    "Keep both handles visible and clearly named. Arrow keys act immediately; Shift plus Arrow keeps a preview active until Shift is released.",
     "InventoryPreview is aria-hidden; use its valid and invalid styling only as visual reinforcement for the live announcements.",
     "Keep item DOM order meaningful even when visual positions change, and announce saved ordering separately when reading order must also change.",
     "A fixed spatial grid may need horizontal scrolling on narrow screens; do not silently rewrite persisted coordinates for visual responsiveness.",
@@ -2883,7 +2883,7 @@ const navigation = [
       p(
         "InventoryPreview",
         "item",
-        "Optional aria-hidden list item placed over the current pointer target.",
+        "Optional aria-hidden list item placed over the current provisional target.",
         true,
         true,
       ),
@@ -2909,6 +2909,11 @@ const navigation = [
         scope: "on InventoryMoveHandle",
       },
       {
+        keys: ["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Keeps movement and its preview active; releasing Shift finishes the move.",
+        scope: "on InventoryMoveHandle",
+      },
+      {
         keys: ["ArrowLeft", "ArrowRight"],
         action: "Shrinks or grows the column span.",
         scope: "on InventoryResizeHandle",
@@ -2917,6 +2922,15 @@ const navigation = [
         keys: ["ArrowUp", "ArrowDown"],
         action: "Shrinks or grows the row span.",
         scope: "on InventoryResizeHandle",
+      },
+      {
+        keys: ["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Keeps resizing and its preview active; releasing Shift finishes the resize.",
+        scope: "on InventoryResizeHandle",
+      },
+      {
+        keys: ["Escape"],
+        action: "Cancels an active Shift interaction and restores its starting layout.",
       },
     ],
     [
@@ -2943,17 +2957,17 @@ const navigation = [
       {
         attribute: "[data-dragging]",
         on: "Inventory, InventoryItem, InventoryMoveHandle",
-        meaning: "A pointer move is in progress.",
+        meaning: "A pointer or Shift-arrow move is in progress.",
       },
       {
         attribute: "[data-resizing]",
         on: "Inventory, InventoryItem, InventoryResizeHandle",
-        meaning: "A pointer resize is in progress.",
+        meaning: "A pointer or Shift-arrow resize is in progress.",
       },
       {
         attribute: "[data-invalid-placement]",
         on: "InventoryPreview",
-        meaning: "The proposed pointer position cannot fit or was vetoed.",
+        meaning: "The proposed position cannot fit or was vetoed.",
       },
     ],
     "Inventory does not create a form value; persist its layout in application state or storage.",

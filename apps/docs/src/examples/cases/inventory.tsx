@@ -54,7 +54,7 @@ export function Example() {
         <div>
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">Store overview</h2>
           <p className="mt-1 text-sm/6 text-zinc-600 dark:text-zinc-400">
-            Drag a grip, or focus it and use the arrow keys.
+            Drag a grip, use an arrow immediately, or hold Shift with arrows for a preview.
           </p>
         </div>
         <button

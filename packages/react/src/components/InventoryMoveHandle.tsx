@@ -7,7 +7,9 @@ export type InventoryMoveHandleProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
 export function InventoryMoveHandle({
   disabled,
+  onBlur,
   onKeyDown,
+  onKeyUp,
   onPointerCancel,
   onPointerDown,
   onPointerMove,
@@ -26,13 +28,26 @@ export function InventoryMoveHandle({
       type="button"
       disabled={disabled}
       aria-label={props["aria-label"] ?? `Move ${item.label}`}
-      aria-keyshortcuts={props["aria-keyshortcuts"] ?? "ArrowLeft ArrowRight ArrowUp ArrowDown"}
+      aria-keyshortcuts={
+        props["aria-keyshortcuts"] ??
+        "ArrowLeft ArrowRight ArrowUp ArrowDown Shift+ArrowLeft Shift+ArrowRight Shift+ArrowUp Shift+ArrowDown"
+      }
       data-dragging={dataAttr(dragging)}
       data-slot={dataSlot(props, "inventory-move-handle")}
+      onBlur={(event) => {
+        onBlur?.(event);
+        if (!event.defaultPrevented) inventory.finishKeyboardInteraction(item.value);
+      }}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (!event.defaultPrevented && !disabled) {
           inventory.handleKeyboardInteraction(event, item.value, item.label, "move");
+        }
+      }}
+      onKeyUp={(event) => {
+        onKeyUp?.(event);
+        if (!event.defaultPrevented && event.key === "Shift") {
+          inventory.finishKeyboardInteraction(item.value);
         }
       }}
       onPointerDown={(event) => {

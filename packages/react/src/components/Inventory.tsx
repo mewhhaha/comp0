@@ -32,6 +32,11 @@ type PointerInteraction = {
   previewInvalid: boolean;
 };
 
+type KeyboardInteraction = Pick<
+  PointerInteraction,
+  "value" | "label" | "interaction" | "layout" | "latestEntry" | "previewInvalid"
+>;
+
 type InventoryUpdate = {
   entry: InventoryLayoutEntry;
   status: "changed" | "invalid" | "unchanged";
@@ -56,6 +61,15 @@ function numberStyle(element: HTMLElement, property: string) {
   return Number.isFinite(value) ? value : 0;
 }
 
+function hasSamePlacement(first: InventoryLayoutEntry, second: InventoryLayoutEntry) {
+  return (
+    first.column === second.column &&
+    first.row === second.row &&
+    first.columnSpan === second.columnSpan &&
+    first.rowSpan === second.rowSpan
+  );
+}
+
 export function Inventory({
   columns,
   rows,
@@ -76,6 +90,7 @@ export function Inventory({
   assertInventoryLayout(layout, columns, rows);
   const rootRef = useRef<HTMLOListElement | null>(null);
   const composedRef = useComposedRefs(rootRef, ref);
+  const keyboardInteraction = useRef<KeyboardInteraction | null>(null);
   const pointerInteraction = useRef<PointerInteraction | null>(null);
   const [interaction, setInteraction] = useState<InventoryInteraction | "">("");
   const [activeValue, setActiveValue] = useState("");
@@ -137,6 +152,19 @@ export function Inventory({
     label: string,
     kind: InventoryInteraction,
   ) => {
+    const current = keyboardInteraction.current;
+    if (event.key === "Escape" && current?.value === itemValue) {
+      event.preventDefault();
+      setLayout(current.layout);
+      keyboardInteraction.current = null;
+      setInteraction("");
+      setActiveValue("");
+      setPreviewEntry(null);
+      setPreviewInvalid(false);
+      setAnnouncement(`${current.label} change cancelled.`);
+      return;
+    }
+
     let columnDelta = 0;
     let rowDelta = 0;
     if (event.key === "ArrowLeft") columnDelta = -1;
@@ -145,18 +173,78 @@ export function Inventory({
     else if (event.key === "ArrowDown") rowDelta = 1;
     else return;
     event.preventDefault();
-    const update = updateEntry(layout, itemValue, kind, (entry) => {
+    if (!event.shiftKey) {
+      const update = updateEntry(layout, itemValue, kind, (entry) => {
+        if (kind === "move") {
+          return { ...entry, column: entry.column + columnDelta, row: entry.row + rowDelta };
+        }
+        return {
+          ...entry,
+          columnSpan: Math.max(1, entry.columnSpan + columnDelta),
+          rowSpan: Math.max(1, entry.rowSpan + rowDelta),
+        };
+      });
+      if (update?.status === "changed") announce(update.entry, label, kind);
+      if (update?.status === "invalid") setAnnouncement(`${label} cannot fit there.`);
+      return;
+    }
+
+    let active = keyboardInteraction.current;
+    if (!active) {
+      const entry = layout.find((candidate) => candidate.value === itemValue);
+      if (!entry) return;
+      active = {
+        value: itemValue,
+        label,
+        interaction: kind,
+        layout,
+        latestEntry: entry,
+        previewInvalid: false,
+      };
+      keyboardInteraction.current = active;
+      setActiveValue(itemValue);
+      setInteraction(kind);
+      setPreviewEntry(entry);
+      setPreviewInvalid(false);
+    }
+    const update = updateEntry(active.layout, itemValue, kind, () => {
       if (kind === "move") {
-        return { ...entry, column: entry.column + columnDelta, row: entry.row + rowDelta };
+        return {
+          ...active.latestEntry,
+          column: active.latestEntry.column + columnDelta,
+          row: active.latestEntry.row + rowDelta,
+        };
       }
       return {
-        ...entry,
-        columnSpan: Math.max(1, entry.columnSpan + columnDelta),
-        rowSpan: Math.max(1, entry.rowSpan + rowDelta),
+        ...active.latestEntry,
+        columnSpan: active.latestEntry.columnSpan + columnDelta,
+        rowSpan: active.latestEntry.rowSpan + rowDelta,
       };
     });
-    if (update?.status === "changed") announce(update.entry, label, kind);
-    if (update?.status === "invalid") setAnnouncement(`${label} cannot fit there.`);
+    if (!update) return;
+    active.previewInvalid = update.status === "invalid";
+    setPreviewEntry(update.entry);
+    setPreviewInvalid(active.previewInvalid);
+    if (update.status === "changed") active.latestEntry = update.entry;
+    if (update.status === "unchanged" && !hasSamePlacement(active.latestEntry, update.entry)) {
+      setLayout(active.layout);
+      active.latestEntry = update.entry;
+    }
+  };
+
+  const finishKeyboardInteraction = (itemValue: string) => {
+    const current = keyboardInteraction.current;
+    if (!current || current.value !== itemValue) return;
+    keyboardInteraction.current = null;
+    setInteraction("");
+    setActiveValue("");
+    setPreviewEntry(null);
+    setPreviewInvalid(false);
+    if (current.previewInvalid) {
+      setAnnouncement(`${current.label} cannot fit there.`);
+    } else {
+      announce(current.latestEntry, current.label, current.interaction);
+    }
   };
 
   const startPointerInteraction = (
@@ -223,13 +311,7 @@ export function Inventory({
     setPreviewEntry(update.entry);
     setPreviewInvalid(current.previewInvalid);
     if (update.status === "changed") current.latestEntry = update.entry;
-    if (
-      update.status === "unchanged" &&
-      (current.latestEntry.column !== update.entry.column ||
-        current.latestEntry.row !== update.entry.row ||
-        current.latestEntry.columnSpan !== update.entry.columnSpan ||
-        current.latestEntry.rowSpan !== update.entry.rowSpan)
-    ) {
+    if (update.status === "unchanged" && !hasSamePlacement(current.latestEntry, update.entry)) {
       setLayout(current.layout);
       current.latestEntry = update.entry;
     }
@@ -275,6 +357,7 @@ export function Inventory({
     rows,
     cancelPointerInteraction,
     continuePointerInteraction,
+    finishKeyboardInteraction,
     finishPointerInteraction,
     handleKeyboardInteraction,
     startPointerInteraction,

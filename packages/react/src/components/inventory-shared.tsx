@@ -22,6 +22,7 @@ export type InventoryContextValue = {
   rows: number;
   cancelPointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
   continuePointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
+  finishKeyboardInteraction: (value: string) => void;
   finishPointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
   handleKeyboardInteraction: (
     event: KeyboardEvent<HTMLButtonElement>,

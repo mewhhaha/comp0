@@ -65,6 +65,14 @@ function mockPointerGeometry(
   control.hasPointerCapture = vi.fn(() => false);
 }
 
+function fireKeyUp(element: Element, key: string, init?: KeyboardEventInit) {
+  act(() => {
+    element.dispatchEvent(
+      new KeyboardEvent("keyup", { key, bubbles: true, cancelable: true, ...init }),
+    );
+  });
+}
+
 describe("inventory composition", () => {
   it("renders a semantic list with grid placement and named controls", () => {
     const { container } = renderInventory();
@@ -82,6 +90,7 @@ describe("inventory composition", () => {
     expect(revenue.dataset.columnSpan).toBe("3");
     expect(revenue.style.gridColumn).toBe("1 / span 3");
     expect(move.getAttribute("aria-label")).toBe("Move Revenue");
+    expect(move.getAttribute("aria-keyshortcuts")).toContain("Shift+ArrowRight");
     expect(resize.getAttribute("aria-label")).toBe("Resize Revenue");
     expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
   });
@@ -101,6 +110,47 @@ describe("inventory composition", () => {
     expect(container.querySelector("output")?.textContent).toContain(
       "Revenue moved to column 2, row 1",
     );
+  });
+
+  it("keeps Shift arrow movement active until Shift is released", () => {
+    const { container } = renderInventory();
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+
+    fireKeyDown(move, "ArrowRight", { shiftKey: true });
+
+    expect(revenue.dataset.column).toBe("2");
+    expect(revenue.hasAttribute("data-dragging")).toBe(true);
+    expect(
+      container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
+    ).toBe("2");
+    expect(container.querySelector("output")?.textContent).toBe("");
+
+    fireKeyUp(move, "Shift");
+
+    expect(revenue.hasAttribute("data-dragging")).toBe(false);
+    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("output")?.textContent).toContain(
+      "Revenue moved to column 2, row 1",
+    );
+  });
+
+  it("restores the starting layout when Escape cancels Shift movement", () => {
+    const { container, onChange } = renderInventory();
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+
+    fireKeyDown(move, "ArrowRight", { shiftKey: true });
+    fireKeyDown(move, "Escape", { shiftKey: true });
+
+    expect(revenue.dataset.column).toBe("1");
+    expect(conversion.dataset.column).toBe("4");
+    expect(conversion.dataset.row).toBe("1");
+    expect(revenue.hasAttribute("data-dragging")).toBe(false);
+    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("output")?.textContent).toContain("Revenue change cancelled");
+    expect(onChange).toHaveBeenCalledTimes(2);
   });
 
   it("resizes in row and column spans without marking a grid edge invalid", () => {
