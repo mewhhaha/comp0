@@ -34,7 +34,7 @@ export function Example() {
           <CalendarCell
             date={cell.iso}
             outsideMonth={cell.outsideMonth}
-            className="p-0 text-center [&>button]:size-9 [&>button]:rounded [&>button]:text-base [&>button]:text-zinc-800 [&>button]:outline-teal-600 [&>button]:hover:bg-zinc-100 [&>button]:focus-visible:outline-2 [&>button]:disabled:opacity-40 [&>button[data-outside-month]]:text-zinc-400 [&>button[data-selected]]:bg-teal-600 [&>button[data-selected]]:text-white [&>button[data-today]]:font-semibold sm:[&>button]:text-sm dark:[&>button]:text-zinc-100 dark:[&>button]:outline-teal-400 dark:[&>button]:hover:bg-zinc-800 dark:[&>button[data-outside-month]]:text-zinc-600 dark:[&>button[data-selected]]:bg-teal-500 dark:[&>button[data-selected]]:text-zinc-950"
+            className="p-0 text-center [&>button]:size-9 [&>button]:rounded [&>button]:text-base [&>button]:text-zinc-800 [&>button]:outline-teal-600 [&>button]:hover:bg-zinc-100 [&>button]:focus-visible:outline-2 [&>button]:disabled:opacity-40 [&>button[data-outside-month]]:text-zinc-400 [&>button[data-selected]]:bg-teal-600 [&>button[data-selected]]:text-white [&>button[data-selected]:hover]:bg-teal-700 [&>button[data-today]]:font-semibold sm:[&>button]:text-sm dark:[&>button]:text-zinc-100 dark:[&>button]:outline-teal-400 dark:[&>button]:hover:bg-zinc-800 dark:[&>button[data-outside-month]]:text-zinc-600 dark:[&>button[data-selected]]:bg-teal-500 dark:[&>button[data-selected]]:text-zinc-950 dark:[&>button[data-selected]:hover]:bg-teal-400"
           />
         )}
       </CalendarGrid>
