@@ -3160,7 +3160,8 @@ const navigation = [
       {
         attribute: "[data-drag-previewing]",
         on: "GridListItem",
-        meaning: "The dragged row has a valid destination preview elsewhere.",
+        meaning:
+          "The dragged row has a valid destination; order: 1 in a flex column moves it there.",
       },
       {
         attribute: "[data-drop-target]",
@@ -3170,12 +3171,14 @@ const navigation = [
       {
         attribute: "[data-drop-before]",
         on: "GridListItem",
-        meaning: "The dragged row will drop before this row; style it as the drop preview.",
+        meaning:
+          "The dragged row will drop before this row; order: 2 on it and its later siblings completes the preview.",
       },
       {
         attribute: "[data-drop-after]",
         on: "GridListItem",
-        meaning: "The dragged row will drop after this row; style it as the drop preview.",
+        meaning:
+          "The dragged row will drop after this row; order: 2 on its later siblings completes the preview.",
       },
       {
         attribute: "[data-drop-preview]",

@@ -212,10 +212,9 @@ export function GridListItem({
         if (event.defaultPrevented || !dnd?.dragValue) return;
         event.preventDefault();
         if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-        if (dnd.dragValue === value) {
-          dnd.setDropTarget(null);
-          return;
-        }
+        // A live preview relocates the source row under the pointer; keep the
+        // pending target instead of flickering it away.
+        if (dnd.dragValue === value) return;
         const rect = event.currentTarget.getBoundingClientRect();
         const edge = event.clientY < rect.top + rect.height / 2 ? "before" : "after";
         dnd.setDropTarget({ value, edge });

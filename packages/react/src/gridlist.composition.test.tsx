@@ -315,6 +315,12 @@ describe("grid list composition", () => {
     expect(last!.hasAttribute("data-drop-after")).toBe(false);
     expect(last!.dataset["dropPreview"]).toBe("report.pdf");
 
+    // Dragging over the relocated source row keeps the pending target instead
+    // of flickering the preview away.
+    fireDrag(first!, "dragover", 85);
+    expect(first!.hasAttribute("data-drag-previewing")).toBe(true);
+    expect(last!.hasAttribute("data-drop-before")).toBe(true);
+
     fireDrag(last!, "dragover", 115);
     expect(last!.hasAttribute("data-drop-after")).toBe(true);
     expect(last!.hasAttribute("data-drop-before")).toBe(false);
