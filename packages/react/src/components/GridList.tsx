@@ -352,6 +352,9 @@ export function GridList({
           ref={composedRef}
           role="grid"
           data-drop-target={dataAttr(dndContext?.listDropTarget)}
+          data-drop-preview={
+            dndContext?.listDropTarget && dndContext.dragLabel ? dndContext.dragLabel : undefined
+          }
           onDragLeave={(event) => {
             onDragLeave?.(event);
             if (event.defaultPrevented || !dndContext) return;

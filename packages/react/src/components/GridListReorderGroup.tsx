@@ -229,6 +229,41 @@ export function GridListReorderGroup({
     onChange(proposal.next, proposal.move);
   };
 
+  const destinationValues = (list: string, moveSource: GridListGroupSource) =>
+    (value[list] ?? []).filter((rowValue) => rowValue !== moveSource.value);
+
+  const targetAtPosition = (
+    list: string,
+    position: number,
+    moveSource: GridListGroupSource,
+  ): GridListGroupDropTarget => {
+    const anchor = destinationValues(list, moveSource)[position];
+    if (anchor === undefined) return { list, value: null, edge: "after" };
+    return { list, value: anchor, edge: "before" };
+  };
+
+  /** The insertion slot the current target points at, as a destination index. */
+  const currentPosition = (moveSource: GridListGroupSource) => {
+    if (!target) {
+      return {
+        list: moveSource.list,
+        position: (value[moveSource.list] ?? []).indexOf(moveSource.value),
+      };
+    }
+    const destination = destinationValues(target.list, moveSource);
+    if (target.value === null) return { list: target.list, position: destination.length };
+    const anchorIndex = destination.indexOf(target.value);
+    const position = target.edge === "before" ? anchorIndex : anchorIndex + 1;
+    return { list: target.list, position };
+  };
+
+  const announcePosition = (moveSource: GridListGroupSource, list: string, position: number) => {
+    const total = destinationValues(list, moveSource).length + 1;
+    setAnnouncement(
+      `Moving ${moveSource.label} to ${getListLabel(list)}, position ${position + 1} of ${total}.`,
+    );
+  };
+
   const context = {
     source,
     target,
@@ -339,6 +374,82 @@ export function GridListReorderGroup({
       setTargetState(null);
     },
     endDrag() {
+      setSource(null);
+      setTargetState(null);
+    },
+    beginKeyboardMove(list: string, rowValue: string) {
+      if (pending || pendingMoveRef.current) return;
+      if (!value[list]?.includes(rowValue)) return;
+      const label = rows.current.get(rowValue)?.label ?? rowValue;
+      setSource({ list, value: rowValue, label });
+      setTargetState(null);
+      setAnnouncement(
+        `Moving ${label}. Use the arrow keys to choose a position, Enter to drop, Escape to cancel.`,
+      );
+    },
+    retargetKeyboardMove(direction: "up" | "down" | "left" | "right") {
+      if (!source || pending || pendingMoveRef.current) return;
+      const current = currentPosition(source);
+      const candidates: { list: string; position: number }[] = [];
+      if (direction === "up" || direction === "down") {
+        const last = destinationValues(current.list, source).length;
+        const step = direction === "up" ? -1 : 1;
+        for (let next = current.position + step; next >= 0 && next <= last; next += step) {
+          candidates.push({ list: current.list, position: next });
+        }
+      } else {
+        const listNames = Object.keys(value);
+        const nextList =
+          listNames[listNames.indexOf(current.list) + (direction === "left" ? -1 : 1)];
+        if (nextList !== undefined) {
+          const last = destinationValues(nextList, source).length;
+          const preferred = Math.min(current.position, last);
+          candidates.push({ list: nextList, position: preferred });
+          for (let offset = 1; offset <= last; offset += 1) {
+            const above = preferred - offset;
+            const below = preferred + offset;
+            if (above >= 0) candidates.push({ list: nextList, position: above });
+            if (below <= last) candidates.push({ list: nextList, position: below });
+          }
+        }
+      }
+      for (const candidate of candidates) {
+        const candidateTarget = targetAtPosition(candidate.list, candidate.position, source);
+        const proposal = getMoveProposal(value, source, candidateTarget);
+        if (!proposal) {
+          // Only the row's own slot produces no change; landing there withdraws
+          // the pending move instead of skipping past it.
+          if (candidate.list !== source.list) continue;
+          setTargetState(null);
+          announcePosition(source, candidate.list, candidate.position);
+          return;
+        }
+        if (canMove && !canMove(proposal.next, proposal.move)) continue;
+        setTargetState(candidateTarget);
+        announcePosition(source, candidate.list, candidate.position);
+        return;
+      }
+      setAnnouncement(`Cannot move ${source.label} there.`);
+    },
+    commitKeyboardMove() {
+      if (pending || pendingMoveRef.current) {
+        setSource(null);
+        setTargetState(null);
+        return;
+      }
+      if (source && target) {
+        const proposal = proposalFor(source, target);
+        if (proposal) {
+          commit(proposal, source.label);
+          return;
+        }
+      }
+      if (source) setAnnouncement(`Cancelled moving ${source.label}.`);
+      setSource(null);
+      setTargetState(null);
+    },
+    cancelKeyboardMove() {
+      if (source) setAnnouncement(`Cancelled moving ${source.label}.`);
       setSource(null);
       setTargetState(null);
     },
