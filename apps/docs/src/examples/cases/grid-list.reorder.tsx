@@ -32,7 +32,7 @@ export function Example() {
             textValue={name}
             draggable={name !== "notes.txt"}
             data-pinned={name === "notes.txt" || undefined}
-            className="relative order-(--comp0-grid-list-order) cursor-grab select-none rounded-md px-2 py-1.5 outline-teal-600 transition-colors hover:bg-zinc-950/5 active:cursor-grabbing focus-visible:outline-2 data-dragging:cursor-grabbing data-dragging:bg-teal-500/10 data-dragging:outline data-dragging:outline-1 data-dragging:outline-dashed data-dragging:outline-teal-500 data-pinned:cursor-default data-selected:bg-teal-100 dark:outline-teal-400 dark:hover:bg-white/5 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-2"
+            className="relative cursor-grab select-none rounded-md px-2 py-1.5 outline-teal-600 transition-colors hover:bg-zinc-950/5 active:cursor-grabbing focus-visible:outline-2 data-dragging:cursor-grabbing data-dragging:bg-teal-500/10 data-dragging:outline data-dragging:outline-1 data-dragging:outline-dashed data-dragging:outline-teal-500 data-drag-previewing:order-1 data-drop-before:order-2 data-pinned:cursor-default data-selected:bg-teal-100 dark:outline-teal-400 dark:hover:bg-white/5 dark:data-selected:bg-teal-950 [&>[role=gridcell]]:flex [&>[role=gridcell]]:items-center [&>[role=gridcell]]:gap-2 [[data-drop-after]~&:not([data-drag-previewing])]:order-2 [[data-drop-before]~&:not([data-drag-previewing])]:order-2"
           >
             <GridListDragHandle
               aria-label={`Reorder ${name}`}

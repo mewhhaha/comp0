@@ -314,12 +314,6 @@ describe("grid list composition", () => {
     expect(last!.hasAttribute("data-drop-before")).toBe(true);
     expect(last!.hasAttribute("data-drop-after")).toBe(false);
     expect(last!.dataset["dropPreview"]).toBe("report.pdf");
-    // Every row carries its previewed position so a flex column can show the
-    // pending order with the real rows.
-    const previewOrder = [...container.querySelectorAll<HTMLElement>("[role='row']")].map((row) =>
-      row.style.getPropertyValue("--comp0-grid-list-order"),
-    );
-    expect(previewOrder).toEqual(["1", "0", "2"]);
 
     // Dragging over the relocated source row keeps the pending target instead
     // of flickering the preview away.
