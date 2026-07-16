@@ -3,13 +3,13 @@ import { dataAttr, useControllableState } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { CarouselContext } from "./carousel-shared.js";
 
-export type CarouselProps = HTMLAttributes<HTMLElement> & {
+export type CarouselProps = Omit<HTMLAttributes<HTMLElement>, "onChange"> & {
   /** Controlled index of the current slide. */
   index?: number | undefined;
   /** Initial slide index when uncontrolled. */
   defaultIndex?: number | undefined;
   /** Receives the next slide index. */
-  onIndexChange?: ((index: number) => void) | undefined;
+  onChange?: ((index: number) => void) | undefined;
   /** Previous on the first slide and Next on the last wrap around. */
   loop?: boolean | undefined;
   /** Milliseconds between automatic advances; omit for a manually rotated carousel. */
@@ -27,7 +27,7 @@ export type CarouselProps = HTMLAttributes<HTMLElement> & {
 export function Carousel({
   index,
   defaultIndex = 0,
-  onIndexChange,
+  onChange,
   loop,
   autoplay,
   onBlur,
@@ -40,7 +40,7 @@ export function Carousel({
   const [currentIndex, setCurrentIndex] = useControllableState({
     value: index,
     defaultValue: defaultIndex,
-    onChange: onIndexChange,
+    onChange,
   });
   const [slides, setSlides] = useState<HTMLElement[]>([]);
   const [stopped, setStopped] = useState(false);

@@ -12,7 +12,7 @@ export type NumberFieldProps = Omit<HTMLAttributes<HTMLDivElement>, "onChange"> 
   name?: string | undefined;
   value?: number | undefined;
   defaultValue?: number | undefined;
-  onChange?: (value: number) => void;
+  onChange?: ((value: number) => void) | undefined;
   disabled?: boolean | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
@@ -70,7 +70,7 @@ export type SliderProps = Omit<
 > & {
   value?: number | undefined;
   defaultValue?: number | undefined;
-  onChange?: (value: number) => void;
+  onChange?: ((value: number) => void) | undefined;
   disabled?: boolean | undefined;
 };
 
@@ -82,7 +82,7 @@ export type RangeSliderProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValu
   value?: RangeSliderValue | undefined;
   defaultValue?: RangeSliderValue | undefined;
   /** Receives the next [start, end] pair; shadows the DOM onChange. */
-  onChange?: (value: RangeSliderValue) => void;
+  onChange?: ((value: RangeSliderValue) => void) | undefined;
   min?: number | undefined;
   max?: number | undefined;
   step?: number | undefined;

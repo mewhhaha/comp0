@@ -312,7 +312,7 @@ describe("picker composition", () => {
 
   it("points aria-activedescendant at a mounted option despite a different logical value", () => {
     const { container } = render(
-      <Combobox id="city" defaultValue="logical-value" allowsEmptyCollection>
+      <Combobox id="city" defaultValue="logical-value" allowEmptyCollection>
         <ComboboxInput aria-label="City" />
         <ComboboxPopover>
           <ComboboxOption value="paris" id="mounted-paris">

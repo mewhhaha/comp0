@@ -15,7 +15,7 @@ export type ToggleButtonProps = Omit<
   selected?: boolean | undefined;
   defaultSelected?: boolean | undefined;
   /** Receives the next on state rather than a DOM ChangeEvent. */
-  onChange?: (selected: boolean) => void;
+  onChange?: ((selected: boolean) => void) | undefined;
   /** Identifies the button inside a ToggleButtonGroup that manages selection. */
   value?: string | undefined;
   children?: ButtonProps["children"] | ((state: ToggleButtonState) => ReactNode);

@@ -314,7 +314,7 @@ describe("real-browser interaction contracts", () => {
 
   it("keeps combobox focus in the input with a mounted active descendant", () => {
     const { container, unmount } = render(
-      <Combobox id="browser-combobox" allowsEmptyCollection>
+      <Combobox id="browser-combobox" allowEmptyCollection>
         <ComboboxInput aria-label="Framework" />
         <ComboboxPopover>
           <ComboboxOption value="logical-react" id="dom-react">

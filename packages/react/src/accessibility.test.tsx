@@ -102,7 +102,7 @@ describe("retained accessibility contracts", () => {
             <SelectOption value="rust">Rust</SelectOption>
           </SelectPopover>
         </Select>
-        <Combobox id="framework" allowsEmptyCollection>
+        <Combobox id="framework" allowEmptyCollection>
           <Label>Framework</Label>
           <ComboboxInput />
           <ComboboxPopover>
@@ -150,9 +150,9 @@ describe("retained accessibility contracts", () => {
         </Accordion>
         <Tabs defaultValue="overview">
           <TabList aria-label="Project">
-            <Tab tab="overview">Overview</Tab>
+            <Tab value="overview">Overview</Tab>
           </TabList>
-          <TabPanel tab="overview">Overview content</TabPanel>
+          <TabPanel value="overview">Overview content</TabPanel>
         </Tabs>
         <Dialog>
           <DialogTrigger>Open settings</DialogTrigger>

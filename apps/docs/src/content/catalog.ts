@@ -194,7 +194,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Tabs with a starting value.",
     "Give each Tab and its TabPanel the same tab id.",
     "Put the Tab elements together inside TabList.",
-    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab tab="one">One</Tab>\n  </TabList>\n  <TabPanel tab="one">Panel one</TabPanel>\n</Tabs>;',
+    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab value="one">One</Tab>\n  </TabList>\n  <TabPanel value="one">Panel one</TabPanel>\n</Tabs>;',
   ),
   breadcrumbs: lesson(
     "A trail of links showing where this page sits.",
@@ -2548,9 +2548,9 @@ const navigation = [
     ["Disclosure", "DisclosurePanel", "DisclosureTrigger"],
     "<Disclosure>\n  <DisclosureTrigger>Details</DisclosureTrigger>\n  <DisclosurePanel>More information.</DisclosurePanel>\n</Disclosure>;",
     [
-      p("Disclosure", "root", "Open-state provider.", false, false, [
+      p("Disclosure", "root", "Native details element that owns the open state.", true, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-        prop("onChange", "(open: boolean) => void", "Receives the next open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
       ]),
       p("DisclosureTrigger", "trigger", "Native summary element that toggles the details."),
       p("DisclosurePanel", "region", "Revealed content."),
@@ -2575,7 +2575,7 @@ const navigation = [
     "Tabs",
     "navigation",
     ["Tab", "TabList", "TabPanel", "Tabs"],
-    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab tab="one">One</Tab>\n  </TabList>\n  <TabPanel tab="one">Panel one</TabPanel>\n</Tabs>;',
+    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab value="one">One</Tab>\n  </TabList>\n  <TabPanel value="one">Panel one</TabPanel>\n</Tabs>;',
     [
       p("Tabs", "root", "Selected-tab provider.", false, false, [
         prop("value / defaultValue", "string", "Controlled or initial selected tab."),
@@ -2586,11 +2586,11 @@ const navigation = [
         prop("orientation", '"horizontal" | "vertical"', "Arrow-key axis and aria-orientation."),
       ]),
       p("Tab", "item", "Native button with tab role.", true, false, [
-        prop("tab", "string", "Identity that pairs this tab with its panel."),
+        prop("value", "string", "Identity that pairs this tab with its panel."),
         prop("disabled", "boolean", "Disables the tab."),
       ]),
       p("TabPanel", "region", "Panel for a matching tab.", true, false, [
-        prop("tab", "string", "The tab this panel belongs to."),
+        prop("value", "string", "The tab this panel belongs to."),
       ]),
     ],
     [
@@ -3333,7 +3333,7 @@ const navigation = [
     ],
     [
       { attribute: "[data-selected]", on: "TreeGridRow", meaning: "The row is selected." },
-      { attribute: "[data-expanded]", on: "TreeGridRow", meaning: "The row's branch is open." },
+      { attribute: "[data-open]", on: "TreeGridRow", meaning: "The row’s branch is open." },
       { attribute: "[data-disabled]", on: "TreeGridRow", meaning: "The row is disabled." },
       {
         attribute: ":focus-visible",
@@ -3662,7 +3662,7 @@ const navigation = [
     ],
     [
       { attribute: "[data-selected]", on: "TreeItem", meaning: "The item is selected." },
-      { attribute: "[data-expanded]", on: "TreeItem", meaning: "The item's branch is open." },
+      { attribute: "[data-open]", on: "TreeItem", meaning: "The item's branch is open." },
       { attribute: "[data-disabled]", on: "TreeItem", meaning: "The item is disabled." },
       {
         attribute: ":focus-visible",
@@ -3696,7 +3696,7 @@ const navigation = [
         [
           prop("aria-label", "string", "Names the carousel for assistive technology; required."),
           prop("index / defaultIndex", "number", "Controlled or initial slide index."),
-          prop("onIndexChange", "(index: number) => void", "Receives the next slide index."),
+          prop("onChange", "(index: number) => void", "Receives the next slide index."),
           prop("loop", "boolean", "Previous on the first slide and Next on the last wrap around."),
           prop(
             "autoplay",

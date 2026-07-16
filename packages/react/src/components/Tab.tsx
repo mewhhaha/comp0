@@ -5,7 +5,7 @@ import { TabsContext, tabPairIds } from "./disclosure-shared.js";
 import { type TabProps } from "./disclosure-shared.js";
 export type { TabProps } from "./disclosure-shared.js";
 export function Tab({
-  tab,
+  value,
   disabled,
   onClick,
   ref,
@@ -13,17 +13,17 @@ export function Tab({
 }: TabProps & RefProp<HTMLButtonElement>) {
   const tabs = useContext(TabsContext);
   const resolvedDisabled = Boolean(disabled);
-  const selected = tabs?.selectedKey === tab;
-  const { tabId, panelId } = tabPairIds(tabs, tab);
+  const selected = tabs?.selectedKey === value;
+  const { tabId, panelId } = tabPairIds(tabs, value);
   const registerTab = tabs?.registerTab;
   // React detaches and reattaches callback refs when their identity changes;
   // keep this registration ref stable across unrelated renders.
   const tabRef = useCallback(
     (element: HTMLButtonElement | null) => {
-      registerTab?.(tab, element, resolvedDisabled);
+      registerTab?.(value, element, resolvedDisabled);
       composeRefs(ref)(element);
     },
-    [ref, registerTab, resolvedDisabled, tab],
+    [ref, registerTab, resolvedDisabled, value],
   );
 
   return (
@@ -41,7 +41,7 @@ export function Tab({
       data-disabled={dataAttr(resolvedDisabled)}
       onClick={(event) => {
         onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) tabs?.setSelectedKey(tab);
+        if (!event.defaultPrevented && !resolvedDisabled) tabs?.setSelectedKey(value);
       }}
     />
   );

@@ -186,7 +186,7 @@ describe("form reset behavior", () => {
             <SelectOption value="pro">Pro</SelectOption>
           </SelectPopover>
         </Select>
-        <Combobox name="city" defaultValue="paris" defaultInputValue="Paris" allowsEmptyCollection>
+        <Combobox name="city" defaultValue="paris" defaultInputValue="Paris" allowEmptyCollection>
           <ComboboxInput aria-label="City" />
           <ComboboxPopover>
             <ComboboxOption value="paris">Paris</ComboboxOption>

@@ -120,7 +120,7 @@ export function TreeGridRow({
         data-parent-value={parentValue}
         data-level={metadata?.level}
         data-selected={dataAttr(selected)}
-        data-expanded={dataAttr(Boolean(metadata?.expandable && expanded))}
+        data-open={dataAttr(Boolean(metadata?.expandable && expanded))}
         data-disabled={dataAttr(resolvedDisabled)}
         onFocus={(event) => {
           onFocus?.(event);

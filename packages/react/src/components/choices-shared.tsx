@@ -37,7 +37,7 @@ export type CheckboxGroupProps = Omit<
   value?: string[] | undefined;
   defaultValue?: string[] | undefined;
   /** Receives the next selected-value array rather than a native ChangeEvent. */
-  onChange?: (value: string[]) => void;
+  onChange?: ((value: string[]) => void) | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
 };
@@ -84,7 +84,7 @@ export type RadioGroupProps = Omit<
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the next selected radio value rather than a native ChangeEvent. */
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
 };

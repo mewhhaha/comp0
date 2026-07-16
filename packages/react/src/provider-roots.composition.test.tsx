@@ -73,11 +73,11 @@ describe("provider roots", () => {
         </Accordion>
         <Tabs value="one" onChange={changed}>
           <TabList>
-            <Tab tab="one">One</Tab>
-            <Tab tab="two">Two</Tab>
+            <Tab value="one">One</Tab>
+            <Tab value="two">Two</Tab>
           </TabList>
-          <TabPanel tab="one">One panel</TabPanel>
-          <TabPanel tab="two">Two panel</TabPanel>
+          <TabPanel value="one">One panel</TabPanel>
+          <TabPanel value="two">Two panel</TabPanel>
         </Tabs>
       </>,
     );

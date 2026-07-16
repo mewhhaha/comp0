@@ -17,7 +17,7 @@ export function Combobox({
   defaultInputValue = "",
   onInputChange,
   filter = defaultFilter,
-  allowsEmptyCollection = false,
+  allowEmptyCollection = false,
   disabled,
   invalid,
   required,
@@ -102,7 +102,7 @@ export function Combobox({
     if (typeof text === "string") inputState.setValue(text);
   };
   const isItemVisible = (textValue: string) =>
-    allowsEmptyCollection || inputValue === "" || filter(textValue, inputValue);
+    allowEmptyCollection || inputValue === "" || filter(textValue, inputValue);
   let displayValue = inputValue;
   if (displayValue === "" && selected) displayValue = selectedText;
   const { controlId, descriptionId, errorId, labelId } = ids;

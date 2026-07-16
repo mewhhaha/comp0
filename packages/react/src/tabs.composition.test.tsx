@@ -10,11 +10,11 @@ function renderTabs(defaultValue?: string) {
   return render(
     <Tabs defaultValue={defaultValue}>
       <TabList aria-label="Project">
-        <Tab tab="one">One</Tab>
-        <Tab tab="two">Two</Tab>
+        <Tab value="one">One</Tab>
+        <Tab value="two">Two</Tab>
       </TabList>
-      <TabPanel tab="one">First panel</TabPanel>
-      <TabPanel tab="two">Second panel</TabPanel>
+      <TabPanel value="one">First panel</TabPanel>
+      <TabPanel value="two">Second panel</TabPanel>
     </Tabs>,
   );
 }
@@ -56,17 +56,17 @@ describe("tabs composition", () => {
     const { container, rerender, unmount } = render(
       <Tabs defaultValue="one">
         <TabList aria-label="Project">
-          <Tab tab="one">One</Tab>
-          <Tab tab="two">Two</Tab>
-          <Tab tab="three">Three</Tab>
+          <Tab value="one">One</Tab>
+          <Tab value="two">Two</Tab>
+          <Tab value="three">Three</Tab>
         </TabList>
       </Tabs>,
     );
     rerender(
       <Tabs defaultValue="one">
         <TabList aria-label="Project">
-          <Tab tab="one">One</Tab>
-          <Tab tab="three">Three</Tab>
+          <Tab value="one">One</Tab>
+          <Tab value="three">Three</Tab>
         </TabList>
       </Tabs>,
     );
@@ -80,8 +80,8 @@ describe("tabs composition", () => {
     const { container, rerender } = render(
       <Tabs value="missing">
         <TabList aria-label="Project">
-          <Tab tab="one">One</Tab>
-          <Tab tab="two">Two</Tab>
+          <Tab value="one">One</Tab>
+          <Tab value="two">Two</Tab>
         </TabList>
       </Tabs>,
     );
@@ -93,10 +93,10 @@ describe("tabs composition", () => {
     rerender(
       <Tabs value="one">
         <TabList aria-label="Project">
-          <Tab tab="one" disabled>
+          <Tab value="one" disabled>
             One
           </Tab>
-          <Tab tab="two">Two</Tab>
+          <Tab value="two">Two</Tab>
         </TabList>
       </Tabs>,
     );
@@ -109,9 +109,9 @@ describe("tabs composition", () => {
     const { container } = render(
       <Tabs value="one">
         <TabList aria-label="Project">
-          <Tab tab="one">One</Tab>
-          <Tab tab="two">Two</Tab>
-          <Tab tab="three">Three</Tab>
+          <Tab value="one">One</Tab>
+          <Tab value="two">Two</Tab>
+          <Tab value="three">Three</Tab>
         </TabList>
       </Tabs>,
     );
