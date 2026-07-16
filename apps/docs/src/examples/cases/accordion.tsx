@@ -16,7 +16,7 @@ export function Example() {
     >
       <AccordionItem value="shipping">
         <AccordionHeader className="m-0">
-          <AccordionTrigger className="group flex w-full items-center justify-between px-3 py-2.5 text-left text-base text-zinc-900 sm:py-2 sm:text-sm dark:text-zinc-100">
+          <AccordionTrigger className="group flex w-full items-center justify-between px-3 py-2.5 text-left text-base text-zinc-900 select-none sm:py-2 sm:text-sm dark:text-zinc-100">
             Shipping{" "}
             <ChevronDownIcon
               className="size-4 text-zinc-400 transition-transform duration-150 ease-out group-data-open:rotate-180 motion-reduce:transition-none"
@@ -34,7 +34,7 @@ export function Example() {
       </AccordionItem>
       <AccordionItem value="returns">
         <AccordionHeader className="m-0">
-          <AccordionTrigger className="group flex w-full items-center justify-between px-3 py-2.5 text-left text-base text-zinc-900 sm:py-2 sm:text-sm dark:text-zinc-100">
+          <AccordionTrigger className="group flex w-full items-center justify-between px-3 py-2.5 text-left text-base text-zinc-900 select-none sm:py-2 sm:text-sm dark:text-zinc-100">
             Returns{" "}
             <ChevronDownIcon
               className="size-4 text-zinc-400 transition-transform duration-150 ease-out group-data-open:rotate-180 motion-reduce:transition-none"
