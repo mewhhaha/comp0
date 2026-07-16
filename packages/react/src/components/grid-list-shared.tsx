@@ -69,6 +69,11 @@ export type GridListReorderGroupContextValue = {
   setDropTarget: (target: GridListGroupDropTarget | null) => void;
   commitDrop: () => void;
   endDrag: () => void;
+  /** Starts a keyboard move session: arrows retarget, Enter drops, Escape cancels. */
+  beginKeyboardMove: (list: string, value: string) => void;
+  retargetKeyboardMove: (direction: "up" | "down" | "left" | "right") => void;
+  commitKeyboardMove: () => void;
+  cancelKeyboardMove: () => void;
   moveWithin: (list: string, value: string, delta: -1 | 1) => void;
   moveTo: (list: string, value: string, targetList: string) => void;
   canMoveTo: (list: string, value: string, targetList: string) => boolean;

@@ -722,6 +722,7 @@ const accessibility: Record<string, string[]> = {
     "Keep row focus and row selection visibly distinct.",
     "Reach row controls with ArrowRight; do not add extra tab stops.",
     "Reordering never requires a pointer: Alt+Arrow moves the focused row and a live region announces its new position.",
+    "In a group, Enter on the drag handle starts a keyboard move: arrows choose a position across lists with the same drop preview pointer drags show, Enter drops, Escape cancels, and every step is announced.",
     "For cross-list moves, render GridListMoveButton controls so the same operation works with a click, tap, Enter, or Space without dragging.",
   ],
   table: [
@@ -3152,6 +3153,26 @@ const navigation = [
         action: "Moves the row to the named destination.",
         scope: "on GridListMoveButton",
       },
+      {
+        keys: ["Enter"],
+        action: "Starts moving the row, then drops it at the chosen position.",
+        scope: "on GridListDragHandle, in a group",
+      },
+      {
+        keys: ["ArrowUp", "ArrowDown"],
+        action: "Chooses a position in the current list while moving.",
+        scope: "on GridListDragHandle, in a group",
+      },
+      {
+        keys: ["ArrowLeft", "ArrowRight"],
+        action: "Chooses a position in a neighboring list while moving.",
+        scope: "on GridListDragHandle, in a group",
+      },
+      {
+        keys: ["Escape"],
+        action: "Cancels the move.",
+        scope: "on GridListDragHandle, in a group",
+      },
     ],
     [
       { attribute: "[data-selected]", on: "GridListItem", meaning: "The row is selected." },
@@ -3184,6 +3205,12 @@ const navigation = [
         attribute: "[data-drop-preview]",
         on: "GridListItem",
         meaning: "The dragged row label, available for an in-flow destination preview.",
+      },
+      {
+        attribute: "[data-drop-preview]",
+        on: "GridList",
+        meaning:
+          "The dragged row label while this list is the drop target, for an insertion slot between the order bands.",
       },
       {
         attribute: ":focus-visible",

@@ -344,6 +344,15 @@ export function GridList({
     };
   }
 
+  // Read from the underlying state rather than dndContext: property loads off
+  // that object in JSX make the React Compiler bail out of extra functions.
+  let dropPreviewLabel = "";
+  if (reorderGroup && name) {
+    if (reorderGroup.target?.list === name) dropPreviewLabel = reorderGroup.source?.label ?? "";
+  } else if (dropTarget) {
+    dropPreviewLabel = dragLabel;
+  }
+
   return (
     <GridListContext value={context}>
       <GridListDndContext value={dndContext}>
@@ -352,6 +361,7 @@ export function GridList({
           ref={composedRef}
           role="grid"
           data-drop-target={dataAttr(dndContext?.listDropTarget)}
+          data-drop-preview={dropPreviewLabel || undefined}
           onDragLeave={(event) => {
             onDragLeave?.(event);
             if (event.defaultPrevented || !dndContext) return;

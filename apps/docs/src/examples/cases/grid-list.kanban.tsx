@@ -107,7 +107,7 @@ export function Example() {
               <GridList
                 name={stage.name}
                 aria-labelledby={`${stage.name}-title`}
-                className="flex min-h-40 flex-col gap-2 rounded-lg border border-dashed border-zinc-950/10 p-1 outline-none transition data-drop-target:border-teal-500 data-drop-target:bg-teal-50/80 data-drop-target:shadow-[inset_0_0_0_1px_var(--color-teal-500)] focus-within:border-teal-500/50 dark:border-white/10 dark:data-drop-target:bg-teal-950/40"
+                className="flex min-h-40 flex-col gap-2 rounded-lg border border-dashed border-zinc-950/10 p-1 outline-none transition after:pointer-events-none after:order-1 after:hidden after:min-h-9 after:items-center after:justify-center after:rounded-lg after:border after:border-dashed after:border-teal-500 after:bg-teal-500/10 after:px-2 after:text-xs after:font-medium after:text-teal-700 after:content-[attr(data-drop-preview)] focus-within:border-teal-500/50 data-drop-target:border-teal-500 data-drop-target:bg-teal-50/80 data-drop-target:shadow-[inset_0_0_0_1px_var(--color-teal-500)] dark:border-white/10 dark:after:text-teal-300 dark:data-drop-target:bg-teal-950/40 [&[data-drop-target]:not(:has([data-drag-previewing]))]:after:flex"
               >
                 {tasks.map((taskId) => {
                   const task = taskById[taskId]!;
@@ -116,7 +116,7 @@ export function Example() {
                       key={taskId}
                       value={taskId}
                       textValue={task.title}
-                      className="relative cursor-grab select-none rounded-lg border border-zinc-950/10 bg-white p-2.5 shadow-sm outline-teal-600 transition hover:-translate-y-px hover:shadow-md active:cursor-grabbing focus-visible:outline-2 data-dragging:cursor-grabbing data-dragging:scale-[0.98] data-dragging:opacity-45 before:pointer-events-none before:absolute before:inset-x-4 before:-top-1 before:z-10 before:h-1 before:rounded-full before:bg-teal-500 before:opacity-0 before:ring-4 before:ring-teal-500/15 before:transition-opacity data-drop-before:before:opacity-100 after:pointer-events-none after:absolute after:inset-x-4 after:-bottom-1 after:z-10 after:h-1 after:rounded-full after:bg-teal-500 after:opacity-0 after:ring-4 after:ring-teal-500/15 after:transition-opacity data-drop-after:after:opacity-100 dark:border-white/10 dark:bg-zinc-950 dark:outline-teal-400 [&>[role=gridcell]]:grid [&>[role=gridcell]]:grid-cols-[auto_1fr_auto] [&>[role=gridcell]]:items-start [&>[role=gridcell]]:gap-2"
+                      className="relative cursor-grab select-none rounded-lg border border-zinc-950/10 bg-white p-2.5 shadow-sm outline-teal-600 transition hover:shadow-md active:cursor-grabbing focus-visible:outline-2 data-dragging:cursor-grabbing data-dragging:border-dashed data-dragging:border-teal-500 data-dragging:shadow-none data-drop-before:order-2 dark:border-white/10 dark:bg-zinc-950 dark:outline-teal-400 dark:data-dragging:border-teal-400 [&>[role=gridcell]]:grid [&>[role=gridcell]]:grid-cols-[auto_1fr_auto] [&>[role=gridcell]]:items-start [&>[role=gridcell]]:gap-2 [[data-drop-after]~&:not([data-drag-previewing])]:order-2 [[data-drop-before]~&:not([data-drag-previewing])]:order-2 [[role=grid][data-drop-target]_&[data-drag-previewing]]:order-1 [[role=grid]:not([data-drop-target])_&[data-drag-previewing]]:opacity-40"
                     >
                       <GridListDragHandle
                         aria-label={`Drag ${task.title}`}
