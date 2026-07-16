@@ -321,8 +321,24 @@ export function GridList({
       commitDrop: reorderGroup.commitDrop,
       endDrag: reorderGroup.endDrag,
       moveItem: (movedValue, delta) => reorderGroup.moveWithin(name, movedValue, delta),
+      beginKeyboardMove: (movedValue) => reorderGroup.beginKeyboardMove(name, movedValue),
+      retargetKeyboardMove: reorderGroup.retargetKeyboardMove,
+      commitKeyboardMove: reorderGroup.commitKeyboardMove,
+      cancelKeyboardMove: reorderGroup.cancelKeyboardMove,
     };
   } else if (onReorder) {
+    /** The insertion slot the pending target points at, as an index into the other rows. */
+    const keyboardPosition = (movedValue: string) => {
+      const order = items().map((item) => item.key);
+      if (!dropTarget) return order.indexOf(movedValue);
+      const destination = order.filter((key) => key !== movedValue);
+      const anchorIndex = destination.indexOf(dropTarget.value);
+      return dropTarget.edge === "before" ? anchorIndex : anchorIndex + 1;
+    };
+    const cancelWithAnnouncement = () => {
+      if (dragValue) setAnnouncement(`Cancelled moving ${dragLabel || dragValue}.`);
+      resetDrag();
+    };
     dndContext = {
       dragValue,
       dragLabel,
@@ -341,6 +357,63 @@ export function GridList({
       commitDrop,
       endDrag: resetDrag,
       moveItem,
+      beginKeyboardMove: (movedValue) => {
+        const label = itemMap.current.get(movedValue)?.textValue ?? movedValue;
+        setDragValue(movedValue);
+        setDragLabel(label);
+        setDropTargetState(null);
+        setAnnouncement(
+          `Moving ${label}. Use the arrow keys to choose a position, Enter to drop, Escape to cancel.`,
+        );
+      },
+      retargetKeyboardMove: (direction) => {
+        if (!dragValue) return;
+        const label = dragLabel || dragValue;
+        if (direction === "left" || direction === "right") {
+          setAnnouncement(`Cannot move ${label} there.`);
+          return;
+        }
+        const order = items().map((item) => item.key);
+        const destination = order.filter((key) => key !== dragValue);
+        const step = direction === "up" ? -1 : 1;
+        const last = destination.length;
+        for (
+          let next = keyboardPosition(dragValue) + step;
+          next >= 0 && next <= last;
+          next += step
+        ) {
+          const proposed = [...destination];
+          proposed.splice(next, 0, dragValue);
+          if (proposed.every((key, index) => key === order[index])) {
+            // The row's own slot: landing there withdraws the pending move.
+            setDropTargetState(null);
+            setAnnouncement(`Moving ${label} to position ${next + 1} of ${last + 1}.`);
+            return;
+          }
+          if (canReorder && !canReorder(proposed, dragValue)) continue;
+          const anchor = destination[next];
+          let candidate: GridListDropTarget = { value: destination[last - 1]!, edge: "after" };
+          if (anchor !== undefined) candidate = { value: anchor, edge: "before" };
+          setDropTargetState(candidate);
+          setAnnouncement(`Moving ${label} to position ${next + 1} of ${last + 1}.`);
+          return;
+        }
+        setAnnouncement(`Cannot move ${label} there.`);
+      },
+      commitKeyboardMove: () => {
+        if (dragValue && dropTarget) {
+          const order = orderForDrop(dragValue, dropTarget);
+          if (order) {
+            onReorder(order);
+            announceMove(dragValue, order);
+            refocusAfterReorder(dragValue);
+            resetDrag();
+            return;
+          }
+        }
+        cancelWithAnnouncement();
+      },
+      cancelKeyboardMove: cancelWithAnnouncement,
     };
   }
 
