@@ -33,6 +33,12 @@ export function Input({
   const { hoverProps, isHovered } = useHover<HTMLInputElement>({ disabled });
   const description = describedBy(field, ariaDescribedBy);
   const inputValue = field?.value ?? props.value ?? autocomplete?.inputValue;
+  // Masked secrets must not be serialized into the DOM where extensions and
+  // logging tools can read them.
+  let mirroredValue: string | undefined;
+  if (typeof inputValue === "string" && props.type !== "password") {
+    mirroredValue = inputValue || undefined;
+  }
   const invalid = props["aria-invalid"] ?? (field?.invalid || undefined);
   useFormReset({
     controlRef: inputRef,
@@ -65,7 +71,7 @@ export function Input({
       data-hovered={dataAttr(isHovered)}
       data-invalid={dataAttr(Boolean(invalid))}
       data-required={dataAttr(required)}
-      data-value={typeof inputValue === "string" ? inputValue || undefined : undefined}
+      data-value={mirroredValue}
       onChange={(event) => {
         onChange?.(event);
         if (event.defaultPrevented) return;

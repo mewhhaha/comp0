@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
-import { composeRefs } from "@comp0/core";
+import { composeRefs, dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
 import { useContextMenuContext, useMenuRootContext, type MenuPopoverProps } from "./menu-shared.js";
@@ -50,7 +50,7 @@ export function MenuPopover({
       popover="auto"
       hidden={!menu?.open}
       style={surfaceStyle}
-      data-open={menu?.open || undefined}
+      data-open={dataAttr(menu?.open)}
       onContextMenu={onContextMenu}
       onContextMenuCapture={(event) => {
         onContextMenuCapture?.(event);

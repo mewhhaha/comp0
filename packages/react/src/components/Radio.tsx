@@ -1,6 +1,6 @@
 import { type RefProp } from "../shared.js";
-import { useState, useContext, useId, useRef } from "react";
-import { dataAttr } from "@comp0/core";
+import { useContext, useId, useRef } from "react";
+import { dataAttr, mergeProps, useFocusRing, useHover } from "@comp0/core";
 import { visuallyHiddenInputStyle, RadioGroupContext } from "./choices-shared.js";
 import { type RadioProps } from "./choices-shared.js";
 import {
@@ -31,10 +31,17 @@ export function Radio({
     defaultValue: defaultChecked,
     onChange,
   });
-  const selected = checkedState.value;
+  const checked = checkedState.value;
   const disabled = Boolean(disabledProp ?? group?.disabled);
-  const [focused, setFocused] = useState(false);
-  const state = { selected, disabled, focused };
+  const { focusProps, isFocused, isFocusVisible } = useFocusRing<HTMLInputElement>({ disabled });
+  const { hoverProps, isHovered } = useHover<HTMLLabelElement>({ disabled });
+  const state = {
+    checked,
+    disabled,
+    focused: isFocused,
+    focusVisible: isFocusVisible,
+    hovered: isHovered,
+  };
   useFormReset({
     controlRef: inputRef,
     controlled: checkedState.controlled,
@@ -52,11 +59,13 @@ export function Radio({
 
   return (
     <label
-      {...props}
+      {...mergeProps(props, hoverProps)}
       ref={ref}
-      data-selected={dataAttr(selected)}
+      data-checked={dataAttr(checked)}
       data-disabled={dataAttr(disabled)}
-      data-focused={dataAttr(focused)}
+      data-focused={dataAttr(isFocused)}
+      data-focus-visible={dataAttr(isFocusVisible)}
+      data-hovered={dataAttr(isHovered)}
     >
       <input
         {...inputProps}
@@ -67,12 +76,12 @@ export function Radio({
         form={inputProps?.form ?? group?.form}
         name={name ?? group?.name}
         value={value}
-        checked={selected}
+        checked={checked}
         disabled={disabled}
         required={inputProps?.required ?? group?.required}
         onBlur={(event) => {
           inputProps?.onBlur?.(event);
-          setFocused(false);
+          focusProps.onBlur?.(event);
         }}
         onChange={(event) => {
           inputProps?.onChange?.(event);
@@ -85,7 +94,7 @@ export function Radio({
         }}
         onFocus={(event) => {
           inputProps?.onFocus?.(event);
-          setFocused(true);
+          focusProps.onFocus?.(event);
         }}
       />
       {typeof children === "function" ? children(state) : children}

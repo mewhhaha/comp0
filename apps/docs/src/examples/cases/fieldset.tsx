@@ -7,7 +7,7 @@ export function Example() {
         Delivery
       </Legend>
       <Checkbox
-        className="flex min-h-7 items-center gap-2 rounded px-1 text-base text-zinc-800 data-selected:bg-teal-50 data-selected:text-teal-950 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950/40 dark:data-selected:text-teal-50"
+        className="flex min-h-7 items-center gap-2 rounded px-1 text-base text-zinc-800 data-checked:bg-teal-50 data-checked:text-teal-950 sm:text-sm dark:text-zinc-100 dark:data-checked:bg-teal-950/40 dark:data-checked:text-teal-50"
         defaultChecked
         name="leave-at-door"
       >

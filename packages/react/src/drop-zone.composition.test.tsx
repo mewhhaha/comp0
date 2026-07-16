@@ -38,7 +38,7 @@ describe("DropZone", () => {
 
     const drag = fireFileDrag(dropZone, "dragenter", [image]);
     expect(drag.event.defaultPrevented).toBe(true);
-    expect(dropZone.hasAttribute("data-active")).toBe(true);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(true);
     expect(dropZone.hasAttribute("data-accept")).toBe(true);
     expect(dropZone.hasAttribute("data-reject")).toBe(false);
 
@@ -47,7 +47,7 @@ describe("DropZone", () => {
     fireFileDrag(dropZone, "drop", [image]);
 
     expect(dropped).toHaveBeenCalledWith([image]);
-    expect(dropZone.hasAttribute("data-active")).toBe(false);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(false);
   });
 
   it("rejects files that do not match its MIME type or extension", () => {
@@ -60,7 +60,7 @@ describe("DropZone", () => {
     const dropZone = container.querySelector<HTMLElement>("[data-slot='drop-zone']")!;
 
     fireFileDrag(dropZone, "dragenter", [text]);
-    expect(dropZone.hasAttribute("data-active")).toBe(true);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(true);
     expect(dropZone.hasAttribute("data-accept")).toBe(false);
     expect(dropZone.hasAttribute("data-reject")).toBe(true);
 
@@ -70,7 +70,7 @@ describe("DropZone", () => {
 
     expect(dropped).not.toHaveBeenCalled();
     expect(rejected).toHaveBeenCalledWith([text]);
-    expect(dropZone.hasAttribute("data-active")).toBe(false);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(false);
   });
 
   it("clears drag state only after the pointer leaves the outer drop zone", () => {
@@ -86,10 +86,10 @@ describe("DropZone", () => {
     fireFileDrag(dropZone, "dragenter", [image]);
     fireFileDrag(child, "dragenter", [image]);
     fireFileDrag(child, "dragleave", [image]);
-    expect(dropZone.hasAttribute("data-active")).toBe(true);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(true);
 
     fireFileDrag(dropZone, "dragleave", [image]);
-    expect(dropZone.hasAttribute("data-active")).toBe(false);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(false);
   });
 
   it("does not accept file drags or drops when disabled", () => {
@@ -103,7 +103,7 @@ describe("DropZone", () => {
 
     expect(drag.event.defaultPrevented).toBe(false);
     expect(dropZone.hasAttribute("data-disabled")).toBe(true);
-    expect(dropZone.hasAttribute("data-active")).toBe(false);
+    expect(dropZone.hasAttribute("data-drop-target")).toBe(false);
     expect(dropped).not.toHaveBeenCalled();
   });
 

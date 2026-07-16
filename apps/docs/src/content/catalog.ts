@@ -1555,7 +1555,11 @@ const action = [
     ],
     [],
     [
-      { attribute: "[data-active]", on: "DropZone", meaning: "A file drag is over the zone." },
+      {
+        attribute: "[data-drop-target]",
+        on: "DropZone",
+        meaning: "A file drag is over the zone.",
+      },
       { attribute: "[data-accept]", on: "DropZone", meaning: "The dragged files match accept." },
       {
         attribute: "[data-reject]",
@@ -1870,7 +1874,7 @@ const field = [
         prop("name", "string", "Submission name; falls back to the group name."),
         prop("value", "string", "Submitted value for this box."),
         prop("checked / defaultChecked", "boolean", "Controlled or initial tick state."),
-        prop("onChange", "(selected: boolean) => void", "Receives the next tick state."),
+        prop("onChange", "(checked: boolean) => void", "Receives the next tick state."),
         prop("indeterminate", "boolean", "Shows the mixed state."),
         prop("disabled", "boolean", "Disables the box."),
         prop("inputProps", "InputHTMLAttributes", "Props for the hidden native input."),
@@ -1881,9 +1885,16 @@ const field = [
       { keys: ["Tab"], action: "Moves between checkboxes." },
     ],
     [
-      { attribute: "[data-selected]", on: "Checkbox", meaning: "The box is checked." },
+      { attribute: "[data-checked]", on: "Checkbox", meaning: "The box is checked." },
       { attribute: "[data-indeterminate]", on: "Checkbox", meaning: "The box is mixed." },
       { attribute: "[data-disabled]", on: "Checkbox", meaning: "The box cannot change." },
+      { attribute: "[data-focused]", on: "Checkbox", meaning: "The hidden input has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Checkbox",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Checkbox", meaning: "A pointer is over the label." },
     ],
     "Each selected Checkbox submits its native name and value.",
     ["radio", "switch", "toggle-button"],
@@ -1908,13 +1919,20 @@ const field = [
       ]),
     ],
     [
-      { keys: ["ArrowDown"], action: "Moves to the next radio." },
-      { keys: ["ArrowUp"], action: "Moves to the previous radio." },
+      { keys: ["ArrowDown", "ArrowRight"], action: "Moves to and selects the next radio." },
+      { keys: ["ArrowUp", "ArrowLeft"], action: "Moves to and selects the previous radio." },
       { keys: ["Space"], action: "Selects the focused radio." },
     ],
     [
-      { attribute: "[data-selected]", on: "Radio", meaning: "This radio is selected." },
+      { attribute: "[data-checked]", on: "Radio", meaning: "This radio is selected." },
       { attribute: "[data-disabled]", on: "Radio", meaning: "This radio is disabled." },
+      { attribute: "[data-focused]", on: "Radio", meaning: "The hidden input has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Radio",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Radio", meaning: "A pointer is over the label." },
     ],
     "The selected radio submits RadioGroup.name and its value.",
     ["checkbox", "select"],
@@ -1936,14 +1954,21 @@ const field = [
       p("Switch", "input", "Label with a hidden native checkbox.", true, false, [
         prop("name", "string", "Submission name for the setting."),
         prop("checked / defaultChecked", "boolean", "Controlled or initial on state."),
-        prop("onChange", "(selected: boolean) => void", "Receives the next on state."),
+        prop("onChange", "(checked: boolean) => void", "Receives the next on state."),
         prop("disabled", "boolean", "Disables the switch."),
       ]),
     ],
     [{ keys: ["Space"], action: "Changes the switch." }],
     [
-      { attribute: "[data-selected]", on: "Switch", meaning: "The switch is on." },
+      { attribute: "[data-checked]", on: "Switch", meaning: "The switch is on." },
       { attribute: "[data-disabled]", on: "Switch", meaning: "The switch is disabled." },
+      { attribute: "[data-focused]", on: "Switch", meaning: "The hidden input has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Switch",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Switch", meaning: "A pointer is over the label." },
     ],
     "A selected switch submits like a native checkbox.",
     ["checkbox", "toggle-button"],
@@ -2447,7 +2472,7 @@ const field = [
     ],
     [
       {
-        attribute: "[data-selected]",
+        attribute: "[data-checked]",
         on: "ColorSwatchPickerItem",
         meaning: "This swatch is selected.",
       },

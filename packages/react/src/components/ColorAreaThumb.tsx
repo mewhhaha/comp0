@@ -1,4 +1,5 @@
 import { type CSSProperties, type HTMLAttributes } from "react";
+import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { useColorAreaContext } from "./color-picker-shared.js";
 
@@ -16,7 +17,7 @@ export function ColorAreaThumb({
       {...props}
       ref={ref}
       aria-hidden={props["aria-hidden"] ?? true}
-      data-disabled={colorArea.disabled || undefined}
+      data-disabled={dataAttr(colorArea.disabled)}
       style={
         {
           ...style,

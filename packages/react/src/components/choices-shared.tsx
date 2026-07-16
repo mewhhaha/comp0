@@ -25,7 +25,7 @@ export interface CheckboxGroupContextValue {
   form?: string | undefined;
   value: string[];
   disabled?: boolean | undefined;
-  onChange: (value: string, selected: boolean) => void;
+  onChange: (value: string, checked: boolean) => void;
 }
 
 export const CheckboxGroupContext = createContext<CheckboxGroupContextValue | null>(null);
@@ -49,7 +49,7 @@ export type CheckboxProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChang
   defaultChecked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
-  onChange?: (selected: boolean) => void;
+  onChange?: ((checked: boolean) => void) | undefined;
   inputProps?: Omit<
     InputHTMLAttributes<HTMLInputElement>,
     "type" | "checked" | "defaultChecked" | "disabled"
@@ -57,12 +57,14 @@ export type CheckboxProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChang
   children?: ReactNode | ((state: ChoiceState) => ReactNode);
 };
 
-export interface ChoiceState {
-  selected: boolean;
+export type ChoiceState = {
+  checked: boolean;
   disabled: boolean;
   indeterminate: boolean;
   focused: boolean;
-}
+  focusVisible: boolean;
+  hovered: boolean;
+};
 
 export interface RadioGroupContextValue {
   name: string;
@@ -93,7 +95,7 @@ export type RadioProps = Omit<LabelHTMLAttributes<HTMLLabelElement>, "onChange" 
   checked?: boolean | undefined;
   defaultChecked?: boolean | undefined;
   disabled?: boolean | undefined;
-  onChange?: ((selected: boolean) => void) | undefined;
+  onChange?: ((checked: boolean) => void) | undefined;
   inputProps?: Omit<
     InputHTMLAttributes<HTMLInputElement>,
     "type" | "checked" | "defaultChecked" | "disabled" | "name" | "value"

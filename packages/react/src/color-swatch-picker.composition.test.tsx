@@ -34,7 +34,7 @@ describe("color swatch picker composition", () => {
         </ColorSwatchPicker>
       </form>,
     );
-    const selected = container.querySelector("[data-selected]")!;
+    const selected = container.querySelector("[data-checked]")!;
     expect(selected.getAttribute("data-value")).toBe("#2563eb");
     expect(new FormData(container.querySelector("form")!).get("accent")).toBe("#2563eb");
   });

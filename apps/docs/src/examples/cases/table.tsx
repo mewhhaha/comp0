@@ -87,7 +87,7 @@ export function Example() {
                 checked={selected.includes(person.id)}
                 onChange={(on) => toggle(person.id, on)}
               >
-                <span className="block size-4 rounded-sm border border-zinc-950/20 bg-white ring-2 ring-transparent group-data-focused:ring-teal-600 group-data-selected:border-teal-600 group-data-selected:bg-teal-600 dark:border-white/20 dark:bg-zinc-900 dark:group-data-focused:ring-teal-400" />
+                <span className="block size-4 rounded-sm border border-zinc-950/20 bg-white ring-2 ring-transparent group-data-focus-visible:ring-teal-600 group-data-checked:border-teal-600 group-data-checked:bg-teal-600 dark:border-white/20 dark:bg-zinc-900 dark:group-data-focus-visible:ring-teal-400" />
               </Checkbox>
             </TableCell>
             <TableRowHeader className="truncate border-b border-zinc-950/5 px-2 py-1.5 text-left font-medium text-zinc-900 outline-teal-600 focus-visible:outline-2 dark:border-white/5 dark:text-zinc-100 dark:outline-teal-400">

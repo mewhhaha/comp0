@@ -107,16 +107,16 @@ describe("form reset behavior", () => {
       checkbox!.click();
       compact!.click();
     });
-    expect(comfortable!.closest("label")!.hasAttribute("data-selected")).toBe(false);
-    expect(compact!.closest("label")!.hasAttribute("data-selected")).toBe(true);
+    expect(comfortable!.closest("label")!.hasAttribute("data-checked")).toBe(false);
+    expect(compact!.closest("label")!.hasAttribute("data-checked")).toBe(true);
 
     await reset(container.querySelector("form")!);
 
     expect(checkbox!.checked).toBe(true);
     expect(comfortable!.checked).toBe(true);
     expect(compact!.checked).toBe(false);
-    expect(comfortable!.closest("label")!.hasAttribute("data-selected")).toBe(true);
-    expect(compact!.closest("label")!.hasAttribute("data-selected")).toBe(false);
+    expect(comfortable!.closest("label")!.hasAttribute("data-checked")).toBe(true);
+    expect(compact!.closest("label")!.hasAttribute("data-checked")).toBe(false);
   });
 
   it("enforces required choice groups and restores their initial values", async () => {

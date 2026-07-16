@@ -76,6 +76,7 @@ export function RangeCalendarCell({
       data-in-range={dataAttr(inRange)}
       data-range-preview={dataAttr(rangePreview)}
       data-today={dataAttr(isToday)}
+      data-disabled={dataAttr(disabled)}
       data-value={date}
     >
       <button
