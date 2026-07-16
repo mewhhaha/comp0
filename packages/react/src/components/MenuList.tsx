@@ -66,16 +66,18 @@ export function MenuList({
 
   useLayoutEffect(() => {
     if (!menu) return;
-    menu.setInitialFocus(() => {
+    menu.setInitialFocus((position) => {
       if (virtualFocusEnabled) {
         autocompleteInputRef?.current?.focus();
         return;
       }
-      const items = sortItems([...itemMap.current.values()]);
-      const firstItem = items.find((item) => !item.disabled);
-      if (firstItem) {
-        activeKey.current = firstItem.key;
-        firstItem.element?.focus();
+      const enabledItems = sortItems([...itemMap.current.values()]).filter(
+        (item) => !item.disabled,
+      );
+      const target = position === "last" ? enabledItems.at(-1) : enabledItems[0];
+      if (target) {
+        activeKey.current = target.key;
+        target.element?.focus();
       }
     });
     return () => menu.setInitialFocus(null);

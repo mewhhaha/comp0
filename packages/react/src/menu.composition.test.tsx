@@ -117,6 +117,27 @@ describe("menu composition", () => {
     expect(document.activeElement?.textContent).toBe("Copy");
   });
 
+  it("opens from the trigger with ArrowUp and focuses the last enabled item", () => {
+    const { container } = render(
+      <Menu>
+        <MenuTrigger>Actions</MenuTrigger>
+        <MenuPopover>
+          <MenuList>
+            <MenuItem>Copy</MenuItem>
+            <MenuItem>Paste</MenuItem>
+            <MenuItem disabled>Delete</MenuItem>
+          </MenuList>
+        </MenuPopover>
+      </Menu>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const surface = container.querySelector<HTMLElement>("[popover]")!;
+
+    fireKeyDown(trigger, "ArrowUp");
+    expect(surface.hidden).toBe(false);
+    expect(document.activeElement?.textContent).toBe("Paste");
+  });
+
   it("closes when focus moves outside the menu and its trigger", () => {
     const { container } = render(
       <>

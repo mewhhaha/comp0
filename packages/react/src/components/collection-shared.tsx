@@ -36,7 +36,7 @@ export function sortItems<TItem extends { element: HTMLElement | null }>(items: 
 export type ListBoxProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> & {
   value?: string | undefined;
   defaultValue?: string | undefined;
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
   orientation?: "vertical" | "horizontal" | undefined;
 };
 

@@ -19,7 +19,7 @@ export function Example() {
             key={color}
             color={color}
             inputProps={{ "aria-label": name }}
-            className="size-9 cursor-pointer rounded-full border-2 border-white outline outline-1 outline-zinc-950/15 ring-2 ring-transparent ring-offset-2 data-focused:ring-teal-600 data-selected:ring-zinc-950 dark:border-zinc-950 dark:outline-white/20 dark:ring-offset-zinc-950 dark:data-focused:ring-teal-400 dark:data-selected:ring-white"
+            className="size-9 cursor-pointer rounded-full border-2 border-white outline outline-1 outline-zinc-950/15 ring-2 ring-transparent ring-offset-2 data-focus-visible:ring-teal-600 data-checked:ring-zinc-950 dark:border-zinc-950 dark:outline-white/20 dark:ring-offset-zinc-950 dark:data-focus-visible:ring-teal-400 dark:data-checked:ring-white"
           />
         ))}
       </div>

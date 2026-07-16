@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { createElement, useLayoutEffect, useRef } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import {
@@ -30,12 +30,31 @@ export function PopoverOverlay({
   const { onNativeToggle, popover, surfaceRef } = usePopoverSurface<HTMLDivElement>(popoverMode);
   const composedRef = useComposedRefs(surfaceRef, ref);
   const Content = as ?? "div";
+  const wasOpen = useRef(false);
+  // The surface announces as a dialog, so opening must move focus into it;
+  // Escape-to-close and screen-reader context depend on focus being inside.
+  useLayoutEffect(() => {
+    const surface = surfaceRef.current;
+    if (popover?.open && !wasOpen.current && surface) {
+      if (!surface.contains(surface.ownerDocument.activeElement)) {
+        const target =
+          surface.querySelector<HTMLElement>("[autofocus]") ??
+          surface.querySelector<HTMLElement>(
+            "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+          ) ??
+          surface;
+        target.focus();
+      }
+    }
+    wasOpen.current = Boolean(popover?.open);
+  });
 
   return createElement(Content, {
     ...props,
     ref: composedRef,
     id: props.id ?? popover?.contentId,
     role: props.role ?? "dialog",
+    tabIndex: props.tabIndex ?? -1,
     popover: popoverMode,
     hidden: hidden ?? !popover?.open,
     style: placementSurfaceStyle(placement, offset, popover?.triggerId, style),

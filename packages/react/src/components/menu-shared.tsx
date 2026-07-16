@@ -37,6 +37,8 @@ export type MenuItemProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
 
 export type MenuSectionProps = HTMLAttributes<HTMLDivElement>;
 
+export type MenuInitialFocus = "first" | "last";
+
 export type MenuRootContextValue = {
   open: boolean;
   isSubmenu: boolean;
@@ -48,7 +50,9 @@ export type MenuRootContextValue = {
   closeAll: () => void;
   focusTrigger: () => void;
   focusInitial: () => void;
-  setInitialFocus: (focus: (() => void) | null) => void;
+  /** Chooses which item the next open focuses; ArrowUp on a trigger requests "last". */
+  requestInitialFocus: (position: MenuInitialFocus) => void;
+  setInitialFocus: (focus: ((position: MenuInitialFocus) => void) | null) => void;
   setTriggerElement: (element: HTMLElement | null) => void;
   setSurfaceElement: (element: HTMLDivElement | null) => void;
 };

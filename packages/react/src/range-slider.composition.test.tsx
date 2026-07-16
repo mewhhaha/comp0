@@ -76,6 +76,25 @@ describe("range slider composition", () => {
     expect(group.style.getPropertyValue("--comp0-range-slider-start")).toBe("0.6");
   });
 
+  it("mirrors ArrowRight and ArrowLeft in a right-to-left layout", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <RangeSlider aria-label="Price range" defaultValue={[20, 60]} onChange={onChange}>
+        <RangeSliderTrack />
+        <RangeSliderThumb thumb="start" aria-label="Minimum price" style={{ direction: "rtl" }} />
+        <RangeSliderThumb thumb="end" aria-label="Maximum price" />
+      </RangeSlider>,
+    );
+    const startThumb = container.querySelector<HTMLElement>("[role='slider']")!;
+
+    fireKeyDown(startThumb, "ArrowRight");
+    expect(onChange).toHaveBeenLastCalledWith([19, 60]);
+    fireKeyDown(startThumb, "ArrowLeft");
+    expect(onChange).toHaveBeenLastCalledWith([20, 60]);
+    fireKeyDown(startThumb, "ArrowUp");
+    expect(onChange).toHaveBeenLastCalledWith([21, 60]);
+  });
+
   it("moves the end thumb between the start value and the maximum", () => {
     const onChange = vi.fn();
     const { endThumb } = renderRange({ onChange });

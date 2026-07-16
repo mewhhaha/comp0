@@ -32,13 +32,13 @@ export function Example() {
           <Radio
             key={plan.value}
             value={plan.value}
-            className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-start gap-3 rounded-xl border border-zinc-950/10 bg-white p-4 text-left text-zinc-800 outline-2 outline-offset-2 outline-transparent transition hover:border-zinc-950/20 data-focused:outline-teal-600 data-selected:border-teal-600 data-selected:bg-teal-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/20 dark:data-focused:outline-teal-400 dark:data-selected:border-teal-400 dark:data-selected:bg-teal-950/40"
+            className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-start gap-3 rounded-xl border border-zinc-950/10 bg-white p-4 text-left text-zinc-800 outline-2 outline-offset-2 outline-transparent transition hover:border-zinc-950/20 data-focus-visible:outline-teal-600 data-checked:border-teal-600 data-checked:bg-teal-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-white/20 dark:data-focus-visible:outline-teal-400 dark:data-checked:border-teal-400 dark:data-checked:bg-teal-950/40"
           >
             <span
               aria-hidden="true"
-              className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border border-zinc-950/20 bg-white group-data-selected:border-teal-600 dark:border-white/20 dark:bg-zinc-900 dark:group-data-selected:border-teal-400"
+              className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border border-zinc-950/20 bg-white group-data-checked:border-teal-600 dark:border-white/20 dark:bg-zinc-900 dark:group-data-checked:border-teal-400"
             >
-              <span className="size-2 rounded-full bg-teal-600 opacity-0 group-data-selected:opacity-100 dark:bg-teal-400" />
+              <span className="size-2 rounded-full bg-teal-600 opacity-0 group-data-checked:opacity-100 dark:bg-teal-400" />
             </span>
             <span className="grid gap-1">
               <span className="font-medium text-zinc-950 dark:text-white">{plan.name}</span>

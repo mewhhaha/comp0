@@ -126,24 +126,24 @@ describe("carousel composition", () => {
   });
 
   it("starts on defaultIndex and reports changes when uncontrolled", () => {
-    const onIndexChange = vi.fn();
-    const { slides, next } = renderCarousel({ defaultIndex: 1, onIndexChange });
+    const onChange = vi.fn();
+    const { slides, next } = renderCarousel({ defaultIndex: 1, onChange });
     expect(currentLabels(slides)).toEqual([false, true, false]);
 
     fireClick(next);
-    expect(onIndexChange).toHaveBeenLastCalledWith(2);
+    expect(onChange).toHaveBeenLastCalledWith(2);
     expect(currentLabels(slides)).toEqual([false, false, true]);
   });
 
   it("respects a controlled index", () => {
-    const onIndexChange = vi.fn();
-    const { slides, next, rerender } = renderCarousel({ index: 0, onIndexChange });
+    const onChange = vi.fn();
+    const { slides, next, rerender } = renderCarousel({ index: 0, onChange });
 
     fireClick(next);
-    expect(onIndexChange).toHaveBeenLastCalledWith(1);
+    expect(onChange).toHaveBeenLastCalledWith(1);
     expect(currentLabels(slides)).toEqual([true, false, false]);
 
-    rerender(<App index={2} onIndexChange={onIndexChange} />);
+    rerender(<App index={2} onChange={onChange} />);
     expect(currentLabels(slides)).toEqual([false, false, true]);
   });
 

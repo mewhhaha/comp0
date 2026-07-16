@@ -447,8 +447,9 @@ export function GridList({
           }}
         >
           {children}
-          {onReorder && <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>}
         </div>
+        {/* Outside the grid element: role="grid" only permits row children. */}
+        {onReorder && <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>}
       </GridListDndContext>
     </GridListContext>
   );

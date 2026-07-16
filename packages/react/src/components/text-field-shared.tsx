@@ -13,7 +13,7 @@ export type TextFieldProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | 
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the next field value, rather than a native ChangeEvent from the provider root. */
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
   disabled?: boolean | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;

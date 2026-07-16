@@ -10,6 +10,7 @@ const keyLabels: Record<KeyboardToken, { visual: string; spoken: string }> = {
   Backspace: { visual: "⌫", spoken: "Backspace" },
   ContextMenu: { visual: "☰", spoken: "Context menu key" },
   Ctrl: { visual: "Ctrl", spoken: "Control" },
+  Delete: { visual: "Del", spoken: "Delete" },
   End: { visual: "End", spoken: "End" },
   Enter: { visual: "↵", spoken: "Enter" },
   Escape: { visual: "Esc", spoken: "Escape" },

@@ -2,7 +2,7 @@ import { createElement, Fragment, useContext, useId, useRef, useState } from "re
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
-import { MenuRootContext, type MenuProps } from "./menu-shared.js";
+import { MenuRootContext, type MenuInitialFocus, type MenuProps } from "./menu-shared.js";
 import { PopoverContext } from "./overlay-shared.js";
 
 export type { MenuProps } from "./menu-shared.js";
@@ -22,7 +22,8 @@ export function Menu({
   const parentMenu = useContext(MenuRootContext);
   const triggerElement = useRef<HTMLElement | null>(null);
   const surfaceElement = useRef<HTMLDivElement | null>(null);
-  const initialFocus = useRef<() => void>(() => undefined);
+  const initialFocus = useRef<(position: MenuInitialFocus) => void>(() => undefined);
+  const pendingInitialFocus = useRef<MenuInitialFocus>("first");
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
@@ -69,9 +70,14 @@ export function Menu({
       }
     },
     focusInitial() {
-      initialFocus.current();
+      const position = pendingInitialFocus.current;
+      pendingInitialFocus.current = "first";
+      initialFocus.current(position);
     },
-    setInitialFocus(focus: (() => void) | null) {
+    requestInitialFocus(position: MenuInitialFocus) {
+      pendingInitialFocus.current = position;
+    },
+    setInitialFocus(focus: ((position: MenuInitialFocus) => void) | null) {
       initialFocus.current = focus ?? (() => undefined);
     },
     setTriggerElement(element: HTMLElement | null) {

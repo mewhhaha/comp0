@@ -53,6 +53,7 @@ export function CalendarCell({
       data-outside-month={dataAttr(Boolean(outsideMonth))}
       data-selected={dataAttr(selected)}
       data-today={dataAttr(isToday)}
+      data-disabled={dataAttr(disabled)}
       data-value={date}
     >
       <button

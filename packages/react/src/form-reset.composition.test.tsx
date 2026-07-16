@@ -107,16 +107,16 @@ describe("form reset behavior", () => {
       checkbox!.click();
       compact!.click();
     });
-    expect(comfortable!.closest("label")!.hasAttribute("data-selected")).toBe(false);
-    expect(compact!.closest("label")!.hasAttribute("data-selected")).toBe(true);
+    expect(comfortable!.closest("label")!.hasAttribute("data-checked")).toBe(false);
+    expect(compact!.closest("label")!.hasAttribute("data-checked")).toBe(true);
 
     await reset(container.querySelector("form")!);
 
     expect(checkbox!.checked).toBe(true);
     expect(comfortable!.checked).toBe(true);
     expect(compact!.checked).toBe(false);
-    expect(comfortable!.closest("label")!.hasAttribute("data-selected")).toBe(true);
-    expect(compact!.closest("label")!.hasAttribute("data-selected")).toBe(false);
+    expect(comfortable!.closest("label")!.hasAttribute("data-checked")).toBe(true);
+    expect(compact!.closest("label")!.hasAttribute("data-checked")).toBe(false);
   });
 
   it("enforces required choice groups and restores their initial values", async () => {
@@ -186,7 +186,7 @@ describe("form reset behavior", () => {
             <SelectOption value="pro">Pro</SelectOption>
           </SelectPopover>
         </Select>
-        <Combobox name="city" defaultValue="paris" defaultInputValue="Paris" allowsEmptyCollection>
+        <Combobox name="city" defaultValue="paris" defaultInputValue="Paris" allowEmptyCollection>
           <ComboboxInput aria-label="City" />
           <ComboboxPopover>
             <ComboboxOption value="paris">Paris</ComboboxOption>

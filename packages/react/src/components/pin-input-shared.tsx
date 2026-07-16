@@ -6,7 +6,7 @@ export type PinInputProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" 
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the joined code; shadows the DOM onChange. */
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
   /** Fires once each time typing or pasting fills every field. */
   onComplete?: ((value: string) => void) | undefined;
   /** Accepted characters; numeric filters to digits and is the default. */

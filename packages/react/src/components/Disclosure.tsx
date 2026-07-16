@@ -9,7 +9,7 @@ export function Disclosure({
   id,
   open: openProp,
   defaultOpen = false,
-  onChange,
+  onToggle,
   ref,
   ...props
 }: DisclosureProps & RefProp<HTMLDetailsElement>) {
@@ -18,7 +18,7 @@ export function Disclosure({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange,
+    onChange: onToggle,
   });
 
   return (

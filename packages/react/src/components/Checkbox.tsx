@@ -1,10 +1,10 @@
 import { type RefProp } from "../shared.js";
-import { useState, useContext, useId, useRef } from "react";
-import { dataAttr, useIsoLayoutEffect } from "@comp0/core";
+import { useContext, useId, useRef } from "react";
+import { dataAttr, mergeProps, useFocusRing, useHover, useIsoLayoutEffect } from "@comp0/core";
 import { visuallyHiddenInputStyle, CheckboxGroupContext } from "./choices-shared.js";
 import { type CheckboxProps, type ChoiceState } from "./choices-shared.js";
 import { useFormControlState, useFormReset } from "./form-control-state.js";
-export type { CheckboxProps } from "./choices-shared.js";
+export type { CheckboxProps, ChoiceState } from "./choices-shared.js";
 export function Checkbox({
   children,
   name,
@@ -27,15 +27,18 @@ export function Checkbox({
     defaultValue: defaultChecked,
     onChange,
   });
-  const selected = checkedState.value;
+  const checked = checkedState.value;
   const disabled = Boolean(disabledProp ?? group?.disabled);
   const resolvedIndeterminate = Boolean(indeterminate);
-  const [focused, setFocused] = useState(false);
+  const { focusProps, isFocused, isFocusVisible } = useFocusRing<HTMLInputElement>({ disabled });
+  const { hoverProps, isHovered } = useHover<HTMLLabelElement>({ disabled });
   const state: ChoiceState = {
-    selected,
+    checked,
     disabled,
     indeterminate: resolvedIndeterminate,
-    focused,
+    focused: isFocused,
+    focusVisible: isFocusVisible,
+    hovered: isHovered,
   };
   useFormReset({
     controlRef: inputRef,
@@ -52,11 +55,13 @@ export function Checkbox({
 
   return (
     <label
-      {...props}
+      {...mergeProps(props, hoverProps)}
       ref={ref}
-      data-selected={dataAttr(selected)}
+      data-checked={dataAttr(checked)}
       data-disabled={dataAttr(disabled)}
-      data-focused={dataAttr(focused)}
+      data-focused={dataAttr(isFocused)}
+      data-focus-visible={dataAttr(isFocusVisible)}
+      data-hovered={dataAttr(isHovered)}
       data-indeterminate={dataAttr(resolvedIndeterminate)}
     >
       <input
@@ -69,12 +74,12 @@ export function Checkbox({
         form={inputProps?.form ?? group?.form}
         name={name ?? group?.name}
         value={value}
-        checked={selected}
+        checked={checked}
         disabled={disabled}
-        aria-checked={resolvedIndeterminate ? "mixed" : selected}
+        aria-checked={resolvedIndeterminate ? "mixed" : checked}
         onBlur={(event) => {
           inputProps?.onBlur?.(event);
-          setFocused(false);
+          focusProps.onBlur?.(event);
         }}
         onChange={(event) => {
           inputProps?.onChange?.(event);
@@ -84,7 +89,7 @@ export function Checkbox({
         }}
         onFocus={(event) => {
           inputProps?.onFocus?.(event);
-          setFocused(true);
+          focusProps.onFocus?.(event);
         }}
       />
       {typeof children === "function" ? children(state) : children}

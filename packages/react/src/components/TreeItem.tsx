@@ -105,7 +105,7 @@ export function TreeItem({
       aria-expanded={hasGroup ? expanded : undefined}
       aria-disabled={resolvedDisabled || undefined}
       data-selected={dataAttr(selected)}
-      data-expanded={dataAttr(hasGroup && expanded)}
+      data-open={dataAttr(hasGroup && expanded)}
       data-disabled={dataAttr(resolvedDisabled)}
       data-value={value}
       onClick={(event) => {

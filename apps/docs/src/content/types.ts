@@ -44,6 +44,7 @@ export type KeyboardToken =
   | "Backspace"
   | "ContextMenu"
   | "Ctrl"
+  | "Delete"
   | "End"
   | "Enter"
   | "Escape"

@@ -27,7 +27,7 @@ export type SelectProps = Omit<
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the selected option value; native input change events stay on leaf controls. */
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
   /** Controlled or initial open state of the listbox; Select owns its own popover. */
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
@@ -54,7 +54,7 @@ export type ComboboxProps = Omit<
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the committed logical option value rather than a native ChangeEvent. */
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
   /** Controlled or initial open state of the results; Combobox owns its own popover. */
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
@@ -70,7 +70,7 @@ export type ComboboxProps = Omit<
   name?: string | undefined;
   form?: string | undefined;
   filter?: ((textValue: string, inputValue: string) => boolean) | undefined;
-  allowsEmptyCollection?: boolean | undefined;
+  allowEmptyCollection?: boolean | undefined;
 };
 
 export const defaultFilter = (textValue: string, inputValue: string) =>

@@ -194,7 +194,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start Tabs with a starting value.",
     "Give each Tab and its TabPanel the same tab id.",
     "Put the Tab elements together inside TabList.",
-    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab tab="one">One</Tab>\n  </TabList>\n  <TabPanel tab="one">Panel one</TabPanel>\n</Tabs>;',
+    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab value="one">One</Tab>\n  </TabList>\n  <TabPanel value="one">Panel one</TabPanel>\n</Tabs>;',
   ),
   breadcrumbs: lesson(
     "A trail of links showing where this page sits.",
@@ -225,12 +225,12 @@ const lessons: Record<string, LessonCopy> = {
   ),
   inventory: lesson(
     "A uniform spatial grid whose cards can move and span more rows or columns.",
-    "Like arranging labeled crates on warehouse shelving: every crate occupies known slots, and larger crates reserve several together.",
+    "Like arranging labelled crates on warehouse shelving: every crate occupies known slots, and larger crates reserve several together.",
     "Use it for customizable dashboards and boards where position and size must persist as grid units.",
     "Start Inventory with its column count, row count, and a complete layout.",
     "Render one InventoryItem per layout value, with optional move and resize handles inside each card.",
     "Add InventoryPreview for a styleable pointer or Shift-arrow landing overlay; blocked placements stay put and only the preview becomes invalid.",
-    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryPreview />\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    <InventoryResizeHandle />\n    Sales\n  </InventoryItem>\n</Inventory>;',
+    '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryPreview />\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    Sales\n    <InventoryResizeHandle />\n  </InventoryItem>\n</Inventory>;',
   ),
   "grid-list": lesson(
     "A list of rows where each row can hold its own controls.",
@@ -518,7 +518,7 @@ const lessons: Record<string, LessonCopy> = {
     "Keep a labelled TimeField as the editable source of truth, and hide its browser-owned indicator when adding the custom trigger.",
     "Open a ListBox of times from a PopoverTrigger beside the field.",
     "Synchronize list selection with the field and close the popover after a choice.",
-    '<Popover>\n  <PopoverTrigger aria-label="Choose time" />\n  <PopoverOverlay>\n    <ListBox aria-label="Available times">\n      <ListBoxItem value="09:00">9:00 AM</ListBoxItem>\n    </ListBox>\n  </PopoverOverlay>\n</Popover>;',
+    '<>\n  <Label htmlFor="time">Meeting time</Label>\n  <TimeField id="time" name="time" defaultValue="09:00" />\n  <Popover>\n    <PopoverTrigger aria-label="Choose time" />\n    <PopoverOverlay>\n      <ListBox aria-label="Available times">\n        <ListBoxItem value="09:00">9:00 AM</ListBoxItem>\n      </ListBox>\n    </PopoverOverlay>\n  </Popover>\n</>;',
   ),
   feed: lesson(
     "An infinite-scroll list of articles that keyboard users can page through and escape.",
@@ -748,6 +748,7 @@ const accessibility: Record<string, string[]> = {
     "Use a visible Label so the trigger and its listbox share a clear name; without one, name both parts explicitly.",
     "Give every SelectOptGroup a native label so grouped options have a name.",
     "Make the chosen value readable in SelectValue.",
+    "Typing on the closed trigger selects the matching option, and typing in the open list moves to it, like a native select.",
     "Use native required feedback or FieldError to explain a missing choice.",
   ],
   combobox: [
@@ -1005,7 +1006,18 @@ const action = [
       { keys: ["Enter"], action: "Presses the focused button." },
       { keys: ["Space"], action: "Presses the focused button." },
     ],
-    [{ attribute: "[data-disabled]", on: "Button", meaning: "The button is disabled." }],
+    [
+      { attribute: "[data-disabled]", on: "Button", meaning: "The button is disabled." },
+      { attribute: "[data-pending]", on: "Button", meaning: "The action is busy." },
+      { attribute: "[data-pressed]", on: "Button", meaning: "The button is being pressed." },
+      { attribute: "[data-hovered]", on: "Button", meaning: "A non-touch pointer is over it." },
+      { attribute: "[data-focused]", on: "Button", meaning: "The button has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Button",
+        meaning: "Focus should show a visible ring.",
+      },
+    ],
     'A native Button submits a form when type="submit".',
     ["toggle-button", "link", "file-trigger"],
   ),
@@ -1082,6 +1094,12 @@ const action = [
     [
       { attribute: "[data-disabled]", on: "Link", meaning: "The link is unavailable." },
       { attribute: "[data-focused]", on: "Link", meaning: "The link has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Link",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Link", meaning: "A non-touch pointer is over it." },
     ],
     "Links do not submit forms.",
     ["button", "breadcrumbs"],
@@ -1193,17 +1211,17 @@ const action = [
       {
         attribute: "[data-low]",
         on: "Meter",
-        meaning: "The low threshold was provided.",
+        meaning: "The provided low threshold value.",
       },
       {
         attribute: "[data-high]",
         on: "Meter",
-        meaning: "The high threshold was provided.",
+        meaning: "The provided high threshold value.",
       },
       {
         attribute: "[data-optimum]",
         on: "Meter",
-        meaning: "The optimum value was provided.",
+        meaning: "The provided optimum value.",
       },
     ],
     "No form behavior; a meter reports a measurement and submits nothing.",
@@ -1509,7 +1527,11 @@ const action = [
       { keys: ["ArrowLeft"], action: "Moves to the previous segment without wrapping." },
       { keys: ["Home"], action: "Moves to the first segment." },
       { keys: ["End"], action: "Moves to the last segment." },
-      { keys: ["ArrowDown"], action: "Opens the menu from the menu button.", scope: "menu button" },
+      {
+        keys: ["ArrowDown", "ArrowUp"],
+        action: "Opens the menu from the menu button.",
+        scope: "menu button",
+      },
       { keys: ["Enter"], action: "Presses the focused segment." },
       { keys: ["Space"], action: "Presses the focused segment." },
     ],
@@ -1555,7 +1577,11 @@ const action = [
     ],
     [],
     [
-      { attribute: "[data-active]", on: "DropZone", meaning: "A file drag is over the zone." },
+      {
+        attribute: "[data-drop-target]",
+        on: "DropZone",
+        meaning: "A file drag is over the zone.",
+      },
       { attribute: "[data-accept]", on: "DropZone", meaning: "The dragged files match accept." },
       {
         attribute: "[data-reject]",
@@ -1844,6 +1870,7 @@ const field = [
     ],
     [
       { keys: ["Enter"], action: "Submits the surrounding form." },
+      { keys: ["Escape"], action: "Erases the query while it has text." },
       { keys: ["Tab"], action: "Moves to the clear button while the query has text." },
     ],
     [
@@ -1870,7 +1897,7 @@ const field = [
         prop("name", "string", "Submission name; falls back to the group name."),
         prop("value", "string", "Submitted value for this box."),
         prop("checked / defaultChecked", "boolean", "Controlled or initial tick state."),
-        prop("onChange", "(selected: boolean) => void", "Receives the next tick state."),
+        prop("onChange", "(checked: boolean) => void", "Receives the next tick state."),
         prop("indeterminate", "boolean", "Shows the mixed state."),
         prop("disabled", "boolean", "Disables the box."),
         prop("inputProps", "InputHTMLAttributes", "Props for the hidden native input."),
@@ -1881,9 +1908,16 @@ const field = [
       { keys: ["Tab"], action: "Moves between checkboxes." },
     ],
     [
-      { attribute: "[data-selected]", on: "Checkbox", meaning: "The box is checked." },
+      { attribute: "[data-checked]", on: "Checkbox", meaning: "The box is checked." },
       { attribute: "[data-indeterminate]", on: "Checkbox", meaning: "The box is mixed." },
       { attribute: "[data-disabled]", on: "Checkbox", meaning: "The box cannot change." },
+      { attribute: "[data-focused]", on: "Checkbox", meaning: "The hidden input has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Checkbox",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Checkbox", meaning: "A pointer is over the label." },
     ],
     "Each selected Checkbox submits its native name and value.",
     ["radio", "switch", "toggle-button"],
@@ -1908,13 +1942,20 @@ const field = [
       ]),
     ],
     [
-      { keys: ["ArrowDown"], action: "Moves to the next radio." },
-      { keys: ["ArrowUp"], action: "Moves to the previous radio." },
+      { keys: ["ArrowDown", "ArrowRight"], action: "Moves to and selects the next radio." },
+      { keys: ["ArrowUp", "ArrowLeft"], action: "Moves to and selects the previous radio." },
       { keys: ["Space"], action: "Selects the focused radio." },
     ],
     [
-      { attribute: "[data-selected]", on: "Radio", meaning: "This radio is selected." },
+      { attribute: "[data-checked]", on: "Radio", meaning: "This radio is selected." },
       { attribute: "[data-disabled]", on: "Radio", meaning: "This radio is disabled." },
+      { attribute: "[data-focused]", on: "Radio", meaning: "The hidden input has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Radio",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Radio", meaning: "A pointer is over the label." },
     ],
     "The selected radio submits RadioGroup.name and its value.",
     ["checkbox", "select"],
@@ -1936,14 +1977,21 @@ const field = [
       p("Switch", "input", "Label with a hidden native checkbox.", true, false, [
         prop("name", "string", "Submission name for the setting."),
         prop("checked / defaultChecked", "boolean", "Controlled or initial on state."),
-        prop("onChange", "(selected: boolean) => void", "Receives the next on state."),
+        prop("onChange", "(checked: boolean) => void", "Receives the next on state."),
         prop("disabled", "boolean", "Disables the switch."),
       ]),
     ],
     [{ keys: ["Space"], action: "Changes the switch." }],
     [
-      { attribute: "[data-selected]", on: "Switch", meaning: "The switch is on." },
+      { attribute: "[data-checked]", on: "Switch", meaning: "The switch is on." },
       { attribute: "[data-disabled]", on: "Switch", meaning: "The switch is disabled." },
+      { attribute: "[data-focused]", on: "Switch", meaning: "The hidden input has focus." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "Switch",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-hovered]", on: "Switch", meaning: "A pointer is over the label." },
     ],
     "A selected switch submits like a native checkbox.",
     ["checkbox", "toggle-button"],
@@ -2018,8 +2066,8 @@ const field = [
       ]),
     ],
     [
-      { keys: ["ArrowRight"], action: "Increases the value." },
-      { keys: ["ArrowLeft"], action: "Decreases the value." },
+      { keys: ["ArrowRight", "ArrowUp"], action: "Increases the value." },
+      { keys: ["ArrowLeft", "ArrowDown"], action: "Decreases the value." },
       { keys: ["Home"], action: "Moves to minimum." },
       { keys: ["End"], action: "Moves to maximum." },
     ],
@@ -2381,7 +2429,7 @@ const field = [
       { keys: ["ArrowDown", "ArrowUp"], action: "Moves through matching options from the input." },
       { keys: ["Enter"], action: "Adds the active option." },
       { keys: ["Backspace", "ArrowLeft"], action: "Moves from an empty input to the last tag." },
-      { keys: ["Backspace"], action: "Removes the focused tag; Delete does the same." },
+      { keys: ["Backspace", "Delete"], action: "Removes the focused tag." },
     ],
     [
       { attribute: "[data-empty]", on: "TagPicker", meaning: "No values are selected." },
@@ -2447,7 +2495,7 @@ const field = [
     ],
     [
       {
-        attribute: "[data-selected]",
+        attribute: "[data-checked]",
         on: "ColorSwatchPickerItem",
         meaning: "This swatch is selected.",
       },
@@ -2498,6 +2546,8 @@ const navigation = [
     [
       { keys: ["ArrowDown"], action: "Moves to next trigger." },
       { keys: ["ArrowUp"], action: "Moves to previous trigger." },
+      { keys: ["Home"], action: "Moves to the first trigger." },
+      { keys: ["End"], action: "Moves to the last trigger." },
       { keys: ["Enter"], action: "Toggles the item." },
       { keys: ["Space"], action: "Toggles the item." },
     ],
@@ -2523,9 +2573,9 @@ const navigation = [
     ["Disclosure", "DisclosurePanel", "DisclosureTrigger"],
     "<Disclosure>\n  <DisclosureTrigger>Details</DisclosureTrigger>\n  <DisclosurePanel>More information.</DisclosurePanel>\n</Disclosure>;",
     [
-      p("Disclosure", "root", "Open-state provider.", false, false, [
+      p("Disclosure", "root", "Native details element that owns the open state.", true, false, [
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-        prop("onChange", "(open: boolean) => void", "Receives the next open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
       ]),
       p("DisclosureTrigger", "trigger", "Native summary element that toggles the details."),
       p("DisclosurePanel", "region", "Revealed content."),
@@ -2550,7 +2600,7 @@ const navigation = [
     "Tabs",
     "navigation",
     ["Tab", "TabList", "TabPanel", "Tabs"],
-    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab tab="one">One</Tab>\n  </TabList>\n  <TabPanel tab="one">Panel one</TabPanel>\n</Tabs>;',
+    '<Tabs defaultValue="one">\n  <TabList>\n    <Tab value="one">One</Tab>\n  </TabList>\n  <TabPanel value="one">Panel one</TabPanel>\n</Tabs>;',
     [
       p("Tabs", "root", "Selected-tab provider.", false, false, [
         prop("value / defaultValue", "string", "Controlled or initial selected tab."),
@@ -2561,18 +2611,24 @@ const navigation = [
         prop("orientation", '"horizontal" | "vertical"', "Arrow-key axis and aria-orientation."),
       ]),
       p("Tab", "item", "Native button with tab role.", true, false, [
-        prop("tab", "string", "Identity that pairs this tab with its panel."),
+        prop("value", "string", "Identity that pairs this tab with its panel."),
         prop("disabled", "boolean", "Disables the tab."),
       ]),
       p("TabPanel", "region", "Panel for a matching tab.", true, false, [
-        prop("tab", "string", "The tab this panel belongs to."),
+        prop("value", "string", "The tab this panel belongs to."),
       ]),
     ],
     [
-      { keys: ["ArrowRight"], action: "Moves to next tab." },
-      { keys: ["ArrowLeft"], action: "Moves to previous tab." },
-      { keys: ["Home"], action: "Moves to first tab." },
-      { keys: ["End"], action: "Moves to last tab." },
+      { keys: ["ArrowRight"], action: "Moves to and selects the next tab.", scope: "horizontal" },
+      {
+        keys: ["ArrowLeft"],
+        action: "Moves to and selects the previous tab.",
+        scope: "horizontal",
+      },
+      { keys: ["ArrowDown"], action: "Moves to and selects the next tab.", scope: "vertical" },
+      { keys: ["ArrowUp"], action: "Moves to and selects the previous tab.", scope: "vertical" },
+      { keys: ["Home"], action: "Moves to and selects the first tab." },
+      { keys: ["End"], action: "Moves to and selects the last tab." },
     ],
     [
       {
@@ -2632,19 +2688,21 @@ const navigation = [
       ]),
     ],
     [
-      { keys: ["ArrowDown"], action: "Moves active item down." },
-      { keys: ["ArrowUp"], action: "Moves active item up." },
-      { keys: ["Enter"], action: "Selects the active item." },
-      { keys: ["Space"], action: "Selects the active item." },
+      { keys: ["ArrowDown"], action: "Moves to and selects the next option." },
+      { keys: ["ArrowUp"], action: "Moves to and selects the previous option." },
+      { keys: ["Home"], action: "Moves to and selects the first option." },
+      { keys: ["End"], action: "Moves to and selects the last option." },
+      { keys: ["Enter"], action: "Selects the focused option." },
+      { keys: ["Space"], action: "Selects the focused option." },
     ],
     [
-      { attribute: "[data-selected]", on: "ListBoxItem", meaning: "The item is selected." },
+      { attribute: "[data-selected]", on: "ListBoxItem", meaning: "The option is selected." },
       {
         attribute: ":focus-visible",
         on: "ListBoxItem",
-        meaning: "The item has visible keyboard focus.",
+        meaning: "The option has visible keyboard focus.",
       },
-      { attribute: "[data-disabled]", on: "ListBoxItem", meaning: "The item is disabled." },
+      { attribute: "[data-disabled]", on: "ListBoxItem", meaning: "The option is disabled." },
     ],
     "No native form behavior by itself.",
     ["menu", "select"],
@@ -2710,15 +2768,18 @@ const navigation = [
       ]),
     ],
     [
-      { keys: ["ArrowDown"], action: "Opens from the trigger, or moves to the next item." },
-      { keys: ["ArrowUp"], action: "Opens from the trigger, or moves to the previous item." },
+      { keys: ["ArrowDown"], action: "Opens from the trigger to the first item, or moves down." },
+      { keys: ["ArrowUp"], action: "Opens from the trigger to the last item, or moves up." },
+      { keys: ["Home"], action: "Moves to the first item." },
+      { keys: ["End"], action: "Moves to the last item." },
       { keys: ["ArrowRight"], action: "Opens the focused submenu item.", scope: "submenu" },
       {
         keys: ["ArrowLeft"],
         action: "Closes the submenu and refocuses its item.",
         scope: "submenu",
       },
-      { keys: ["Enter"], action: "Activates item." },
+      { keys: ["Enter"], action: "Activates the focused item." },
+      { keys: ["Space"], action: "Activates the focused item." },
       { keys: ["Escape"], action: "Closes and returns focus to trigger." },
       { keys: ["Tab"], action: "Closes the menu and moves on." },
     ],
@@ -2776,6 +2837,8 @@ const navigation = [
       { keys: ["End"], action: "Moves to the last tag." },
       { keys: ["Space"], action: "Toggles the focused tag's selection." },
       { keys: ["Enter"], action: "Toggles the focused tag's selection." },
+      { keys: ["Delete"], action: "Removes the focused tag when onRemove is wired." },
+      { keys: ["Backspace"], action: "Removes the focused tag when onRemove is wired." },
     ],
     [
       { attribute: "[data-selected]", on: "Tag", meaning: "The tag is selected." },
@@ -3308,7 +3371,7 @@ const navigation = [
     ],
     [
       { attribute: "[data-selected]", on: "TreeGridRow", meaning: "The row is selected." },
-      { attribute: "[data-expanded]", on: "TreeGridRow", meaning: "The row's branch is open." },
+      { attribute: "[data-open]", on: "TreeGridRow", meaning: "The row’s branch is open." },
       { attribute: "[data-disabled]", on: "TreeGridRow", meaning: "The row is disabled." },
       {
         attribute: ":focus-visible",
@@ -3429,7 +3492,10 @@ const navigation = [
       },
       { keys: ["ArrowDown"], action: "Moves to the next item." },
       { keys: ["ArrowUp"], action: "Moves to the previous item." },
+      { keys: ["Home"], action: "Moves to the first item." },
+      { keys: ["End"], action: "Moves to the last item." },
       { keys: ["Enter"], action: "Activates the focused item." },
+      { keys: ["Space"], action: "Activates the focused item." },
       { keys: ["Escape"], action: "Closes and restores focus to where it was." },
       { keys: ["Tab"], action: "Closes the menu and moves on." },
     ],
@@ -3527,6 +3593,7 @@ const navigation = [
           "Moves to the previous item, wrapping; while a menu is open, opens the neighbor's menu.",
       },
       { keys: ["ArrowDown"], action: "Opens the focused item's menu and focuses the first item." },
+      { keys: ["ArrowUp"], action: "Opens the focused item's menu and focuses the last item." },
       { keys: ["Enter"], action: "Opens the focused item's menu and focuses the first item." },
       { keys: ["Space"], action: "Opens the focused item's menu and focuses the first item." },
       { keys: ["Home"], action: "Moves to the first item." },
@@ -3637,7 +3704,7 @@ const navigation = [
     ],
     [
       { attribute: "[data-selected]", on: "TreeItem", meaning: "The item is selected." },
-      { attribute: "[data-expanded]", on: "TreeItem", meaning: "The item's branch is open." },
+      { attribute: "[data-open]", on: "TreeItem", meaning: "The item's branch is open." },
       { attribute: "[data-disabled]", on: "TreeItem", meaning: "The item is disabled." },
       {
         attribute: ":focus-visible",
@@ -3671,7 +3738,7 @@ const navigation = [
         [
           prop("aria-label", "string", "Names the carousel for assistive technology; required."),
           prop("index / defaultIndex", "number", "Controlled or initial slide index."),
-          prop("onIndexChange", "(index: number) => void", "Receives the next slide index."),
+          prop("onChange", "(index: number) => void", "Receives the next slide index."),
           prop("loop", "boolean", "Previous on the first slide and Next on the last wrap around."),
           prop(
             "autoplay",
@@ -3810,7 +3877,7 @@ const navigation = [
         keys: ["Ctrl", "Home"],
         action: "Moves focus to the first focusable element before the feed.",
       },
-      { keys: ["Tab"], action: "Moves through links and controls inside the focused article." },
+      { keys: ["Tab"], action: "Moves into an article, then through its links and controls." },
     ],
     [
       { attribute: "[data-busy]", on: "Feed", meaning: "More articles are loading." },
@@ -4048,7 +4115,12 @@ const picker = [
     [
       { keys: ["Enter"], action: "Opens or chooses." },
       { keys: ["Space"], action: "Opens or chooses." },
-      { keys: ["ArrowDown"], action: "Moves through options." },
+      {
+        keys: ["ArrowDown", "ArrowUp"],
+        action: "Opens from the trigger, then moves through options.",
+      },
+      { keys: ["Home"], action: "Moves to the first option.", scope: "open list" },
+      { keys: ["End"], action: "Moves to the last option.", scope: "open list" },
       { keys: ["Escape"], action: "Closes the list." },
     ],
     [
@@ -4157,7 +4229,13 @@ const picker = [
       ]),
     ],
     [
-      { keys: ["ArrowDown"], action: "Moves through options." },
+      { keys: ["ArrowDown"], action: "Opens the results or moves to the next option." },
+      {
+        keys: ["ArrowUp"],
+        action: "Moves to the previous option, or the last when none is active.",
+      },
+      { keys: ["Home"], action: "Moves to the first option.", scope: "open results" },
+      { keys: ["End"], action: "Moves to the last option.", scope: "open results" },
       {
         keys: ["Enter"],
         action: "Selects the active option from the input or opens from ComboboxTrigger.",
@@ -4684,6 +4762,11 @@ const picker = [
         on: "CalendarCell",
         meaning: "The day belongs to a neighboring month.",
       },
+      {
+        attribute: "[data-disabled]",
+        on: "CalendarCell",
+        meaning: "The day falls outside min or max.",
+      },
       { attribute: "[data-value]", on: "Calendar (with as)", meaning: "A date is selected." },
     ],
     "Selection does not create a native form value; pair the calendar with a named DateField, or mirror the value into a hidden input.",
@@ -4930,7 +5013,7 @@ const picker = [
     "Time Picker",
     "pickers",
     ["Label", "ListBox", "ListBoxItem", "Popover", "PopoverOverlay", "PopoverTrigger", "TimeField"],
-    '<Popover>\n  <PopoverTrigger aria-label="Choose time" />\n  <PopoverOverlay>\n    <ListBox aria-label="Available times">\n      <ListBoxItem value="09:00">9:00 AM</ListBoxItem>\n    </ListBox>\n  </PopoverOverlay>\n</Popover>;',
+    '<>\n  <Label htmlFor="time">Meeting time</Label>\n  <TimeField id="time" name="time" defaultValue="09:00" />\n  <Popover>\n    <PopoverTrigger aria-label="Choose time" />\n    <PopoverOverlay>\n      <ListBox aria-label="Available times">\n        <ListBoxItem value="09:00">9:00 AM</ListBoxItem>\n      </ListBox>\n    </PopoverOverlay>\n  </Popover>\n</>;',
     [
       p("Label", "label", "Visible name connected to the TimeField."),
       p("TimeField", "input", "Native editable time input and form control.", true, false, [
@@ -5069,6 +5152,11 @@ const picker = [
         attribute: "[data-outside-month]",
         on: "RangeCalendarCell",
         meaning: "The day belongs to a neighboring month.",
+      },
+      {
+        attribute: "[data-disabled]",
+        on: "RangeCalendarCell",
+        meaning: "The day falls outside min or max.",
       },
     ],
     "RangeCalendar does not create form values; pair it with Date Range Picker or mirror the two ISO dates into form controls.",

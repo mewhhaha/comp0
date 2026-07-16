@@ -149,6 +149,7 @@ export function MenuTrigger({
         ) {
           event.preventDefault();
           menubar.closeOthers(menu.triggerId);
+          menu.requestInitialFocus(event.key === "ArrowUp" ? "last" : "first");
           menu.setOpen(true);
         }
       },
@@ -217,6 +218,7 @@ export function MenuTrigger({
       if (event.defaultPrevented || disabled) return;
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
+        menu?.requestInitialFocus(event.key === "ArrowUp" ? "last" : "first");
         menu?.setOpen(true);
         return;
       }

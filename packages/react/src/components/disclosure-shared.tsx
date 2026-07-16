@@ -22,7 +22,7 @@ export type DisclosureProps = Omit<
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state; the native toggle event remains internal to details. */
-  onChange?: (open: boolean) => void;
+  onToggle?: ((open: boolean) => void) | undefined;
   children?: ReactNode;
 };
 
@@ -51,7 +51,7 @@ export type TabsProps = Omit<HTMLAttributes<HTMLElement>, "defaultValue" | "onCh
   value?: string | undefined;
   defaultValue?: string | undefined;
   /** Receives the selected tab value rather than a DOM ChangeEvent. */
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | undefined;
 };
 
 export type TabListProps = HTMLAttributes<HTMLDivElement> & {
@@ -59,11 +59,13 @@ export type TabListProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export type TabProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "id" | "value"> & {
-  tab: string;
+  /** Identity that pairs this tab with its panel through the root's value. */
+  value: string;
 };
 
 export type TabPanelProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
-  tab: string;
+  /** Identity that pairs this panel with its tab through the root's value. */
+  value: string;
 };
 
 export type BreadcrumbsProps = HTMLAttributes<HTMLElement> & {
