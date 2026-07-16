@@ -16,6 +16,7 @@ function SiteNavigation(props: { value?: string; onChange?: (value: string) => v
           <NavigationMenuTrigger>Products</NavigationMenuTrigger>
           <NavigationMenuContent>
             <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
+            <NavigationMenuLink href="#reports">Reports</NavigationMenuLink>
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem value="resources">
@@ -23,6 +24,9 @@ function SiteNavigation(props: { value?: string; onChange?: (value: string) => v
           <NavigationMenuContent>
             <NavigationMenuLink href="#docs">Docs</NavigationMenuLink>
           </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem value="pricing">
+          <NavigationMenuLink href="#pricing">Pricing</NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
@@ -150,6 +154,102 @@ describe("navigation menu composition", () => {
     expect(link.getAttribute("href")).toBe("#reports");
     fireClick(link);
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("moves along the top-level row with arrow keys without opening panels", () => {
+    const { container } = render(<SiteNavigation />);
+
+    const products = triggerNamed(container, "Products");
+    products.focus();
+    fireKeyDown(products, "ArrowRight");
+    expect(document.activeElement).toBe(triggerNamed(container, "Resources"));
+    fireKeyDown(triggerNamed(container, "Resources"), "ArrowDown");
+    const pricing = container.querySelector<HTMLAnchorElement>("a[href='#pricing']")!;
+    expect(document.activeElement).toBe(pricing);
+    fireKeyDown(pricing, "ArrowRight");
+    expect(document.activeElement).toBe(pricing);
+    fireKeyDown(pricing, "ArrowLeft");
+    fireKeyDown(triggerNamed(container, "Resources"), "ArrowUp");
+    expect(document.activeElement).toBe(products);
+    fireKeyDown(products, "ArrowLeft");
+    expect(document.activeElement).toBe(products);
+    expect(container.querySelector("nav")?.hasAttribute("data-open")).toBe(false);
+  });
+
+  it("moves from an expanded trigger into its panel and between the panel links without wrapping", () => {
+    const { container } = render(<SiteNavigation />);
+
+    const products = triggerNamed(container, "Products");
+    fireClick(products);
+    products.focus();
+    fireKeyDown(products, "ArrowDown");
+    const analytics = container.querySelector<HTMLAnchorElement>("a[href='#analytics']")!;
+    const reports = container.querySelector<HTMLAnchorElement>("a[href='#reports']")!;
+    expect(document.activeElement).toBe(analytics);
+    expect(products.getAttribute("aria-expanded")).toBe("true");
+
+    fireKeyDown(analytics, "ArrowDown");
+    expect(document.activeElement).toBe(reports);
+    fireKeyDown(reports, "ArrowDown");
+    expect(document.activeElement).toBe(reports);
+    fireKeyDown(reports, "ArrowUp");
+    expect(document.activeElement).toBe(analytics);
+    fireKeyDown(analytics, "ArrowUp");
+    expect(document.activeElement).toBe(analytics);
+  });
+
+  it("jumps to the first and last stop with Home and End in each context", () => {
+    const { container } = render(<SiteNavigation />);
+
+    const resources = triggerNamed(container, "Resources");
+    resources.focus();
+    fireKeyDown(resources, "End");
+    expect(document.activeElement).toBe(container.querySelector("a[href='#pricing']"));
+    resources.focus();
+    fireKeyDown(resources, "Home");
+    expect(document.activeElement).toBe(triggerNamed(container, "Products"));
+
+    fireClick(triggerNamed(container, "Products"));
+    const analytics = container.querySelector<HTMLAnchorElement>("a[href='#analytics']")!;
+    const reports = container.querySelector<HTMLAnchorElement>("a[href='#reports']")!;
+    analytics.focus();
+    fireKeyDown(analytics, "End");
+    expect(document.activeElement).toBe(reports);
+    fireKeyDown(reports, "Home");
+    expect(document.activeElement).toBe(analytics);
+  });
+
+  it("leaves modified keys and non-link panel widgets to their own behavior", () => {
+    const { container } = render(
+      <NavigationMenu aria-label="Main">
+        <NavigationMenuList>
+          <NavigationMenuItem value="products">
+            <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <input aria-label="Filter destinations" />
+              <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem value="resources">
+            <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink href="#docs">Docs</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>,
+    );
+
+    const products = triggerNamed(container, "Products");
+    products.focus();
+    fireKeyDown(products, "ArrowRight", { ctrlKey: true });
+    expect(document.activeElement).toBe(products);
+
+    fireClick(products);
+    const filter = container.querySelector("input")!;
+    filter.focus();
+    fireKeyDown(filter, "ArrowDown");
+    expect(document.activeElement).toBe(filter);
   });
 
   it("reports a missing item value with the received value", () => {

@@ -997,7 +997,7 @@ const accessibility: Record<string, string[]> = {
   ],
   "navigation-menu": [
     "Give the nav an aria-label when the page has more than one navigation landmark.",
-    'Triggers are disclosure buttons, not role="menu" items; Tab moves through triggers and links in document order.',
+    'Triggers are disclosure buttons, not role="menu" items; Tab moves through triggers and links in document order, and arrow keys, Home, and End move focus without opening panels.',
     "Mark the page you are on with current instead of relying on styling alone.",
     "Panels stay in the page flow; keep each one right after its trigger so reading order matches the visual order.",
   ],
@@ -4431,6 +4431,23 @@ const navigation = [
       { keys: ["Enter"], action: "Toggles the focused trigger's panel." },
       { keys: ["Space"], action: "Toggles the focused trigger's panel." },
       { keys: ["Escape"], action: "Closes the open panel and returns focus to its trigger." },
+      {
+        keys: ["ArrowDown", "ArrowRight"],
+        action:
+          "Moves to the next top-level stop, or from an expanded trigger to its panel's first link.",
+        scope: "top-level row",
+      },
+      {
+        keys: ["ArrowDown", "ArrowRight"],
+        action: "Moves to the next link in the panel.",
+        scope: "panel link",
+      },
+      {
+        keys: ["ArrowUp", "ArrowLeft"],
+        action: "Moves to the previous stop or link; movement never wraps.",
+      },
+      { keys: ["Home"], action: "Moves to the first stop or the panel's first link." },
+      { keys: ["End"], action: "Moves to the last stop or the panel's last link." },
     ],
     [
       {
