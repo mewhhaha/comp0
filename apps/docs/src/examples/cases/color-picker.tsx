@@ -20,7 +20,7 @@ function ThemePreview({ color }: ThemePreviewProps) {
   return (
     <div
       aria-label="Theme preview"
-      className="mt-3 overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
+      className="mt-3 overflow-hidden rounded-b-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
     >
       <div className="h-2" style={{ backgroundColor: color }} />
       <div className="flex items-center justify-between gap-3 p-3">
