@@ -84,6 +84,8 @@ export type GridListDndContextValue = {
   dragValue: string;
   dragLabel: string;
   hasDropTarget: boolean;
+  /** The row's index in the order the pending drop would produce, or undefined without one. */
+  previewIndex: (value: string) => number | undefined;
   dropTarget: GridListDropTarget | null;
   listDropTarget: boolean;
   startDrag: (value: string, label: string) => void;

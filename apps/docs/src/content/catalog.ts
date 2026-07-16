@@ -3183,6 +3183,12 @@ const navigation = [
         meaning: "The dragged row label, available for an in-flow destination preview.",
       },
       {
+        attribute: "--comp0-grid-list-order",
+        on: "GridListItem",
+        meaning:
+          "The row's position in the pending drop; order in a flex column to preview the move with the real rows.",
+      },
+      {
         attribute: ":focus-visible",
         on: "GridListItem, GridListDragHandle, GridListMoveButton",
         meaning: "The row or a control in it has keyboard focus.",

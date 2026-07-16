@@ -307,6 +307,7 @@ export function GridList({
       dragValue: reorderGroup.source?.value ?? "",
       dragLabel: reorderGroup.source?.label ?? "",
       hasDropTarget: Boolean(reorderGroup.target),
+      previewIndex: () => undefined,
       dropTarget: groupDropTarget,
       listDropTarget: reorderGroup.target?.list === name,
       startDrag: (movedValue, label) => reorderGroup.startDrag(name, movedValue, label),
@@ -323,10 +324,15 @@ export function GridList({
       moveItem: (movedValue, delta) => reorderGroup.moveWithin(name, movedValue, delta),
     };
   } else if (onReorder) {
+    const previewOrder = dragValue && dropTarget ? orderForDrop(dragValue, dropTarget) : null;
     dndContext = {
       dragValue,
       dragLabel,
       hasDropTarget: Boolean(dropTarget),
+      previewIndex: (rowValue) => {
+        const index = previewOrder?.indexOf(rowValue) ?? -1;
+        return index < 0 ? undefined : index;
+      },
       dropTarget,
       listDropTarget: Boolean(dropTarget),
       startDrag: (movedValue, label) => {

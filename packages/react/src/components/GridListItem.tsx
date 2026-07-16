@@ -1,4 +1,12 @@
-import { useContext, useId, useLayoutEffect, useRef, useState, type HTMLAttributes } from "react";
+import {
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type HTMLAttributes,
+} from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { resolveItemLabel } from "./collection-shared.js";
@@ -60,6 +68,13 @@ export function GridListItem({
   const active = gridList?.activeKey === value;
   const dragging = dnd?.dragValue === value;
   const dropEdge = dnd?.dropTarget?.value === value ? dnd.dropTarget.edge : undefined;
+  const previewIndex = dnd?.previewIndex(value);
+  // In a flex column, order: var(--comp0-grid-list-order) lets the real rows
+  // preview the pending drop without ghost elements or layout shifts.
+  let style = props.style;
+  if (previewIndex !== undefined) {
+    style = { ...style, "--comp0-grid-list-order": previewIndex } as CSSProperties;
+  }
   const rowRef = useRef<HTMLDivElement | null>(null);
   const pointerStartedOnControl = useRef(false);
   const registeredRow = useRef<{
@@ -139,6 +154,7 @@ export function GridListItem({
       {...props}
       ref={composedRef}
       id={id}
+      style={style}
       role="row"
       tabIndex={tabIndex}
       draggable={reorderable || undefined}
@@ -212,10 +228,9 @@ export function GridListItem({
         if (event.defaultPrevented || !dnd?.dragValue) return;
         event.preventDefault();
         if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-        if (dnd.dragValue === value) {
-          dnd.setDropTarget(null);
-          return;
-        }
+        // A live preview relocates the source row under the pointer; keep the
+        // pending target instead of flickering it away.
+        if (dnd.dragValue === value) return;
         const rect = event.currentTarget.getBoundingClientRect();
         const edge = event.clientY < rect.top + rect.height / 2 ? "before" : "after";
         dnd.setDropTarget({ value, edge });
