@@ -577,6 +577,7 @@ describe("grid list composition", () => {
 
     fireKeyDown(handle, "ArrowRight");
     expect(doneList.hasAttribute("data-drop-target")).toBe(true);
+    expect(doneList.getAttribute("data-drop-preview")).toBe("design");
     expect(container.querySelector("[data-value='ship']")!.hasAttribute("data-drop-before")).toBe(
       true,
     );
