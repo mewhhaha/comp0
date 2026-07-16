@@ -213,6 +213,28 @@
     display: grid !important;
   }
 
+  .docs-disclosure {
+    interpolate-size: allow-keywords;
+  }
+
+  .docs-disclosure::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      content-visibility 150ms allow-discrete,
+      block-size 150ms ease-out;
+  }
+
+  .docs-disclosure[open]::details-content {
+    block-size: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .docs-disclosure::details-content {
+      transition: none;
+    }
+  }
+
   @media (prefers-color-scheme: dark) {
     html,
     body {

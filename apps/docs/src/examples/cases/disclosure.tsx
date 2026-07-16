@@ -3,7 +3,7 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid";
 
 export function Example() {
   return (
-    <Disclosure className="flex max-w-xs flex-col gap-2 rounded border border-zinc-950/10 p-3 dark:border-white/10">
+    <Disclosure className="docs-disclosure max-w-xs rounded border border-zinc-950/10 p-3 dark:border-white/10">
       <DisclosureTrigger className="group flex cursor-pointer list-none items-center justify-between gap-2 text-base font-medium text-zinc-900 sm:text-sm dark:text-zinc-100 [&::-webkit-details-marker]:hidden">
         What is included?
         <ChevronDownIcon
@@ -11,7 +11,7 @@ export function Example() {
           aria-hidden="true"
         />
       </DisclosureTrigger>
-      <DisclosurePanel className="text-base text-zinc-600 sm:text-sm dark:text-zinc-400">
+      <DisclosurePanel className="pt-2 text-base text-zinc-600 sm:text-sm dark:text-zinc-400">
         Source files, updates, and email support.
       </DisclosurePanel>
     </Disclosure>
