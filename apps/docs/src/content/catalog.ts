@@ -601,6 +601,69 @@ const lessons: Record<string, LessonCopy> = {
     "Use dateTime for the machine-readable timestamp and format the visible time for people.",
     '<Timeline aria-label="Release history">\n  <TimelineItem>\n    <TimelineTime dateTime="2026-07-14T09:15:00Z">09:15</TimelineTime>Deployed\n  </TimelineItem>\n</Timeline>;',
   ),
+  "navigation-menu": lesson(
+    "A site nav where some links unfold into small panels of more links.",
+    "Like a store directory: most signs point straight somewhere, a few unfold into a small map.",
+    "Use it for site-wide navigation with grouped destinations; use Menubar for application commands.",
+    "Start NavigationMenu with NavigationMenuList around the items.",
+    "Give each NavigationMenuItem a value, then pair a NavigationMenuTrigger with its NavigationMenuContent panel of links.",
+    "Use NavigationMenuLink for every destination and mark the page you are on with current.",
+    '<NavigationMenu aria-label="Main">\n  <NavigationMenuList>\n    <NavigationMenuItem value="products">\n      <NavigationMenuTrigger>Products</NavigationMenuTrigger>\n      <NavigationMenuContent>\n        <NavigationMenuLink href="/analytics">Analytics</NavigationMenuLink>\n      </NavigationMenuContent>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>;',
+  ),
+  steps: lesson(
+    "A numbered trail through a fixed process, showing one panel at a time.",
+    "Like the stops printed on a boarding pass: done, you are here, still to come.",
+    "Use it for checkout, signup, and other flows people finish in order.",
+    "Start Steps with the value of the first step.",
+    "Put one StepsItem per step inside StepsList, and give each StepsPanel the matching value.",
+    "Advance the value from your own Continue button; every item before it marks itself completed.",
+    '<Steps defaultValue="shipping">\n  <StepsList>\n    <StepsItem value="shipping">\n      <StepsTrigger>Shipping</StepsTrigger>\n    </StepsItem>\n  </StepsList>\n  <StepsPanel value="shipping">Address form</StepsPanel>\n</Steps>;',
+  ),
+  avatar: lesson(
+    "An image that keeps a graceful stand-in while it loads or fails.",
+    "Like a name tag showing your initials until the photo is pinned on.",
+    "Use it for profile pictures and other images that may be slow or missing.",
+    "Wrap Avatar around one AvatarImage and one AvatarFallback.",
+    "Give AvatarImage a src and an alt that names the person; put initials or an icon in AvatarFallback.",
+    "Style the settled states through [data-loaded] and [data-error] on Avatar.",
+    '<Avatar>\n  <AvatarImage src={photoUrl} alt="Ada Kaplan" />\n  <AvatarFallback>AK</AvatarFallback>\n</Avatar>;',
+  ),
+  drawer: lesson(
+    "An edge-anchored modal panel that slides in and can be swiped away.",
+    "Like a sliding tray that pulls out from the side of a cabinet and pushes back shut.",
+    "Use it for secondary tasks such as settings, filters, or a cart that belong beside the page rather than over its center.",
+    "Start Drawer with DrawerTrigger and pick the side the panel anchors to.",
+    "Put a labelled DrawerContent after the trigger and anchor its styles with the data-side attribute.",
+    "Keep an explicit close action inside; dragging the panel toward its edge or pressing Escape also dismisses it.",
+    '<Drawer side="right">\n  <DrawerTrigger>Open settings</DrawerTrigger>\n  <DrawerContent aria-labelledby="settings-title">\n    <h2 id="settings-title">Settings</h2>\n  </DrawerContent>\n</Drawer>;',
+  ),
+  preview: lesson(
+    "A rich card revealed by pausing on a link.",
+    "Like peeking through a shop window before deciding to walk in.",
+    "Use it to show what a link leads to, such as a profile or package card.",
+    "Start Preview around the link people already follow.",
+    "Give PreviewTrigger the real href and put the card in PreviewPopover with a placement.",
+    "Keep the link useful on its own; the card is a bonus, not the destination.",
+    '<Preview>\n  <PreviewTrigger href="/users/ada">@ada</PreviewTrigger>\n  <PreviewPopover placement="bottom start" offset={8}>\n    Ada Lovelace, first programmer\n  </PreviewPopover>\n</Preview>;',
+  ),
+  editable: lesson(
+    "Plain text that turns into an input when clicked.",
+    "Like a name tag written in pencil: tap it, rewrite it, and it settles back into place.",
+    "Use it to rename something in place, such as a document title or a list name.",
+    "Wrap Editable around EditableView and EditableInput.",
+    "EditableView shows the committed value and enters edit mode on click; EditableInput takes over while editing.",
+    "Enter commits, Escape cancels, and clicking away commits; give the input a name so a form submits the committed value.",
+    '<Editable defaultValue="Untitled document">\n  <EditableView />\n  <EditableInput name="title" aria-label="Document title" />\n</Editable>;',
+  ),
+  rating: lesson(
+    "A star scale built from hidden native radios, one per step.",
+    "Like a row of hotel stars you can point at and pick.",
+    "Use it to collect one score on a small fixed scale, such as one to five stars.",
+    "Put Rating where the score belongs and give it a name.",
+    "Add one RatingItem per step with its number as value and a star glyph as children.",
+    "Style the stars through [data-active], which covers every step up to the hovered or selected one; use readOnly to display a score without allowing changes.",
+    '<Rating name="stay" defaultValue={3}>\n  <RatingItem value={1} inputProps={{ "aria-label": "1 of 5 stars" }}>\n    ★\n  </RatingItem>\n</Rating>;',
+  ),
 };
 const accessibility: Record<string, string[]> = {
   button: [
@@ -931,6 +994,44 @@ const accessibility: Record<string, string[]> = {
     "Give the ordered list a name when the surrounding heading does not already do so.",
     "Use a machine-readable dateTime value on TimelineTime and keep its visible text understandable in context.",
     "Do not use the visual line or dots as the only way to convey order; the native ordered list supplies that relationship.",
+  ],
+  "navigation-menu": [
+    "Give the nav an aria-label when the page has more than one navigation landmark.",
+    'Triggers are disclosure buttons, not role="menu" items; Tab moves through triggers and links in document order.',
+    "Mark the page you are on with current instead of relying on styling alone.",
+    "Panels stay in the page flow; keep each one right after its trigger so reading order matches the visual order.",
+  ],
+  steps: [
+    'StepsTrigger marks the current step with aria-current="step"; do not duplicate that state manually.',
+    "Each panel is labelled by its step item, so keep the visible step names meaningful.",
+    "Only render StepsTrigger for steps that are safe to return to; use plain text for locked steps.",
+    "Show completed and current states with more than color; the numbered circles or a checkmark carry the order.",
+  ],
+  avatar: [
+    'Give AvatarImage an alt that names the person or entity; use alt="" only when adjacent text already names them.',
+    "Keep the fallback recognizable: initials or an icon, not an empty box.",
+    "The image stays hidden until it loads, so a broken-image glyph is never announced or shown.",
+  ],
+  drawer: [
+    "Connect DrawerContent to a visible heading with aria-labelledby.",
+    "The swipe gesture is purely additive; keep an explicit close action for keyboard and assistive users.",
+    "Focus stays inside the modal panel while it is open and returns to the trigger on close.",
+  ],
+  preview: [
+    "Keep the trigger a real link with a clear name; the card must stay optional.",
+    "Do not put content in the card that is not reachable another way.",
+    "Escape closes the card from anywhere, and it stays open while hovered or focused (WCAG 1.4.13).",
+  ],
+  editable: [
+    "EditableView is a real button, so keyboard users reach it with Tab and press Enter to start editing.",
+    "Give EditableInput an aria-label that names the value, such as Document title; the view's text is hidden while editing.",
+    "Show the edit affordance, such as a pencil icon, without relying on hover alone.",
+    "Style [data-empty] on EditableView so an empty value still leaves something visible to click.",
+  ],
+  rating: [
+    "Give each hidden radio a spoken name such as 3 of 5 stars via inputProps.",
+    "Show the picked score with more than color; the glyphs themselves should fill.",
+    "Use readOnly for a score people can inspect but not change; it stays focusable.",
   ],
 };
 
@@ -1593,6 +1694,59 @@ const action = [
     ],
     "DropZone does not create form values. FileTrigger submits selected files with its native name prop.",
     ["file-trigger", "progress-bar"],
+  ),
+  common(
+    "avatar",
+    "Avatar",
+    "actions",
+    ["Avatar", "AvatarFallback", "AvatarImage"],
+    '<Avatar><AvatarImage src={photoUrl} alt="Ada Kaplan" /><AvatarFallback>AK</AvatarFallback></Avatar>',
+    [
+      p(
+        "Avatar",
+        "root",
+        "Span that tracks the image status and exposes it as data attributes.",
+        true,
+        false,
+        [prop("children", "ReactNode", "One AvatarImage and one AvatarFallback, in either order.")],
+      ),
+      p("AvatarImage", "value", "Native img, hidden until a load succeeds.", true, false, [
+        prop("src", "string", "Image source; a data: URI works for inline artwork."),
+        prop(
+          "alt",
+          "string",
+          'Names the person or entity; "" only when adjacent text already does.',
+        ),
+        prop(
+          "onLoad / onError",
+          "(event: SyntheticEvent) => void",
+          "Run before the avatar reacts; preventDefault keeps the status unchanged.",
+        ),
+      ]),
+      p(
+        "AvatarFallback",
+        "feedback",
+        "Stand-in such as initials or an icon, hidden once the image loads.",
+        true,
+        false,
+        [prop("children", "ReactNode", "The initials or icon to show while there is no image.")],
+      ),
+    ],
+    [],
+    [
+      {
+        attribute: "[data-loaded]",
+        on: "Avatar",
+        meaning: "The image loaded; the fallback is hidden.",
+      },
+      {
+        attribute: "[data-error]",
+        on: "Avatar",
+        meaning: "The image failed to load; the fallback stays visible.",
+      },
+    ],
+    "No form behavior; an avatar only displays an image.",
+    ["messages", "visually-hidden"],
   ),
 ];
 
@@ -2513,6 +2667,128 @@ const field = [
     ],
     "Submits one native radio value under name as a normalized lowercase #rrggbb color.",
     ["color-picker", "color-field", "radio"],
+  ),
+  common(
+    "editable",
+    "Editable",
+    "fields",
+    ["Editable", "EditableInput", "EditableView"],
+    '<Editable defaultValue="Untitled document"><EditableView /><EditableInput name="title" aria-label="Document title" /></Editable>',
+    [
+      p("Editable", "root", "Context provider with no DOM by default.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial committed value."),
+        prop(
+          "onChange",
+          "(value: string) => void",
+          "Receives the committed value when an edit commits, not per keystroke.",
+        ),
+        prop("editing / defaultEditing", "boolean", "Controlled or initial edit mode."),
+        prop("onEditingChange", "(editing: boolean) => void", "Receives the next edit mode."),
+        prop("disabled", "boolean", "Blocks entering edit mode and disables both parts."),
+      ]),
+      p(
+        "EditableView",
+        "trigger",
+        "Native button showing the committed value; click enters edit mode.",
+        true,
+        false,
+        [
+          prop(
+            "children",
+            "ReactNode | (state) => ReactNode",
+            "Custom display; a function receives { value, editing }.",
+          ),
+        ],
+      ),
+      p(
+        "EditableInput",
+        "input",
+        "Native input that stays in the DOM so its name always submits.",
+        true,
+        false,
+        [prop("name", "string", "Submission name for the committed value.")],
+      ),
+    ],
+    [
+      { keys: ["Enter"], action: "Enters edit mode.", scope: "view" },
+      { keys: ["Enter"], action: "Commits the draft and returns to the view.", scope: "input" },
+      {
+        keys: ["Escape"],
+        action: "Cancels editing and restores the committed value.",
+        scope: "input",
+      },
+      { keys: ["Tab"], action: "Moves focus away; leaving the input commits the draft." },
+    ],
+    [
+      {
+        attribute: "[data-editing]",
+        on: "Editable / EditableView / EditableInput",
+        meaning: "An edit is in progress.",
+      },
+      {
+        attribute: "[data-empty]",
+        on: "EditableView",
+        meaning: "The committed value is empty, so a placeholder can be styled.",
+      },
+      {
+        attribute: "[data-disabled]",
+        on: "Editable / EditableView / EditableInput",
+        meaning: "Editing cannot start.",
+      },
+    ],
+    "The always-present EditableInput submits its native name with the committed value.",
+    ["text-field", "search-field"],
+  ),
+  common(
+    "rating",
+    "Rating",
+    "fields",
+    ["Rating", "RatingItem"],
+    '<Rating name="stay" defaultValue={3}>\n  <RatingItem value={1}>★</RatingItem>\n  <RatingItem value={2}>★</RatingItem>\n  <RatingItem value={3}>★</RatingItem>\n</Rating>;',
+    [
+      p("Rating", "root", "Container that names and manages the star radios.", true, false, [
+        prop(
+          "name",
+          "string",
+          "Shared submission name for the item radios; generated when absent.",
+        ),
+        prop("value / defaultValue", "number", "Controlled or initial rating; 0 means none."),
+        prop("onChange", "(value: number) => void", "Receives the next rating."),
+        prop("required", "boolean", "Requires one item in the group to be selected."),
+        prop("readOnly", "boolean", "Keeps the items focusable while preventing changes."),
+        prop("disabled", "boolean", "Disables every item."),
+      ]),
+      p("RatingItem", "item", "Star label around one hidden native radio.", true, false, [
+        prop("value", "number", "The rating this item stands for; 0.5 steps are allowed."),
+        prop(
+          "inputProps",
+          "InputHTMLAttributes",
+          "Extra props for the hidden radio, such as aria-label.",
+        ),
+      ]),
+    ],
+    [
+      { keys: ["ArrowDown", "ArrowRight"], action: "Moves to and selects the next star." },
+      { keys: ["ArrowUp", "ArrowLeft"], action: "Moves to and selects the previous star." },
+      { keys: ["Space"], action: "Selects the focused star." },
+    ],
+    [
+      {
+        attribute: "[data-active]",
+        on: "RatingItem",
+        meaning: "This step is at or below the hovered or selected rating.",
+      },
+      { attribute: "[data-selected]", on: "RatingItem", meaning: "This step is the exact rating." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "RatingItem",
+        meaning: "Focus should show a visible ring.",
+      },
+      { attribute: "[data-disabled]", on: "Rating", meaning: "The rating is disabled." },
+      { attribute: "[data-readonly]", on: "Rating", meaning: "The rating cannot be changed." },
+    ],
+    "The checked radio submits Rating.name and its value.",
+    ["radio", "slider", "toggle-button"],
   ),
 ];
 
@@ -4077,6 +4353,175 @@ const navigation = [
     "Timeline is descriptive content and does not create form values.",
     ["feed", "messages"],
   ),
+  common(
+    "navigation-menu",
+    "Navigation Menu",
+    "navigation",
+    [
+      "NavigationMenu",
+      "NavigationMenuContent",
+      "NavigationMenuItem",
+      "NavigationMenuLink",
+      "NavigationMenuList",
+      "NavigationMenuTrigger",
+    ],
+    '<NavigationMenu aria-label="Main">\n  <NavigationMenuList>\n    <NavigationMenuItem value="products">\n      <NavigationMenuTrigger>Products</NavigationMenuTrigger>\n      <NavigationMenuContent>\n        <NavigationMenuLink href="/analytics">Analytics</NavigationMenuLink>\n      </NavigationMenuContent>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>;',
+    [
+      p(
+        "NavigationMenu",
+        "root",
+        "Navigation landmark that keeps a single panel open at a time.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Names the landmark when the page has more than one nav."),
+          prop(
+            "value / defaultValue",
+            "string",
+            'Controlled or initial open item; "" means every panel is closed.',
+          ),
+          prop("onChange", "(value: string) => void", "Receives the next open item value."),
+        ],
+      ),
+      p("NavigationMenuList", "root", "Native list of navigation items.", true, false),
+      p(
+        "NavigationMenuItem",
+        "item",
+        "List item pairing one trigger with its panel.",
+        true,
+        false,
+        [prop("value", "string", "Identity that pairs the trigger with its content panel.")],
+      ),
+      p(
+        "NavigationMenuTrigger",
+        "trigger",
+        "Native button that toggles its item's panel; hovering opens it after a short intent delay.",
+        true,
+        false,
+        [
+          prop(
+            "as",
+            "ElementType | Fragment",
+            "Fragment merges the trigger onto your own element child.",
+          ),
+        ],
+      ),
+      p(
+        "NavigationMenuContent",
+        "region",
+        "Inline panel of links; it stays in the page flow so CSS positions it.",
+        true,
+        false,
+      ),
+      p(
+        "NavigationMenuLink",
+        "item",
+        "Native anchor to a destination; activating it closes the open panel.",
+        true,
+        false,
+        [
+          prop("href", "string", "Destination URL."),
+          prop("current", "boolean", 'Marks the page you are on with aria-current="page".'),
+          prop("as", "ElementType", "Renders a router link instead of the native anchor."),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves through triggers and links in document order." },
+      { keys: ["Enter"], action: "Toggles the focused trigger's panel." },
+      { keys: ["Space"], action: "Toggles the focused trigger's panel." },
+      { keys: ["Escape"], action: "Closes the open panel and returns focus to its trigger." },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent",
+        meaning: "This item's panel is open.",
+      },
+      { attribute: "[data-open]", on: "NavigationMenu", meaning: "Some panel is open." },
+      {
+        attribute: "[aria-current]",
+        on: "NavigationMenuLink",
+        meaning: "This link is the current page.",
+      },
+      {
+        attribute: "[data-current]",
+        on: "NavigationMenuLink",
+        meaning: "Presence hook mirroring aria-current for styling.",
+      },
+    ],
+    "No native form behavior.",
+    ["menubar", "disclosure", "breadcrumbs", "link"],
+  ),
+  common(
+    "steps",
+    "Steps",
+    "navigation",
+    ["Steps", "StepsItem", "StepsList", "StepsPanel", "StepsTrigger"],
+    '<Steps defaultValue="shipping">\n  <StepsList>\n    <StepsItem value="shipping">\n      <StepsTrigger>Shipping</StepsTrigger>\n    </StepsItem>\n  </StepsList>\n  <StepsPanel value="shipping">Address form</StepsPanel>\n</Steps>;',
+    [
+      p("Steps", "root", "Current-step provider.", false, false, [
+        prop("value / defaultValue", "string", "Controlled or initial current step."),
+        prop("onChange", "(value: string) => void", "Receives the next step value."),
+        prop("as", "ElementType", "Renders a wrapper element around the whole process."),
+      ]),
+      p(
+        "StepsList",
+        "root",
+        "Native ordered list; the sequence itself is meaningful.",
+        true,
+        false,
+        [prop("aria-label", "string", "Names the process for assistive technology.")],
+      ),
+      p(
+        "StepsItem",
+        "item",
+        "List item for one step; items register in document order, so each knows its position and whether it is completed.",
+        true,
+        false,
+        [
+          prop("value", "string", "Identity that pairs this item with its panel."),
+          prop(
+            "children",
+            "ReactNode | (state) => ReactNode",
+            "Receives { step, current, completed } for numbering and painting.",
+          ),
+        ],
+      ),
+      p("StepsTrigger", "trigger", "Optional button that jumps back to its step.", true, true, [
+        prop("disabled", "boolean", "Keeps the step visible but not activatable."),
+        prop("as", "ElementType", "Renders another element with button behavior attached."),
+      ]),
+      p("StepsPanel", "region", "Content for one step; hidden unless current.", true, true, [
+        prop("value", "string", "The step this panel belongs to."),
+      ]),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves focus through the step triggers." },
+      { keys: ["Enter"], action: "Activates the focused step." },
+      { keys: ["Space"], action: "Activates the focused step." },
+    ],
+    [
+      { attribute: "[data-current]", on: "StepsItem", meaning: "This is the current step." },
+      {
+        attribute: "[data-completed]",
+        on: "StepsItem",
+        meaning: "This step comes before the current one.",
+      },
+      {
+        attribute: "[data-step]",
+        on: "StepsItem",
+        meaning: "The item's 1-based position, for numbering.",
+      },
+      {
+        attribute: "[aria-current]",
+        on: "StepsTrigger",
+        meaning: "The trigger belongs to the current step.",
+      },
+    ],
+    "No native form behavior; the panels hold the real form fields.",
+    ["tabs", "accordion", "progress-bar"],
+  ),
 ];
 
 const picker = [
@@ -4558,6 +5003,14 @@ const picker = [
     ],
     "No native form behavior; forms may live inside DialogContent.",
     ["modal", "alert-dialog", "popover"],
+    [
+      {
+        id: "command-palette",
+        title: "Command palette",
+        description:
+          "Open a modal search from a ⌘K trigger, filter commands with Autocomplete, and run one to close the dialog.",
+      },
+    ],
   ),
   common(
     "alert-dialog",
@@ -5304,6 +5757,136 @@ const picker = [
     ],
     "DateRangePicker submits two native date inputs named `${name}-start` and `${name}-end` and restores uncontrolled values on form reset.",
     ["range-calendar", "date-picker", "date-field"],
+  ),
+  common(
+    "preview",
+    "Preview",
+    "pickers",
+    ["Preview", "PreviewPopover", "PreviewTrigger"],
+    '<Preview>\n  <PreviewTrigger href="/users/ada">@ada</PreviewTrigger>\n  <PreviewPopover placement="bottom start" offset={8}>\n    Ada Lovelace, first programmer\n  </PreviewPopover>\n</Preview>;',
+    [
+      p("Preview", "root", "Open-state provider with hover-intent timing.", false, false, [
+        prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop(
+          "openDelay",
+          "number",
+          "Milliseconds the pointer must rest before opening; 600 by default. Focus opens immediately.",
+        ),
+        prop(
+          "closeDelay",
+          "number",
+          "Milliseconds after the pointer or focus leaves before closing; 300 by default.",
+        ),
+      ]),
+      p(
+        "PreviewTrigger",
+        "trigger",
+        "Link that reveals the card on hover intent or focus.",
+        true,
+        false,
+        [
+          prop("href", "string", "Real destination; the preview never replaces it."),
+          prop(
+            "as",
+            "ElementType | Fragment",
+            "Fragment merges the trigger onto your own element child.",
+          ),
+        ],
+      ),
+      p("PreviewPopover", "content", "Rich card that may hold interactive content.", true, false, [
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Trigger side to open on, such as "bottom start"; flips when there is no room.',
+        ),
+        prop("offset", "number", "Pixel gap between the trigger and the card."),
+      ]),
+    ],
+    [
+      { keys: ["Tab"], action: "Focus reveals the card on its trigger." },
+      { keys: ["Escape"], action: "Closes the card." },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "PreviewTrigger, PreviewPopover",
+        meaning: "The card is visible.",
+      },
+    ],
+    "Previews never hold form values; they only describe what a link leads to.",
+    ["tooltip", "popover", "link"],
+  ),
+  common(
+    "drawer",
+    "Drawer",
+    "pickers",
+    ["Drawer", "DrawerContent", "DrawerTrigger"],
+    '<Drawer side="right">\n  <DrawerTrigger>Open settings</DrawerTrigger>\n  <DrawerContent aria-labelledby="settings-title">\n    <h2 id="settings-title">Settings</h2>\n  </DrawerContent>\n</Drawer>;',
+    [
+      p(
+        "Drawer",
+        "root",
+        "Wrapper-free provider for the drawer's open state and anchored side.",
+        false,
+        false,
+        [
+          prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+          prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+          prop(
+            "side",
+            '"left" | "right" | "top" | "bottom"',
+            'Edge the panel anchors to; defaults to "right".',
+          ),
+        ],
+      ),
+      p("DrawerTrigger", "trigger", "Button that opens the drawer.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger onto your own element child.",
+        ),
+      ]),
+      p(
+        "DrawerContent",
+        "content",
+        "Native modal panel anchored to one edge; dragging it toward that edge dismisses it.",
+        true,
+        false,
+        [
+          prop("aria-labelledby", "string", "Points to the drawer's visible heading."),
+          prop("portal", "boolean", "Renders into document.body; on by default."),
+          prop(
+            "closedby",
+            '"any" | "closerequest" | "none"',
+            "Native dismissal policy; any adds light dismiss where supported.",
+          ),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Escape"], action: "Closes and restores trigger focus." },
+      { keys: ["Tab"], action: "Cycles inside the modal panel." },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "DrawerTrigger, DrawerContent",
+        meaning: "The drawer is open.",
+      },
+      {
+        attribute: "[data-side]",
+        on: "DrawerContent",
+        meaning: "The anchored edge, for positioning and slide transitions.",
+      },
+      {
+        attribute: "[data-dragging]",
+        on: "DrawerContent",
+        meaning: "A dismiss drag is following the pointer.",
+      },
+    ],
+    "Forms inside DrawerContent submit normally; method=dialog closes the drawer without navigation.",
+    ["modal", "dialog", "alert-dialog"],
   ),
 ];
 
