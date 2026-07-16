@@ -169,6 +169,33 @@ describe("picker composition", () => {
     );
   });
 
+  it("changes the selection from typeahead on the closed select trigger", () => {
+    const { container } = render(
+      <Select id="plan" defaultValue="free">
+        <SelectTrigger>Plan</SelectTrigger>
+        <SelectPopover>
+          <SelectOption value="free">Free</SelectOption>
+          <SelectOption value="pro">Pro</SelectOption>
+          <SelectOption value="team" disabled>
+            Team
+          </SelectOption>
+        </SelectPopover>
+      </Select>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
+
+    fireKeyDown(trigger, "p");
+    expect(content.hidden).toBe(true);
+    expect(container.querySelector("[data-value='pro']")?.getAttribute("aria-selected")).toBe(
+      "true",
+    );
+    fireKeyDown(trigger, "t");
+    expect(container.querySelector("[data-value='pro']")?.getAttribute("aria-selected")).toBe(
+      "true",
+    );
+  });
+
   it("navigates labelled select opt groups and submits the selected option", () => {
     const { container } = render(
       <form>

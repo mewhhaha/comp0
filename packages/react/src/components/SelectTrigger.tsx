@@ -5,7 +5,7 @@ import {
   type ElementType,
   type MouseEvent,
 } from "react";
-import { dataAttr, useComposedRefs } from "@comp0/core";
+import { dataAttr, findTypeaheadMatch, useComposedRefs, useTypeaheadSearch } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field.js";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { Button } from "./Button.js";
@@ -32,6 +32,7 @@ export function SelectTrigger({
   const resolvedDisabled = Boolean(disabled || select.disabled);
   const description = describedBy(field, props["aria-describedby"]);
   const composedRef = useComposedRefs(ref, popover.setTriggerElement);
+  const typeaheadSearch = useTypeaheadSearch();
   let ariaLabelledBy = props["aria-labelledby"];
   if (ariaLabelledBy === undefined && props["aria-label"] === undefined) {
     ariaLabelledBy = `${select.labelId} ${select.triggerId}`;
@@ -58,9 +59,28 @@ export function SelectTrigger({
     onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
       onKeyDown?.(event as never);
       if (event.defaultPrevented || popover.open) return;
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        popover.setOpen(true);
+        return;
+      }
+      // Typing on the closed trigger changes the selection, like a native
+      // select. The listbox stays mounted while hidden, so its options are
+      // readable here.
+      if (event.key.length !== 1 || event.key.trim() === "") return;
+      const listBox = event.currentTarget.ownerDocument.getElementById(select.listBoxId);
+      if (!listBox) return;
+      const items = [...listBox.querySelectorAll<HTMLElement>("[role='option']")].map(
+        (element) => ({
+          key: element.getAttribute("data-value") ?? "",
+          textValue: element.textContent ?? "",
+          disabled: element.hasAttribute("data-disabled"),
+        }),
+      );
+      const match = findTypeaheadMatch(items, typeaheadSearch(event.key), select.selectedKey);
+      if (!match) return;
       event.preventDefault();
-      popover.setOpen(true);
+      select.setSelectedKey(match);
     },
   });
 }

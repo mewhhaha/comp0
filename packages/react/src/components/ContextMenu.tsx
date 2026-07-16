@@ -13,6 +13,7 @@ import {
   ContextMenuContext,
   MenuRootContext,
   type ContextMenuContextValue,
+  type MenuInitialFocus,
   type MenuRootContextValue,
 } from "./menu-shared.js";
 import { PopoverContext } from "./overlay-shared.js";
@@ -48,7 +49,8 @@ export function ContextMenu({
   const generatedId = useId().replace(/:/g, "");
   const areaElement = useRef<HTMLElement | null>(null);
   const restoreElement = useRef<HTMLElement | null>(null);
-  const initialFocus = useRef<() => void>(() => undefined);
+  const initialFocus = useRef<(position: MenuInitialFocus) => void>(() => undefined);
+  const pendingInitialFocus = useRef<MenuInitialFocus>("first");
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
@@ -76,7 +78,12 @@ export function ContextMenu({
       restoreFocus();
     },
     focusInitial() {
-      initialFocus.current();
+      const focusPosition = pendingInitialFocus.current;
+      pendingInitialFocus.current = "first";
+      initialFocus.current(focusPosition);
+    },
+    requestInitialFocus(focusPosition) {
+      pendingInitialFocus.current = focusPosition;
     },
     setInitialFocus(focus) {
       initialFocus.current = focus ?? (() => undefined);

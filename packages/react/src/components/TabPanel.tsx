@@ -15,6 +15,9 @@ export function TabPanel({ value, ref, ...props }: TabPanelProps & RefProp<HTMLD
       ref={ref}
       id={panelId}
       role="tabpanel"
+      // In the tab sequence so keyboard users reach text-only panel content
+      // after the tab list, per the APG tabs pattern.
+      tabIndex={props.tabIndex ?? 0}
       aria-labelledby={tabId}
       hidden={!selected}
       data-selected={dataAttr(selected)}

@@ -29,6 +29,9 @@ export function TooltipTrigger({
     ref: triggerRef,
     id: props.id ?? tooltip?.triggerId,
     type: isNativeButton ? (props.type ?? "button") : undefined,
+    // Focus must reach non-native triggers or the tooltip never opens for
+    // keyboard users. Fragment triggers keep their own element's focusability.
+    tabIndex: isNativeButton || as === Fragment ? props.tabIndex : (props.tabIndex ?? 0),
     style: triggerAnchorStyle(tooltip?.triggerId, style),
     "aria-describedby": ariaDescribedBy,
     "data-open": dataAttr(tooltip?.open),

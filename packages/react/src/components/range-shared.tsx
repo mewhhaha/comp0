@@ -131,14 +131,21 @@ export function valueAtPointer(
   orientation: "horizontal" | "vertical",
   min: number,
   max: number,
+  rtl = false,
 ) {
   let fraction: number;
   if (orientation === "horizontal") {
     if (rect.width === 0) return undefined;
     fraction = (point.clientX - rect.left) / rect.width;
+    if (rtl) fraction = 1 - fraction;
   } else {
     if (rect.height === 0) return undefined;
     fraction = (rect.bottom - point.clientY) / rect.height;
   }
   return min + Math.min(1, Math.max(0, fraction)) * (max - min);
+}
+
+/** A horizontal track's low end sits on the right in right-to-left layouts. */
+export function isRtl(element: HTMLElement) {
+  return getComputedStyle(element).direction === "rtl";
 }

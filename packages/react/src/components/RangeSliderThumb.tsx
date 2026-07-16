@@ -1,7 +1,12 @@
 import { useContext, useRef, useState } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
-import { RangeSliderContext, valueAtPointer, type RangeSliderThumbProps } from "./range-shared.js";
+import {
+  isRtl,
+  RangeSliderContext,
+  valueAtPointer,
+  type RangeSliderThumbProps,
+} from "./range-shared.js";
 export type { RangeSliderThumbProps } from "./range-shared.js";
 
 /**
@@ -59,9 +64,15 @@ export function RangeSliderThumb({
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.defaultPrevented || disabled) return;
+        // ArrowRight moves toward the visual high end, which in a horizontal
+        // right-to-left layout is the low end of the range.
+        let increase = step;
+        if (orientation === "horizontal" && isRtl(event.currentTarget)) increase = -step;
         let next: number | undefined;
-        if (event.key === "ArrowRight" || event.key === "ArrowUp") next = ownValue + step;
-        if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = ownValue - step;
+        if (event.key === "ArrowRight") next = ownValue + increase;
+        if (event.key === "ArrowLeft") next = ownValue - increase;
+        if (event.key === "ArrowUp") next = ownValue + step;
+        if (event.key === "ArrowDown") next = ownValue - step;
         if (event.key === "PageUp") next = ownValue + step * 10;
         if (event.key === "PageDown") next = ownValue - step * 10;
         if (event.key === "Home") next = ownMin;
@@ -85,7 +96,14 @@ export function RangeSliderThumb({
         if (!state || state.pointerId !== event.pointerId) return;
         const rect = trackRect(event.currentTarget);
         if (!rect) return;
-        const next = valueAtPointer(event, rect, orientation, min, max);
+        const next = valueAtPointer(
+          event,
+          rect,
+          orientation,
+          min,
+          max,
+          orientation === "horizontal" && isRtl(event.currentTarget),
+        );
         if (next !== undefined) setThumbValue(thumb, next);
       }}
       onPointerUp={(event) => {

@@ -1,7 +1,12 @@
 import { useContext } from "react";
 import { composeRefs } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
-import { RangeSliderContext, valueAtPointer, type RangeSliderTrackProps } from "./range-shared.js";
+import {
+  isRtl,
+  RangeSliderContext,
+  valueAtPointer,
+  type RangeSliderTrackProps,
+} from "./range-shared.js";
 export type { RangeSliderTrackProps } from "./range-shared.js";
 
 /**
@@ -32,6 +37,7 @@ export function RangeSliderTrack({
           context.orientation,
           context.min,
           context.max,
+          context.orientation === "horizontal" && isRtl(event.currentTarget),
         );
         if (next === undefined) return;
         event.preventDefault();

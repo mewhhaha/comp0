@@ -42,7 +42,7 @@ export function DialogContent({
       id={props.id ?? dialog?.contentId}
       role={props.role ?? "dialog"}
       aria-modal={props["aria-modal"] ?? true}
-      aria-labelledby={props["aria-labelledby"] ?? dialog?.triggerId}
+      aria-labelledby={props["aria-labelledby"]}
       data-open={dataAttr(dialog?.open)}
       data-slot={dataSlot(props, "dialog-content")}
       onCancel={(event) => {

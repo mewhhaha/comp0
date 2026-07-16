@@ -57,7 +57,7 @@ describe("feed composition", () => {
     expect(feed.getAttribute("aria-label")).toBe("Recipe feed");
     expect(feed.hasAttribute("aria-busy")).toBe(false);
     expect(articles).toHaveLength(3);
-    expect(articles.map((article) => article.tabIndex)).toEqual([-1, -1, -1]);
+    expect(articles.map((article) => article.tabIndex)).toEqual([0, 0, 0]);
     expect(articles.map((article) => article.getAttribute("aria-posinset"))).toEqual([
       "1",
       "2",

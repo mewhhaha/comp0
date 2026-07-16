@@ -29,7 +29,9 @@ export function FeedArticle({ ref, ...props }: FeedArticleProps & RefProp<HTMLEl
     <article
       {...props}
       ref={composeRefs(ref, setElement)}
-      tabIndex={-1}
+      // In the tab sequence per the APG feed pattern, so keyboard users can
+      // reach articles and the feed's PageUp/PageDown navigation.
+      tabIndex={props.tabIndex ?? 0}
       aria-posinset={props["aria-posinset"] ?? (position >= 0 ? position + 1 : undefined)}
       aria-setsize={props["aria-setsize"] ?? (position >= 0 ? setSize : undefined)}
     />
