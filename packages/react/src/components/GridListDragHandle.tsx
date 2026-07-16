@@ -1,11 +1,7 @@
 import { useContext, type ButtonHTMLAttributes } from "react";
 import { dataAttr } from "@comp0/core";
 import { type RefProp } from "../shared.js";
-import {
-  GridListDndContext,
-  GridListItemContext,
-  GridListReorderGroupContext,
-} from "./grid-list-shared.js";
+import { GridListDndContext, GridListItemContext } from "./grid-list-shared.js";
 
 export type GridListDragHandleProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
@@ -26,9 +22,7 @@ export function GridListDragHandle({
 }: GridListDragHandleProps & RefProp<HTMLButtonElement>) {
   const item = useContext(GridListItemContext);
   const dnd = useContext(GridListDndContext);
-  const group = useContext(GridListReorderGroupContext);
   if (!dnd || !item?.reorderable) return null;
-  const list = item.listName;
   const moving = dnd.dragValue === item.value;
 
   return (
@@ -43,12 +37,12 @@ export function GridListDragHandle({
       data-slot="grid-list-drag-handle"
       onKeyDown={(event) => {
         onKeyDown?.(event);
-        if (event.defaultPrevented || !group || !list) return;
+        if (event.defaultPrevented) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           event.stopPropagation();
-          if (moving) group.commitKeyboardMove();
-          else group.beginKeyboardMove(list, item.value);
+          if (moving) dnd.commitKeyboardMove();
+          else dnd.beginKeyboardMove(item.value);
           return;
         }
         if (!moving) return;
@@ -56,27 +50,27 @@ export function GridListDragHandle({
         if (direction) {
           event.preventDefault();
           event.stopPropagation();
-          group.retargetKeyboardMove(direction);
+          dnd.retargetKeyboardMove(direction);
           return;
         }
         if (event.key === "Escape") {
           event.preventDefault();
           event.stopPropagation();
-          group.cancelKeyboardMove();
+          dnd.cancelKeyboardMove();
         }
       }}
       onClick={(event) => {
         onClick?.(event);
-        if (event.defaultPrevented || !group || !list) return;
+        if (event.defaultPrevented) return;
         // Assistive technology can activate the button with a synthesized
         // click that never produces key events.
         if (event.detail !== 0) return;
-        if (moving) group.commitKeyboardMove();
-        else group.beginKeyboardMove(list, item.value);
+        if (moving) dnd.commitKeyboardMove();
+        else dnd.beginKeyboardMove(item.value);
       }}
       onBlur={(event) => {
         onBlur?.(event);
-        if (moving && group) group.cancelKeyboardMove();
+        if (moving) dnd.cancelKeyboardMove();
       }}
     />
   );

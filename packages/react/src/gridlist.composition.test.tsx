@@ -295,6 +295,65 @@ describe("grid list composition", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
+  it("moves a row from the drag handle keyboard session with a live preview", async () => {
+    const spy = vi.fn();
+    const { container } = render(
+      <ReorderableList spy={spy} withHandle canReorder={(next) => next.at(-1) === "notes.txt"} />,
+    );
+    const handle = container.querySelector<HTMLElement>(
+      "[data-value='report.pdf'] [data-slot='grid-list-drag-handle']",
+    )!;
+    const reportRow = () => container.querySelector<HTMLElement>("[data-value='report.pdf']")!;
+    const announcement = () => container.querySelector("[aria-live]")?.textContent;
+
+    fireKeyDown(handle, "Enter");
+    expect(reportRow().hasAttribute("data-dragging")).toBe(true);
+    expect(announcement()).toBe(
+      "Moving report.pdf. Use the arrow keys to choose a position, Enter to drop, Escape to cancel.",
+    );
+
+    fireKeyDown(handle, "ArrowDown");
+    expect(reportRow().hasAttribute("data-drag-previewing")).toBe(true);
+    expect(
+      container.querySelector("[data-value='notes.txt']")!.hasAttribute("data-drop-before"),
+    ).toBe(true);
+    expect(announcement()).toBe("Moving report.pdf to position 2 of 3.");
+
+    // The pinned last row vetoes position 3, so ArrowDown has nowhere to go.
+    fireKeyDown(handle, "ArrowDown");
+    expect(announcement()).toBe("Cannot move report.pdf there.");
+
+    // Arrowing back to the row's own slot withdraws the pending move.
+    fireKeyDown(handle, "ArrowUp");
+    expect(reportRow().hasAttribute("data-drag-previewing")).toBe(false);
+    expect(announcement()).toBe("Moving report.pdf to position 1 of 3.");
+
+    fireKeyDown(handle, "ArrowDown");
+    fireKeyDown(handle, "Enter");
+    expect(spy).toHaveBeenLastCalledWith(["photos.zip", "report.pdf", "notes.txt"]);
+    expect(announcement()).toBe("Moved report.pdf to position 2 of 3.");
+    await flushTimers();
+    expect(document.activeElement).toBe(reportRow());
+  });
+
+  it("cancels a plain-list keyboard move with Escape", () => {
+    const spy = vi.fn();
+    const { container } = render(<ReorderableList spy={spy} withHandle />);
+    const handle = container.querySelector<HTMLElement>(
+      "[data-value='report.pdf'] [data-slot='grid-list-drag-handle']",
+    )!;
+    const reportRow = container.querySelector<HTMLElement>("[data-value='report.pdf']")!;
+
+    fireKeyDown(handle, "Enter");
+    fireKeyDown(handle, "ArrowDown");
+    fireKeyDown(handle, "Escape");
+    expect(spy).not.toHaveBeenCalled();
+    expect(reportRow.hasAttribute("data-dragging")).toBe(false);
+    expect(container.querySelector("[aria-live]")?.textContent).toBe(
+      "Cancelled moving report.pdf.",
+    );
+  });
+
   it("shows a styleable drop preview while dragging and reorders on drop", () => {
     const spy = vi.fn();
     const { container } = render(<ReorderableList spy={spy} />);

@@ -722,7 +722,7 @@ const accessibility: Record<string, string[]> = {
     "Keep row focus and row selection visibly distinct.",
     "Reach row controls with ArrowRight; do not add extra tab stops.",
     "Reordering never requires a pointer: Alt+Arrow moves the focused row and a live region announces its new position.",
-    "In a group, Enter on the drag handle starts a keyboard move: arrows choose a position across lists with the same drop preview pointer drags show, Enter drops, Escape cancels, and every step is announced.",
+    "Enter on the drag handle starts a keyboard move: arrows choose a position — across lists in a group — with the same drop preview pointer drags show, Enter drops, Escape cancels, and every step is announced.",
     "For cross-list moves, render GridListMoveButton controls so the same operation works with a click, tap, Enter, or Space without dragging.",
   ],
   table: [
@@ -3156,12 +3156,12 @@ const navigation = [
       {
         keys: ["Enter"],
         action: "Starts moving the row, then drops it at the chosen position.",
-        scope: "on GridListDragHandle, in a group",
+        scope: "on GridListDragHandle",
       },
       {
         keys: ["ArrowUp", "ArrowDown"],
-        action: "Chooses a position in the current list while moving.",
-        scope: "on GridListDragHandle, in a group",
+        action: "Chooses a position in the list while moving.",
+        scope: "on GridListDragHandle",
       },
       {
         keys: ["ArrowLeft", "ArrowRight"],
@@ -3171,7 +3171,7 @@ const navigation = [
       {
         keys: ["Escape"],
         action: "Cancels the move.",
-        scope: "on GridListDragHandle, in a group",
+        scope: "on GridListDragHandle",
       },
     ],
     [

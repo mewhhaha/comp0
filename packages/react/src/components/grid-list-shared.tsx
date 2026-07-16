@@ -97,6 +97,11 @@ export type GridListDndContextValue = {
   commitDrop: () => void;
   endDrag: () => void;
   moveItem: (value: string, delta: -1 | 1) => void;
+  /** Starts a keyboard move session: arrows retarget, Enter drops, Escape cancels. */
+  beginKeyboardMove: (value: string) => void;
+  retargetKeyboardMove: (direction: "up" | "down" | "left" | "right") => void;
+  commitKeyboardMove: () => void;
+  cancelKeyboardMove: () => void;
 };
 
 export const GridListDndContext = createContext<GridListDndContextValue | null>(null);
