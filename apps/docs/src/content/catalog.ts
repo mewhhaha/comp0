@@ -228,7 +228,7 @@ const lessons: Record<string, LessonCopy> = {
     "Like arranging labelled crates on warehouse shelving: every crate occupies known slots, and larger crates reserve several together.",
     "Use it for customizable dashboards and boards where position and size must persist as grid units.",
     "Start Inventory with its column count, row count, and a complete layout.",
-    "Render one InventoryItem per layout value, with optional move and resize handles inside each card.",
+    "Render one InventoryItem per layout value; arrow between cards, then Tab through the focused card's optional move and resize handles.",
     "Add InventoryPreview for a styleable pointer or Shift-arrow landing overlay; blocked placements stay put and only the preview becomes invalid.",
     '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryPreview />\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    Sales\n    <InventoryResizeHandle />\n  </InventoryItem>\n</Inventory>;',
   ),
@@ -774,7 +774,8 @@ const accessibility: Record<string, string[]> = {
     "Inside a resizable TableColumn the handle hides itself; keyboard resizing stays on the header.",
   ],
   inventory: [
-    "Give Inventory an aria-label or aria-labelledby; it renders a native ordered list rather than claiming ARIA grid behavior.",
+    "Give Inventory an aria-label or aria-labelledby; it renders a native ordered list with one roving item tab stop rather than claiming ARIA grid behavior.",
+    "Arrow keys move item focus by persisted visual position. Tab enters the focused item's controls and leaves Inventory after its last control.",
     "Keep both handles visible and clearly named. Arrow keys act immediately; Shift plus Arrow keeps a preview active until Shift is released.",
     "InventoryPreview is aria-hidden; use its valid and invalid styling only as visual reinforcement for the live announcements.",
     "Keep item DOM order meaningful even when visual positions change, and announce saved ordering separately when reading order must also change.",
@@ -3208,7 +3209,7 @@ const navigation = [
       p(
         "InventoryItem",
         "item",
-        "Native list item placed from its matching layout entry.",
+        "Roving-focus native list item placed from its matching layout entry.",
         true,
         false,
         [
@@ -3243,6 +3244,21 @@ const navigation = [
       ),
     ],
     [
+      {
+        keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Moves focus to the closest item in that visual direction.",
+        scope: "on InventoryItem",
+      },
+      {
+        keys: ["Tab"],
+        action: "Steps through the focused item's controls, then leaves Inventory.",
+        scope: "on InventoryItem or one of its controls",
+      },
+      {
+        keys: ["Shift", "Tab"],
+        action: "Steps backward through the focused item's controls and back to its item.",
+        scope: "on an InventoryItem control",
+      },
       {
         keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
         action: "Moves the item one cell in that direction.",

@@ -93,6 +93,96 @@ describe("inventory composition", () => {
     expect(move.getAttribute("aria-keyshortcuts")).toContain("Shift+ArrowRight");
     expect(resize.getAttribute("aria-label")).toBe("Resize Revenue");
     expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    const items = container.querySelectorAll<HTMLElement>("li[data-value]");
+    expect(items[0]!.tabIndex).toBe(0);
+    expect([...items].slice(1).every((item) => item.tabIndex === -1)).toBe(true);
+    expect(
+      [...container.querySelectorAll("button")].every((button) => button.tabIndex === -1),
+    ).toBe(true);
+  });
+
+  it("moves item focus to the closest card in each visual direction", () => {
+    const { container } = render(
+      <Inventory
+        columns={5}
+        rows={5}
+        defaultValue={[
+          { value: "center", column: 3, row: 3, columnSpan: 1, rowSpan: 1 },
+          { value: "up", column: 3, row: 1, columnSpan: 1, rowSpan: 1 },
+          { value: "right", column: 5, row: 3, columnSpan: 1, rowSpan: 1 },
+          { value: "down", column: 3, row: 5, columnSpan: 1, rowSpan: 1 },
+          { value: "left", column: 1, row: 3, columnSpan: 1, rowSpan: 1 },
+        ]}
+      >
+        <InventoryItem value="center">Center</InventoryItem>
+        <InventoryItem value="up">Up</InventoryItem>
+        <InventoryItem value="right">Right</InventoryItem>
+        <InventoryItem value="down">Down</InventoryItem>
+        <InventoryItem value="left">Left</InventoryItem>
+      </Inventory>,
+    );
+    const item = (value: string) =>
+      container.querySelector<HTMLElement>(`li[data-value='${value}']`)!;
+
+    for (const [key, value] of [
+      ["ArrowUp", "up"],
+      ["ArrowRight", "right"],
+      ["ArrowDown", "down"],
+      ["ArrowLeft", "left"],
+    ] as const) {
+      act(() => item("center").focus());
+      fireKeyDown(item("center"), key);
+      expect(document.activeElement).toBe(item(value));
+      expect(item(value).tabIndex).toBe(0);
+      expect(item("center").tabIndex).toBe(-1);
+    }
+  });
+
+  it("prefers the card most aligned with the movement direction", () => {
+    const { container } = renderInventory();
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
+
+    act(() => revenue.focus());
+    fireKeyDown(revenue, "ArrowRight");
+
+    expect(document.activeElement).toBe(conversion);
+  });
+
+  it("tabs through the focused card controls before leaving the inventory", () => {
+    const { container } = renderInventory();
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const [move, resize] = revenue.querySelectorAll<HTMLButtonElement>("button");
+
+    act(() => revenue.focus());
+    fireKeyDown(revenue, "Tab");
+    expect(document.activeElement).toBe(move);
+    fireKeyDown(move!, "Tab");
+    expect(document.activeElement).toBe(resize);
+
+    const leaving = new KeyboardEvent("keydown", {
+      key: "Tab",
+      bubbles: true,
+      cancelable: true,
+    });
+    act(() => resize!.dispatchEvent(leaving));
+    expect(leaving.defaultPrevented).toBe(false);
+
+    fireKeyDown(resize!, "Tab", { shiftKey: true });
+    expect(document.activeElement).toBe(move);
+    fireKeyDown(move!, "Tab", { shiftKey: true });
+    expect(document.activeElement).toBe(revenue);
+  });
+
+  it("makes the focused card the inventory tab stop", () => {
+    const { container } = renderInventory();
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const alerts = container.querySelector<HTMLElement>('[data-value="alerts"]')!;
+
+    act(() => alerts.focus());
+
+    expect(alerts.tabIndex).toBe(0);
+    expect(revenue.tabIndex).toBe(-1);
   });
 
   it("moves by grid units and pushes obstructing items forward", () => {

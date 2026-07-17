@@ -54,7 +54,7 @@ export function Example() {
         <div>
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">Store overview</h2>
           <p className="mt-1 text-sm/6 text-zinc-600 dark:text-zinc-400">
-            Drag a grip, use an arrow immediately, or hold Shift with arrows for a preview.
+            Arrow between cards, Tab into its grips, or drag a grip with the pointer.
           </p>
         </div>
         <button
@@ -72,7 +72,7 @@ export function Example() {
           rows={6}
           value={layout}
           onChange={setLayout}
-          className="relative h-[30rem] min-w-[42rem] list-none gap-2 rounded-xl border border-zinc-950/10 bg-zinc-100/70 p-2 dark:border-white/10 dark:bg-zinc-950"
+          className="relative h-[30rem] min-w-[38rem] list-none gap-2 rounded-xl border border-zinc-950/10 bg-zinc-100/70 p-2 dark:border-white/10 dark:bg-zinc-950"
         >
           <li
             aria-hidden="true"
@@ -93,7 +93,7 @@ export function Example() {
                 key={entry.value}
                 value={entry.value}
                 textValue={card.title}
-                className="relative z-10 min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 bg-white p-3 shadow-sm data-dragging:opacity-70 data-resizing:ring-2 data-resizing:ring-teal-500 dark:border-white/10 dark:bg-zinc-900"
+                className="relative z-10 min-w-0 scroll-mx-2 overflow-hidden rounded-lg border border-zinc-950/10 bg-white p-3 shadow-sm outline-teal-600 focus-visible:outline-2 data-dragging:opacity-70 data-resizing:ring-2 data-resizing:ring-teal-500 dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

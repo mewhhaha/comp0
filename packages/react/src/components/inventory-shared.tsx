@@ -1,4 +1,5 @@
 import { createContext, useContext, type KeyboardEvent, type PointerEvent } from "react";
+import { FOCUSABLE_SELECTOR } from "./grid-list-shared.js";
 
 export type InventoryLayoutEntry = {
   value: string;
@@ -15,11 +16,13 @@ export type InventoryInteraction = "move" | "resize";
 export type InventoryContextValue = {
   activeValue: string;
   columns: number;
+  focusedValue: string;
   interaction: InventoryInteraction | "";
   layout: InventoryLayout;
   previewEntry: InventoryLayoutEntry | null;
   previewInvalid: boolean;
   rows: number;
+  setFocusedValue: (value: string) => void;
   cancelPointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
   continuePointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
   finishKeyboardInteraction: (value: string) => void;
@@ -56,6 +59,12 @@ export function useInventoryItemContext(part: string) {
   const context = useContext(InventoryItemContext);
   if (!context) throw new Error(`${part} must be rendered inside InventoryItem.`);
   return context;
+}
+
+export function inventoryItemFocusables(item: HTMLLIElement) {
+  return [...item.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
+    (element) => !element.matches(":disabled"),
+  );
 }
 
 function overlaps(first: InventoryLayoutEntry, second: InventoryLayoutEntry) {

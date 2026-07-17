@@ -1,4 +1,5 @@
 import {
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -9,6 +10,7 @@ import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
 import { dataSlot, type RefProp } from "../shared.js";
 import {
   assertInventoryLayout,
+  inventoryItemFocusables,
   InventoryContext,
   resolveInventoryLayout,
   type InventoryInteraction,
@@ -16,6 +18,8 @@ import {
   type InventoryLayoutEntry,
 } from "./inventory-shared.js";
 import { visuallyHiddenStyle } from "./visually-hidden-shared.js";
+
+/* oxlint-disable jsx-a11y/no-noninteractive-element-interactions -- The native list coordinates roving item focus and Tab entry without claiming ARIA grid semantics. */
 
 type PointerInteraction = {
   pointerId: number;
@@ -78,6 +82,7 @@ export function Inventory({
   onChange,
   canChange,
   children,
+  onKeyDown,
   style,
   ref,
   ...props
@@ -94,9 +99,15 @@ export function Inventory({
   const pointerInteraction = useRef<PointerInteraction | null>(null);
   const [interaction, setInteraction] = useState<InventoryInteraction | "">("");
   const [activeValue, setActiveValue] = useState("");
+  const [focusedValue, setFocusedValue] = useState(layout[0]?.value ?? "");
   const [previewEntry, setPreviewEntry] = useState<InventoryLayoutEntry | null>(null);
   const [previewInvalid, setPreviewInvalid] = useState(false);
   const [announcement, setAnnouncement] = useState("");
+
+  useLayoutEffect(() => {
+    if (layout.some((entry) => entry.value === focusedValue)) return;
+    setFocusedValue(layout[0]?.value ?? "");
+  }, [focusedValue, layout]);
 
   const announce = (entry: InventoryLayoutEntry, label: string, kind: InventoryInteraction) => {
     if (kind === "move") {
@@ -350,11 +361,13 @@ export function Inventory({
   const context = {
     activeValue,
     columns,
+    focusedValue,
     interaction,
     layout,
     previewEntry,
     previewInvalid,
     rows,
+    setFocusedValue,
     cancelPointerInteraction,
     continuePointerInteraction,
     finishKeyboardInteraction,
@@ -371,6 +384,101 @@ export function Inventory({
         data-dragging={dataAttr(interaction === "move")}
         data-resizing={dataAttr(interaction === "resize")}
         data-slot={dataSlot(props, "inventory")}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (event.defaultPrevented) return;
+          const target = event.target instanceof HTMLElement ? event.target : null;
+          if (!target) return;
+          const items = [...event.currentTarget.children].filter(
+            (element): element is HTMLLIElement =>
+              element instanceof HTMLLIElement && element.dataset["value"] !== undefined,
+          );
+          const item = items.find((candidate) => candidate.contains(target));
+          if (!item) return;
+
+          if (event.key === "Tab") {
+            const focusables = inventoryItemFocusables(item);
+            if (event.shiftKey) {
+              if (target === item) return;
+              event.preventDefault();
+              const previous = focusables[focusables.indexOf(target) - 1];
+              if (previous) previous.focus();
+              else item.focus();
+              return;
+            }
+            const next = focusables[focusables.indexOf(target) + 1];
+            if (next) {
+              event.preventDefault();
+              next.focus();
+            }
+            return;
+          }
+
+          if (target !== item || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+          }
+          if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+            return;
+          }
+          const current = layout.find((entry) => entry.value === item.dataset["value"]);
+          if (!current) return;
+          const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
+          const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+          let currentPrimaryCenter = current.column + current.columnSpan / 2;
+          let currentCrossStart = current.row;
+          let currentCrossEnd = current.row + current.rowSpan;
+          if (vertical) {
+            currentPrimaryCenter = current.row + current.rowSpan / 2;
+            currentCrossStart = current.column;
+            currentCrossEnd = current.column + current.columnSpan;
+          }
+          const candidates = layout.flatMap((entry, index) => {
+            if (entry.value === current.value) return [];
+            const element = items.find((candidate) => candidate.dataset["value"] === entry.value);
+            if (!element) return [];
+            let primaryCenter = entry.column + entry.columnSpan / 2;
+            let crossStart = entry.row;
+            let crossEnd = entry.row + entry.rowSpan;
+            if (vertical) {
+              primaryCenter = entry.row + entry.rowSpan / 2;
+              crossStart = entry.column;
+              crossEnd = entry.column + entry.columnSpan;
+            }
+            if (forward && primaryCenter <= currentPrimaryCenter) return [];
+            if (!forward && primaryCenter >= currentPrimaryCenter) return [];
+            const crossGap = Math.max(
+              currentCrossStart - crossEnd,
+              crossStart - currentCrossEnd,
+              0,
+            );
+            return [
+              {
+                crossGap,
+                crossDistance: Math.abs(
+                  (crossStart + crossEnd) / 2 - (currentCrossStart + currentCrossEnd) / 2,
+                ),
+                element,
+                index,
+                primaryDistance: Math.abs(primaryCenter - currentPrimaryCenter),
+                value: entry.value,
+              },
+            ];
+          });
+          candidates.sort(
+            (first, second) =>
+              first.crossGap - second.crossGap ||
+              first.crossDistance - second.crossDistance ||
+              first.primaryDistance - second.primaryDistance ||
+              first.index - second.index,
+          );
+          const next = candidates[0];
+          if (!next) return;
+          event.preventDefault();
+          item.tabIndex = -1;
+          next.element.tabIndex = 0;
+          setFocusedValue(next.value);
+          next.element.focus();
+        }}
         style={{
           ...style,
           display: "grid",
