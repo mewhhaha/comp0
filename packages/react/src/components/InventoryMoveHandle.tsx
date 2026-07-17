@@ -8,8 +8,8 @@ export type InventoryMoveHandleProps = ButtonHTMLAttributes<HTMLButtonElement>;
 export function InventoryMoveHandle({
   disabled,
   onBlur,
+  onClick,
   onKeyDown,
-  onKeyUp,
   onPointerCancel,
   onPointerDown,
   onPointerMove,
@@ -29,26 +29,37 @@ export function InventoryMoveHandle({
       disabled={disabled}
       aria-label={props["aria-label"] ?? `Move ${item.label}`}
       aria-keyshortcuts={
-        props["aria-keyshortcuts"] ??
-        "ArrowLeft ArrowRight ArrowUp ArrowDown Shift+ArrowLeft Shift+ArrowRight Shift+ArrowUp Shift+ArrowDown"
+        props["aria-keyshortcuts"] ?? "Enter Space ArrowLeft ArrowRight ArrowUp ArrowDown Escape"
       }
       data-dragging={dataAttr(dragging)}
       data-slot={dataSlot(props, "inventory-move-handle")}
       onBlur={(event) => {
         onBlur?.(event);
-        if (!event.defaultPrevented) inventory.finishKeyboardInteraction(item.value);
+        if (!event.defaultPrevented && dragging) {
+          inventory.cancelKeyboardInteraction(item.value);
+        }
       }}
       onKeyDown={(event) => {
         onKeyDown?.(event);
-        if (!event.defaultPrevented && !disabled) {
-          inventory.handleKeyboardInteraction(event, item.value, item.label, "move");
+        if (event.defaultPrevented || disabled) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          if (dragging) inventory.commitKeyboardInteraction(item.value);
+          else inventory.beginKeyboardInteraction(item.value, item.label, "move");
+          return;
         }
+        if (event.key === "Escape" && dragging) {
+          event.preventDefault();
+          inventory.cancelKeyboardInteraction(item.value);
+          return;
+        }
+        inventory.handleKeyboardInteraction(event, item.value, "move");
       }}
-      onKeyUp={(event) => {
-        onKeyUp?.(event);
-        if (!event.defaultPrevented && event.key === "Shift") {
-          inventory.finishKeyboardInteraction(item.value);
-        }
+      onClick={(event) => {
+        onClick?.(event);
+        if (event.defaultPrevented || disabled || event.detail !== 0) return;
+        if (dragging) inventory.commitKeyboardInteraction(item.value);
+        else inventory.beginKeyboardInteraction(item.value, item.label, "move");
       }}
       onPointerDown={(event) => {
         onPointerDown?.(event);

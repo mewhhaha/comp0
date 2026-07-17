@@ -157,25 +157,41 @@ export function Inventory({
     return entry ? { entry, status: "changed" } : undefined;
   };
 
-  const handleKeyboardInteraction = (
-    event: KeyboardEvent<HTMLButtonElement>,
+  const beginKeyboardInteraction = (
     itemValue: string,
     label: string,
     kind: InventoryInteraction,
   ) => {
     const current = keyboardInteraction.current;
-    if (event.key === "Escape" && current?.value === itemValue) {
-      event.preventDefault();
-      setLayout(current.layout);
-      keyboardInteraction.current = null;
-      setInteraction("");
-      setActiveValue("");
-      setPreviewEntry(null);
-      setPreviewInvalid(false);
-      setAnnouncement(`${current.label} change cancelled.`);
-      return;
-    }
+    const startingLayout = current?.layout ?? layout;
+    const entry = startingLayout.find((candidate) => candidate.value === itemValue);
+    if (!entry) return;
+    if (current) setLayout(startingLayout);
+    keyboardInteraction.current = {
+      value: itemValue,
+      label,
+      interaction: kind,
+      layout: startingLayout,
+      latestEntry: entry,
+      previewInvalid: false,
+    };
+    setActiveValue(itemValue);
+    setInteraction(kind);
+    setPreviewEntry(entry);
+    setPreviewInvalid(false);
+    const action = kind === "move" ? "Moving" : "Resizing";
+    setAnnouncement(
+      `${action} ${label}. Use the arrow keys to make changes, Enter to finish, Escape to cancel.`,
+    );
+  };
 
+  const handleKeyboardInteraction = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    itemValue: string,
+    kind: InventoryInteraction,
+  ) => {
+    const active = keyboardInteraction.current;
+    if (!active || active.value !== itemValue || active.interaction !== kind) return;
     let columnDelta = 0;
     let rowDelta = 0;
     if (event.key === "ArrowLeft") columnDelta = -1;
@@ -184,40 +200,6 @@ export function Inventory({
     else if (event.key === "ArrowDown") rowDelta = 1;
     else return;
     event.preventDefault();
-    if (!event.shiftKey) {
-      const update = updateEntry(layout, itemValue, kind, (entry) => {
-        if (kind === "move") {
-          return { ...entry, column: entry.column + columnDelta, row: entry.row + rowDelta };
-        }
-        return {
-          ...entry,
-          columnSpan: Math.max(1, entry.columnSpan + columnDelta),
-          rowSpan: Math.max(1, entry.rowSpan + rowDelta),
-        };
-      });
-      if (update?.status === "changed") announce(update.entry, label, kind);
-      if (update?.status === "invalid") setAnnouncement(`${label} cannot fit there.`);
-      return;
-    }
-
-    let active = keyboardInteraction.current;
-    if (!active) {
-      const entry = layout.find((candidate) => candidate.value === itemValue);
-      if (!entry) return;
-      active = {
-        value: itemValue,
-        label,
-        interaction: kind,
-        layout,
-        latestEntry: entry,
-        previewInvalid: false,
-      };
-      keyboardInteraction.current = active;
-      setActiveValue(itemValue);
-      setInteraction(kind);
-      setPreviewEntry(entry);
-      setPreviewInvalid(false);
-    }
     const update = updateEntry(active.layout, itemValue, kind, () => {
       if (kind === "move") {
         return {
@@ -236,26 +218,42 @@ export function Inventory({
     active.previewInvalid = update.status === "invalid";
     setPreviewEntry(update.entry);
     setPreviewInvalid(active.previewInvalid);
-    if (update.status === "changed") active.latestEntry = update.entry;
+    if (update.status === "changed") {
+      active.latestEntry = update.entry;
+      announce(update.entry, active.label, kind);
+    }
+    if (update.status === "invalid") setAnnouncement(`${active.label} cannot fit there.`);
     if (update.status === "unchanged" && !hasSamePlacement(active.latestEntry, update.entry)) {
       setLayout(active.layout);
       active.latestEntry = update.entry;
     }
   };
 
-  const finishKeyboardInteraction = (itemValue: string) => {
-    const current = keyboardInteraction.current;
-    if (!current || current.value !== itemValue) return;
+  const clearKeyboardInteraction = () => {
     keyboardInteraction.current = null;
     setInteraction("");
     setActiveValue("");
     setPreviewEntry(null);
     setPreviewInvalid(false);
+  };
+
+  const commitKeyboardInteraction = (itemValue: string) => {
+    const current = keyboardInteraction.current;
+    if (!current || current.value !== itemValue) return;
+    clearKeyboardInteraction();
     if (current.previewInvalid) {
       setAnnouncement(`${current.label} cannot fit there.`);
     } else {
       announce(current.latestEntry, current.label, current.interaction);
     }
+  };
+
+  const cancelKeyboardInteraction = (itemValue: string) => {
+    const current = keyboardInteraction.current;
+    if (!current || current.value !== itemValue) return;
+    setLayout(current.layout);
+    clearKeyboardInteraction();
+    setAnnouncement(`${current.label} change cancelled.`);
   };
 
   const startPointerInteraction = (
@@ -265,7 +263,9 @@ export function Inventory({
     kind: InventoryInteraction,
   ) => {
     const root = rootRef.current;
-    const entry = layout.find((candidate) => candidate.value === itemValue);
+    const keyboard = keyboardInteraction.current;
+    const startingLayout = keyboard?.layout ?? layout;
+    const entry = startingLayout.find((candidate) => candidate.value === itemValue);
     if (!root || !entry) return;
     const columnGap = numberStyle(root, "column-gap");
     const rowGap = numberStyle(root, "row-gap");
@@ -277,6 +277,8 @@ export function Inventory({
     const rowSize = (contentHeight - rowGap * (rows - 1)) / rows;
     if (columnSize <= 0 || rowSize <= 0) return;
     event.preventDefault();
+    if (keyboard) setLayout(startingLayout);
+    keyboardInteraction.current = null;
     pointerInteraction.current = {
       pointerId: event.pointerId,
       value: itemValue,
@@ -287,7 +289,7 @@ export function Inventory({
       columnStep: columnSize + columnGap,
       rowStep: rowSize + rowGap,
       entry,
-      layout,
+      layout: startingLayout,
       latestEntry: entry,
       previewInvalid: false,
     };
@@ -368,9 +370,11 @@ export function Inventory({
     previewInvalid,
     rows,
     setFocusedValue,
+    beginKeyboardInteraction,
+    cancelKeyboardInteraction,
     cancelPointerInteraction,
+    commitKeyboardInteraction,
     continuePointerInteraction,
-    finishKeyboardInteraction,
     finishPointerInteraction,
     handleKeyboardInteraction,
     startPointerInteraction,

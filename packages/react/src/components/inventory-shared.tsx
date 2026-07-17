@@ -23,14 +23,19 @@ export type InventoryContextValue = {
   previewInvalid: boolean;
   rows: number;
   setFocusedValue: (value: string) => void;
+  beginKeyboardInteraction: (
+    value: string,
+    label: string,
+    interaction: InventoryInteraction,
+  ) => void;
+  cancelKeyboardInteraction: (value: string) => void;
   cancelPointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
+  commitKeyboardInteraction: (value: string) => void;
   continuePointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
-  finishKeyboardInteraction: (value: string) => void;
   finishPointerInteraction: (event: PointerEvent<HTMLButtonElement>) => void;
   handleKeyboardInteraction: (
     event: KeyboardEvent<HTMLButtonElement>,
     value: string,
-    label: string,
     interaction: InventoryInteraction,
   ) => void;
   startPointerInteraction: (

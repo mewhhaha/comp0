@@ -65,14 +65,6 @@ function mockPointerGeometry(
   control.hasPointerCapture = vi.fn(() => false);
 }
 
-function fireKeyUp(element: Element, key: string, init?: KeyboardEventInit) {
-  act(() => {
-    element.dispatchEvent(
-      new KeyboardEvent("keyup", { key, bubbles: true, cancelable: true, ...init }),
-    );
-  });
-}
-
 describe("inventory composition", () => {
   it("renders a semantic list with grid placement and named controls", () => {
     const { container } = renderInventory();
@@ -90,7 +82,7 @@ describe("inventory composition", () => {
     expect(revenue.dataset.columnSpan).toBe("3");
     expect(revenue.style.gridColumn).toBe("1 / span 3");
     expect(move.getAttribute("aria-label")).toBe("Move Revenue");
-    expect(move.getAttribute("aria-keyshortcuts")).toContain("Shift+ArrowRight");
+    expect(move.getAttribute("aria-keyshortcuts")).toContain("Enter");
     expect(resize.getAttribute("aria-label")).toBe("Resize Revenue");
     expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
     const items = container.querySelectorAll<HTMLElement>("li[data-value]");
@@ -185,12 +177,16 @@ describe("inventory composition", () => {
     expect(revenue.tabIndex).toBe(-1);
   });
 
-  it("moves by grid units and pushes obstructing items forward", () => {
+  it("moves by grid units after activation and pushes obstructing items forward", () => {
     const { container, onChange } = renderInventory();
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
     const move = revenue.querySelector("[data-slot='inventory-move-handle']")!;
 
+    fireKeyDown(move, "ArrowRight");
+    expect(revenue.dataset.column).toBe("1");
+
+    fireKeyDown(move, "Enter");
     fireKeyDown(move, "ArrowRight");
 
     expect(revenue.dataset.column).toBe("2");
@@ -202,21 +198,25 @@ describe("inventory composition", () => {
     );
   });
 
-  it("keeps Shift arrow movement active until Shift is released", () => {
+  it("keeps keyboard movement active until the handle is pressed again", () => {
     const { container } = renderInventory();
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
 
-    fireKeyDown(move, "ArrowRight", { shiftKey: true });
+    fireKeyDown(move, " ");
 
-    expect(revenue.dataset.column).toBe("2");
     expect(revenue.hasAttribute("data-dragging")).toBe(true);
     expect(
       container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
-    ).toBe("2");
-    expect(container.querySelector("output")?.textContent).toBe("");
+    ).toBe("1");
+    expect(container.querySelector("output")?.textContent).toContain(
+      "Moving Revenue. Use the arrow keys",
+    );
 
-    fireKeyUp(move, "Shift");
+    fireKeyDown(move, "ArrowRight");
+    expect(revenue.dataset.column).toBe("2");
+
+    fireKeyDown(move, "Enter");
 
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
     expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
@@ -225,18 +225,37 @@ describe("inventory composition", () => {
     );
   });
 
-  it("restores the starting layout when Escape cancels Shift movement", () => {
+  it("restores the starting layout when Escape cancels keyboard movement", () => {
     const { container, onChange } = renderInventory();
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
     const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
 
-    fireKeyDown(move, "ArrowRight", { shiftKey: true });
-    fireKeyDown(move, "Escape", { shiftKey: true });
+    fireKeyDown(move, "Enter");
+    fireKeyDown(move, "ArrowRight");
+    fireKeyDown(move, "Escape");
 
     expect(revenue.dataset.column).toBe("1");
     expect(conversion.dataset.column).toBe("4");
     expect(conversion.dataset.row).toBe("1");
+    expect(revenue.hasAttribute("data-dragging")).toBe(false);
+    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("output")?.textContent).toContain("Revenue change cancelled");
+    expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("restores the starting layout when focus leaves an active handle", () => {
+    const { container, onChange } = renderInventory();
+    const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
+    const [move, resize] = revenue.querySelectorAll<HTMLButtonElement>("button");
+
+    act(() => move!.focus());
+    fireKeyDown(move!, "Enter");
+    fireKeyDown(move!, "ArrowRight");
+    fireKeyDown(move!, "Tab");
+
+    expect(document.activeElement).toBe(resize);
+    expect(revenue.dataset.column).toBe("1");
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
     expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
     expect(container.querySelector("output")?.textContent).toContain("Revenue change cancelled");
@@ -248,6 +267,7 @@ describe("inventory composition", () => {
     const alerts = container.querySelector<HTMLElement>('[data-value="alerts"]')!;
     const resize = alerts.querySelector("[data-slot='inventory-resize-handle']")!;
 
+    fireKeyDown(resize, "Enter");
     fireKeyDown(resize, "ArrowDown");
     expect(alerts.dataset.rowSpan).toBe("3");
 
@@ -270,7 +290,9 @@ describe("inventory composition", () => {
     );
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
 
-    fireKeyDown(revenue.querySelector("button")!, "ArrowRight");
+    const move = revenue.querySelector("button")!;
+    fireKeyDown(move, "Enter");
+    fireKeyDown(move, "ArrowRight");
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(onChange.mock.calls[0]?.[0][0]).toMatchObject({ value: "revenue", column: 2 });
@@ -450,7 +472,9 @@ describe("inventory composition", () => {
     const first = container.querySelector<HTMLElement>('[data-value="first"]')!;
     const second = container.querySelector<HTMLElement>('[data-value="second"]')!;
 
-    fireKeyDown(first.querySelector("button")!, "ArrowRight");
+    const move = first.querySelector("button")!;
+    fireKeyDown(move, "Enter");
+    fireKeyDown(move, "ArrowRight");
 
     expect(first.dataset.column).toBe("1");
     expect(second.dataset.column).toBe("2");

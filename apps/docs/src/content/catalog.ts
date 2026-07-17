@@ -229,7 +229,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for customizable dashboards and boards where position and size must persist as grid units.",
     "Start Inventory with its column count, row count, and a complete layout.",
     "Render one InventoryItem per layout value; arrow between cards, then Tab through the focused card's optional move and resize handles.",
-    "Add InventoryPreview for a styleable pointer or Shift-arrow landing overlay; blocked placements stay put and only the preview becomes invalid.",
+    "Add InventoryPreview for a styleable pointer or active keyboard landing overlay; blocked placements stay put and only the preview becomes invalid.",
     '<Inventory columns={6} rows={6} value={layout} onChange={setLayout}>\n  <InventoryPreview />\n  <InventoryItem value="sales" textValue="Sales">\n    <InventoryMoveHandle />\n    Sales\n    <InventoryResizeHandle />\n  </InventoryItem>\n</Inventory>;',
   ),
   "grid-list": lesson(
@@ -776,7 +776,7 @@ const accessibility: Record<string, string[]> = {
   inventory: [
     "Give Inventory an aria-label or aria-labelledby; it renders a native ordered list with one roving item tab stop rather than claiming ARIA grid behavior.",
     "Arrow keys move item focus by persisted visual position. Tab enters the focused item's controls and leaves Inventory after its last control.",
-    "Keep both handles visible and clearly named. Arrow keys act immediately; Shift plus Arrow keeps a preview active until Shift is released.",
+    "Keep both handles visible and clearly named. Enter or Space activates one, arrows adjust its item, and Enter or Space commits the change.",
     "InventoryPreview is aria-hidden; use its valid and invalid styling only as visual reinforcement for the live announcements.",
     "Keep item DOM order meaningful even when visual positions change, and announce saved ordering separately when reading order must also change.",
     "A fixed spatial grid may need horizontal scrolling on narrow screens; do not silently rewrite persisted coordinates for visual responsiveness.",
@@ -3260,33 +3260,29 @@ const navigation = [
         scope: "on an InventoryItem control",
       },
       {
-        keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
-        action: "Moves the item one cell in that direction.",
-        scope: "on InventoryMoveHandle",
+        keys: ["Enter", "Space"],
+        action: "Starts moving or resizing; pressing it again commits the change.",
+        scope: "on an Inventory move or resize handle",
       },
       {
-        keys: ["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
-        action: "Keeps movement and its preview active; releasing Shift finishes the move.",
-        scope: "on InventoryMoveHandle",
+        keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Moves the item one cell while movement is active.",
+        scope: "on an active InventoryMoveHandle",
       },
       {
         keys: ["ArrowLeft", "ArrowRight"],
-        action: "Shrinks or grows the column span.",
-        scope: "on InventoryResizeHandle",
+        action: "Shrinks or grows the column span while resizing is active.",
+        scope: "on an active InventoryResizeHandle",
       },
       {
         keys: ["ArrowUp", "ArrowDown"],
-        action: "Shrinks or grows the row span.",
-        scope: "on InventoryResizeHandle",
-      },
-      {
-        keys: ["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
-        action: "Keeps resizing and its preview active; releasing Shift finishes the resize.",
-        scope: "on InventoryResizeHandle",
+        action: "Shrinks or grows the row span while resizing is active.",
+        scope: "on an active InventoryResizeHandle",
       },
       {
         keys: ["Escape"],
-        action: "Cancels an active Shift interaction and restores its starting layout.",
+        action:
+          "Cancels an active interaction and restores its starting layout; leaving the handle does the same.",
       },
     ],
     [
@@ -3313,12 +3309,12 @@ const navigation = [
       {
         attribute: "[data-dragging]",
         on: "Inventory, InventoryItem, InventoryMoveHandle",
-        meaning: "A pointer or Shift-arrow move is in progress.",
+        meaning: "A pointer drag or armed keyboard move is in progress.",
       },
       {
         attribute: "[data-resizing]",
         on: "Inventory, InventoryItem, InventoryResizeHandle",
-        meaning: "A pointer or Shift-arrow resize is in progress.",
+        meaning: "A pointer drag or armed keyboard resize is in progress.",
       },
       {
         attribute: "[data-invalid-placement]",

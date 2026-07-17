@@ -58,4 +58,40 @@ describe("inventory browser interactions", () => {
     expect(document.activeElement).toBe(right);
     unmount();
   });
+
+  it("requires handle activation and cancels an active change when focus leaves", async () => {
+    const { container, unmount } = render(
+      <div>
+        <Inventory
+          aria-label="Dashboard"
+          columns={2}
+          rows={1}
+          defaultValue={[{ value: "card", column: 1, row: 1, columnSpan: 1, rowSpan: 1 }]}
+        >
+          <InventoryItem value="card" textValue="Card">
+            Card
+            <InventoryMoveHandle />
+          </InventoryItem>
+        </Inventory>
+        <button type="button">After</button>
+      </div>,
+    );
+    const card = container.querySelector<HTMLElement>('[data-value="card"]')!;
+    const move = card.querySelector<HTMLButtonElement>("button")!;
+    const after = [...container.querySelectorAll<HTMLButtonElement>("button")].at(-1)!;
+
+    act(() => move.focus());
+    await act(async () => userEvent.keyboard("{ArrowRight}"));
+    expect(card.dataset.column).toBe("1");
+
+    await act(async () => userEvent.keyboard("{Enter}{ArrowRight}"));
+    expect(card.dataset.column).toBe("2");
+    expect(card.hasAttribute("data-dragging")).toBe(true);
+
+    await act(async () => userEvent.tab());
+    expect(document.activeElement).toBe(after);
+    expect(card.dataset.column).toBe("1");
+    expect(card.hasAttribute("data-dragging")).toBe(false);
+    unmount();
+  });
 });
