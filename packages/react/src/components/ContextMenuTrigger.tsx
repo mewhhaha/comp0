@@ -1,4 +1,4 @@
-import { type HTMLAttributes } from "react";
+import { useEffect, useRef, type HTMLAttributes } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { InteractiveDiv, type RefProp } from "../shared.js";
 import { useContextMenuContext, useMenuRootContext } from "./menu-shared.js";
@@ -20,10 +20,19 @@ export function ContextMenuTrigger({
 }: ContextMenuTriggerProps & RefProp<HTMLDivElement>) {
   const menu = useMenuRootContext();
   const contextMenu = useContextMenuContext();
+  const pendingPointerOpen = useRef<AbortController | null>(null);
+  const pendingOpenTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const setElement = (element: HTMLDivElement | null) => {
     menu?.setTriggerElement(element);
     composeRefs(ref)(element);
   };
+  useEffect(
+    () => () => {
+      pendingPointerOpen.current?.abort();
+      clearTimeout(pendingOpenTimer.current);
+    },
+    [],
+  );
 
   return (
     <InteractiveDiv
@@ -35,7 +44,39 @@ export function ContextMenuTrigger({
         onContextMenu?.(event);
         if (event.defaultPrevented) return;
         event.preventDefault();
-        contextMenu?.openAt(event.clientX, event.clientY);
+        pendingPointerOpen.current?.abort();
+        clearTimeout(pendingOpenTimer.current);
+        if (event.buttons === 0) {
+          contextMenu?.openAt(event.clientX, event.clientY);
+          return;
+        }
+
+        // Opening an auto popover during contextmenu lets the pointerup from
+        // the same press light-dismiss it, so open after that press settles.
+        const pendingOpen = new AbortController();
+        const ownerDocument = event.currentTarget.ownerDocument;
+        const { clientX, clientY } = event;
+        pendingPointerOpen.current = pendingOpen;
+        ownerDocument.addEventListener(
+          "pointerup",
+          () => {
+            pendingOpen.abort();
+            pendingPointerOpen.current = null;
+            pendingOpenTimer.current = setTimeout(() => {
+              pendingOpenTimer.current = undefined;
+              contextMenu?.openAt(clientX, clientY);
+            });
+          },
+          { capture: true, once: true, signal: pendingOpen.signal },
+        );
+        ownerDocument.addEventListener(
+          "pointercancel",
+          () => {
+            pendingOpen.abort();
+            pendingPointerOpen.current = null;
+          },
+          { capture: true, once: true, signal: pendingOpen.signal },
+        );
       }}
       onKeyDown={(event) => {
         onKeyDown?.(event);

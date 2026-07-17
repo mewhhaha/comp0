@@ -37,6 +37,31 @@ import {
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 
 describe("real-browser interaction contracts", () => {
+  it("keeps a context menu open after the right-click press finishes", async () => {
+    const { container, unmount } = render(
+      <ContextMenu id="pointer-context-menu">
+        <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>
+        <MenuPopover>
+          <MenuList aria-label="Attachment actions">
+            <MenuItem value="download">Download</MenuItem>
+          </MenuList>
+        </MenuPopover>
+      </ContextMenu>,
+    );
+    const trigger = container.querySelector<HTMLElement>("[tabindex='0']")!;
+    const popover = container.querySelector<HTMLElement>("[popover]")!;
+
+    await act(async () => userEvent.click(trigger, { button: "right" }));
+
+    expect(popover.matches(":popover-open")).toBe(true);
+    expect(document.activeElement?.getAttribute("data-value")).toBe("download");
+
+    await act(async () => userEvent.click(trigger, { button: "right" }));
+
+    expect(popover.matches(":popover-open")).toBe(true);
+    unmount();
+  });
+
   it("keeps a searchable menu editor inside the native popover and restores its trigger", () => {
     const activated = vi.fn();
     const { container, unmount } = render(
