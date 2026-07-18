@@ -28,7 +28,9 @@ export function PasswordFieldInput({
   useEffect(() => {
     const selection = selectionRef.current;
     if (!selection) return;
-    const animationFrame = window.requestAnimationFrame(() => {
+    const ownerWindow = inputRef.current?.ownerDocument.defaultView;
+    if (!ownerWindow) return;
+    const animationFrame = ownerWindow.requestAnimationFrame(() => {
       inputRef.current?.setSelectionRange(
         selection.start,
         selection.end,
@@ -36,7 +38,7 @@ export function PasswordFieldInput({
       );
       selectionRef.current = null;
     });
-    return () => window.cancelAnimationFrame(animationFrame);
+    return () => ownerWindow.cancelAnimationFrame(animationFrame);
   }, [inputRef, passwordVisible, selectionRef]);
 
   return (

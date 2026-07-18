@@ -1,5 +1,5 @@
 import { act, createRef } from "react";
-import { hydrateRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
@@ -203,6 +203,42 @@ describe("password field composition", () => {
     expect(input.type).toBe("text");
     act(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
     expect(input.type).toBe("password");
+  });
+
+  it("conceals the password after a page restore in its owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow!;
+    const container = frame.contentDocument!.createElement("div");
+    frame.contentDocument!.body.append(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <PasswordField>
+          <PasswordFieldInput />
+          <PasswordFieldToggle />
+        </PasswordField>,
+      );
+    });
+    const input = container.querySelector("input")!;
+    const toggle = container.querySelector("button")!;
+    act(() =>
+      toggle.dispatchEvent(
+        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
+      ),
+    );
+    expect(input.type).toBe("text");
+
+    act(() =>
+      frameWindow.dispatchEvent(
+        new frameWindow.PageTransitionEvent("pageshow", { persisted: true }),
+      ),
+    );
+
+    expect(input.type).toBe("password");
+    act(() => root.unmount());
+    frame.remove();
   });
 
   it("renders hidden on the server and adds the toggle after hydration", async () => {

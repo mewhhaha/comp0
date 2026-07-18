@@ -51,8 +51,9 @@ export function PasswordField({
 
   useEffect(() => {
     setMounted(true);
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
+    const ownerWindow = inputRef.current?.ownerDocument.defaultView;
+    ownerWindow?.addEventListener("pageshow", handlePageShow);
+    return () => ownerWindow?.removeEventListener("pageshow", handlePageShow);
   }, []);
 
   const context = {
