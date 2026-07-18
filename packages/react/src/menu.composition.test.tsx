@@ -1,4 +1,5 @@
 import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Menu } from "./components/Menu.js";
@@ -73,6 +74,52 @@ describe("menu composition", () => {
     fireKeyDown(content, "Escape");
     expect(surface.hidden).toBe(true);
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("navigates menu items in the menu's owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow!;
+    const frameDocument = frame.contentDocument!;
+    const container = frameDocument.createElement("div");
+    frameDocument.body.append(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <Menu>
+          <MenuTrigger>Actions</MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem>Copy</MenuItem>
+              <MenuItem>Paste</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>,
+      );
+    });
+    const trigger = container.querySelector("button")!;
+    const menu = container.querySelector<HTMLElement>("[role='menu']")!;
+    const items = container.querySelectorAll<HTMLElement>("[role='menuitem']");
+
+    act(() =>
+      trigger.dispatchEvent(
+        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
+      ),
+    );
+    act(() =>
+      menu.dispatchEvent(
+        new frameWindow.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+    );
+
+    expect(frameDocument.activeElement).toBe(items[1]);
+    act(() => root.unmount());
+    frame.remove();
   });
 
   it("closes after an item activation unless the item callback prevents it", () => {
