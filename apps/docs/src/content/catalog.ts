@@ -106,6 +106,15 @@ const lessons: Record<string, LessonCopy> = {
     "Give TextArea a name so the full text submits.",
     '<TextField>\n  <Label>Notes</Label>\n  <TextArea name="notes" />\n</TextField>;',
   ),
+  "code-editor": lesson(
+    "A small native code editor that can switch between read-only display and editing.",
+    "Like a scratch file: inspect it safely, then unlock it when changes are needed.",
+    "Use it for short editable examples, configuration, templates, or code previews—not as a replacement for a full IDE.",
+    "Start a TextField with Label and CodeEditor.",
+    "Use native value, defaultValue, name, and onChange props just like a text area.",
+    "Set readOnly while showing code; remove it to edit. Tab always leaves the editor instead of being trapped for indentation.",
+    '<TextField>\n  <Label>Source code</Label>\n  <CodeEditor name="source" defaultValue={code} readOnly />\n</TextField>;',
+  ),
   fieldset: lesson(
     "A native border and name for a related set of controls.",
     "Like a folder tab that names everything inside the folder.",
@@ -705,6 +714,13 @@ const accessibility: Record<string, string[]> = {
     "Give the multi-line box a visible Label.",
     "Explain character limits in Description when they matter.",
     "Use FieldError to state what needs fixing.",
+  ],
+  "code-editor": [
+    "Give the editor a visible Label that names the code or configuration being edited.",
+    "Use readOnly rather than disabled when people should still focus, scroll, select, and copy the code.",
+    "CodeEditor is a native textarea, so it already exposes multi-line textbox semantics; do not add role=textbox, aria-multiline, or contentEditable.",
+    "Tab moves to the next control. If an application adds Tab indentation, it must also provide and explain a keyboard command that leaves the editor.",
+    "Treat syntax colors, squiggles, and token hovers as supplemental. Keep the editable source in CodeEditor, hide duplicate highlighting from assistive technology, and expose every diagnostic as text and a keyboard-reachable action.",
   ],
   fieldset: [
     "Put Legend first so the group has a name.",
@@ -1803,6 +1819,63 @@ const field = [
     ],
     "TextArea submits its native name and multi-line value.",
     ["text-field", "fieldset"],
+  ),
+  common(
+    "code-editor",
+    "Code Editor",
+    "fields",
+    ["CodeEditor", "Description", "Label", "TextField"],
+    '<TextField>\n  <Label>Source code</Label>\n  <Description>Tab moves to the next control.</Description>\n  <CodeEditor name="source" defaultValue={code} readOnly />\n</TextField>;',
+    [
+      p("TextField", "root", "Optional field provider; it owns no DOM by default.", false, false, [
+        prop("value", "string", "Controlled editor value."),
+        prop("defaultValue", "string", "Initial uncontrolled editor value."),
+        prop("onChange", "(value: string) => void", "Receives the next value."),
+        prop("disabled", "boolean", "Disables the editor."),
+        prop("invalid", "boolean", "Marks the editor invalid."),
+        prop("required", "boolean", "Requires a value when a form submits."),
+      ]),
+      p("Label", "label", "Native label linked to the editor.", true, false, [
+        prop("htmlFor", "string", "Auto-wired to the editor; set it only to override."),
+      ]),
+      p("CodeEditor", "input", "Native textarea with code-friendly text defaults.", true, false, [
+        prop("value", "string", "Controlled source text."),
+        prop("defaultValue", "string", "Initial uncontrolled source text."),
+        prop("onChange", "ChangeEventHandler", "Receives the native textarea change event."),
+        prop("name", "string", "Submission name for the source text."),
+        prop("readOnly", "boolean", "Keeps code focusable and selectable while preventing edits."),
+        prop("wrap", '"hard" | "soft" | "off"', 'Line wrapping mode; defaults to "off".'),
+        prop("spellCheck", "boolean", "Spell checking; defaults to false."),
+        prop("autoCapitalize", "string", 'Automatic capitalization; defaults to "none".'),
+        prop("autoCorrect", "string", 'Automatic correction; defaults to "off".'),
+        prop("autoComplete", "string", 'Browser completion; defaults to "off".'),
+      ]),
+      p("Description", "feedback", "Optional linked editing instructions.", true, true),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves to the next control; it does not insert indentation." },
+      { keys: ["Shift", "Tab"], action: "Moves to the previous control." },
+    ],
+    [
+      { attribute: "[data-readonly]", on: "CodeEditor", meaning: "The code cannot be edited." },
+      { attribute: "[data-disabled]", on: "CodeEditor", meaning: "The editor is disabled." },
+      { attribute: "[data-invalid]", on: "CodeEditor", meaning: "The editor is invalid." },
+      {
+        attribute: "[data-focus-visible]",
+        on: "CodeEditor",
+        meaning: "Keyboard focus should show a visible ring.",
+      },
+    ],
+    "CodeEditor submits its native name and complete source value. Read-only editors still submit; disabled editors do not.",
+    ["text-area", "text-field", "editable"],
+    [
+      {
+        id: "diagnostics",
+        title: "Syntax highlighting and diagnostics",
+        description:
+          "Layer decorative syntax tokens and hover details over the native editor, then expose the same mocked LSP feedback as keyboard-reachable diagnostic actions.",
+      },
+    ],
   ),
   common(
     "fieldset",

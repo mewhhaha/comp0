@@ -30,6 +30,7 @@ const publicComponents = [
   "CarouselViewport",
   "Checkbox",
   "CheckboxGroup",
+  "CodeEditor",
   "ColorArea",
   "ColorAreaThumb",
   "ColorField",
