@@ -1,5 +1,4 @@
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import {
   Combobox,
@@ -470,24 +469,19 @@ describe("picker composition", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const frameDocument = frame.contentDocument!;
-    const container = frameDocument.createElement("div");
-    frameDocument.body.append(container);
-    const root = createRoot(container);
-
-    act(() => {
-      root.render(
-        <Select id="framed-plan" name="plan" required>
-          <SelectTrigger>Choose plan</SelectTrigger>
-        </Select>,
-      );
-    });
+    const { container, unmount } = render(
+      <Select id="framed-plan" name="plan" required>
+        <SelectTrigger>Choose plan</SelectTrigger>
+      </Select>,
+      frameDocument,
+    );
     const nativeSelect = container.querySelector("select")!;
     const trigger = container.querySelector("button")!;
 
     act(() => nativeSelect.dispatchEvent(new Event("invalid", { cancelable: true })));
 
     expect(frameDocument.activeElement).toBe(trigger);
-    act(() => root.unmount());
+    unmount();
     frame.remove();
   });
 

@@ -4,9 +4,9 @@ import { act } from "react";
 
 const roots = new Set<Root>();
 
-export function render(element: ReactElement) {
-  const container = document.createElement("div");
-  document.body.append(container);
+export function render(element: ReactElement, ownerDocument: Document = document) {
+  const container = ownerDocument.createElement("div");
+  ownerDocument.body.append(container);
   const root = createRoot(container);
   roots.add(root);
 

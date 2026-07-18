@@ -1,5 +1,4 @@
 import { act, type AnchorHTMLAttributes } from "react";
-import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { NavigationMenu } from "./components/NavigationMenu.js";
@@ -182,10 +181,7 @@ describe("navigation menu composition", () => {
     document.body.append(frame);
     const frameWindow = frame.contentWindow!;
     const frameDocument = frame.contentDocument!;
-    const container = frameDocument.createElement("div");
-    frameDocument.body.append(container);
-    const root = createRoot(container);
-    act(() => root.render(<SiteNavigation />));
+    const { container, unmount } = render(<SiteNavigation />, frameDocument);
     const products = triggerNamed(container, "Products");
     const resources = triggerNamed(container, "Resources");
 
@@ -201,7 +197,7 @@ describe("navigation menu composition", () => {
     });
 
     expect(frameDocument.activeElement).toBe(resources);
-    act(() => root.unmount());
+    unmount();
     frame.remove();
   });
 

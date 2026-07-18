@@ -1,5 +1,4 @@
 import { act, useState } from "react";
-import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
 import { Dialog } from "./components/Dialog.js";
@@ -171,10 +170,7 @@ describe("overlay composition", () => {
     document.body.append(frame);
     const frameWindow = frame.contentWindow!;
     const frameDocument = frame.contentDocument!;
-    const container = frameDocument.createElement("div");
-    frameDocument.body.append(container);
-    const root = createRoot(container);
-    act(() => root.render(<Harness />));
+    const { container, unmount } = render(<Harness />, frameDocument);
     const trigger = container.querySelector("button")!;
     const content = container.querySelector("dialog")!;
 
@@ -189,7 +185,7 @@ describe("overlay composition", () => {
     );
 
     expect(frameDocument.activeElement).toBe(trigger);
-    act(() => root.unmount());
+    unmount();
     frame.remove();
   });
 });

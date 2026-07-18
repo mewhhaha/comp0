@@ -1,5 +1,4 @@
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
 import { Drawer } from "./components/Drawer.js";
@@ -183,17 +182,13 @@ describe("drawer composition", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const frameWindow = frame.contentWindow!;
-    const container = frame.contentDocument!.createElement("div");
-    frame.contentDocument!.body.append(container);
-    const root = createRoot(container);
-    act(() =>
-      root.render(
-        <Drawer defaultOpen>
-          <DrawerContent portal={false}>
-            <button type="button">Save</button>
-          </DrawerContent>
-        </Drawer>,
-      ),
+    const { container, unmount } = render(
+      <Drawer defaultOpen>
+        <DrawerContent portal={false}>
+          <button type="button">Save</button>
+        </DrawerContent>
+      </Drawer>,
+      frame.contentDocument!,
     );
     const panel = container.querySelector("dialog")!;
     const save = panel.querySelector("button")!;
@@ -222,7 +217,7 @@ describe("drawer composition", () => {
 
     expect(panel.hasAttribute("data-dragging")).toBe(false);
     expect(panel.style.translate).toBe("");
-    act(() => root.unmount());
+    unmount();
     frame.remove();
   });
 });

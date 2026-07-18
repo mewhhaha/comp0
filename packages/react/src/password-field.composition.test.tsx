@@ -1,5 +1,5 @@
 import { act, createRef } from "react";
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
@@ -209,18 +209,13 @@ describe("password field composition", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const frameWindow = frame.contentWindow!;
-    const container = frame.contentDocument!.createElement("div");
-    frame.contentDocument!.body.append(container);
-    const root = createRoot(container);
-
-    act(() => {
-      root.render(
-        <PasswordField>
-          <PasswordFieldInput />
-          <PasswordFieldToggle />
-        </PasswordField>,
-      );
-    });
+    const { container, unmount } = render(
+      <PasswordField>
+        <PasswordFieldInput />
+        <PasswordFieldToggle />
+      </PasswordField>,
+      frame.contentDocument!,
+    );
     const input = container.querySelector("input")!;
     const toggle = container.querySelector("button")!;
     act(() =>
@@ -237,7 +232,7 @@ describe("password field composition", () => {
     );
 
     expect(input.type).toBe("password");
-    act(() => root.unmount());
+    unmount();
     frame.remove();
   });
 
