@@ -106,6 +106,15 @@ const lessons: Record<string, LessonCopy> = {
     "Give TextArea a name so the full text submits.",
     '<TextField>\n  <Label>Notes</Label>\n  <TextArea name="notes" />\n</TextField>;',
   ),
+  "mention-field": lesson(
+    "A multi-line field that completes a token beside the caret without replacing the surrounding message.",
+    "Like tagging a teammate in a note: type @, narrow the names, and insert one exactly where you are writing.",
+    "Use it for people, topics, slash commands, or other token completions inside longer text.",
+    "Start MentionField with a Label and MentionFieldInput.",
+    "Add MentionFieldPopover with an explicitly labelled ListBox and its ListBoxItem suggestions; the surface follows the active token at the caret.",
+    "Pass triggers for token prefixes and filter for matching. Selection replaces only the active token and returns focus to the message.",
+    '<MentionField triggers={["@"]}>\n  <Label>Message</Label>\n  <MentionFieldInput name="message" />\n  <MentionFieldPopover>\n    <ListBox aria-label="Teammates">\n      <ListBoxItem value="Aisha">@Aisha</ListBoxItem>\n    </ListBox>\n  </MentionFieldPopover>\n</MentionField>;',
+  ),
   "code-editor": lesson(
     "A small native code editor that can switch between read-only display and editing.",
     "Like a scratch file: inspect it safely, then unlock it when changes are needed.",
@@ -655,6 +664,15 @@ const lessons: Record<string, LessonCopy> = {
     "Keep the link useful on its own; the card is a bonus, not the destination.",
     '<Preview>\n  <PreviewTrigger href="/users/ada">@ada</PreviewTrigger>\n  <PreviewPopover placement="bottom start" offset={8}>\n    Ada Lovelace, first programmer\n  </PreviewPopover>\n</Preview>;',
   ),
+  tour: lesson(
+    "A guided sequence of modal dialogs anchored to existing controls.",
+    "Like a guide pointing out landmarks on a map while leaving the map itself intact.",
+    "Use it for short, optional introductions to unfamiliar product areas; use inline help for instructions people need repeatedly.",
+    "Declare the ordered steps once with stable target names, titles, descriptions, and placements.",
+    "Mark existing controls with matching data-tour-target attributes and add TourTrigger wherever the tour starts.",
+    "Render the current step through TourOverlay; its state supplies progress, navigation, dismissal, target anchoring, and final focus restoration.",
+    '<Tour steps={steps}>\n  <TourTrigger>Start tour</TourTrigger>\n  <Button data-tour-target="search">Search</Button>\n  <TourOverlay aria-label="Product tour">\n    {({ step, next }) => <Button onClick={next}>{step.title}</Button>}\n  </TourOverlay>\n</Tour>;',
+  ),
   editable: lesson(
     "Plain text that turns into an input when clicked.",
     "Like a name tag written in pencil: tap it, rewrite it, and it settles back into place.",
@@ -845,6 +863,12 @@ const accessibility: Record<string, string[]> = {
     "Keep the active matching item mounted while virtual focus refers to it; use disableVirtualFocus when the collection should move DOM focus instead.",
     "Make empty and loading messages non-selectable, and do not use a completion as the only way to enter a value.",
   ],
+  "mention-field": [
+    "Give MentionFieldInput a visible Label and name the explicit ListBox when the field label does not describe its suggestions.",
+    "Keep typed text valid without a selected suggestion; mention completion must remain optional.",
+    "Render the virtually focused ListBoxItem while aria-activedescendant points to it.",
+    "Do not trigger suggestions inside words such as email addresses.",
+  ],
   dialog: [
     "Give DialogContent an accessible name.",
     "Keep focus inside the modal until it closes.",
@@ -864,6 +888,12 @@ const accessibility: Record<string, string[]> = {
     "Name the trigger so people know what opens.",
     "Do not put essential instructions only in a popover.",
     "PopoverArrow is decorative and should not carry meaning.",
+  ],
+  tour: [
+    "Keep tours optional, short, and dismissible; do not hide required instructions exclusively inside a tour.",
+    "Give every application target one unique, stable data-tour-target value that matches its step definition.",
+    "Give TourOverlay an accessible name that describes the whole tour, while each step keeps a visible title.",
+    "Tour moves focus into the active dialog and restores the TourTrigger when the sequence closes.",
   ],
   tooltip: [
     "Give the trigger its own accessible name.",
@@ -1838,6 +1868,114 @@ const field = [
     ],
     "TextArea submits its native name and multi-line value.",
     ["text-field", "fieldset"],
+  ),
+  common(
+    "mention-field",
+    "Mention Field",
+    "fields",
+    ["Label", "ListBox", "ListBoxItem", "MentionField", "MentionFieldInput", "MentionFieldPopover"],
+    '<MentionField triggers={["@"]}>\n  <Label>Message</Label>\n  <MentionFieldInput name="message" />\n  <MentionFieldPopover>\n    <ListBox aria-label="Teammates">\n      <ListBoxItem value="Aisha">@Aisha</ListBoxItem>\n    </ListBox>\n  </MentionFieldPopover>\n</MentionField>;',
+    [
+      p(
+        "MentionField",
+        "root",
+        "Wrapper-free field provider that owns the message, active token, and caret position.",
+        false,
+        false,
+        [
+          prop("value", "string", "Controlled message text."),
+          prop("defaultValue", "string", "Initial uncontrolled message text."),
+          prop("onChange", "(value: string) => void", "Receives the next complete message."),
+          prop(
+            "triggers",
+            "readonly string[]",
+            "Characters that begin a completion token; defaults to @.",
+          ),
+          prop(
+            "filter",
+            "(textValue: string, query: string) => boolean",
+            "Optional client-side match rule for suggestion text.",
+          ),
+          prop("as", "ElementType | Fragment", "Optional provider root element."),
+        ],
+      ),
+      p("Label", "label", "Native label connected to the message input."),
+      p(
+        "MentionFieldInput",
+        "input",
+        "Native textarea that tracks the token and caret without moving DOM focus.",
+        true,
+        false,
+        [
+          prop("name", "string", "Submission name for the complete message."),
+          prop("placeholder", "string", "Hint text; never a replacement for Label."),
+        ],
+      ),
+      p(
+        "MentionFieldPopover",
+        "content",
+        "Caret-anchored floating surface around the suggestion collection.",
+        true,
+        false,
+        [prop("offset", "number", "Gap from the caret in pixels; defaults to 4.")],
+      ),
+      p("ListBox", "root", "Explicit labelled collection of matching completions.", true, false, [
+        prop("aria-label", "string", "Accessible name for the suggestion collection."),
+      ]),
+      p("ListBoxItem", "item", "One token completion.", true, false, [
+        prop("value", "string", "Text inserted after the active trigger."),
+        prop("textValue", "string", "Matching text when children contain rich content."),
+      ]),
+    ],
+    [
+      { keys: ["ArrowDown"], action: "Moves virtual focus to the next suggestion." },
+      { keys: ["ArrowUp"], action: "Moves virtual focus to the previous suggestion." },
+      { keys: ["Enter"], action: "Inserts the active suggestion at the caret." },
+      { keys: ["Escape"], action: "Closes suggestions without changing the message." },
+      {
+        keys: ["ArrowLeft", "ArrowRight"],
+        action: "Moves the native caret and updates the active token.",
+      },
+    ],
+    [
+      {
+        attribute: "[data-mention-field]",
+        on: "MentionField",
+        meaning: "Optional DOM root for the mention field.",
+      },
+      {
+        attribute: "[data-mention-active]",
+        on: "MentionFieldInput",
+        meaning: "The caret is inside a completion token.",
+      },
+      {
+        attribute: "[data-open]",
+        on: "MentionFieldPopover",
+        meaning: "Suggestions are visible.",
+      },
+      {
+        attribute: "[data-trigger]",
+        on: "MentionFieldPopover",
+        meaning: "The active token trigger, such as @ or #.",
+      },
+      {
+        attribute: "[data-active]",
+        on: "ListBoxItem",
+        meaning: "The suggestion has the virtual keyboard highlight.",
+      },
+      {
+        attribute: "[aria-activedescendant]",
+        on: "MentionFieldInput",
+        meaning: "The textarea points to the active suggestion while retaining focus.",
+      },
+      {
+        attribute: "[aria-expanded]",
+        on: "MentionFieldInput",
+        meaning: "Whether the suggestion list is open.",
+      },
+    ],
+    "MentionFieldInput submits the complete native textarea value under its name.",
+    ["autocomplete", "list-box", "text-area"],
   ),
   common(
     "code-editor",
@@ -3614,6 +3752,12 @@ const navigation = [
           "GridListReorderGroup owns one controlled order for all columns. Drag cards for precise placement, use Alt+Arrow within a column, or activate the arrow buttons to move without dragging.",
       },
       {
+        id: "transfer-list",
+        title: "Transfer list",
+        description:
+          "Compose two named Grid Lists for a transfer list. Checkboxes provide bulk selection, ordinary buttons move the selected rows, and each row retains the group's pointer, keyboard, and direct move paths.",
+      },
+      {
         id: "files",
         title: "File rows with actions",
         description:
@@ -5018,12 +5162,6 @@ const picker = [
         description: "Filter command actions while Menu keeps its own activation behavior.",
       },
       {
-        id: "mentions",
-        title: "Mention completion",
-        description:
-          "Complete an @mention inside a multi-line message without replacing the rest of it.",
-      },
-      {
         id: "recipients",
         title: "Email recipients",
         description:
@@ -5229,6 +5367,108 @@ const picker = [
     ],
     "No native form behavior.",
     ["dialog", "menu", "tooltip"],
+  ),
+  common(
+    "tour",
+    "Tour",
+    "pickers",
+    ["Tour", "TourTrigger", "TourOverlay"],
+    '<Tour steps={steps}><TourTrigger>Start tour</TourTrigger><button data-tour-target="search">Search</button><TourOverlay aria-label="Product tour">{({ step, next }) => <button onClick={next}>{step.title}</button>}</TourOverlay></Tour>',
+    [
+      p(
+        "Tour",
+        "root",
+        "Wrapper-free owner for the current step, external target anchor, and focus restoration.",
+        false,
+        false,
+        [
+          prop(
+            "steps",
+            "readonly TourStep[]",
+            "Ordered target, title, description, and placement definitions; target names must be unique.",
+          ),
+          prop("step", "number | null", "Controlled active step index; null closes the tour."),
+          prop(
+            "defaultStep",
+            "number | null",
+            "Initial uncontrolled step index; null keeps the tour closed.",
+          ),
+          prop(
+            "onStepChange",
+            "(step: number | null) => void",
+            "Receives each step change and null when the tour closes.",
+          ),
+        ],
+      ),
+      p("TourTrigger", "trigger", "Button that starts the tour at its first step.", true, false, [
+        prop(
+          "as",
+          "ElementType | Fragment",
+          "Fragment merges the trigger behavior onto your own element child.",
+        ),
+      ]),
+      p(
+        "TourOverlay",
+        "content",
+        "Modal dialog anchored to the current external target.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Accessible name for the guided sequence."),
+          prop("offset", "number", "Pixel gap between the active target and the dialog."),
+          prop(
+            "children",
+            "ReactNode | (state: TourState) => ReactNode",
+            "Static content or a render function receiving the step, position, and navigation actions.",
+          ),
+        ],
+      ),
+    ],
+    [
+      { keys: ["Enter"], action: "Starts the tour from TourTrigger." },
+      { keys: ["Space"], action: "Starts the tour from TourTrigger." },
+      { keys: ["Tab"], action: "Cycles through controls in the step dialog." },
+      { keys: ["Escape"], action: "Closes the tour and restores TourTrigger focus." },
+    ],
+    [
+      {
+        attribute: "[data-open]",
+        on: "TourTrigger",
+        meaning: "The tour is open.",
+      },
+      {
+        attribute: "[data-open]",
+        on: "TourOverlay",
+        meaning: "The step dialog is visible.",
+      },
+      {
+        attribute: "[data-step]",
+        on: "TourOverlay",
+        meaning: "The zero-based active step index.",
+      },
+      {
+        attribute: "[data-target]",
+        on: "TourOverlay",
+        meaning: "The active step's target name.",
+      },
+      {
+        attribute: "[data-first]",
+        on: "TourOverlay",
+        meaning: "The first step is active.",
+      },
+      {
+        attribute: "[data-last]",
+        on: "TourOverlay",
+        meaning: "The final step is active.",
+      },
+      {
+        attribute: "[data-tour-active]",
+        on: "Tour",
+        meaning: "Applied to the external data-tour-target element for spotlight styling.",
+      },
+    ],
+    "No native form behavior; controls targeted by the tour retain their existing behavior.",
+    ["popover", "steps", "tooltip"],
   ),
   common(
     "tooltip",

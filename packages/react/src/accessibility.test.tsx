@@ -55,6 +55,9 @@ import {
   InventoryMoveHandle,
   InventoryPreview,
   InventoryResizeHandle,
+  Tour,
+  TourOverlay,
+  TourTrigger,
 } from "./index.js";
 import { render } from "../test/render.js";
 
@@ -158,6 +161,19 @@ describe("retained accessibility contracts", () => {
           <DialogTrigger>Open settings</DialogTrigger>
           <DialogContent aria-label="Settings">Settings</DialogContent>
         </Dialog>
+        <Tour defaultStep={0} steps={[{ target: "project-search", title: "Find projects" }]}>
+          <TourTrigger>Start product tour</TourTrigger>
+          <button type="button" data-tour-target="project-search">
+            Search projects
+          </button>
+          <TourOverlay aria-label="Product tour">
+            {({ step, next }) => (
+              <button type="button" onClick={next}>
+                {step.title}
+              </button>
+            )}
+          </TourOverlay>
+        </Tour>
       </main>,
     );
 

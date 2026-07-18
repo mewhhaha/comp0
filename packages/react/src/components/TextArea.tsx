@@ -10,6 +10,7 @@ import { useRef } from "react";
 import { describedBy, useFieldContext } from "../field.js";
 import { type RefProp } from "../shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
+import { useMentionFieldContext } from "./mention-field-shared.js";
 import { type TextAreaProps } from "./text-field-shared.js";
 import { useFormReset } from "./form-control-state.js";
 export type { TextAreaProps } from "./text-field-shared.js";
@@ -25,6 +26,7 @@ export function TextArea({
   ...props
 }: TextAreaProps & RefProp<HTMLTextAreaElement>) {
   const autocomplete = useAutocompleteContext();
+  const mentionField = useMentionFieldContext();
   const field = useFieldContext();
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const disabled = Boolean(disabledProp ?? field?.disabled);
@@ -70,7 +72,9 @@ export function TextArea({
         if (event.defaultPrevented) return;
         field?.setValue?.(event.currentTarget.value);
         const nativeEvent = event.nativeEvent as InputEvent;
-        autocomplete?.setInputValue(event.currentTarget.value, nativeEvent.inputType);
+        const mention = mentionField?.syncInput(event.currentTarget, true);
+        const autocompleteValue = mentionField ? (mention?.query ?? "") : event.currentTarget.value;
+        autocomplete?.setInputValue(autocompleteValue, nativeEvent.inputType);
       }}
       onKeyDown={(event) => {
         onKeyDown?.(event);

@@ -9,6 +9,7 @@ import {
 import { type RefProp } from "../shared.js";
 import { ListBoxContext, sortItems } from "./collection-shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
+import { useMentionFieldListBoxContext } from "./mention-field-shared.js";
 import {
   type SelectableCollectionContextValue,
   type CollectionItemRecord,
@@ -26,13 +27,17 @@ export function ListBox({
   ...props
 }: ListBoxProps & RefProp<HTMLDivElement>) {
   const autocomplete = useAutocompleteContext();
-  const collectionId = props.id ?? autocomplete?.defaultCollectionId;
+  const mentionField = useMentionFieldListBoxContext();
+  const collectionId = props.id ?? mentionField?.id ?? autocomplete?.defaultCollectionId;
   const setAutocompleteCollectionId = autocomplete?.setCollectionId;
   const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
   const [selected, setSelected] = useControllableState({
-    value,
+    value: mentionField ? "" : value,
     defaultValue: defaultValue ?? "",
-    onChange,
+    onChange(nextValue) {
+      onChange?.(nextValue);
+      mentionField?.select(nextValue);
+    },
   });
   const typeaheadSearch = useTypeaheadSearch();
   const [activeKey, setActiveKey] = useState(selected);
@@ -145,7 +150,9 @@ export function ListBox({
         ref={composeRefs(ref, autocomplete?.collectionRef)}
         id={collectionId}
         role="listbox"
-        aria-labelledby={props["aria-labelledby"]}
+        aria-labelledby={
+          props["aria-label"] ? undefined : (props["aria-labelledby"] ?? mentionField?.labelId)
+        }
         aria-orientation={orientation}
         data-orientation={orientation}
         onKeyDown={(event) => {
