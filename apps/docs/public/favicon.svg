@@ -1,31 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" fill="#000" />
   <path
-    d="M47.3 16.7a21.6 21.6 0 1 0 0 30.6"
+    d="M46.1 17.9a19.9 19.9 0 1 0 0 28.2"
     fill="none"
     stroke="#fff"
     stroke-linecap="round"
     stroke-width="7"
   />
   <path
-    d="M47.3 16.7a21.6 21.6 0 0 1 0 30.6"
+    d="M46.1 17.9a19.9 19.9 0 0 1 0 28.2"
     fill="none"
     stroke="#ff6b00"
     stroke-linecap="round"
     stroke-width="6"
   />
   <path
-    d="M4 54 60 10"
+    d="M0 64 64 0"
     fill="none"
     stroke="#ff6b00"
     stroke-linecap="round"
-    stroke-width="6"
+    stroke-width="7"
   />
   <path
-    d="m43.4 20.6 7.8-7.8m-7.8 30.6 7.8 7.8"
+    d="m40.3 23.7 11.6-11.6m-11.6 28.2 11.6 11.6"
     fill="none"
     stroke="#fff"
     stroke-linecap="round"
+    stroke-linejoin="round"
     stroke-width="7"
   />
 </svg>
