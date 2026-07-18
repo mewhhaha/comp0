@@ -1,4 +1,5 @@
 import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import {
   Combobox,
@@ -463,6 +464,31 @@ describe("picker composition", () => {
     const data = new FormData(form);
     expect(data.get("plan")).toBe("pro");
     expect(data.get("city")).toBe("Warsaw");
+  });
+
+  it("focuses the select trigger in the control's owning document after native validation", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameDocument = frame.contentDocument!;
+    const container = frameDocument.createElement("div");
+    frameDocument.body.append(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <Select id="framed-plan" name="plan" required>
+          <SelectTrigger>Choose plan</SelectTrigger>
+        </Select>,
+      );
+    });
+    const nativeSelect = container.querySelector("select")!;
+    const trigger = container.querySelector("button")!;
+
+    act(() => nativeSelect.dispatchEvent(new Event("invalid", { cancelable: true })));
+
+    expect(frameDocument.activeElement).toBe(trigger);
+    act(() => root.unmount());
+    frame.remove();
   });
 
   it("treats an initial committed combobox value as a valid form value", () => {
