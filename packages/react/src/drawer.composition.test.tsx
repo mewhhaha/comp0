@@ -1,4 +1,5 @@
 import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
 import { Drawer } from "./components/Drawer.js";
@@ -176,5 +177,52 @@ describe("drawer composition", () => {
     expect(panel.open).toBe(true);
     expect(panel.hasAttribute("data-dragging")).toBe(false);
     expect(panel.style.translate).toBe("");
+  });
+
+  it("leaves interactive elements in the drawer's owning document in charge of gestures", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow!;
+    const container = frame.contentDocument!.createElement("div");
+    frame.contentDocument!.body.append(container);
+    const root = createRoot(container);
+    act(() =>
+      root.render(
+        <Drawer defaultOpen>
+          <DrawerContent portal={false}>
+            <button type="button">Save</button>
+          </DrawerContent>
+        </Drawer>,
+      ),
+    );
+    const panel = container.querySelector("dialog")!;
+    const save = panel.querySelector("button")!;
+    mockDragGeometry(panel, { width: 400, height: 600 });
+
+    act(() =>
+      save.dispatchEvent(
+        new frameWindow.MouseEvent("pointerdown", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 100,
+          clientY: 100,
+        }),
+      ),
+    );
+    act(() =>
+      save.dispatchEvent(
+        new frameWindow.MouseEvent("pointermove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 350,
+          clientY: 100,
+        }),
+      ),
+    );
+
+    expect(panel.hasAttribute("data-dragging")).toBe(false);
+    expect(panel.style.translate).toBe("");
+    act(() => root.unmount());
+    frame.remove();
   });
 });

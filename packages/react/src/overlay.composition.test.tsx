@@ -1,4 +1,5 @@
 import { act, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
 import { Dialog } from "./components/Dialog.js";
@@ -153,5 +154,42 @@ describe("overlay composition", () => {
     } finally {
       HTMLDialogElement.prototype.close = originalClose;
     }
+  });
+
+  it("restores focus inside the dialog's owning document", () => {
+    function Harness() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Dialog open={open} onToggle={setOpen}>
+          <DialogTrigger>Open</DialogTrigger>
+          <DialogContent portal={false}>Settings</DialogContent>
+        </Dialog>
+      );
+    }
+
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow!;
+    const frameDocument = frame.contentDocument!;
+    const container = frameDocument.createElement("div");
+    frameDocument.body.append(container);
+    const root = createRoot(container);
+    act(() => root.render(<Harness />));
+    const trigger = container.querySelector("button")!;
+    const content = container.querySelector("dialog")!;
+
+    act(() => {
+      trigger.focus();
+      trigger.dispatchEvent(
+        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
+      );
+    });
+    act(() =>
+      content.dispatchEvent(new frameWindow.Event("cancel", { bubbles: true, cancelable: true })),
+    );
+
+    expect(frameDocument.activeElement).toBe(trigger);
+    act(() => root.unmount());
+    frame.remove();
   });
 });
