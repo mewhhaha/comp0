@@ -3595,6 +3595,14 @@ const navigation = [
     ],
     "No native form behavior; form controls inside a panel keep their own behavior.",
     ["popover", "resizer", "inventory"],
+    [
+      {
+        id: "nodes",
+        title: "Shader node graph",
+        description:
+          "Compose fixed panels into a material graph with typed vector, value, color, and shader ports. Labelled port controls support pointer and keyboard reattachment while the aria-hidden SVG layer follows every node.",
+      },
+    ],
   ),
   common(
     "inventory",
