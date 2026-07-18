@@ -679,6 +679,7 @@ const accessibility: Record<string, string[]> = {
     "Use a visible verb that describes the action.",
     "Keep a visible focus ring.",
     "Use Link instead when the action changes the URL.",
+    "Give an icon-only Button an aria-label; its Tooltip is supplementary and must not be its only accessible name.",
   ],
   "toggle-button": [
     "Give icon-only toggles an aria-label.",
@@ -1140,7 +1141,15 @@ const action = [
       },
     ],
     'A native Button submits a form when type="submit".',
-    ["toggle-button", "link", "file-trigger"],
+    ["toggle-button", "link", "file-trigger", "tooltip"],
+    [
+      {
+        id: "icon-tooltip",
+        title: "Icon button with tooltip",
+        description:
+          "Name an icon-only button directly, then add a tooltip that reveals the same action on hover or focus.",
+      },
+    ],
   ),
   common(
     "toggle-button",
