@@ -9,7 +9,7 @@ export function SelectValue({
   ...props
 }: SelectValueProps & RefProp<HTMLSpanElement>) {
   const select = useSelectRootContext();
-  const resolvedValue = value ?? select?.selectedText ?? select?.selectedKey;
+  const resolvedValue = value ?? select?.selectedText;
   const isPlaceholder = resolvedValue === undefined || resolvedValue === "";
 
   return (

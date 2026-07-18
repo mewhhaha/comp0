@@ -42,11 +42,11 @@ function HydrationFixture() {
 }
 
 describe("SSR contracts", () => {
-  it("hydrates generated relationships and fragment roots without mismatches", async () => {
+  it("renders selected option labels and hydrates generated relationships without mismatches", async () => {
     const markup = renderToString(<HydrationFixture />);
-    expect(markup).toContain(">one<");
     const container = document.createElement("div");
     container.innerHTML = markup;
+    expect(container.querySelector("#hydrated-select span")?.textContent).toBe("One");
     document.body.append(container);
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
