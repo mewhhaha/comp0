@@ -19,6 +19,7 @@ type FloatingPanelRegistration = {
 
 export type FloatingPanelGroupContextValue = {
   activeId: string | undefined;
+  boundary: RefObject<HTMLElement | null> | undefined;
   stack: readonly string[];
   activate: (id: string, focused?: HTMLElement | null) => void;
   register: (id: string, registration: FloatingPanelRegistration) => void;
@@ -32,6 +33,7 @@ export type FloatingPanelContextValue = {
   moving: boolean;
   open: boolean;
   position: FloatingPanelPosition | null;
+  boundary: RefObject<HTMLElement | null> | undefined;
   resizing: boolean;
   size: FloatingPanelSize | null;
   surfaceRef: RefObject<HTMLDivElement | null>;

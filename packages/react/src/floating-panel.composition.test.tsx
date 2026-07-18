@@ -1,4 +1,4 @@
-import { act } from "react";
+import { act, createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { FloatingPanel } from "./components/FloatingPanel.js";
@@ -97,6 +97,65 @@ describe("floating panel composition", () => {
     expect(onSizeChange).toHaveBeenLastCalledWith({ width: 240, height: 160 });
     expect(resize.hasAttribute("data-resizing")).toBe(false);
     expect(surface.querySelector("output")?.textContent).toBe("Panel resize cancelled.");
+  });
+
+  it("limits movement and resizing to the group boundary", () => {
+    const boundary = createRef<HTMLDivElement>();
+    const onPositionChange = vi.fn();
+    const onSizeChange = vi.fn();
+    const getBoundingClientRect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        if (this.hasAttribute("data-panel-boundary")) {
+          return { left: 100, top: 100, right: 400, bottom: 300 } as DOMRect;
+        }
+        if (this.dataset.slot === "floating-panel-surface") {
+          return {
+            left: 104,
+            top: 104,
+            right: 224,
+            bottom: 184,
+            width: 120,
+            height: 80,
+          } as DOMRect;
+        }
+        return new DOMRect();
+      });
+    const { container } = render(
+      <div ref={boundary} data-panel-boundary="">
+        <FloatingPanelGroup boundary={boundary}>
+          <FloatingPanel
+            defaultOpen
+            defaultPosition={{ x: 104, y: 104 }}
+            defaultSize={{ width: 120, height: 80 }}
+            onPositionChange={onPositionChange}
+            onSizeChange={onSizeChange}
+          >
+            <FloatingPanelSurface portal={false} aria-label="Inspector">
+              <FloatingPanelDragHandle />
+              <FloatingPanelResizeHandle />
+            </FloatingPanelSurface>
+          </FloatingPanel>
+        </FloatingPanelGroup>
+      </div>,
+    );
+    const move = container.querySelector<HTMLElement>("[data-slot='floating-panel-drag-handle']")!;
+    const resize = container.querySelector<HTMLElement>(
+      "[data-slot='floating-panel-resize-handle']",
+    )!;
+    fireKeyDown(move, "Enter");
+    fireKeyDown(move, "ArrowLeft");
+    fireKeyDown(move, "ArrowUp");
+    expect(onPositionChange).toHaveBeenNthCalledWith(1, { x: 100, y: 104 });
+    expect(onPositionChange).toHaveBeenNthCalledWith(2, { x: 100, y: 100 });
+
+    fireKeyDown(resize, "Enter");
+    for (let step = 0; step < 20; step += 1) {
+      fireKeyDown(resize, "ArrowRight");
+      fireKeyDown(resize, "ArrowDown");
+    }
+    expect(onSizeChange).toHaveBeenLastCalledWith({ width: 300, height: 200 });
+    getBoundingClientRect.mockRestore();
   });
 
   it("moves from the header without taking pointer gestures from its controls", () => {

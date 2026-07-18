@@ -247,7 +247,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for inspectors, layers, properties, and other secondary tools people need while continuing to work in the application.",
     "Wrap related panels in FloatingPanelGroup, then give each FloatingPanel its own trigger and labelled surface.",
     "Build the draggable surface header from FloatingPanelTitle, FloatingPanelDragHandle, and FloatingPanelClose; add FloatingPanelResizeHandle at the resize corner.",
-    "Use position and size when geometry must persist. Tab enters each panel normally; F6 is an optional shortcut between open panels and the application.",
+    "Use position and size when geometry must persist, and pass a boundary ref to FloatingPanelGroup when panels must stay inside a workspace. Tab enters each panel normally; F6 is an optional shortcut between open panels and the application.",
     "<FloatingPanelGroup>\n  <FloatingPanel>\n    <FloatingPanelTrigger>Layers</FloatingPanelTrigger>\n    <FloatingPanelSurface>\n      <FloatingPanelHeader>\n        <FloatingPanelDragHandle />\n        <FloatingPanelTitle>Layers</FloatingPanelTitle>\n        <FloatingPanelClose />\n      </FloatingPanelHeader>\n      <FloatingPanelResizeHandle />\n    </FloatingPanelSurface>\n  </FloatingPanel>\n</FloatingPanelGroup>;",
   ),
   inventory: lesson(
@@ -3438,6 +3438,13 @@ const navigation = [
         "Wrapper-free coordinator for focus cycling and panel stacking.",
         false,
         false,
+        [
+          prop(
+            "boundary",
+            "RefObject<HTMLElement | null>",
+            "Limits moving and resizing to an element's client rectangle.",
+          ),
+        ],
       ),
       p(
         "FloatingPanel",

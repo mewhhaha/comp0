@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   FloatingPanel,
   FloatingPanelClose,
@@ -8,7 +9,13 @@ import {
   FloatingPanelSurface,
   FloatingPanelTitle,
   FloatingPanelTrigger,
+  type FloatingPanelPosition,
 } from "@comp0/react";
+
+type PanelPositions = {
+  layers: FloatingPanelPosition;
+  properties: FloatingPanelPosition;
+};
 
 function MoveGrip() {
   return (
@@ -37,9 +44,36 @@ const surfaceClassName =
   "w-72 min-w-56 min-h-44 overflow-auto rounded-xl border border-zinc-950/10 bg-white shadow-xl outline-teal-600 data-active:outline-2 data-active:outline-teal-500 data-moving:outline-dashed data-resizing:outline-dashed dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400";
 
 export function Example() {
+  const workspaceRef = useRef<HTMLDivElement | null>(null);
+  const layersTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const propertiesTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [positions, setPositions] = useState<PanelPositions | null>(null);
+
+  useLayoutEffect(() => {
+    const workspace = workspaceRef.current;
+    const layersTrigger = layersTriggerRef.current;
+    const propertiesTrigger = propertiesTriggerRef.current;
+    if (!workspace || !layersTrigger || !propertiesTrigger || positions) return;
+    const rect = workspace.getBoundingClientRect();
+    const panelTop = Math.min(
+      Math.max(
+        layersTrigger.getBoundingClientRect().bottom,
+        propertiesTrigger.getBoundingClientRect().bottom,
+      ) + 8,
+      rect.bottom - 196,
+    );
+    setPositions({
+      layers: { x: rect.left + 20, y: panelTop },
+      properties: { x: rect.right - 308, y: panelTop },
+    });
+  }, [positions]);
+
   return (
-    <FloatingPanelGroup>
-      <div className="flex min-h-80 flex-col items-start gap-4 rounded-xl border border-dashed border-zinc-950/15 bg-zinc-50 p-5 dark:border-white/15 dark:bg-zinc-950">
+    <FloatingPanelGroup boundary={workspaceRef}>
+      <div
+        ref={workspaceRef}
+        className="flex min-h-[30rem] flex-col items-start gap-4 rounded-xl border border-dashed border-zinc-950/15 bg-zinc-50 p-5 dark:border-white/15 dark:bg-zinc-950"
+      >
         <div>
           <h2 className="font-semibold text-zinc-950 dark:text-white">Workspace</h2>
           <p className="mt-1 max-w-md text-sm/6 text-zinc-600 dark:text-zinc-400">
@@ -48,8 +82,16 @@ export function Example() {
           </p>
         </div>
         <div className="flex w-full max-w-xl justify-between gap-2">
-          <FloatingPanel defaultOpen>
-            <FloatingPanelTrigger className={triggerClassName}>Layers</FloatingPanelTrigger>
+          <FloatingPanel
+            defaultOpen
+            position={positions?.layers ?? null}
+            onPositionChange={(position) => {
+              setPositions((current) => (current ? { ...current, layers: position } : current));
+            }}
+          >
+            <FloatingPanelTrigger ref={layersTriggerRef} className={triggerClassName}>
+              Layers
+            </FloatingPanelTrigger>
             <FloatingPanelSurface placement="bottom start" className={surfaceClassName}>
               <FloatingPanelHeader className="flex cursor-grab items-center gap-2 border-b border-zinc-950/10 px-3 py-2 data-moving:cursor-grabbing dark:border-white/10">
                 <FloatingPanelDragHandle className="cursor-grab touch-none rounded p-1 text-zinc-400 outline-teal-600 hover:bg-zinc-100 active:cursor-grabbing focus-visible:outline-2 data-moving:cursor-grabbing dark:outline-teal-400 dark:hover:bg-zinc-800">
@@ -79,8 +121,15 @@ export function Example() {
             </FloatingPanelSurface>
           </FloatingPanel>
 
-          <FloatingPanel>
-            <FloatingPanelTrigger className={triggerClassName}>Properties</FloatingPanelTrigger>
+          <FloatingPanel
+            position={positions?.properties ?? null}
+            onPositionChange={(position) => {
+              setPositions((current) => (current ? { ...current, properties: position } : current));
+            }}
+          >
+            <FloatingPanelTrigger ref={propertiesTriggerRef} className={triggerClassName}>
+              Properties
+            </FloatingPanelTrigger>
             <FloatingPanelSurface placement="bottom end" className={surfaceClassName}>
               <FloatingPanelHeader className="flex cursor-grab items-center gap-2 border-b border-zinc-950/10 px-3 py-2 data-moving:cursor-grabbing dark:border-white/10">
                 <FloatingPanelDragHandle className="cursor-grab touch-none rounded p-1 text-zinc-400 outline-teal-600 hover:bg-zinc-100 active:cursor-grabbing focus-visible:outline-2 data-moving:cursor-grabbing dark:outline-teal-400 dark:hover:bg-zinc-800">

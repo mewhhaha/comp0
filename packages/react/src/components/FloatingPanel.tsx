@@ -1,4 +1,12 @@
-import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactNode,
+} from "react";
 import { useControllableState } from "@comp0/core";
 import {
   FloatingPanelContext,
@@ -65,7 +73,7 @@ export function FloatingPanel({
   );
   finiteSize(sizeProp === undefined ? defaultSize : sizeProp, "FloatingPanel size");
   const group = useFloatingPanelGroupContext("FloatingPanel");
-  const { activeId, activate, register, stack, unregister } = group;
+  const { activeId, activate, boundary, register, stack, unregister } = group;
   const generatedId = useId();
   const baseId = id ?? generatedId;
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -87,6 +95,7 @@ export function FloatingPanel({
       if (next) onPositionChange?.(next);
     },
   });
+  const positionRef = useRef(position);
   const [size, setSize] = useControllableState<FloatingPanelSize | null>({
     value: sizeProp,
     defaultValue: defaultSize,
@@ -97,6 +106,28 @@ export function FloatingPanel({
   const contentId = `${baseId}-content`;
   const titleId = `${baseId}-title`;
   const triggerId = `${baseId}-trigger`;
+
+  useLayoutEffect(() => {
+    const boundaryRect = boundary?.current?.getBoundingClientRect();
+    const surfaceRect = surfaceRef.current?.getBoundingClientRect();
+    if (!open || positionRef.current || !boundaryRect || !surfaceRect) return;
+    const nextPosition = {
+      x: Math.min(
+        Math.max(boundaryRect.left, surfaceRect.left),
+        Math.max(boundaryRect.left, boundaryRect.right - surfaceRect.width),
+      ),
+      y: Math.min(
+        Math.max(boundaryRect.top, surfaceRect.top),
+        Math.max(boundaryRect.top, boundaryRect.bottom - surfaceRect.height),
+      ),
+    };
+    positionRef.current = nextPosition;
+    setPosition(nextPosition);
+  }, [boundary, open, setPosition]);
+
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
 
   useEffect(() => {
     register(baseId, {
@@ -112,6 +143,10 @@ export function FloatingPanel({
     if (!nextOpen) restoreFocus.current = false;
     setOpenState(nextOpen);
   };
+  const setPanelPosition = (nextPosition: FloatingPanelPosition) => {
+    positionRef.current = nextPosition;
+    setPosition(nextPosition);
+  };
   const requestClose = () => {
     restoreFocus.current = true;
     setOpenState(false);
@@ -125,9 +160,14 @@ export function FloatingPanel({
     const rect = measure();
     const ownerWindow = surfaceRef.current?.ownerDocument.defaultView;
     if (!rect || !ownerWindow) return nextPosition;
+    const boundaryRect = boundary?.current?.getBoundingClientRect();
+    const left = boundaryRect?.left ?? 0;
+    const top = boundaryRect?.top ?? 0;
+    const right = boundaryRect?.right ?? ownerWindow.innerWidth;
+    const bottom = boundaryRect?.bottom ?? ownerWindow.innerHeight;
     return {
-      x: Math.min(Math.max(0, nextPosition.x), Math.max(0, ownerWindow.innerWidth - rect.width)),
-      y: Math.min(Math.max(0, nextPosition.y), Math.max(0, ownerWindow.innerHeight - rect.height)),
+      x: Math.min(Math.max(left, nextPosition.x), Math.max(left, right - rect.width)),
+      y: Math.min(Math.max(top, nextPosition.y), Math.max(top, bottom - rect.height)),
     };
   };
   const announcePosition = (nextPosition: FloatingPanelPosition) => {
@@ -139,7 +179,7 @@ export function FloatingPanel({
     const current = getPosition();
     if (!current) return;
     const nextPosition = constrainPosition({ x: current.x + x, y: current.y + y });
-    setPosition(nextPosition);
+    setPanelPosition(nextPosition);
     announcePosition(nextPosition);
   };
   const startPointerMove = (
@@ -162,7 +202,7 @@ export function FloatingPanel({
   const continuePointerMove = (event: PointerEvent<HTMLElement>) => {
     const move = pointerMove.current;
     if (!move || move.pointerId !== event.pointerId) return;
-    setPosition(
+    setPanelPosition(
       constrainPosition({
         x: move.position.x + event.clientX - move.startX,
         y: move.position.y + event.clientY - move.startY,
@@ -185,10 +225,49 @@ export function FloatingPanel({
   const cancelPointerMove = (event: PointerEvent<HTMLElement>) => {
     const move = pointerMove.current;
     if (!move || move.pointerId !== event.pointerId) return;
-    setPosition(move.position);
+    setPanelPosition(move.position);
     clearPointerMove(event);
     setAnnouncement("Panel movement cancelled.");
   };
+
+  useEffect(() => {
+    const boundaryElement = boundary?.current;
+    const ownerWindow = boundaryElement?.ownerDocument.defaultView;
+    if (!boundaryElement || !ownerWindow) return;
+    let previousRect = boundaryElement.getBoundingClientRect();
+    const followBoundary = () => {
+      const nextRect = boundaryElement.getBoundingClientRect();
+      const current = positionRef.current;
+      const surfaceRect = surfaceRef.current?.getBoundingClientRect();
+      const deltaX = nextRect.left - previousRect.left;
+      const deltaY = nextRect.top - previousRect.top;
+      previousRect = nextRect;
+      if (!current || !surfaceRect) return;
+      const nextPosition = {
+        x: Math.min(
+          Math.max(nextRect.left, current.x + deltaX),
+          Math.max(nextRect.left, nextRect.right - surfaceRect.width),
+        ),
+        y: Math.min(
+          Math.max(nextRect.top, current.y + deltaY),
+          Math.max(nextRect.top, nextRect.bottom - surfaceRect.height),
+        ),
+      };
+      if (nextPosition.x === current.x && nextPosition.y === current.y) return;
+      positionRef.current = nextPosition;
+      setPosition(nextPosition);
+    };
+    ownerWindow.addEventListener("scroll", followBoundary, true);
+    ownerWindow.addEventListener("resize", followBoundary);
+    const observer =
+      typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(followBoundary);
+    observer?.observe(boundaryElement);
+    return () => {
+      ownerWindow.removeEventListener("scroll", followBoundary, true);
+      ownerWindow.removeEventListener("resize", followBoundary);
+      observer?.disconnect();
+    };
+  }, [boundary, setPosition]);
 
   useEffect(() => {
     if (open || !restoreFocus.current) return;
@@ -205,6 +284,7 @@ export function FloatingPanel({
         announce(message) {
           setAnnouncement(message);
         },
+        boundary,
         contentId,
         moving,
         open,
@@ -226,7 +306,7 @@ export function FloatingPanel({
         requestClose,
         setMoving,
         setOpen,
-        setPosition,
+        setPosition: setPanelPosition,
         setResizing,
         setSize,
         setSurfaceElement(element) {

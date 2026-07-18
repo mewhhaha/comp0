@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
   FloatingPanelGroupContext,
   type FloatingPanelGroupContextValue,
@@ -7,6 +7,7 @@ import {
 type FloatingPanelRegistration = Parameters<FloatingPanelGroupContextValue["register"]>[1];
 
 export type FloatingPanelGroupProps = {
+  boundary?: RefObject<HTMLElement | null> | undefined;
   children?: ReactNode | undefined;
 };
 
@@ -14,7 +15,7 @@ function panelFocusTarget(surface: HTMLElement) {
   return surface.querySelector<HTMLElement>("[autofocus]") ?? surface;
 }
 
-export function FloatingPanelGroup({ children }: FloatingPanelGroupProps) {
+export function FloatingPanelGroup({ boundary, children }: FloatingPanelGroupProps) {
   const registrations = useRef(new Map<string, FloatingPanelRegistration>());
   const applicationFocus = useRef<HTMLElement | null>(null);
   const [stack, setStack] = useState<readonly string[]>([]);
@@ -90,7 +91,7 @@ export function FloatingPanelGroup({ children }: FloatingPanelGroupProps) {
 
   return (
     <FloatingPanelGroupContext
-      value={{ activeId: stack.at(-1), stack, activate, register, unregister }}
+      value={{ activeId: stack.at(-1), boundary, stack, activate, register, unregister }}
     >
       {children}
     </FloatingPanelGroupContext>

@@ -109,7 +109,8 @@ function canConnect(from: OutputName, to: InputName) {
 
 function curvePath(start: FloatingPanelPosition, end: FloatingPanelPosition) {
   const bend = Math.max(48, Math.abs(end.x - start.x) / 2);
-  return `M ${start.x} ${start.y} C ${start.x + bend} ${start.y}, ${end.x - bend} ${end.y}, ${end.x} ${end.y}`;
+  const direction = end.x >= start.x ? 1 : -1;
+  return `M ${start.x} ${start.y} C ${start.x + bend * direction} ${start.y}, ${end.x - bend * direction} ${end.y}, ${end.x} ${end.y}`;
 }
 
 function MoveGrip() {
@@ -243,10 +244,7 @@ export function Example() {
       const toolbarRect = toolbarRef.current?.getBoundingClientRect();
       const sideWidth = canvasRect.width < 500 ? 136 : 200;
       const noiseWidth = canvasRect.width < 500 ? 200 : 220;
-      const baseTop = Math.min(
-        Math.max(24, canvasRect.top + 112, (toolbarRect?.bottom ?? canvasRect.top) + 16),
-        ownerWindow.innerHeight - 360,
-      );
+      const baseTop = Math.max(canvasRect.top + 112, (toolbarRect?.bottom ?? canvasRect.top) + 16);
       setPositions({
         coordinates: { x: canvasRect.left + 12, y: baseTop },
         noise: { x: canvasRect.left + (canvasRect.width - noiseWidth) / 2, y: baseTop + 170 },
@@ -497,7 +495,7 @@ export function Example() {
       </div>
 
       {positions && (
-        <FloatingPanelGroup key={layoutKey}>
+        <FloatingPanelGroup key={layoutKey} boundary={canvasRef}>
           <FloatingPanel
             open
             position={positions.coordinates}
