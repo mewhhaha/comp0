@@ -149,7 +149,8 @@ export function NavigationMenu({
           }
           if (!MOVEMENT_KEYS.has(event.key)) return;
           if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-          if (!(event.target instanceof HTMLElement)) return;
+          const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+          if (!ownerWindow || !(event.target instanceof ownerWindow.HTMLElement)) return;
           const next = arrowFocusTarget(event.currentTarget, event.target, event.key);
           if (!next) return;
           event.preventDefault();
@@ -159,7 +160,14 @@ export function NavigationMenu({
           onBlur?.(event);
           if (event.defaultPrevented || value === "") return;
           const next = event.relatedTarget;
-          if (next instanceof Node && event.currentTarget.contains(next)) return;
+          const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+          if (
+            ownerWindow &&
+            next instanceof ownerWindow.Node &&
+            event.currentTarget.contains(next)
+          ) {
+            return;
+          }
           context.close();
         }}
         onPointerEnter={(event) => {
