@@ -12,6 +12,34 @@ import {
 } from "./index.js";
 
 describe("MentionField browser interactions", () => {
+  it("keeps the first filtered mention active after the query changes", async () => {
+    const { container, unmount } = render(
+      <MentionField as="div" defaultValue="Could @">
+        <MentionFieldInput
+          aria-label="Message"
+          style={{ display: "block", font: "16px/24px sans-serif", padding: 12, width: 320 }}
+        />
+        <MentionFieldPopover style={{ width: 180 }}>
+          <ListBox aria-label="Teammates">
+            <ListBoxItem value="Aisha">Aisha</ListBoxItem>
+            <ListBoxItem value="Diego">Diego</ListBoxItem>
+          </ListBox>
+        </MentionFieldPopover>
+      </MentionField>,
+    );
+    const input = container.querySelector("textarea")!;
+    const firstMention = container.querySelector<HTMLElement>("[data-value='Aisha']")!;
+
+    await act(async () => userEvent.click(input));
+    await act(async () => userEvent.keyboard("a"));
+    await vi.waitFor(() => expect(firstMention.hasAttribute("data-active")).toBe(true));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 100)));
+
+    expect(input.getAttribute("aria-activedescendant")).toBe(firstMention.id);
+    expect(firstMention.hasAttribute("data-active")).toBe(true);
+    unmount();
+  });
+
   it("positions suggestions at an earlier caret and retains textarea focus after insertion", async () => {
     const { container, unmount } = render(
       <MentionField as="div" defaultValue="Ask @Mi, then review the draft">

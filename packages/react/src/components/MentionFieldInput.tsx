@@ -25,7 +25,8 @@ export function MentionFieldInput({
 
   const syncSelection = (input: HTMLTextAreaElement) => {
     const match = mentionField.syncInput(input);
-    autocomplete?.setInputValue(match?.query ?? "");
+    const query = match?.query ?? "";
+    if (autocomplete?.inputValue !== query) autocomplete?.setInputValue(query);
   };
 
   return (
