@@ -1,5 +1,7 @@
 import {
+  Children,
   Fragment,
+  isValidElement,
   useCallback,
   useEffect,
   useRef,
@@ -10,8 +12,9 @@ import {
 import { dataAttr } from "@comp0/core";
 import { fieldFeedback, FieldProvider, useFieldIds } from "../field.js";
 import { SelectRootContext, type RefProp } from "../shared.js";
+import { resolveAutocompleteItemText } from "./autocomplete-shared.js";
 import { PopoverContext, usePopoverState } from "./overlay-shared.js";
-import { type SelectProps } from "./pickers-shared.js";
+import { selectOptionPart, type SelectProps } from "./pickers-shared.js";
 import { useFormControlState, useFormReset } from "./form-control-state.js";
 export type { SelectProps } from "./pickers-shared.js";
 
@@ -25,6 +28,17 @@ const nativeSelectStyle: CSSProperties = {
   position: "absolute",
   whiteSpace: "nowrap",
   width: 1,
+};
+
+type DeclarativeSelectOptionProps = {
+  "aria-label"?: string | undefined;
+  children?: ReactNode;
+  textValue?: string | undefined;
+  value?: string | undefined;
+};
+
+type SelectOptionComponent = {
+  [selectOptionPart]?: true;
 };
 
 export function Select({
@@ -69,6 +83,23 @@ export function Select({
   });
   const selected = selectedState.value;
   const setSelected = selectedState.setValue;
+  let declarativeSelectedText: ReactNode;
+  const visitSelectOptions = (nodes: ReactNode) => {
+    Children.forEach(nodes, (child) => {
+      if (declarativeSelectedText !== undefined) return;
+      if (!isValidElement<DeclarativeSelectOptionProps>(child)) return;
+      const isSelectOption = Boolean((child.type as SelectOptionComponent)[selectOptionPart]);
+      if (isSelectOption && child.props.value === selected) {
+        declarativeSelectedText =
+          child.props.textValue ??
+          resolveAutocompleteItemText(child.props.children).text ??
+          child.props["aria-label"];
+        return;
+      }
+      visitSelectOptions(child.props.children);
+    });
+  };
+  visitSelectOptions(children);
   useFormReset({
     controlRef: selectRef,
     controlled: selectedState.controlled,
@@ -111,7 +142,7 @@ export function Select({
     listBoxId: `${controlId}-listbox`,
     labelId,
     descriptionId,
-    selectedText,
+    selectedText: selectedText ?? declarativeSelectedText,
     setSelectedKey: setSelected,
     registerItem,
     unregisterItem,

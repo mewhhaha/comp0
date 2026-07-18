@@ -2,7 +2,7 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, type HTMLAttribu
 import { dataAttr } from "@comp0/core";
 import { useSelectRootContext, type RefProp } from "../shared.js";
 import { resolveItemLabel } from "./collection-shared.js";
-import { SelectCollectionContext } from "./pickers-shared.js";
+import { selectOptionPart, SelectCollectionContext } from "./pickers-shared.js";
 import { usePopoverContext } from "./overlay-shared.js";
 
 export type SelectOptionProps = Omit<HTMLAttributes<HTMLDivElement>, "id"> & {
@@ -99,3 +99,5 @@ export function SelectOption({
     </div>
   );
 }
+
+Object.assign(SelectOption, { [selectOptionPart]: true as const });

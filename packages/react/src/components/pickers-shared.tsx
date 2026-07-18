@@ -18,6 +18,7 @@ export type PickerCollectionContextValue = {
   unregister: (value: string) => void;
 };
 export const SelectCollectionContext = createContext<PickerCollectionContextValue | null>(null);
+export const selectOptionPart = Symbol("comp0.select-option-part");
 
 export type SelectProps = Omit<
   HTMLAttributes<HTMLDivElement>,
