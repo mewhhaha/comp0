@@ -100,7 +100,6 @@ describe("floating panel composition", () => {
   });
 
   it("limits movement and resizing to the group boundary", () => {
-    const boundary = createRef<HTMLDivElement>();
     const onPositionChange = vi.fn();
     const onSizeChange = vi.fn();
     const getBoundingClientRect = vi
@@ -129,22 +128,20 @@ describe("floating panel composition", () => {
         return new DOMRect();
       });
     const { container } = render(
-      <div ref={boundary} data-panel-boundary="">
-        <FloatingPanelGroup boundary={boundary}>
-          <FloatingPanel
-            defaultOpen
-            defaultPosition={{ x: 4, y: 4 }}
-            defaultSize={{ width: 120, height: 80 }}
-            onPositionChange={onPositionChange}
-            onSizeChange={onSizeChange}
-          >
-            <FloatingPanelSurface portal={false} aria-label="Inspector">
-              <FloatingPanelDragHandle />
-              <FloatingPanelResizeHandle />
-            </FloatingPanelSurface>
-          </FloatingPanel>
-        </FloatingPanelGroup>
-      </div>,
+      <FloatingPanelGroup as="div" data-panel-boundary="">
+        <FloatingPanel
+          defaultOpen
+          defaultPosition={{ x: 4, y: 4 }}
+          defaultSize={{ width: 120, height: 80 }}
+          onPositionChange={onPositionChange}
+          onSizeChange={onSizeChange}
+        >
+          <FloatingPanelSurface portal={false} aria-label="Inspector">
+            <FloatingPanelDragHandle />
+            <FloatingPanelResizeHandle />
+          </FloatingPanelSurface>
+        </FloatingPanel>
+      </FloatingPanelGroup>,
     );
     const move = container.querySelector<HTMLElement>("[data-slot='floating-panel-drag-handle']")!;
     const resize = container.querySelector<HTMLElement>(
@@ -169,17 +166,15 @@ describe("floating panel composition", () => {
     const boundary = createRef<HTMLDivElement>();
     const onPositionChange = vi.fn();
     const { baseElement } = render(
-      <div ref={boundary} style={{ position: "relative" }}>
-        <FloatingPanelGroup boundary={boundary}>
-          <FloatingPanel
-            defaultOpen
-            defaultPosition={{ x: 24, y: 32 }}
-            onPositionChange={onPositionChange}
-          >
-            <FloatingPanelSurface aria-label="Inspector" />
-          </FloatingPanel>
-        </FloatingPanelGroup>
-      </div>,
+      <FloatingPanelGroup as="div" ref={boundary}>
+        <FloatingPanel
+          defaultOpen
+          defaultPosition={{ x: 24, y: 32 }}
+          onPositionChange={onPositionChange}
+        >
+          <FloatingPanelSurface aria-label="Inspector" />
+        </FloatingPanel>
+      </FloatingPanelGroup>,
     );
     const surface = baseElement.querySelector<HTMLElement>("[data-slot='floating-panel-surface']")!;
 

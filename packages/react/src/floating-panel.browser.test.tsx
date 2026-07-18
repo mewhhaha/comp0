@@ -52,13 +52,11 @@ describe("floating panel browser interactions", () => {
     const boundary = createRef<HTMLDivElement>();
     const { unmount } = render(
       <div style={{ height: 1600, paddingTop: 400 }}>
-        <div ref={boundary} style={{ position: "relative", width: 500, height: 500 }}>
-          <FloatingPanelGroup boundary={boundary}>
-            <FloatingPanel defaultOpen defaultPosition={{ x: 40, y: 60 }}>
-              <FloatingPanelSurface aria-label="Inspector" style={{ width: 160, height: 120 }} />
-            </FloatingPanel>
-          </FloatingPanelGroup>
-        </div>
+        <FloatingPanelGroup as="div" ref={boundary} style={{ width: 500, height: 500 }}>
+          <FloatingPanel defaultOpen defaultPosition={{ x: 40, y: 60 }}>
+            <FloatingPanelSurface aria-label="Inspector" style={{ width: 160, height: 120 }} />
+          </FloatingPanel>
+        </FloatingPanelGroup>
       </div>,
     );
     const surface = page.getByRole("dialog", { name: "Inspector" }).element() as HTMLElement;

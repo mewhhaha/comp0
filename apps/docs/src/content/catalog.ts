@@ -247,8 +247,8 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for inspectors, layers, properties, and other secondary tools people need while continuing to work in the application.",
     "Wrap related panels in FloatingPanelGroup, then give each FloatingPanel its own trigger and labelled surface.",
     "Build the draggable surface header from FloatingPanelTitle, FloatingPanelDragHandle, and FloatingPanelClose; add FloatingPanelResizeHandle at the resize corner.",
-    "Use position and size when geometry must persist. For workspace-local coordinates, make the boundary a positioned containing block and pass its ref to FloatingPanelGroup. Tab enters each panel normally; F6 is an optional shortcut between open panels and the application.",
-    "<FloatingPanelGroup>\n  <FloatingPanel>\n    <FloatingPanelTrigger>Layers</FloatingPanelTrigger>\n    <FloatingPanelSurface>\n      <FloatingPanelHeader>\n        <FloatingPanelDragHandle />\n        <FloatingPanelTitle>Layers</FloatingPanelTitle>\n        <FloatingPanelClose />\n      </FloatingPanelHeader>\n      <FloatingPanelResizeHandle />\n    </FloatingPanelSurface>\n  </FloatingPanel>\n</FloatingPanelGroup>;",
+    "Use position and size when geometry must persist. Render FloatingPanelGroup as an element for workspace-local coordinates, or leave it wrapper-free for viewport coordinates. Tab enters each panel normally; F6 is an optional shortcut between open panels and the application.",
+    '<FloatingPanelGroup as="div">\n  <FloatingPanel>\n    <FloatingPanelTrigger>Layers</FloatingPanelTrigger>\n    <FloatingPanelSurface>\n      <FloatingPanelHeader>\n        <FloatingPanelDragHandle />\n        <FloatingPanelTitle>Layers</FloatingPanelTitle>\n        <FloatingPanelClose />\n      </FloatingPanelHeader>\n      <FloatingPanelResizeHandle />\n    </FloatingPanelSurface>\n  </FloatingPanel>\n</FloatingPanelGroup>;',
   ),
   inventory: lesson(
     "A uniform spatial grid whose cards can move and span more rows or columns.",
@@ -3425,19 +3425,19 @@ const navigation = [
       "FloatingPanelTitle",
       "FloatingPanelTrigger",
     ],
-    "<FloatingPanelGroup><FloatingPanel><FloatingPanelTrigger>Layers</FloatingPanelTrigger><FloatingPanelSurface><FloatingPanelHeader><FloatingPanelDragHandle /><FloatingPanelTitle>Layers</FloatingPanelTitle><FloatingPanelClose /></FloatingPanelHeader><FloatingPanelResizeHandle /></FloatingPanelSurface></FloatingPanel></FloatingPanelGroup>",
+    '<FloatingPanelGroup as="div"><FloatingPanel><FloatingPanelTrigger>Layers</FloatingPanelTrigger><FloatingPanelSurface><FloatingPanelHeader><FloatingPanelDragHandle /><FloatingPanelTitle>Layers</FloatingPanelTitle><FloatingPanelClose /></FloatingPanelHeader><FloatingPanelResizeHandle /></FloatingPanelSurface></FloatingPanel></FloatingPanelGroup>',
     [
       p(
         "FloatingPanelGroup",
         "root",
-        "Wrapper-free coordinator for focus cycling and panel stacking.",
-        false,
+        "Focus and stacking coordinator that optionally renders the panel boundary.",
+        true,
         false,
         [
           prop(
-            "boundary",
-            "RefObject<HTMLElement | null>",
-            "Contains panel positioning and resizing; the element must establish a positioned containing block.",
+            "as",
+            "ElementType | Fragment",
+            "Renders a positioned local boundary; omit it to keep the group wrapper-free and viewport-based.",
           ),
         ],
       ),
@@ -3454,7 +3454,7 @@ const navigation = [
           prop(
             "position",
             "FloatingPanelPosition | null",
-            "Controlled viewport coordinates, or boundary-local coordinates when the group has a boundary.",
+            "Controlled viewport coordinates, or local coordinates when the group renders an element.",
           ),
           prop(
             "defaultPosition",
@@ -3495,7 +3495,7 @@ const navigation = [
           prop(
             "portal",
             "boolean",
-            "Renders unbounded panels into document.body; bounded panels remain inside their containing block.",
+            "Renders viewport panels into document.body; locally contained panels remain inside their group element.",
           ),
         ],
       ),

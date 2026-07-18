@@ -487,9 +487,11 @@ export function Example() {
   };
 
   return (
-    <div
+    <FloatingPanelGroup
+      as="div"
+      key={layoutKey}
       ref={canvasRef}
-      className="relative min-h-[38rem] rounded-xl border border-dashed border-zinc-950/15 bg-zinc-50 dark:border-white/15 dark:bg-zinc-950"
+      className="min-h-[38rem] rounded-xl border border-dashed border-zinc-950/15 bg-zinc-50 dark:border-white/15 dark:bg-zinc-950"
     >
       <div ref={toolbarRef} className="relative z-10 flex items-start justify-between gap-4 p-4">
         <div>
@@ -509,7 +511,7 @@ export function Example() {
       </div>
 
       {positions && (
-        <FloatingPanelGroup key={layoutKey} boundary={canvasRef}>
+        <>
           <FloatingPanel
             open
             position={positions.coordinates}
@@ -672,13 +674,13 @@ export function Example() {
               </FloatingPanelResizeHandle>
             </FloatingPanelSurface>
           </FloatingPanel>
-        </FloatingPanelGroup>
+        </>
       )}
 
       {positions && connectionLayer}
       <output className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </output>
-    </div>
+    </FloatingPanelGroup>
   );
 }

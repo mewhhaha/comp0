@@ -1,13 +1,25 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ElementType,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
+import { useComposedRefs } from "@comp0/core";
+import { dataSlot, type RefProp } from "../shared.js";
 import {
   FloatingPanelGroupContext,
   type FloatingPanelGroupContextValue,
 } from "./floating-panel-shared.js";
+import { ProviderRoot } from "./provider-root.js";
 
 type FloatingPanelRegistration = Parameters<FloatingPanelGroupContextValue["register"]>[1];
 
-export type FloatingPanelGroupProps = {
-  boundary?: RefObject<HTMLElement | null> | undefined;
+export type FloatingPanelGroupProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
+  as?: ElementType | typeof Fragment | undefined;
   children?: ReactNode | undefined;
 };
 
@@ -15,10 +27,19 @@ function panelFocusTarget(surface: HTMLElement) {
   return surface.querySelector<HTMLElement>("[autofocus]") ?? surface;
 }
 
-export function FloatingPanelGroup({ boundary, children }: FloatingPanelGroupProps) {
+export function FloatingPanelGroup({
+  as,
+  children,
+  ref,
+  style,
+  ...props
+}: FloatingPanelGroupProps & RefProp<HTMLElement>) {
   const registrations = useRef(new Map<string, FloatingPanelRegistration>());
   const applicationFocus = useRef<HTMLElement | null>(null);
+  const boundaryRef = useRef<HTMLElement | null>(null);
+  const composedRef = useComposedRefs(boundaryRef, ref);
   const [stack, setStack] = useState<readonly string[]>([]);
+  const bounded = Boolean(as && as !== Fragment);
 
   // Registration effects depend on these functions, so their identity must stay stable.
   const register = useCallback((id: string, registration: FloatingPanelRegistration) => {
@@ -91,9 +112,24 @@ export function FloatingPanelGroup({ boundary, children }: FloatingPanelGroupPro
 
   return (
     <FloatingPanelGroupContext
-      value={{ activeId: stack.at(-1), boundary, stack, activate, register, unregister }}
+      value={{
+        activeId: stack.at(-1),
+        boundary: bounded ? boundaryRef : undefined,
+        stack,
+        activate,
+        register,
+        unregister,
+      }}
     >
-      {children}
+      <ProviderRoot
+        {...props}
+        as={as}
+        ref={composedRef}
+        data-slot={dataSlot(props, "floating-panel-group")}
+        style={bounded ? { ...style, position: style?.position ?? "relative" } : style}
+      >
+        {children}
+      </ProviderRoot>
     </FloatingPanelGroupContext>
   );
 }
