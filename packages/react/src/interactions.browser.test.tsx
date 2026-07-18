@@ -1,5 +1,5 @@
 import { act, useState } from "react";
-import { userEvent } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
 import {
   Autocomplete,
@@ -34,7 +34,7 @@ import {
   SearchField,
   SearchFieldInput,
 } from "./index.js";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
+import { render } from "../test/render.js";
 
 describe("real-browser interaction contracts", () => {
   it("keeps a context menu open after the right-click press finishes", async () => {
@@ -62,7 +62,7 @@ describe("real-browser interaction contracts", () => {
     unmount();
   });
 
-  it("keeps a searchable menu editor inside the native popover and restores its trigger", () => {
+  it("keeps a searchable menu editor inside the native popover and restores its trigger", async () => {
     const activated = vi.fn();
     const { container, unmount } = render(
       <Autocomplete disableAutoFocusFirst>
@@ -83,20 +83,20 @@ describe("real-browser interaction contracts", () => {
         </Menu>
       </Autocomplete>,
     );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const input = container.querySelector<HTMLInputElement>("input")!;
+    const trigger = page.getByRole("button", { name: "Commands" }).element();
     const surface = container.querySelector<HTMLElement>("[popover]")!;
     const menu = container.querySelector<HTMLElement>("[role='menu']")!;
 
-    fireClick(trigger);
+    await act(async () => userEvent.click(trigger));
+    const input = page.getByRole("searchbox", { name: "Find a command" }).element();
     expect(surface.matches(":popover-open")).toBe(true);
     expect(surface.contains(input)).toBe(true);
     expect(menu.contains(input)).toBe(false);
     expect(document.activeElement).toBe(input);
 
-    fireKeyDown(input, "ArrowDown");
+    await act(async () => userEvent.keyboard("{ArrowDown}"));
     expect(input.getAttribute("aria-activedescendant")).toBe("browser-archive-command");
-    fireKeyDown(input, "Enter");
+    await act(async () => userEvent.keyboard("{Enter}"));
 
     expect(activated).toHaveBeenCalledOnce();
     expect(surface.matches(":popover-open")).toBe(false);
@@ -138,7 +138,7 @@ describe("real-browser interaction contracts", () => {
   });
 
   it("light-dismisses picker popovers without stealing outside focus", async () => {
-    const { container, unmount } = render(
+    const { unmount } = render(
       <div>
         <button type="button">Outside target</button>
         <Select id="light-dismiss-select">
@@ -149,12 +149,13 @@ describe("real-browser interaction contracts", () => {
         </Select>
       </div>,
     );
-    const [outside, trigger] = container.querySelectorAll<HTMLButtonElement>("button");
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
+    const outside = page.getByRole("button", { name: "Outside target" }).element();
+    const trigger = page.getByRole("button", { name: "Choose" }).element();
 
-    await act(async () => userEvent.click(trigger!));
+    await act(async () => userEvent.click(trigger));
+    const content = page.getByRole("listbox").element() as HTMLElement;
     expect(content.matches(":popover-open")).toBe(true);
-    await act(async () => userEvent.click(outside!));
+    await act(async () => userEvent.click(outside));
     await vi.waitFor(() => expect(trigger?.getAttribute("aria-expanded")).toBe("false"));
 
     expect(content.matches(":popover-open")).toBe(false);
@@ -164,7 +165,7 @@ describe("real-browser interaction contracts", () => {
 
   it("restores a controlled picker popover when its owner rejects light dismissal", async () => {
     const onToggle = vi.fn();
-    const { container, unmount } = render(
+    const { unmount } = render(
       <div>
         <button type="button">Outside target</button>
         <Select id="controlled-select" open onToggle={onToggle}>
@@ -175,9 +176,9 @@ describe("real-browser interaction contracts", () => {
         </Select>
       </div>,
     );
-    const outside = container.querySelector<HTMLButtonElement>("button")!;
-    const trigger = container.querySelectorAll<HTMLButtonElement>("button")[1]!;
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
+    const outside = page.getByRole("button", { name: "Outside target" }).element();
+    const trigger = page.getByRole("button", { name: "Choose" }).element();
+    const content = page.getByRole("listbox").element();
 
     expect(content.matches(":popover-open")).toBe(true);
     await act(async () => userEvent.click(outside));
@@ -188,9 +189,9 @@ describe("real-browser interaction contracts", () => {
     unmount();
   });
 
-  it("keeps a controlled picker open when its owner rejects Escape", () => {
+  it("keeps a controlled picker open when its owner rejects Escape", async () => {
     const onToggle = vi.fn();
-    const { container, unmount } = render(
+    const { unmount } = render(
       <Select open onToggle={onToggle}>
         <SelectTrigger>Choose</SelectTrigger>
         <SelectPopover>
@@ -198,10 +199,11 @@ describe("real-browser interaction contracts", () => {
         </SelectPopover>
       </Select>,
     );
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
-    const option = container.querySelector<HTMLElement>("[role='option']")!;
+    const content = page.getByRole("listbox").element();
+    const option = page.getByRole("option", { name: "One" }).element();
 
-    fireKeyDown(option, "Escape");
+    act(() => option.focus());
+    await act(async () => userEvent.keyboard("{Escape}"));
 
     expect(onToggle).toHaveBeenCalledWith(false);
     expect(content.matches(":popover-open")).toBe(true);
@@ -292,8 +294,8 @@ describe("real-browser interaction contracts", () => {
     unmount();
   });
 
-  it("focuses the selected option when Select starts open", () => {
-    const { container, unmount } = render(
+  it("focuses the selected option when Select starts open", async () => {
+    const { unmount } = render(
       <Select id="initially-open-select" defaultValue="two" defaultOpen>
         <SelectTrigger>Choose</SelectTrigger>
         <SelectPopover>
@@ -302,18 +304,18 @@ describe("real-browser interaction contracts", () => {
         </SelectPopover>
       </Select>,
     );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
+    const trigger = page.getByRole("button", { name: "Choose" }).element();
+    const content = page.getByRole("listbox").element();
 
     expect(content.matches(":popover-open")).toBe(true);
     expect(document.activeElement?.textContent).toBe("Two");
-    fireKeyDown(document.activeElement!, "Escape");
+    await act(async () => userEvent.keyboard("{Escape}"));
     expect(document.activeElement).toBe(trigger);
     unmount();
   });
 
-  it("moves focus through select options and restores it after commit", () => {
-    const { container, unmount } = render(
+  it("moves focus through select options and restores it after commit", async () => {
+    const { unmount } = render(
       <Select id="browser-select">
         <SelectTrigger>Choose</SelectTrigger>
         <SelectPopover>
@@ -322,23 +324,21 @@ describe("real-browser interaction contracts", () => {
         </SelectPopover>
       </Select>,
     );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
+    const trigger = page.getByRole("button", { name: "Choose" }).element();
 
-    fireClick(trigger);
+    await act(async () => userEvent.click(trigger));
+    const content = page.getByRole("listbox").element() as HTMLElement;
     expect(document.activeElement?.textContent).toBe("One");
-    fireKeyDown(document.activeElement!, "Enter");
+    await act(async () => userEvent.keyboard("{Enter}"));
 
     expect(content.hidden).toBe(true);
     expect(document.activeElement).toBe(trigger);
-    expect(container.querySelector("[data-value='one']")?.getAttribute("aria-selected")).toBe(
-      "true",
-    );
+    expect(content.querySelector("[role='option']")?.getAttribute("aria-selected")).toBe("true");
     unmount();
   });
 
-  it("keeps combobox focus in the input with a mounted active descendant", () => {
-    const { container, unmount } = render(
+  it("keeps combobox focus in the input with a mounted active descendant", async () => {
+    const { unmount } = render(
       <Combobox id="browser-combobox" allowEmptyCollection>
         <ComboboxInput aria-label="Framework" />
         <ComboboxPopover>
@@ -348,10 +348,10 @@ describe("real-browser interaction contracts", () => {
         </ComboboxPopover>
       </Combobox>,
     );
-    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
+    const input = page.getByRole("combobox", { name: "Framework" }).element();
 
-    input.focus();
-    fireKeyDown(input, "ArrowDown");
+    await act(async () => userEvent.click(input));
+    await act(async () => userEvent.keyboard("{ArrowDown}"));
 
     expect(document.activeElement).toBe(input);
     expect(input.getAttribute("aria-activedescendant")).toBe("dom-react");
@@ -375,7 +375,9 @@ describe("real-browser interaction contracts", () => {
       </form>,
     );
     const form = container.querySelector("form")!;
-    const input = container.querySelector<HTMLInputElement>("input")!;
+    const input = page
+      .getByRole("searchbox", { name: "Destination" })
+      .element() as HTMLInputElement;
 
     await act(async () => userEvent.click(input));
     await act(async () => userEvent.fill(input, "War"));
@@ -383,7 +385,8 @@ describe("real-browser interaction contracts", () => {
     expect(input.getAttribute("aria-activedescendant")).toBe("warsaw-suggestion");
 
     await act(async () => userEvent.keyboard("{Enter}"));
-    expect(container.querySelector("#warsaw-suggestion")?.getAttribute("aria-selected")).toBe(
+    expect(page.getByRole("option", { name: "Warsaw" }).element()).toHaveAttribute(
+      "aria-selected",
       "true",
     );
     expect(input.value).toBe("War");
@@ -569,7 +572,7 @@ describe("real-browser interaction contracts", () => {
     unmount();
   });
 
-  it("uses native form validity and serialization for required pickers", () => {
+  it("uses native form validity and serialization for required pickers", async () => {
     const { container, unmount } = render(
       <form>
         <Select id="browser-required-select" name="plan" required>
@@ -587,15 +590,15 @@ describe("real-browser interaction contracts", () => {
       </form>,
     );
     const form = container.querySelector("form")!;
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const trigger = page.getByRole("button", { name: "Plan" }).element();
 
     let valid = true;
     act(() => {
       valid = form.checkValidity();
     });
     expect(valid).toBe(false);
-    fireClick(trigger);
-    fireClick(container.querySelector<HTMLElement>("[role='option']")!);
+    await act(async () => userEvent.click(trigger));
+    await act(async () => userEvent.click(page.getByRole("option", { name: "Pro" }).element()));
 
     act(() => {
       valid = form.checkValidity();
@@ -607,18 +610,17 @@ describe("real-browser interaction contracts", () => {
     unmount();
   });
 
-  it("uses the native dialog lifecycle and restores trigger focus", () => {
-    const { container, unmount } = render(
+  it("uses the native dialog lifecycle and restores trigger focus", async () => {
+    const { unmount } = render(
       <Dialog>
         <DialogTrigger>Open dialog</DialogTrigger>
         <DialogContent aria-label="Settings">Settings</DialogContent>
       </Dialog>,
     );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
+    const trigger = page.getByRole("button", { name: "Open dialog" }).element();
 
-    trigger.focus();
-    fireClick(trigger);
-    const dialog = document.body.querySelector<HTMLDialogElement>("dialog")!;
+    await act(async () => userEvent.click(trigger));
+    const dialog = page.getByRole("dialog", { name: "Settings" }).element() as HTMLDialogElement;
     expect(dialog.open).toBe(true);
 
     act(() => {

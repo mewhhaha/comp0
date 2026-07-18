@@ -46,10 +46,9 @@ export function Example() {
       </TableCaption>
       <TableHeader>
         <TableRow>
-          <TableColumn
-            aria-label="Selection"
-            className="w-10 border-b border-zinc-950/10 px-2 py-1.5 outline-teal-600 focus-visible:outline-2 dark:border-white/10 dark:outline-teal-400"
-          />
+          <TableColumn className="w-10 border-b border-zinc-950/10 px-2 py-1.5 outline-teal-600 focus-visible:outline-2 dark:border-white/10 dark:outline-teal-400">
+            <span className="sr-only">Selection</span>
+          </TableColumn>
           {columns.map((column) => (
             <TableColumn
               key={column}

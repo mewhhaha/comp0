@@ -5,12 +5,15 @@ export type ListBoxSeparatorProps = HTMLAttributes<HTMLDivElement>;
 
 export function ListBoxSeparator(props: ListBoxSeparatorProps & RefProp<HTMLDivElement>) {
   const { ref } = props;
+  const role = props.role ?? "presentation";
   return (
     <div
       {...props}
       ref={ref}
-      role={props.role ?? "separator"}
-      aria-orientation={props["aria-orientation"] ?? "horizontal"}
+      role={role}
+      aria-orientation={
+        props["aria-orientation"] ?? (role === "separator" ? "horizontal" : undefined)
+      }
     />
   );
 }

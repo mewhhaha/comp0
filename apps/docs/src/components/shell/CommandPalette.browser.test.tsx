@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
-import { userEvent } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
 import { docsNavigation, paletteEntries } from "../../content/navigation.js";
 import { DocsShell } from "./DocsShell.js";
@@ -47,7 +47,7 @@ function paletteDialog() {
 }
 
 function paletteInput() {
-  return document.querySelector<HTMLInputElement>('input[aria-label="Search docs"]');
+  return page.getByRole("combobox", { name: "Search docs" }).element() as HTMLInputElement;
 }
 
 function visibleOptionTitles() {
@@ -61,19 +61,8 @@ function currentPath(container: HTMLElement) {
   return container.querySelector("[data-testid='location']")?.textContent;
 }
 
-async function openFromHeaderButton(container: HTMLElement) {
-  const buttons = [...container.querySelectorAll<HTMLButtonElement>("header button")];
-  const search = buttons.find((button) => button.textContent?.includes("Search docs"));
-  if (!search) throw new Error("Missing header search button");
-  await act(async () => userEvent.click(search));
-}
-
-function pressEscape(target: HTMLElement) {
-  act(() => {
-    target.dispatchEvent(
-      new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Escape" }),
-    );
-  });
+async function openFromHeaderButton() {
+  await act(async () => page.getByRole("button", { name: /Search docs/ }).click());
 }
 
 describe("CommandPalette", () => {
@@ -88,7 +77,7 @@ describe("CommandPalette", () => {
     const app = mount();
     try {
       expect(paletteDialog()?.open).not.toBe(true);
-      await openFromHeaderButton(app.container);
+      await openFromHeaderButton();
 
       const dialog = paletteDialog();
       expect(dialog?.open).toBe(true);
@@ -105,7 +94,7 @@ describe("CommandPalette", () => {
   it("navigates to the active option with Enter and closes", async () => {
     const app = mount();
     try {
-      await openFromHeaderButton(app.container);
+      await openFromHeaderButton();
       const input = paletteInput()!;
       await act(async () => userEvent.fill(input, "clnd"));
       await act(async () => userEvent.keyboard("{ArrowDown}"));
@@ -123,7 +112,7 @@ describe("CommandPalette", () => {
   it("automatically activates and navigates to the first filtered result", async () => {
     const app = mount();
     try {
-      await openFromHeaderButton(app.container);
+      await openFromHeaderButton();
       const input = paletteInput()!;
       await act(async () => userEvent.fill(input, "instl"));
       const activeId = input.getAttribute("aria-activedescendant");
@@ -142,13 +131,11 @@ describe("CommandPalette", () => {
   it("navigates when an option is clicked", async () => {
     const app = mount();
     try {
-      await openFromHeaderButton(app.container);
+      await openFromHeaderButton();
       await act(async () => userEvent.fill(paletteInput()!, "clnd"));
-      const option = document.querySelector<HTMLElement>(
-        '[aria-label="Search results"] [role="option"]',
-      );
-      expect(option?.textContent).toContain("Calendar");
-      await act(async () => userEvent.click(option!));
+      const option = page.getByRole("option", { name: /^Calendar/ });
+      expect(option.element().textContent).toContain("Calendar");
+      await act(async () => option.click());
 
       expect(currentPath(app.container)).toBe("/components/calendar");
       await vi.waitFor(() => expect(paletteDialog()?.open).not.toBe(true));
@@ -160,35 +147,17 @@ describe("CommandPalette", () => {
   it("toggles with Ctrl+K and closes on a single Escape press", async () => {
     const app = mount();
     try {
-      act(() => {
-        document.dispatchEvent(
-          new KeyboardEvent("keydown", {
-            bubbles: true,
-            cancelable: true,
-            ctrlKey: true,
-            key: "k",
-          }),
-        );
-      });
+      await act(async () => userEvent.keyboard("{Control>}k{/Control}"));
       await vi.waitFor(() => expect(paletteDialog()?.open).toBe(true));
 
       const input = paletteInput()!;
       expect(document.activeElement).toBe(input);
-      pressEscape(input);
+      await act(async () => userEvent.keyboard("{Escape}"));
       await vi.waitFor(() => expect(paletteDialog()?.open).not.toBe(true));
       // Reset for the next open: the query is cleared once closed.
       await act(async () => Promise.resolve());
 
-      act(() => {
-        document.dispatchEvent(
-          new KeyboardEvent("keydown", {
-            bubbles: true,
-            cancelable: true,
-            ctrlKey: true,
-            key: "k",
-          }),
-        );
-      });
+      await act(async () => userEvent.keyboard("{Control>}k{/Control}"));
       await vi.waitFor(() => expect(paletteDialog()?.open).toBe(true));
       expect(paletteInput()?.value).toBe("");
     } finally {

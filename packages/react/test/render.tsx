@@ -1,43 +1,21 @@
 import { type ReactElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { act } from "react";
+import { cleanup, render as renderWithTestingLibrary, within } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 
-const roots = new Set<Root>();
+export { userEvent, within };
 
 export function render(element: ReactElement, ownerDocument: Document = document) {
   const container = ownerDocument.createElement("div");
   ownerDocument.body.append(container);
-  const root = createRoot(container);
-  roots.add(root);
-
-  act(() => {
-    root.render(element);
-  });
-
-  return {
+  return renderWithTestingLibrary(element, {
+    baseElement: ownerDocument.body,
     container,
-    rerender(next: ReactElement) {
-      act(() => {
-        root.render(next);
-      });
-    },
-    unmount() {
-      act(() => {
-        root.unmount();
-      });
-      roots.delete(root);
-      container.remove();
-    },
-  };
+  });
 }
 
 export function cleanupRoots() {
-  for (const root of roots) {
-    act(() => {
-      root.unmount();
-    });
-  }
-  roots.clear();
+  cleanup();
 }
 
 export function fireClick(element: Element) {

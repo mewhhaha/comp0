@@ -1,5 +1,5 @@
 import { act } from "react";
-import { userEvent } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { describe, expect, it } from "vitest";
 import { Inventory } from "./components/Inventory.js";
 import { InventoryItem } from "./components/InventoryItem.js";
@@ -9,7 +9,7 @@ import { render } from "../test/render.js";
 
 describe("inventory browser interactions", () => {
   it("enters once, moves spatially, tabs through one card, and leaves", async () => {
-    const { container, unmount } = render(
+    const { unmount } = render(
       <div>
         <button type="button">Before</button>
         <Inventory
@@ -34,11 +34,13 @@ describe("inventory browser interactions", () => {
         <button type="button">After</button>
       </div>,
     );
-    const before = container.querySelector<HTMLButtonElement>("button")!;
-    const after = [...container.querySelectorAll<HTMLButtonElement>("button")].at(-1)!;
-    const left = container.querySelector<HTMLElement>('[data-value="left"]')!;
-    const right = container.querySelector<HTMLElement>('[data-value="right"]')!;
-    const [move, resize] = right.querySelectorAll<HTMLButtonElement>("button");
+    const before = page.getByRole("button", { name: "Before" }).element();
+    const after = page.getByRole("button", { name: "After" }).element();
+    const leftMove = page.getByRole("button", { name: "Move Left card" }).element();
+    const move = page.getByRole("button", { name: "Move Right card" }).element();
+    const resize = page.getByRole("button", { name: "Resize Right card" }).element();
+    const left = leftMove.closest("li")!;
+    const right = move.closest("li")!;
 
     await act(async () => userEvent.click(before));
     await act(async () => userEvent.tab());
@@ -60,7 +62,7 @@ describe("inventory browser interactions", () => {
   });
 
   it("requires handle activation and cancels an active change when focus leaves", async () => {
-    const { container, unmount } = render(
+    const { unmount } = render(
       <div>
         <Inventory
           aria-label="Dashboard"
@@ -76,9 +78,9 @@ describe("inventory browser interactions", () => {
         <button type="button">After</button>
       </div>,
     );
-    const card = container.querySelector<HTMLElement>('[data-value="card"]')!;
-    const move = card.querySelector<HTMLButtonElement>("button")!;
-    const after = [...container.querySelectorAll<HTMLButtonElement>("button")].at(-1)!;
+    const move = page.getByRole("button", { name: "Move Card" }).element();
+    const after = page.getByRole("button", { name: "After" }).element();
+    const card = move.closest("li")!;
 
     act(() => move.focus());
     await act(async () => userEvent.keyboard("{ArrowRight}"));

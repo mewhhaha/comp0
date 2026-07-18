@@ -1,21 +1,23 @@
 import { act } from "react";
-import { userEvent } from "vitest/browser";
+import { page } from "vitest/browser";
 import { describe, expect, it } from "vitest";
 import { render } from "../test/render.js";
-import { PasswordField, PasswordFieldInput, PasswordFieldToggle } from "./index.js";
+import { Label, PasswordField, PasswordFieldInput, PasswordFieldToggle } from "./index.js";
 
 describe("password field browser interactions", () => {
   it("uses native pointer focus while revealing the same input", async () => {
-    const { container, unmount } = render(
+    const { unmount } = render(
       <form>
         <PasswordField defaultValue="correct horse">
+          <Label>Password</Label>
           <PasswordFieldInput />
           <PasswordFieldToggle />
         </PasswordField>
       </form>,
     );
-    const input = container.querySelector("input")!;
-    const toggle = container.querySelector("button")!;
+    const input = page.getByLabelText("Password", { exact: true }).element() as HTMLInputElement;
+    const toggle = page.getByRole("button", { name: "Show password" });
+    const toggleElement = toggle.element() as HTMLButtonElement;
 
     act(() => {
       input.focus();
@@ -23,16 +25,16 @@ describe("password field browser interactions", () => {
     });
     expect(input.selectionStart).toBe(3);
     expect(input.selectionEnd).toBe(7);
-    await act(async () => userEvent.click(toggle));
+    await act(async () => toggle.click());
     await act(async () => new Promise(requestAnimationFrame));
 
-    expect(document.activeElement).toBe(toggle);
-    expect(container.querySelector("input")).toBe(input);
+    expect(document.activeElement).toBe(toggleElement);
+    expect(page.getByLabelText("Password", { exact: true }).element()).toBe(input);
     expect(input.type).toBe("text");
     expect(input.value).toBe("correct horse");
     expect(input.selectionStart).toBe(3);
     expect(input.selectionEnd).toBe(7);
-    expect(toggle.type).toBe("button");
+    expect(toggleElement.type).toBe("button");
     unmount();
   });
 });

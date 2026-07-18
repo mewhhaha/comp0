@@ -1,6 +1,7 @@
 import { Toast, ToastProvider, ToastRegion } from "@comp0/react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
+import { page } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
 import { CodeBlockCopyButton } from "./CodeBlockCopyButton.js";
 
@@ -22,19 +23,13 @@ describe("CodeBlockCopyButton", () => {
         );
       });
 
-      const copyButton = container.querySelector<HTMLButtonElement>('[aria-label="Copy code"]');
-      expect(copyButton).not.toBeNull();
-      expect(document.querySelector('[data-slot="toast"]')).toBeNull();
+      const copyButton = page.getByRole("button", { name: "Copy code" });
+      expect(document.querySelector('[role="status"]')).toBeNull();
 
-      await act(async () => {
-        copyButton!.click();
-      });
+      await act(async () => copyButton.click());
 
       expect(writeText).toHaveBeenCalledExactlyOnceWith(source);
-      const toast = document.querySelector<HTMLElement>('[data-slot="toast"]');
-      expect(toast).not.toBeNull();
-      expect(toast!.textContent).toBe("Copied to clipboard");
-      expect(toast!.getAttribute("role")).toBe("status");
+      await expect.element(page.getByRole("status")).toHaveTextContent("Copied to clipboard");
     } finally {
       act(() => root.unmount());
       container.remove();

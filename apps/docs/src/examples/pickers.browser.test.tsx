@@ -1,5 +1,6 @@
 import { act, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { page, userEvent } from "vitest/browser";
 import { describe, expect, it } from "vitest";
 import { getExample } from "./registry.js";
 
@@ -16,37 +17,20 @@ function mount(Example: ComponentType): MountedExample {
   return { container, root };
 }
 
-function press(element: HTMLElement, key: string) {
-  act(() => {
-    element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key }));
-  });
-}
-
-function type(input: HTMLInputElement, value: string) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setter?.call(input, value);
-    input.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
-  });
-}
-
 function unmount({ container, root }: MountedExample) {
   act(() => root.unmount());
   container.remove();
 }
 
 describe("picker docs examples", () => {
-  it("uses one labelled native listbox popover for Select", () => {
+  it("uses one labelled native listbox popover for Select", async () => {
     const Example = getExample("select");
     if (!Example) throw new Error("Missing Select docs example");
     const mounted = mount(Example);
 
     try {
       const label = mounted.container.querySelector("label")!;
-      const trigger = mounted.container.querySelector<HTMLButtonElement>(
-        'button[aria-haspopup="listbox"]',
-      )!;
+      const trigger = page.getByRole("button", { name: "Size" }).element();
       const listbox = mounted.container.querySelector<HTMLElement>('[role="listbox"]')!;
       const medium = listbox.querySelector<HTMLElement>('[data-value="medium"]')!;
 
@@ -60,14 +44,14 @@ describe("picker docs examples", () => {
       );
       expect(listbox.style.getPropertyValue("position-area")).toBe("block-end");
 
-      act(() => trigger.click());
+      await act(async () => userEvent.click(trigger));
       expect(trigger.getAttribute("aria-expanded")).toBe("true");
       expect(listbox.matches(":popover-open")).toBe(true);
       expect(document.activeElement).toBe(medium);
 
-      press(medium, "ArrowDown");
+      await act(async () => userEvent.keyboard("{ArrowDown}"));
       expect(medium.getAttribute("aria-selected")).toBe("true");
-      press(document.activeElement as HTMLElement, "Enter");
+      await act(async () => userEvent.keyboard("{Enter}"));
 
       expect(trigger.getAttribute("aria-expanded")).toBe("false");
       expect(trigger.textContent?.trim()).toBe("Large");
@@ -79,14 +63,14 @@ describe("picker docs examples", () => {
     }
   });
 
-  it("keeps Combobox focus and visible active state on its labelled input", () => {
+  it("keeps Combobox focus and visible active state on its labelled input", async () => {
     const Example = getExample("combobox");
     if (!Example) throw new Error("Missing Combobox docs example");
     const mounted = mount(Example);
 
     try {
       const label = mounted.container.querySelector("label")!;
-      const input = mounted.container.querySelector<HTMLInputElement>('input[role="combobox"]')!;
+      const input = page.getByRole("combobox", { name: "City" }).element() as HTMLInputElement;
       const listbox = mounted.container.querySelector<HTMLElement>('[role="listbox"]')!;
 
       expect(label.htmlFor).toBe(input.id);
@@ -99,16 +83,16 @@ describe("picker docs examples", () => {
       );
       expect(listbox.style.getPropertyValue("position-area")).toBe("block-end");
 
-      input.focus();
-      type(input, "to");
-      press(input, "ArrowDown");
+      await act(async () => userEvent.click(input));
+      await act(async () => userEvent.fill(input, "to"));
+      await act(async () => userEvent.keyboard("{ArrowDown}"));
       const activeId = input.getAttribute("aria-activedescendant");
       const activeOption = document.getElementById(activeId ?? "");
 
       expect(document.activeElement).toBe(input);
       expect(activeOption?.textContent).toBe("Tokyo");
       expect(activeOption?.hasAttribute("data-active")).toBe(true);
-      press(input, "Enter");
+      await act(async () => userEvent.keyboard("{Enter}"));
 
       expect(input.value).toBe("Tokyo");
       expect(input.getAttribute("aria-expanded")).toBe("false");

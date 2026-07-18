@@ -1,5 +1,6 @@
 import { act, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { page } from "vitest/browser";
 import { describe, expect, it } from "vitest";
 import { getExample } from "./registry.js";
 
@@ -22,7 +23,7 @@ function unmount({ container, root }: MountedExample) {
 }
 
 describe("composite docs examples", () => {
-  it("moves every checked transfer-list row with the bulk action", () => {
+  it("moves every checked transfer-list row with the bulk action", async () => {
     const Example = getExample("grid-list.transfer-list");
     if (!Example) throw new Error("Missing Transfer List docs example");
     const mounted = mount(Example);
@@ -34,15 +35,11 @@ describe("composite docs examples", () => {
       const chosen = mounted.container.querySelector<HTMLElement>(
         'section[aria-labelledby="chosen-title"]',
       )!;
-      const vueCheckbox = Array.from(available.querySelectorAll<HTMLInputElement>("input")).find(
-        (input) => input.parentElement?.textContent?.includes("Vue"),
-      )!;
-      const addSelected = Array.from(mounted.container.querySelectorAll("button")).find((button) =>
-        button.textContent?.includes("Add selected"),
-      )!;
+      const vueLabel = page.getByText("Vue");
+      const addSelected = page.getByRole("button", { name: /Add selected/ });
 
-      act(() => vueCheckbox.click());
-      act(() => addSelected.click());
+      await act(async () => vueLabel.click());
+      await act(async () => addSelected.click());
 
       expect(available.textContent).not.toContain("Vue");
       expect(chosen.textContent).toContain("Vue");
@@ -57,33 +54,21 @@ describe("composite docs examples", () => {
     const mounted = mount(Example);
 
     try {
-      const start = Array.from(mounted.container.querySelectorAll("button")).find(
-        (button) => button.textContent === "Start tour",
-      )!;
+      const start = page.getByRole("button", { name: "Start tour" });
+      const startElement = start.element();
 
-      act(() => start.click());
-      expect(document.querySelector('[role="dialog"][open]')?.textContent).toContain(
-        "Find anything",
-      );
+      await act(async () => start.click());
+      expect(page.getByRole("dialog").element().textContent).toContain("Find anything");
       expect(document.activeElement?.textContent).toBe("Skip tour");
 
-      const next = Array.from(document.querySelectorAll("button")).find(
-        (button) => button.textContent === "Next" && button.closest("dialog[open]"),
-      )!;
-      act(() => next.click());
+      await act(async () => page.getByRole("button", { name: "Next" }).click());
 
-      expect(document.querySelector('[role="dialog"][open]')?.textContent).toContain(
-        "Review updates",
-      );
-      expect(document.activeElement?.textContent).toBe("Skip tour");
+      expect(page.getByRole("dialog").element().textContent).toContain("Review updates");
+      expect(document.activeElement?.textContent).toBe("Next");
 
-      const skip = document.activeElement as HTMLButtonElement;
-      await act(async () => {
-        skip.click();
-        await Promise.resolve();
-      });
+      await act(async () => page.getByRole("button", { name: "Skip tour" }).click());
       expect(document.querySelector('[role="dialog"][open]')).toBeNull();
-      expect(document.activeElement).toBe(start);
+      expect(document.activeElement).toBe(startElement);
     } finally {
       unmount(mounted);
     }
@@ -95,11 +80,10 @@ describe("composite docs examples", () => {
     const mounted = mount(Example);
 
     try {
-      const start = Array.from(mounted.container.querySelectorAll("button")).find(
-        (button) => button.textContent === "Start tour",
-      )!;
-      act(() => start.click());
-      const dialog = document.querySelector<HTMLDialogElement>('[role="dialog"][open]')!;
+      const start = page.getByRole("button", { name: "Start tour" });
+      const startElement = start.element();
+      await act(async () => start.click());
+      const dialog = page.getByRole("dialog").element() as HTMLDialogElement;
 
       await act(async () => {
         dialog.dispatchEvent(new Event("cancel", { bubbles: false, cancelable: true }));
@@ -107,7 +91,7 @@ describe("composite docs examples", () => {
       });
 
       expect(dialog.open).toBe(false);
-      expect(document.activeElement).toBe(start);
+      expect(document.activeElement).toBe(startElement);
     } finally {
       unmount(mounted);
     }

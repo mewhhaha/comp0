@@ -71,6 +71,19 @@ describe("source conventions", () => {
     expect(directBooleanDataAttributes).toEqual([]);
   });
 
+  it("uses provider-backed user interactions in browser tests", () => {
+    const browserTests = conventionSources.filter(({ relativePath }) =>
+      relativePath.endsWith(".browser.test.tsx"),
+    );
+    const syntheticInteractionHelpers = browserTests.flatMap(({ relativePath, source }) =>
+      matchingLines(source, /\b(?:fireClick|fireKeyDown)\b|@testing-library\/user-event/).map(
+        (line) => `${relativePath}:${line}`,
+      ),
+    );
+
+    expect(syntheticInteractionHelpers).toEqual([]);
+  });
+
   it("keeps removed compatibility aliases out of docs and the public barrel", () => {
     const publicBarrel = readFileSync(resolve(root, "packages/react/src/index.ts"), "utf8");
     const docsSources = sources.filter(({ relativePath }) => relativePath.startsWith("apps/docs/"));

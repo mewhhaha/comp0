@@ -33,7 +33,6 @@ export function MentionFieldInput({
     <TextArea
       {...props}
       ref={composeRefs(ref, mentionField.inputRef)}
-      aria-expanded={props["aria-expanded"] ?? mentionField.match !== null}
       aria-haspopup={props["aria-haspopup"] ?? "listbox"}
       data-mention-active={dataAttr(mentionField.match !== null)}
       onBlur={(event) => {

@@ -1,6 +1,6 @@
 import { act, Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
+import { fireClick, fireKeyDown, render, userEvent } from "../test/render.js";
 import {
   Label,
   ListBox,
@@ -69,33 +69,32 @@ describe("MentionField composition", () => {
     expect(container.querySelector("[popover] > [role='listbox']")).not.toBeNull();
   });
 
-  it("filters the active token and inserts the keyboard-active mention", () => {
+  it("filters the active token and inserts the keyboard-active mention", async () => {
     const changed = vi.fn();
-    const { container } = render(<Composer onChange={changed} />);
-    const input = container.querySelector("textarea")!;
-    const popover = container.querySelector<HTMLElement>("[popover]")!;
-    const listBox = popover.querySelector<HTMLElement>("[role='listbox']")!;
+    const user = userEvent.setup();
+    const { getByLabelText, getByRole } = render(<Composer onChange={changed} />);
+    const input = getByLabelText("Message") as HTMLTextAreaElement;
+    const listBox = getByRole("listbox", { name: "Teammates", hidden: true });
+    const popover = listBox.parentElement!;
 
-    input.focus();
-    fireInput(input, "Ask @Ai");
+    await user.click(input);
+    await user.type(input, "Ask @Ai");
 
     expect(popover.hidden, "suggestions open").toBe(false);
     expect(input.hasAttribute("data-mention-active"), "input exposes active token").toBe(true);
-    expect(input.getAttribute("aria-expanded")).toBe("true");
+    expect(input.getAttribute("aria-autocomplete")).toBe("list");
+    expect(input.hasAttribute("aria-expanded")).toBe(false);
     expect(input.getAttribute("aria-controls")).toBe(listBox.id);
-    expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
-    expect(input.getAttribute("aria-activedescendant")).toBe(
-      container.querySelector("[role='option']")?.id,
-    );
+    const option = getByRole("option", { name: "Aisha", hidden: true });
+    expect(input.getAttribute("aria-activedescendant")).toBe(option.id);
 
-    fireKeyDown(input, "Enter");
+    await user.keyboard("{Enter}");
 
     expect(changed).toHaveBeenLastCalledWith("Ask @Aisha ");
     expect(input.value).toBe("Ask @Aisha ");
     expect(input.selectionStart).toBe(11);
     expect(popover.dataset.trigger, "active trigger clears after insertion").toBeUndefined();
     expect(popover.hidden, "suggestions close after insertion").toBe(true);
-    expect(input.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("replaces a mention at the caret without changing surrounding text", () => {

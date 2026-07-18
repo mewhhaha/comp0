@@ -1985,11 +1985,6 @@ const field = [
         on: "MentionFieldInput",
         meaning: "The textarea points to the active suggestion while retaining focus.",
       },
-      {
-        attribute: "[aria-expanded]",
-        on: "MentionFieldInput",
-        meaning: "Whether the suggestion list is open.",
-      },
     ],
     "MentionFieldInput submits the complete native textarea value under its name.",
     ["autocomplete", "list-box", "text-area"],
