@@ -105,6 +105,19 @@ describe("tree grid composition", () => {
     expect(document.activeElement).toBe(row("components"));
   });
 
+  it("mirrors branch and cell arrows in right-to-left layouts", () => {
+    const { container, row, cell } = renderTreeGrid({ defaultExpanded: ["src"] });
+    container.querySelector("table")!.style.direction = "rtl";
+    row("components").focus();
+
+    fireKeyDown(row("components"), "ArrowLeft");
+    expect(row("components").getAttribute("aria-expanded")).toBe("true");
+    fireKeyDown(row("components"), "ArrowLeft");
+    expect(document.activeElement).toBe(cell("components", 0));
+    fireKeyDown(cell("components", 0), "ArrowLeft");
+    expect(document.activeElement).toBe(cell("components", 1));
+  });
+
   it("collapses a parent row, else moves row focus to its parent", () => {
     const { row } = renderTreeGrid({ defaultExpanded: ["src", "components"] });
     row("components").focus();

@@ -97,8 +97,8 @@ export function GridListItem({
   if (resolvedDisabled) tabIndex = undefined;
   else if (active) tabIndex = 0;
 
-  // Interactive children are reachable with ArrowRight instead of Tab, so
-  // the grid stays a single tab stop.
+  // Interactive children use the inline-forward arrow instead of Tab, so the
+  // grid stays a single tab stop.
   useLayoutEffect(() => {
     const row = rowRef.current;
     if (!row) return;

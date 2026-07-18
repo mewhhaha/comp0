@@ -100,6 +100,15 @@ describe("table composition", () => {
     expect(document.activeElement).toBe(cells[0]);
   });
 
+  it("mirrors horizontal cell navigation in right-to-left layouts", () => {
+    const { table, cells } = renderTable();
+    table.style.direction = "rtl";
+    cells[0]!.focus();
+
+    fireKey(cells[0]!, "ArrowLeft");
+    expect(document.activeElement).toBe(cells[1]);
+  });
+
   it("supports Home, End, and Ctrl edges, and moves the roving tab stop", () => {
     const { cells } = renderTable();
     cells[0]!.focus();

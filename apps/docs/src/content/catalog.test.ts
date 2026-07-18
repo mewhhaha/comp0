@@ -8,9 +8,9 @@ import { getExampleSource } from "../examples/sources.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 74 unique component slugs", () => {
-    expect(components).toHaveLength(74);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(74);
+  it("contains 79 unique component slugs", () => {
+    expect(components).toHaveLength(79);
+    expect(new Set(components.map((component) => component.slug)).size).toBe(79);
   });
 
   it("resolves every related component link", () => {
@@ -67,9 +67,9 @@ describe("docs content catalog", () => {
     }
   });
 
-  it("contains six learn docs with unique, valid section IDs", () => {
-    expect(learnDocs).toHaveLength(6);
-    expect(new Set(learnDocs.map((doc) => doc.slug)).size).toBe(6);
+  it("contains seven learn docs with unique, valid section IDs", () => {
+    expect(learnDocs).toHaveLength(7);
+    expect(new Set(learnDocs.map((doc) => doc.slug)).size).toBe(7);
     for (const doc of learnDocs) {
       const ids = doc.sections.map((section) => section.id);
       expect(ids.length, doc.slug).toBeGreaterThan(0);

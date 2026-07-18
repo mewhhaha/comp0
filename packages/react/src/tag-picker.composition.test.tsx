@@ -122,6 +122,17 @@ describe("tag picker composition", () => {
     expect(container.querySelector("[aria-live]")?.textContent).toBe("Removed Vue.");
   });
 
+  it("uses the inline-backward arrow to reach the last tag", () => {
+    const { container } = render(<FrameworkPicker defaultValue={["react", "vue"]} />);
+    const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;
+    const tags = container.querySelectorAll<HTMLElement>("[role='row']");
+    input.style.direction = "rtl";
+    input.focus();
+
+    fireKeyDown(input, "ArrowRight");
+    expect(document.activeElement).toBe(tags[1]);
+  });
+
   it("returns focus to the input when the final tag is removed", () => {
     const { container } = render(<FrameworkPicker defaultValue={["react"]} />);
     const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;

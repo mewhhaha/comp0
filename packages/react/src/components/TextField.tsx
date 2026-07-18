@@ -34,15 +34,17 @@ export function TextField({
     defaultValue: defaultValue ?? "",
     onChange,
   });
-  const { controlId, descriptionId, errorId, labelId } = ids;
+  const { characterCountId, controlId, descriptionId, errorId, labelId } = ids;
   const providerValue = {
     controlId,
+    characterCountId,
     descriptionId,
     errorId,
     labelId,
     disabled: resolvedDisabled,
     invalid: resolvedInvalid,
     required: resolvedRequired,
+    textControl: true as const,
     value: controlsValue ? fieldState.value : undefined,
     setValue: controlsValue ? fieldState.setValue : undefined,
     valueControlled: controlsValue ? fieldState.controlled : undefined,

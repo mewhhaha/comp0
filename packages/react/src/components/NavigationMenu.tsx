@@ -5,6 +5,7 @@ import {
   NavigationMenuContext,
   type NavigationMenuContextValue,
 } from "./navigation-menu-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 /* oxlint-disable jsx-a11y/no-noninteractive-element-interactions -- Escape and arrow-key handling, focusout closing, and hover-intent timers coordinate the disclosures inside the nav landmark; the handlers trigger no action of their own, so the nav stays non-interactive. */
 
@@ -16,19 +17,24 @@ export type NavigationMenuProps = Omit<HTMLAttributes<HTMLElement>, "defaultValu
   onChange?: ((value: string) => void) | undefined;
 };
 
-const FORWARD_KEYS = new Set(["ArrowDown", "ArrowRight"]);
-const BACKWARD_KEYS = new Set(["ArrowUp", "ArrowLeft"]);
-const MOVEMENT_KEYS = new Set([...FORWARD_KEYS, ...BACKWARD_KEYS, "Home", "End"]);
+const MOVEMENT_KEYS = new Set(["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Home", "End"]);
 
 function panelLinks(scope: Element) {
   return [...scope.querySelectorAll<HTMLElement>('[data-slot="navigation-menu-link"]')];
 }
 
-function focusStopAfterMovement(stops: HTMLElement[], target: HTMLElement, key: string) {
+function focusStopAfterMovement(
+  stops: HTMLElement[],
+  target: HTMLElement,
+  key: string,
+  dir: "ltr" | "rtl",
+) {
   const index = stops.indexOf(target);
   if (index < 0) return null;
-  if (FORWARD_KEYS.has(key)) return stops[index + 1] ?? null;
-  if (BACKWARD_KEYS.has(key)) return stops[index - 1] ?? null;
+  if (key === "ArrowDown") return stops[index + 1] ?? null;
+  if (key === "ArrowUp") return stops[index - 1] ?? null;
+  if (key === "ArrowRight") return stops[index + (dir === "ltr" ? 1 : -1)] ?? null;
+  if (key === "ArrowLeft") return stops[index + (dir === "ltr" ? -1 : 1)] ?? null;
   if (key === "Home" && index > 0) return stops[0] ?? null;
   if (key === "End" && index < stops.length - 1) return stops[stops.length - 1] ?? null;
   return null;
@@ -42,17 +48,18 @@ function focusStopAfterMovement(stops: HTMLElement[], target: HTMLElement, key: 
  * behavior, so unhandled edges still scroll the page.
  */
 function arrowFocusTarget(nav: HTMLElement, target: HTMLElement, key: string) {
+  const dir = writingDirection(nav);
   const slot = target.getAttribute("data-slot");
   const panel = target.closest('[data-slot="navigation-menu-content"]');
   if (panel) {
     // Only the panel's links take part; a text input or other widget a
     // consumer placed in a mega-menu keeps its own arrow-key behavior.
     if (slot !== "navigation-menu-link") return null;
-    return focusStopAfterMovement(panelLinks(panel), target, key);
+    return focusStopAfterMovement(panelLinks(panel), target, key, dir);
   }
   if (slot !== "navigation-menu-trigger" && slot !== "navigation-menu-link") return null;
   if (
-    FORWARD_KEYS.has(key) &&
+    (key === "ArrowDown" || key === (dir === "ltr" ? "ArrowRight" : "ArrowLeft")) &&
     slot === "navigation-menu-trigger" &&
     target.getAttribute("aria-expanded") === "true"
   ) {
@@ -68,7 +75,7 @@ function arrowFocusTarget(nav: HTMLElement, target: HTMLElement, key: string) {
       '[data-slot="navigation-menu-trigger"], [data-slot="navigation-menu-link"]',
     ),
   ].filter((element) => !element.closest('[data-slot="navigation-menu-content"]'));
-  return focusStopAfterMovement(stops, target, key);
+  return focusStopAfterMovement(stops, target, key, dir);
 }
 
 /**

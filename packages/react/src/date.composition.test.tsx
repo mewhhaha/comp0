@@ -201,6 +201,20 @@ describe("calendar", () => {
     ).toBe(false);
   });
 
+  it("mirrors day arrows in right-to-left layouts", () => {
+    const { container } = render(
+      <Calendar defaultValue="2024-02-15" locale="en-GB">
+        <CalendarHeader />
+        <CalendarGrid style={{ direction: "rtl" }} />
+      </Calendar>,
+    );
+    const grid = container.querySelector<HTMLTableElement>("[role='grid']")!;
+    dayButton(container, "2024-02-15").focus();
+
+    fireKeyDown(grid, "ArrowLeft");
+    expect(document.activeElement).toBe(dayButton(container, "2024-02-16"));
+  });
+
   it("reports controlled selection without moving it until the owner updates", () => {
     const { container, onChange } = renderCalendar({ value: "2024-02-15" });
 

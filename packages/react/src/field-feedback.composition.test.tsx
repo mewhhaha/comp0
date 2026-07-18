@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { render } from "../test/render.js";
 import { Description } from "./components/Description.js";
+import { CharacterCount } from "./components/CharacterCount.js";
 import { FieldError } from "./components/FieldError.js";
 import { Input } from "./components/Input.js";
 import { Label } from "./components/Label.js";
@@ -21,6 +22,19 @@ describe("field feedback wiring", () => {
     expect(markup).toContain('aria-describedby="server-name-description server-name-error"');
     expect(markup).toContain('id="server-name-description"');
     expect(markup).toContain('id="server-name-error"');
+  });
+
+  it("renders a character count relationship in server markup", () => {
+    const markup = renderToString(
+      <TextField id="server-biography" defaultValue="Hello">
+        <Input name="biography" maxLength={10} />
+        <CharacterCount maxLength={10} />
+      </TextField>,
+    );
+
+    expect(markup).toContain('aria-describedby="server-biography-character-count"');
+    expect(markup).toContain('id="server-biography-character-count"');
+    expect(markup).toContain("5 characters remaining");
   });
 
   it("does not reference a conditional error that is absent from server markup", () => {

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type FocusEvent, type KeyboardEvent } from "react";
 import { getRovingFocusTarget } from "@comp0/core";
 import { rowFocusables } from "./grid-list-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 const NESTED_COMPOSITE_SELECTOR = "[role='listbox'],[role='grid'],[role='menu']";
 
@@ -76,7 +77,10 @@ export function useRovingControls<T extends HTMLElement = HTMLElement>(
     if (currentIndex === -1) return;
     const items = controls.map((_, index) => ({ key: String(index) }));
     // APG: arrows may stop at the ends, so no looping.
-    const targetKey = getRovingFocusTarget(items, String(currentIndex), event.key, { orientation });
+    const targetKey = getRovingFocusTarget(items, String(currentIndex), event.key, {
+      orientation,
+      dir: writingDirection(event.currentTarget),
+    });
     if (targetKey === undefined) return;
     event.preventDefault();
     const nextControl = controls[Number(targetKey)];

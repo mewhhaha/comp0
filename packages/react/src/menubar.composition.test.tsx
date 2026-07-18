@@ -93,6 +93,15 @@ describe("menubar composition", () => {
     expect(document.activeElement).toBe(file);
   });
 
+  it("mirrors horizontal roving in right-to-left layouts", () => {
+    const { bar, file, edit } = renderMenubar();
+    bar.style.direction = "rtl";
+    act(() => file.focus());
+
+    fireKeyDown(file, "ArrowLeft");
+    expect(document.activeElement).toBe(edit);
+  });
+
   it("roves within the menubar's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);

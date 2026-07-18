@@ -17,6 +17,7 @@ import {
 import { type RefProp } from "../shared.js";
 import { sortItems, type CollectionItemRecord } from "./collection-shared.js";
 import { VisuallyHidden } from "./VisuallyHidden.js";
+import { writingDirection } from "./writing-direction.js";
 import {
   GridListContext,
   GridListDndContext,
@@ -477,6 +478,9 @@ export function GridList({
             const row = rowRecord.element;
             const insideRow = target !== row;
             const focusables = rowFocusables(row);
+            const rtl = writingDirection(event.currentTarget) === "rtl";
+            const enterRowKey = rtl ? "ArrowLeft" : "ArrowRight";
+            const leaveRowKey = rtl ? "ArrowRight" : "ArrowLeft";
 
             // Alt+Arrow also works from controls inside the row, such as a
             // drag handle.
@@ -491,8 +495,7 @@ export function GridList({
               dndContext.moveItem(rowRecord.key, event.key === "ArrowUp" ? -1 : 1);
               return;
             }
-            if (event.key === "ArrowRight") {
-              // Right steps into and through the row's interactive children.
+            if (event.key === enterRowKey) {
               const index = insideRow ? focusables.indexOf(target) : -1;
               const next = focusables[index + 1];
               if (next) {
@@ -501,7 +504,7 @@ export function GridList({
               }
               return;
             }
-            if (event.key === "ArrowLeft") {
+            if (event.key === leaveRowKey) {
               if (!insideRow) return;
               event.preventDefault();
               const index = focusables.indexOf(target);

@@ -128,6 +128,15 @@ describe("pin input composition", () => {
     expect(document.activeElement).toBe(fields[0]);
   });
 
+  it("mirrors field arrows in right-to-left layouts", () => {
+    const { container, fields } = renderPin();
+    container.querySelector<HTMLElement>("[role='group']")!.style.direction = "rtl";
+    focus(fields[1]!);
+
+    fireKeyDown(fields[1]!, "ArrowLeft");
+    expect(document.activeElement).toBe(fields[2]);
+  });
+
   it("distributes a pasted code from the focused field", () => {
     const onChange = vi.fn();
     const onComplete = vi.fn();

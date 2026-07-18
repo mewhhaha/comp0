@@ -178,8 +178,50 @@ export const learnDocs = [
     ],
   },
   {
-    slug: "ssr",
+    slug: "accessible-page-structure",
     order: 6,
+    title: "Accessible page structure",
+    summary:
+      "Give every page a navigable map, visible focus, comfortable targets, and styles that survive user preferences.",
+    sections: [
+      {
+        id: "landmarks-and-bypass",
+        title: "Build a native landmark map",
+        explanation:
+          "Use header, nav, main, aside, and footer for the regions they actually represent. Put SkipLink before repeated navigation and point it at the main landmark. Native landmarks let assistive-technology users jump between major regions without tabbing through every control.",
+        code: '<>\n  <SkipLink href="#main">Skip to main content</SkipLink>\n  <header>...</header>\n  <nav aria-label="Primary">...</nav>\n  <main id="main" tabIndex={-1}>\n    ...\n  </main>\n  <footer>...</footer>\n</>;',
+        language: "tsx",
+        note: "Landmarks describe regions; headings describe the content hierarchy inside them. Most pages need both.",
+      },
+      {
+        id: "focus-not-obscured",
+        title: "Keep focused controls visible",
+        explanation:
+          "Sticky headers, cookie banners, and docked toolbars must not completely cover the control that receives focus. Reserve scrolling space around focus destinations and test keyboard navigation at high zoom. The browser can then bring the focused element into a visible area instead of hiding it behind an overlay.",
+        code: ":focus-visible {\n  scroll-margin-block: 6rem 2rem;\n}",
+        language: "css",
+      },
+      {
+        id: "target-size",
+        title: "Leave room to activate controls",
+        explanation:
+          "WCAG 2.2 requires a pointer target to contain a 24 by 24 CSS-pixel area or have enough separation from nearby targets. comp0 is headless, so your styles own this requirement. Give compact icon buttons a minimum size and avoid packing small targets directly against one another.",
+        code: '<Button className="min-h-6 min-w-6">...</Button>;',
+        language: "tsx",
+      },
+      {
+        id: "preferences-and-direction",
+        title: "Respect direction and display preferences",
+        explanation:
+          "Set dir on the document or the nearest application region and let logical keyboard navigation follow it. Keep focus and state visible in forced-colors mode, and remove non-essential motion when reduced motion is requested.",
+        code: "@media (forced-colors: active) {\n  :focus-visible {\n    outline: 2px solid CanvasText;\n  }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  * {\n    scroll-behavior: auto;\n  }\n}",
+        language: "css",
+      },
+    ],
+  },
+  {
+    slug: "ssr",
+    order: 7,
     title: "SSR",
     summary: "Make the first server picture and first browser picture match exactly.",
     sections: [

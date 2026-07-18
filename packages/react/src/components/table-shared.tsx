@@ -42,8 +42,8 @@ export function primaryStop(cell: HTMLTableCellElement) {
 }
 
 /**
- * The ArrowLeft/ArrowRight stops of a row: each cell, then the widgets
- * inside it, with delegated single-widget cells collapsing to the widget.
+ * The inline-axis stops of a row: each cell, then the widgets inside it, with
+ * delegated single-widget cells collapsing to the widget.
  */
 export function rowStops(row: HTMLTableRowElement) {
   const stops: HTMLElement[] = [];

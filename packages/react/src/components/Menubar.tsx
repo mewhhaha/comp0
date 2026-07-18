@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, type HTMLAttributes } from "react";
-import { getRovingFocusTarget } from "@comp0/core";
+import { composeRefs, getRovingFocusTarget } from "@comp0/core";
 import { InteractiveDiv, type RefProp } from "../shared.js";
 import { sortItems, type CollectionItemRecord } from "./collection-shared.js";
 import { MenubarContext, type MenubarContextValue } from "./menubar-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type MenubarProps = HTMLAttributes<HTMLDivElement>;
 
@@ -22,6 +23,7 @@ export function Menubar({
   const itemMap = useRef(new Map<string, CollectionItemRecord>());
   const menuMap = useRef(new Map<string, { open: boolean; setOpen: (open: boolean) => void }>());
   const tabStopKey = useRef("");
+  const menubarRef = useRef<HTMLDivElement | null>(null);
 
   const items = () => sortItems([...itemMap.current.values()]);
 
@@ -67,6 +69,7 @@ export function Menubar({
     moveFocus(currentKey, eventKey, options) {
       const targetKey = getRovingFocusTarget(items(), currentKey, eventKey, {
         orientation: "horizontal",
+        dir: menubarRef.current ? writingDirection(menubarRef.current) : "ltr",
         loop: true,
       });
       if (!targetKey || targetKey === currentKey) return false;
@@ -81,7 +84,7 @@ export function Menubar({
     <MenubarContext value={context}>
       <InteractiveDiv
         {...props}
-        ref={ref}
+        ref={composeRefs(ref, menubarRef)}
         role={props.role ?? "menubar"}
         onFocus={(event) => {
           onFocus?.(event);

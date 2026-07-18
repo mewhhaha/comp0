@@ -123,7 +123,7 @@ export function TreeItem({
         tree?.setSelectedKey(value);
         // v1 simplification: clicking an expandable row both selects it and
         // toggles its group, so pointer users need no separate chevron
-        // control; keyboard expansion stays on ArrowRight/ArrowLeft.
+        // control; keyboard expansion stays on the inline arrow keys.
         if (hasGroup) tree?.toggleExpanded(value);
       }}
       onKeyDown={(event) => {

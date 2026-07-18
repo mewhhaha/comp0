@@ -3,6 +3,7 @@ import { addDays, addMonths, monthMatrix, type MonthMatrixCell } from "@comp0/co
 import { type RefProp } from "../shared.js";
 import { CalendarCell } from "./CalendarCell.js";
 import { isoWeekday, useCalendarContext, weekdayName, weekdayOrder } from "./calendar-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type CalendarGridProps = Omit<TableHTMLAttributes<HTMLTableElement>, "children"> & {
   /** Custom day cell renderer, called for each matrix cell in row order. */
@@ -47,8 +48,9 @@ export function CalendarGrid({
         // Shift); focus crossing the month edge shifts the visible month.
         const offsetFromWeekStart = (isoWeekday(focusedDate) - calendar.weekStart + 7) % 7;
         let next: string | undefined;
-        if (event.key === "ArrowRight") next = addDays(focusedDate, 1);
-        else if (event.key === "ArrowLeft") next = addDays(focusedDate, -1);
+        const horizontalStep = writingDirection(event.currentTarget) === "rtl" ? -1 : 1;
+        if (event.key === "ArrowRight") next = addDays(focusedDate, horizontalStep);
+        else if (event.key === "ArrowLeft") next = addDays(focusedDate, -horizontalStep);
         else if (event.key === "ArrowDown") next = addDays(focusedDate, 7);
         else if (event.key === "ArrowUp") next = addDays(focusedDate, -7);
         else if (event.key === "Home") next = addDays(focusedDate, -offsetFromWeekStart);

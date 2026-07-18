@@ -15,6 +15,7 @@ import {
 } from "./collection-shared.js";
 import { useContextMenuContext, useMenuRootContext, type MenuListProps } from "./menu-shared.js";
 import { useMenubarContext } from "./menubar-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type { MenuListProps } from "./menu-shared.js";
 
@@ -128,7 +129,9 @@ export function MenuList({
             targetMenu = event.target.closest("[role='menu']");
           }
           if (targetMenu !== event.currentTarget) return;
-          if (menu?.isSubmenu && event.key === "ArrowLeft") {
+          const closeSubmenuKey =
+            writingDirection(event.currentTarget) === "rtl" ? "ArrowRight" : "ArrowLeft";
+          if (menu?.isSubmenu && event.key === closeSubmenuKey) {
             event.preventDefault();
             menu.setOpen(false);
             menu.focusTrigger();

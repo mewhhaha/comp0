@@ -14,6 +14,8 @@ export interface FieldContextValue {
   labelId: string;
   descriptionId: string;
   errorId: string;
+  characterCountId?: string | undefined;
+  textControl?: true | undefined;
   disabled?: boolean | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
@@ -24,6 +26,7 @@ export interface FieldContextValue {
   restoreValue?: ((value: string) => void) | undefined;
   descriptionMounted?: boolean | undefined;
   errorMounted?: boolean | undefined;
+  characterCountMounted?: boolean | undefined;
 }
 
 export const FieldContext = createContext<FieldContextValue | null>(null);
@@ -41,19 +44,21 @@ export function useFieldIds(id: string | undefined) {
     labelId: `${controlId}-label`,
     descriptionId: `${controlId}-description`,
     errorId: `${controlId}-error`,
+    characterCountId: `${controlId}-character-count`,
   };
 }
 
 export const fieldFeedbackPart = Symbol("comp0.field-feedback-part");
 
 type FieldFeedbackComponent = {
-  [fieldFeedbackPart]?: "description" | "error";
+  [fieldFeedbackPart]?: "description" | "error" | "character-count";
 };
 
 /** Reads declaratively rendered feedback so ARIA relationships exist in server markup. */
 export function fieldFeedback(children: ReactNode, invalid = false) {
   let descriptionMounted = false;
   let errorMounted = false;
+  let characterCountMounted = false;
 
   const visit = (nodes: ReactNode) => {
     Children.forEach(nodes, (child) => {
@@ -63,11 +68,14 @@ export function fieldFeedback(children: ReactNode, invalid = false) {
       if (part === "error" && (invalid || Boolean(child.props.forceMount))) {
         errorMounted = true;
       }
-      if (!descriptionMounted || !errorMounted) visit(child.props.children);
+      if (part === "character-count") characterCountMounted = true;
+      if (!descriptionMounted || !errorMounted || !characterCountMounted) {
+        visit(child.props.children);
+      }
     });
   };
   visit(children);
-  return { descriptionMounted, errorMounted };
+  return { characterCountMounted, descriptionMounted, errorMounted };
 }
 
 export function describedBy(
@@ -80,6 +88,7 @@ export function describedBy(
     describedByProp,
     hasDescription ? context?.descriptionId : undefined,
     context?.invalid && hasError ? context.errorId : undefined,
+    context?.characterCountMounted ? context.characterCountId : undefined,
   ]
     .filter(Boolean)
     .join(" ")

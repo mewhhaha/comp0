@@ -11,6 +11,7 @@ import {
   type TreeGridRowMetadata,
   type TreeGridRowRecord,
 } from "./tree-grid-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type TreeGridProps = Omit<
   TableHTMLAttributes<HTMLTableElement>,
@@ -313,8 +314,11 @@ export function TreeGrid({
           const rowIndex = rows.indexOf(row);
           const metadata = rowMetadata.get(row.value);
           let moved = false;
+          const rtl = writingDirection(event.currentTarget) === "rtl";
+          const expandKey = rtl ? "ArrowLeft" : "ArrowRight";
+          const collapseKey = rtl ? "ArrowRight" : "ArrowLeft";
 
-          if (event.key === "ArrowRight") {
+          if (event.key === expandKey) {
             if (rowFocused) {
               // Rows-first APG model: expansion stays in row mode, while a
               // second Right Arrow enters the row's first cell.
@@ -330,7 +334,7 @@ export function TreeGrid({
               const next = row.element.cells[cellElement.cellIndex + 1];
               if (next?.getAttribute("role") === "gridcell") moved = focusCell(next);
             }
-          } else if (event.key === "ArrowLeft") {
+          } else if (event.key === collapseKey) {
             if (rowFocused) {
               if (metadata?.expandable && expanded.includes(row.value)) {
                 setRowExpanded(row.value, false);

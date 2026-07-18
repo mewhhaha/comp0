@@ -2,6 +2,7 @@ import { useRef, useState, type TableHTMLAttributes } from "react";
 import { composeRefs } from "@comp0/core";
 import { type RefProp } from "../shared.js";
 import { primaryStop, rowStops, TableContext, type TableContextValue } from "./table-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
   /**
@@ -108,7 +109,8 @@ export function Table({
             const stops = rowStops(row);
             const index = stops.indexOf(focused);
             if (index === -1) return;
-            next = stops[index + (event.key === "ArrowRight" ? 1 : -1)];
+            const rightStep = writingDirection(event.currentTarget) === "rtl" ? -1 : 1;
+            next = stops[index + (event.key === "ArrowRight" ? rightStep : -rightStep)];
           } else if (event.key === "ArrowDown") {
             const below = rows[rowIndex + 1]?.cells[cell.cellIndex];
             if (below) next = primaryStop(below);

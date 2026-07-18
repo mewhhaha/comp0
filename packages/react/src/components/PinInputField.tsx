@@ -6,6 +6,7 @@ import {
   PinInputContext,
   type PinInputFieldProps,
 } from "./pin-input-shared.js";
+import { writingDirection } from "./writing-direction.js";
 export type { PinInputFieldProps } from "./pin-input-shared.js";
 
 /**
@@ -76,11 +77,13 @@ export function PinInputField({
         }
         if (event.key === "ArrowLeft") {
           event.preventDefault();
-          context.focusField(index - 1);
+          const step = writingDirection(event.currentTarget) === "rtl" ? 1 : -1;
+          context.focusField(index + step);
         }
         if (event.key === "ArrowRight") {
           event.preventDefault();
-          context.focusField(index + 1);
+          const step = writingDirection(event.currentTarget) === "rtl" ? -1 : 1;
+          context.focusField(index + step);
         }
       }}
       onPaste={(event) => {

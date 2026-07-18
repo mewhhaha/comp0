@@ -4,6 +4,7 @@ import { describedBy, useFieldContext } from "../field.js";
 import { type RefProp } from "../shared.js";
 import { sortItems, type CollectionItemRecord } from "./collection-shared.js";
 import { TagGroupContext, TagListContext } from "./tag-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type TagListProps = Omit<HTMLAttributes<HTMLDivElement>, "role">;
 
@@ -89,6 +90,7 @@ export function TagList({
           }
           let key = getRovingFocusTarget(tags, current.key, event.key, {
             orientation: "horizontal",
+            dir: writingDirection(event.currentTarget),
           });
           if (!key && event.key.length === 1) {
             key = findTypeaheadMatch(tags, typeaheadSearch(event.key), current.key);

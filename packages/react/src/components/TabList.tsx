@@ -3,6 +3,7 @@ import { useContext, useLayoutEffect, useRef } from "react";
 import { composeRefs, getRovingFocusTarget } from "@comp0/core";
 import { TabsContext } from "./disclosure-shared.js";
 import { type TabListProps } from "./disclosure-shared.js";
+import { writingDirection } from "./writing-direction.js";
 export type { TabListProps } from "./disclosure-shared.js";
 export function TabList({
   orientation = "horizontal",
@@ -49,6 +50,7 @@ export function TabList({
           event.key,
           {
             orientation,
+            dir: writingDirection(event.currentTarget),
             loop: true,
           },
         );

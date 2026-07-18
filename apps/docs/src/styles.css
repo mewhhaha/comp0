@@ -198,6 +198,10 @@
     cursor: not-allowed;
   }
 
+  :focus-visible {
+    scroll-margin-block: --spacing(24);
+  }
+
   ::selection {
     color: var(--color-teal-950);
     background: var(--color-teal-200);
@@ -230,8 +234,19 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
     .docs-disclosure::details-content {
       transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 2px solid CanvasText;
+      outline-offset: 2px;
     }
   }
 

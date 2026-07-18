@@ -79,6 +79,15 @@ const lessons: Record<string, LessonCopy> = {
     "Keep the visible control and its normal label visible.",
     "<VisuallyHidden>Loading messages</VisuallyHidden>;",
   ),
+  "keybinding-hint": lesson(
+    "A visible, semantic reminder for a keyboard shortcut implemented elsewhere.",
+    "Like the shortcut printed beside an application menu command.",
+    "Use it beside actions that already respond to a discoverable, non-conflicting shortcut.",
+    "Put KeybindingHint inside or beside the action it accelerates.",
+    "Describe simultaneous keys with + and sequential chords with spaces; Mod displays as Command on Apple platforms and Control elsewhere.",
+    "Put the real combinations on the action with aria-keyshortcuts and implement the keyboard behavior separately.",
+    '<Button aria-keyshortcuts="Control+K Meta+K">\n  Search <KeybindingHint keys="Mod+K" />\n</Button>;',
+  ),
   "text-field": lesson(
     "A shared field brain that connects a label, one text input, help, and errors.",
     "Like a name tag kit: every piece knows which input it belongs to.",
@@ -105,6 +114,15 @@ const lessons: Record<string, LessonCopy> = {
     "Put TextArea inside it instead of Input.",
     "Give TextArea a name so the full text submits.",
     '<TextField>\n  <Label>Notes</Label>\n  <TextArea name="notes" />\n</TextField>;',
+  ),
+  "character-count": lesson(
+    "A live, field-linked count of how much text remains before a native length limit.",
+    "Like the page count printed at the bottom of a writing form.",
+    "Use it when a text limit is important enough that people need to plan what they write.",
+    "Give TextField an initial or controlled value so it can share the current text with CharacterCount.",
+    "Put the same maxLength on TextArea and CharacterCount; the native control enforces the limit.",
+    "Keep the output visible and concise; it is automatically associated with the field and announced politely.",
+    '<TextField defaultValue="">\n  <TextArea maxLength={160} />\n  <CharacterCount maxLength={160} />\n</TextField>;',
   ),
   "mention-field": lesson(
     "A multi-line field that completes a token beside the caret without replacing the surrounding message.",
@@ -393,6 +411,33 @@ const lessons: Record<string, LessonCopy> = {
     "Name it with a wired Label or an aria-label.",
     "Pass value as the completed fraction of max, or omit value while the total is unknown; add your own fill and size it with --comp0-progress-value.",
     '<ProgressBar aria-label="Uploading photos" value={0.4}>\n  <span className="fill" />\n</ProgressBar>;',
+  ),
+  alert: lesson(
+    "An assertive live message for important feedback that needs immediate attention.",
+    "Like a clear interruption when a payment fails.",
+    "Use it for urgent failures or changes people must know about before continuing.",
+    "Mount Alert when the important message becomes true.",
+    "Write a concise message that includes the next useful action.",
+    "Reserve Alert for urgency; use Status for ordinary confirmations and progress updates.",
+    "{\n  failed && <Alert>Payment failed. Check the card details and try again.</Alert>;\n}",
+  ),
+  status: lesson(
+    "A polite live message for advisory feedback that should not interrupt the current task.",
+    "Like a quiet confirmation that a draft was saved.",
+    "Use it for saves, background updates, and other useful but non-urgent results.",
+    "Mount Status when new advisory information is ready.",
+    "Keep its message short and visible as well as announced.",
+    "Use Alert instead only when the message genuinely demands immediate attention.",
+    "{\n  saved && <Status>Draft saved.</Status>;\n}",
+  ),
+  "error-summary": lesson(
+    "A focused list of form errors that lets people jump directly to each invalid answer.",
+    "Like a checklist at the top of a returned form, with every note pointing to its field.",
+    "Use it after an unsuccessful submission in addition to inline FieldError messages.",
+    "Conditionally render ErrorSummary with an ErrorSummaryTitle when validation fails.",
+    "Put matching messages in ErrorSummaryList and link each ErrorSummaryLink to its field id.",
+    "The summary focuses itself on mount by default; keep each inline FieldError visible and worded the same.",
+    '<ErrorSummary>\n  <ErrorSummaryTitle>There is a problem</ErrorSummaryTitle>\n  <ErrorSummaryList>\n    <li>\n      <ErrorSummaryLink href="#email">Enter a valid email</ErrorSummaryLink>\n    </li>\n  </ErrorSummaryList>\n</ErrorSummary>;',
   ),
   separator: lesson(
     "A native rule that divides content into visually distinct groups.",
@@ -729,6 +774,11 @@ const accessibility: Record<string, string[]> = {
     "Do not accidentally hide the only focusable control.",
     "Keep hidden text short and useful.",
   ],
+  "keybinding-hint": [
+    "A hint only documents a shortcut; implement the same keys on the related action and expose them through aria-keyshortcuts.",
+    "Avoid single-character global shortcuts. They can be triggered accidentally by speech input and must be disableable, remappable, or limited to a focused component.",
+    "Do not override browser, operating-system, or assistive-technology shortcuts.",
+  ],
   "text-field": [
     "Use Label so the input has a clear name.",
     "Put Description and FieldError near their field.",
@@ -743,6 +793,11 @@ const accessibility: Record<string, string[]> = {
     "Give the multi-line box a visible Label.",
     "Explain character limits in Description when they matter.",
     "Use FieldError to state what needs fixing.",
+  ],
+  "character-count": [
+    "Put the same non-negative maxLength on the native control and CharacterCount so the message matches the enforced limit.",
+    "Keep the count visible and associated with the control; do not communicate the limit only after it is reached.",
+    "Give TextField value, defaultValue, or onChange so CharacterCount receives the current text.",
   ],
   "code-editor": [
     "Give the editor a visible Label that names the code or configuration being edited.",
@@ -801,6 +856,7 @@ const accessibility: Record<string, string[]> = {
   tabs: [
     "Keep tab names short and distinct.",
     "Ensure each Tab has a matching TabPanel key.",
+    "Horizontal arrows follow visual direction: Right moves forward in LTR and Left moves forward in RTL.",
     "Do not use tabs to hide unrelated page navigation.",
   ],
   breadcrumbs: [
@@ -837,7 +893,7 @@ const accessibility: Record<string, string[]> = {
   "grid-list": [
     "Give the grid an aria-label when it has no visible heading.",
     "Keep row focus and row selection visibly distinct.",
-    "Reach row controls with ArrowRight; do not add extra tab stops.",
+    "Reach row controls with the inline-forward arrow: ArrowRight in LTR and ArrowLeft in RTL. Do not add extra tab stops.",
     "Reordering never requires a pointer: Alt+Arrow moves the focused row and a live region announces its new position.",
     "Enter on the drag handle starts a keyboard move: arrows choose a position — across lists in a group — with the same drop preview pointer drags show, Enter drops, Escape cancels, and every step is announced.",
     "For cross-list moves, render GridListMoveButton controls so the same operation works with a click, tap, Enter, or Space without dragging.",
@@ -845,12 +901,13 @@ const accessibility: Record<string, string[]> = {
   table: [
     "Give the table an aria-label or a visible caption.",
     "Keep column headers in TableColumn so cells inherit their names.",
+    "Horizontal arrows follow visual direction and reverse their DOM-order movement in RTL.",
     "Keep the focused cell visible while arrowing through the grid.",
   ],
   "tree-grid": [
     "Give the TreeGrid an aria-label that names the hierarchy, such as Project files, and use TreeGridColumn for every column header.",
     "Rows announce their level, position, expansion, and selection automatically; keep the visible text in each row meaningful without its parent.",
-    "ArrowRight expands a row or enters its first cell, and ArrowLeft collapses it or returns to its parent. Avoid buttons and links inside cells unless their independent keyboard behavior is essential.",
+    "The inline-forward arrow expands a row or enters its first cell, and inline-backward collapses it or returns to its parent; these are ArrowRight and ArrowLeft in LTR, reversed in RTL. Avoid buttons and links inside cells unless their independent keyboard behavior is essential.",
   ],
   "list-box": [
     "Give the list an aria-label when it has no visible heading.",
@@ -860,6 +917,7 @@ const accessibility: Record<string, string[]> = {
   menu: [
     "Give MenuList an aria-label when trigger text is vague.",
     "Use MenuItem for actions, not a form selection.",
+    "Submenu open and close arrows mirror in RTL so they continue to follow the panel's visual direction.",
     "Return focus to the trigger when the menu closes.",
   ],
   select: [
@@ -928,6 +986,22 @@ const accessibility: Record<string, string[]> = {
     "Show the percentage as visible text when precision matters.",
     "Use Meter instead for a measurement that is not task progress.",
   ],
+  alert: [
+    "Mount Alert when new urgent information appears; content present before assistive technology starts observing may not be announced as a change.",
+    "Reserve assertive interruption for failures and time-sensitive consequences, not routine confirmation.",
+    "Keep the message visible and include a clear recovery action when one exists.",
+  ],
+  status: [
+    "Mount or update Status for advisory information that should wait until the current announcement finishes.",
+    "Keep the same result visible instead of relying on the live announcement alone.",
+    "Use Alert only when delaying the message could cause a real problem.",
+  ],
+  "error-summary": [
+    "Render the summary only after validation fails so its alert and focus movement correspond to a new error state.",
+    "Link every ErrorSummaryLink to the native control, or to the first invalid control in a grouped answer.",
+    "Repeat every message beside its field with identical wording; the summary supplements inline errors rather than replacing them.",
+    "After destructive success or navigation, move focus to the new logical context instead of restoring the submit button.",
+  ],
   separator: [
     "Keep it non-focusable; a separator conveys grouping, not interaction.",
     'Use role="presentation" for lines that are only decoration.',
@@ -937,6 +1011,7 @@ const accessibility: Record<string, string[]> = {
     "Make it the first focusable element on the page.",
     "Style the revealed state clearly; it appears exactly when a keyboard user needs it.",
     "Point href at a real element with a matching id, and give that target tabIndex={-1}.",
+    "Use native header, nav, main, aside, and footer landmarks so assistive technology can navigate the page structure directly.",
   ],
   toast: [
     "Keep messages short and self-contained; role=status announces politely and role=alert interrupts, so reserve alert for urgent problems.",
@@ -946,6 +1021,7 @@ const accessibility: Record<string, string[]> = {
   toolbar: [
     "Give the toolbar an aria-label that names the task, such as Text formatting.",
     "Keep controls in a visual order that matches the arrow-key order.",
+    "Horizontal arrow movement mirrors automatically when the toolbar inherits RTL direction.",
     "Nested composites like a listbox or menu keep their own arrow keys; do not double-handle them.",
   ],
   "split-button": [
@@ -962,10 +1038,12 @@ const accessibility: Record<string, string[]> = {
     "Give the menubar an aria-label naming the area it commands, such as Notes.",
     "Keep the bar for persistent application commands; a row of unrelated buttons should be a toolbar instead.",
     "Keep bar items in a visual order that matches the arrow-key order.",
+    "Horizontal bar and submenu arrows mirror automatically in RTL.",
   ],
   "pin-input": [
     "Name the group and every field: an aria-label on PinInput and one per PinInputField, such as Digit 1.",
     "The first field advertises autocomplete=one-time-code so platforms can offer the received code.",
+    "Horizontal field arrows mirror in RTL while Backspace still returns to the preceding logical field.",
     "Keep a visible way to submit as well; do not rely on onComplete alone to move people forward.",
   ],
   "range-slider": [
@@ -976,10 +1054,11 @@ const accessibility: Record<string, string[]> = {
   tree: [
     "Give the tree an aria-label that names the hierarchy, such as Project files.",
     "Levels, positions, and expansion state are announced automatically; keep each row's visible text meaningful on its own and pass textValue when markup obscures it.",
-    "Clicking an expandable row both selects it and toggles its branch, while ArrowRight and ArrowLeft expand and collapse for keyboard users; avoid extra click targets inside rows.",
+    "Clicking an expandable row both selects it and toggles its branch. The inline-forward arrow expands and inline-backward collapses, so the physical keys reverse in RTL; avoid extra click targets inside rows.",
   ],
   calendar: [
     "The grid is one tab stop; arrow keys move between days, so keep custom cells as buttons.",
+    "Horizontal day arrows mirror in RTL so focus follows the visual calendar order.",
     "Month and weekday names come from Intl for the given locale, but the prev/next button labels default to English aria-labels; translate them.",
     "The header is a polite live region, so month changes are announced without moving focus.",
   ],
@@ -1033,7 +1112,7 @@ const accessibility: Record<string, string[]> = {
   ],
   "tag-picker": [
     "Give both the selected TagList and available ListBox clear names when visible labels do not supply them.",
-    "Backspace or ArrowLeft from an empty input moves to the last tag; Delete and Backspace remove a focused tag, so keep the tag text meaningful.",
+    "Backspace or the inline-backward arrow from an empty input moves to the last tag; that arrow is Left in LTR and Right in RTL. Delete and Backspace remove a focused tag, so keep the tag text meaningful.",
     "Do not make color the only difference between selected and available options.",
   ],
   "color-swatch-picker": [
@@ -1065,6 +1144,7 @@ const accessibility: Record<string, string[]> = {
   "navigation-menu": [
     "Give the nav an aria-label when the page has more than one navigation landmark.",
     'Triggers are disclosure buttons, not role="menu" items; Tab moves through triggers and links in document order, and arrow keys, Home, and End move focus without opening panels.',
+    "Horizontal arrow movement follows visual direction and mirrors in RTL.",
     "Mark the page you are on with current instead of relying on styling alone.",
     "Panels stay in the page flow; keep each one right after its trigger so reading order matches the visual order.",
   ],
@@ -1351,6 +1431,34 @@ const action = [
     ["tooltip", "button"],
   ),
   common(
+    "keybinding-hint",
+    "Keybinding Hint",
+    "actions",
+    ["Button", "Input", "KeybindingHint", "Label", "TextField"],
+    '<Button aria-keyshortcuts="Control+K Meta+K">\n  Search <KeybindingHint keys="Mod+K" />\n</Button>;',
+    [
+      p(
+        "KeybindingHint",
+        "value",
+        "Visible shortcut text composed from semantic kbd elements; it installs no keyboard behavior.",
+        true,
+        false,
+        [
+          prop(
+            "keys",
+            "string",
+            "Chords joined by + and sequential chords separated by spaces; Mod adapts to the visitor's platform.",
+          ),
+          prop("aria-label", "string", "Overrides the generated spoken key description."),
+        ],
+      ),
+    ],
+    [],
+    [],
+    "No form behavior and no keyboard handler; the related action owns both.",
+    ["button", "visually-hidden"],
+  ),
+  common(
     "meter",
     "Meter",
     "actions",
@@ -1462,6 +1570,86 @@ const action = [
     ],
     "No form behavior; progress reports status and submits nothing.",
     ["meter"],
+  ),
+  common(
+    "alert",
+    "Alert",
+    "actions",
+    ["Alert", "Button"],
+    "{\n  failed && <Alert>Payment failed. Check the card details and try again.</Alert>;\n}",
+    [
+      p("Alert", "feedback", "Assertive live message rendered with role=alert.", true, false, [
+        prop("children", "ReactNode", "Visible urgent message and any recovery action."),
+      ]),
+    ],
+    [],
+    [],
+    "No form value; use it to report an important form or application result.",
+    ["status", "error-summary", "toast"],
+  ),
+  common(
+    "status",
+    "Status",
+    "actions",
+    ["Button", "Status"],
+    "{\n  saved && <Status>Draft saved.</Status>;\n}",
+    [
+      p("Status", "feedback", "Polite live message rendered with role=status.", true, false, [
+        prop("children", "ReactNode", "Visible advisory message."),
+      ]),
+    ],
+    [],
+    [],
+    "No form value; use it to report an advisory form or application result.",
+    ["alert", "progress-bar", "toast"],
+  ),
+  common(
+    "error-summary",
+    "Error Summary",
+    "actions",
+    [
+      "Button",
+      "ErrorSummary",
+      "ErrorSummaryLink",
+      "ErrorSummaryList",
+      "ErrorSummaryTitle",
+      "FieldError",
+      "Input",
+      "Label",
+      "TextField",
+    ],
+    '<ErrorSummary><ErrorSummaryTitle>There is a problem</ErrorSummaryTitle><ErrorSummaryList><li><ErrorSummaryLink href="#email">Enter a valid email</ErrorSummaryLink></li></ErrorSummaryList></ErrorSummary>',
+    [
+      p(
+        "ErrorSummary",
+        "root",
+        "Assertive, programmatically focusable summary labelled by its title.",
+        true,
+        false,
+        [
+          prop("autoFocus", "boolean", "Moves focus to the summary on mount; enabled by default."),
+          prop("tabIndex", "number", "Defaults to -1 so focus can land without adding a tab stop."),
+        ],
+      ),
+      p("ErrorSummaryTitle", "label", "Visible h2 that names the summary."),
+      p("ErrorSummaryList", "region", "Native unordered list of validation messages."),
+      p("ErrorSummaryLink", "item", "Native anchor pointing to one invalid control.", true, false, [
+        prop("href", "string", "Fragment URL for the matching invalid control id."),
+      ]),
+    ],
+    [
+      { keys: ["Tab"], action: "Moves from the focused summary to its first error link." },
+      { keys: ["Enter"], action: "Moves from an error link to its matching field." },
+    ],
+    [
+      {
+        attribute: ":focus-visible",
+        on: "ErrorSummary",
+        meaning: "The newly mounted summary received visible keyboard focus.",
+      },
+    ],
+    "The summary submits nothing; its links point into the form and supplement inline FieldError messages.",
+    ["alert", "text-field", "fieldset"],
   ),
   common(
     "separator",
@@ -1884,7 +2072,68 @@ const field = [
       { attribute: "[data-invalid]", on: "TextArea", meaning: "The surrounding field is invalid." },
     ],
     "TextArea submits its native name and multi-line value.",
-    ["text-field", "fieldset"],
+    ["text-field", "character-count", "fieldset"],
+  ),
+  common(
+    "character-count",
+    "Character Count",
+    "fields",
+    ["CharacterCount", "Label", "TextArea", "TextField"],
+    '<TextField defaultValue=""><Label>Biography</Label><TextArea maxLength={160} /><CharacterCount maxLength={160} /></TextField>',
+    [
+      p(
+        "TextField",
+        "root",
+        "Wrapper-free value provider shared by the native control and count.",
+        false,
+        false,
+        [
+          prop("value", "string", "Controlled text value."),
+          prop("defaultValue", "string", "Initial uncontrolled text value."),
+          prop("onChange", "(value: string) => void", "Receives the next text value."),
+        ],
+      ),
+      p("Label", "label", "Visible name for the text control."),
+      p("TextArea", "input", "Native text control that enforces maxLength.", true, false, [
+        prop("maxLength", "number", "Native maximum accepted character count."),
+      ]),
+      p(
+        "CharacterCount",
+        "feedback",
+        "Polite output associated with the field through aria-describedby and for.",
+        true,
+        false,
+        [
+          prop("maxLength", "number", "Non-negative integer used to calculate remaining text."),
+          prop(
+            "children",
+            "ReactNode | (state: CharacterCountState) => ReactNode",
+            "Custom output receiving count, maximum, remaining, and limitReached.",
+          ),
+        ],
+      ),
+    ],
+    [{ keys: ["Tab"], action: "Moves to and from the native text control." }],
+    [
+      { attribute: "[data-empty]", on: "CharacterCount", meaning: "The field has no text." },
+      {
+        attribute: "[data-limit-reached]",
+        on: "CharacterCount",
+        meaning: "No characters remain.",
+      },
+      {
+        attribute: "[data-count]",
+        on: "CharacterCount",
+        meaning: "Current character count.",
+      },
+      {
+        attribute: "[data-remaining]",
+        on: "CharacterCount",
+        meaning: "Characters remaining before the limit.",
+      },
+    ],
+    "TextArea submits its native value; CharacterCount submits nothing.",
+    ["text-area", "text-field", "fieldset"],
   ),
   common(
     "mention-field",
@@ -2520,8 +2769,8 @@ const field = [
     ],
     [
       { keys: ["Backspace"], action: "Clears the field, or moves back when it is already empty." },
-      { keys: ["ArrowLeft"], action: "Moves to the previous field." },
-      { keys: ["ArrowRight"], action: "Moves to the next field." },
+      { keys: ["ArrowLeft"], action: "Moves to the field on the visual left." },
+      { keys: ["ArrowRight"], action: "Moves to the field on the visual right." },
       { keys: ["Tab"], action: "Leaves the code; typing a character already advances." },
     ],
     [
@@ -2826,7 +3075,10 @@ const field = [
     [
       { keys: ["ArrowDown", "ArrowUp"], action: "Moves through matching options from the input." },
       { keys: ["Enter"], action: "Adds the active option." },
-      { keys: ["Backspace", "ArrowLeft"], action: "Moves from an empty input to the last tag." },
+      {
+        keys: ["Backspace", "ArrowLeft", "ArrowRight"],
+        action: "Moves from an empty input to the last tag; use Left in LTR or Right in RTL.",
+      },
       { keys: ["Backspace", "Delete"], action: "Removes the focused tag." },
     ],
     [
@@ -3139,10 +3391,14 @@ const navigation = [
       ]),
     ],
     [
-      { keys: ["ArrowRight"], action: "Moves to and selects the next tab.", scope: "horizontal" },
+      {
+        keys: ["ArrowRight"],
+        action: "Moves to and selects the tab on the visual right.",
+        scope: "horizontal",
+      },
       {
         keys: ["ArrowLeft"],
-        action: "Moves to and selects the previous tab.",
+        action: "Moves to and selects the tab on the visual left.",
         scope: "horizontal",
       },
       { keys: ["ArrowDown"], action: "Moves to and selects the next tab.", scope: "vertical" },
@@ -3292,10 +3548,9 @@ const navigation = [
       { keys: ["ArrowUp"], action: "Opens from the trigger to the last item, or moves up." },
       { keys: ["Home"], action: "Moves to the first item." },
       { keys: ["End"], action: "Moves to the last item." },
-      { keys: ["ArrowRight"], action: "Opens the focused submenu item.", scope: "submenu" },
       {
-        keys: ["ArrowLeft"],
-        action: "Closes the submenu and refocuses its item.",
+        keys: ["ArrowLeft", "ArrowRight"],
+        action: "Opens inline-forward or closes inline-backward; physical keys reverse in RTL.",
         scope: "submenu",
       },
       { keys: ["Enter"], action: "Activates the focused item." },
@@ -3865,8 +4120,10 @@ const navigation = [
     [
       { keys: ["ArrowDown"], action: "Moves to the next row." },
       { keys: ["ArrowUp"], action: "Moves to the previous row." },
-      { keys: ["ArrowRight"], action: "Moves into and through the row's controls." },
-      { keys: ["ArrowLeft"], action: "Moves back toward the row." },
+      {
+        keys: ["ArrowLeft", "ArrowRight"],
+        action: "Moves into or out of row controls; inline direction mirrors in RTL.",
+      },
       { keys: ["Home"], action: "Moves to the first row." },
       { keys: ["End"], action: "Moves to the last row." },
       { keys: ["Enter"], action: "Selects the focused row." },
@@ -4038,8 +4295,8 @@ const navigation = [
       p("TableFooter", "root", "Native tfoot for totals or summary rows.", true, true),
     ],
     [
-      { keys: ["ArrowRight"], action: "Moves right through each cell and the controls inside it." },
-      { keys: ["ArrowLeft"], action: "Moves left through each cell and the controls inside it." },
+      { keys: ["ArrowRight"], action: "Moves visually right through cells and their controls." },
+      { keys: ["ArrowLeft"], action: "Moves visually left through cells and their controls." },
       { keys: ["ArrowDown"], action: "Moves one cell down the column." },
       { keys: ["ArrowUp"], action: "Moves one cell up the column." },
       { keys: ["Home"], action: "Moves to the first cell in the row." },
@@ -4116,13 +4373,9 @@ const navigation = [
         action: "Moves to the previous visible row, preserving the focused column.",
       },
       {
-        keys: ["ArrowRight"],
+        keys: ["ArrowLeft", "ArrowRight"],
         action:
-          "Expands a collapsed row; on an expanded or leaf row, enters or moves right through cells.",
-      },
-      {
-        keys: ["ArrowLeft"],
-        action: "Moves left through cells; from a row, collapses it or moves to its parent.",
+          "Inline-forward expands or enters cells; inline-backward moves through cells, collapses, or reaches the parent. Physical keys reverse in RTL.",
       },
       {
         keys: ["Home"],
@@ -4189,6 +4442,14 @@ const navigation = [
     ],
     "No form behavior.",
     ["link", "visually-hidden"],
+    [
+      {
+        id: "page-shell",
+        title: "Landmark page shell",
+        description:
+          "Pair the first skip link with native header, nav, main, and footer landmarks.",
+      },
+    ],
   ),
   common(
     "context-menu",
@@ -4354,13 +4615,11 @@ const navigation = [
       { keys: ["Tab"], action: "Moves into the bar to the last-used item; Tab again leaves." },
       {
         keys: ["ArrowRight"],
-        action:
-          "Moves to the next item, wrapping; while a menu is open, opens the neighbor's menu.",
+        action: "Moves to the item on the visual right, wrapping; while open, switches menus.",
       },
       {
         keys: ["ArrowLeft"],
-        action:
-          "Moves to the previous item, wrapping; while a menu is open, opens the neighbor's menu.",
+        action: "Moves to the item on the visual left, wrapping; while open, switches menus.",
       },
       { keys: ["ArrowDown"], action: "Opens the focused item's menu and focuses the first item." },
       { keys: ["ArrowUp"], action: "Opens the focused item's menu and focuses the last item." },
@@ -4374,13 +4633,8 @@ const navigation = [
         scope: "open menu",
       },
       {
-        keys: ["ArrowRight"],
-        action: "Opens the focused submenu item.",
-        scope: "submenu",
-      },
-      {
-        keys: ["ArrowLeft"],
-        action: "Closes the submenu and refocuses its item.",
+        keys: ["ArrowLeft", "ArrowRight"],
+        action: "Opens inline-forward or closes inline-backward; physical keys reverse in RTL.",
         scope: "submenu",
       },
     ],
@@ -4460,12 +4714,9 @@ const navigation = [
       { keys: ["ArrowDown"], action: "Moves to the next visible item without wrapping." },
       { keys: ["ArrowUp"], action: "Moves to the previous visible item without wrapping." },
       {
-        keys: ["ArrowRight"],
-        action: "Expands a collapsed item; on an expanded item, moves to its first child.",
-      },
-      {
-        keys: ["ArrowLeft"],
-        action: "Collapses an expanded item; otherwise moves to the parent item.",
+        keys: ["ArrowLeft", "ArrowRight"],
+        action:
+          "Inline-forward expands or enters a branch; inline-backward collapses or reaches its parent. Physical keys reverse in RTL.",
       },
       { keys: ["Home"], action: "Moves to the first visible item." },
       { keys: ["End"], action: "Moves to the last visible item." },
@@ -5814,8 +6065,8 @@ const picker = [
       ]),
     ],
     [
-      { keys: ["ArrowLeft"], action: "Moves focus one day back." },
-      { keys: ["ArrowRight"], action: "Moves focus one day forward." },
+      { keys: ["ArrowLeft"], action: "Moves focus one day toward the visual left." },
+      { keys: ["ArrowRight"], action: "Moves focus one day toward the visual right." },
       { keys: ["ArrowUp"], action: "Moves focus one week back." },
       { keys: ["ArrowDown"], action: "Moves focus one week forward." },
       { keys: ["Home"], action: "Moves focus to the start of the week." },

@@ -213,6 +213,18 @@ describe("grid list composition", () => {
     expect(document.activeElement).toBe(rows[0]);
   });
 
+  it("mirrors row entry and exit arrows in right-to-left layouts", () => {
+    const { container, rows } = renderGridList();
+    const buttons = rows[0]!.querySelectorAll("button");
+    container.querySelector<HTMLElement>("[role='grid']")!.style.direction = "rtl";
+    rows[0]!.focus();
+
+    fireKeyDown(rows[0]!, "ArrowLeft");
+    expect(document.activeElement).toBe(buttons[0]);
+    fireKeyDown(buttons[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(rows[0]);
+  });
+
   it("keeps row navigation and child actions in the grid's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);

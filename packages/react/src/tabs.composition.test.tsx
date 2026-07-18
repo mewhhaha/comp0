@@ -124,4 +124,21 @@ describe("tabs composition", () => {
     fireKeyDown(tabs[1]!, "ArrowRight");
     expect(document.activeElement).toBe(tabs[2]);
   });
+
+  it("mirrors horizontal arrow navigation in right-to-left layouts", () => {
+    const { container } = render(
+      <Tabs defaultValue="one">
+        <TabList aria-label="Project" style={{ direction: "rtl" }}>
+          <Tab value="one">One</Tab>
+          <Tab value="two">Two</Tab>
+        </TabList>
+      </Tabs>,
+    );
+    const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
+    const tabs = container.querySelectorAll<HTMLButtonElement>("[role='tab']");
+    tabs[0]!.focus();
+
+    fireKeyDown(tablist, "ArrowLeft");
+    expect(document.activeElement).toBe(tabs[1]);
+  });
 });

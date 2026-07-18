@@ -13,6 +13,7 @@ import {
   useTreeGroupScope,
   type TreeContextValue,
 } from "./tree-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type TreeProps = Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> & {
   /** Controlled or initial selected item; selection is single. */
@@ -151,8 +152,11 @@ export function Tree({
             const current = visible.find((item) => item.element === itemElement);
             const currentElement = current?.element;
             if (!current || !currentElement) return;
+            const rtl = writingDirection(event.currentTarget) === "rtl";
+            const expandKey = rtl ? "ArrowLeft" : "ArrowRight";
+            const collapseKey = rtl ? "ArrowRight" : "ArrowLeft";
 
-            if (event.key === "ArrowRight") {
+            if (event.key === expandKey) {
               // A descendant group can only belong to this item: groups only
               // ever render inside their own parent item.
               if (current.disabled || currentElement.querySelector('[role="group"]') === null) {
@@ -169,7 +173,7 @@ export function Tree({
               if (next?.element && currentElement.contains(next.element)) focusItem(next.key);
               return;
             }
-            if (event.key === "ArrowLeft") {
+            if (event.key === collapseKey) {
               const expandable = currentElement.querySelector('[role="group"]') !== null;
               if (expandable && expanded.includes(current.key) && !current.disabled) {
                 event.preventDefault();

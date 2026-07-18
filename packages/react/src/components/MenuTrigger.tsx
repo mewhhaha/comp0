@@ -6,6 +6,7 @@ import { MenuContext, resolveItemLabel } from "./collection-shared.js";
 import { useMenuRootContext, type MenuTriggerProps } from "./menu-shared.js";
 import { useMenubarContext } from "./menubar-shared.js";
 import { triggerAnchorStyle } from "./overlay-shared.js";
+import { writingDirection } from "./writing-direction.js";
 
 export type { MenuTriggerProps } from "./menu-shared.js";
 
@@ -21,7 +22,7 @@ export function MenuTrigger({
   const menu = useMenuRootContext();
   // Inside a parent menu's popover the trigger becomes a submenu item: it
   // registers with the parent collection and opens with hover, click,
-  // Enter, Space, or ArrowRight.
+  // Enter, Space, or the inline-forward arrow.
   const parentCollection = useContext(MenuContext);
   const submenu = menu?.isSubmenu === true && parentCollection !== null;
   // Inside a menubar the trigger of a top-level menu becomes a menubar item:
@@ -184,7 +185,9 @@ export function MenuTrigger({
       onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
         onKeyDown?.(event as never);
         if (event.defaultPrevented || disabled) return;
-        if (event.key === "ArrowRight" || event.key === "Enter" || event.key === " ") {
+        const openSubmenuKey =
+          writingDirection(event.currentTarget) === "rtl" ? "ArrowLeft" : "ArrowRight";
+        if (event.key === openSubmenuKey || event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           menu?.setOpen(true);
         }

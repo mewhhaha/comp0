@@ -10,6 +10,7 @@ import { type RefProp } from "../shared.js";
 import { ListBoxContext, sortItems } from "./collection-shared.js";
 import { useAutocompleteContext } from "./autocomplete-shared.js";
 import { useMentionFieldListBoxContext } from "./mention-field-shared.js";
+import { writingDirection } from "./writing-direction.js";
 import {
   type SelectableCollectionContextValue,
   type CollectionItemRecord,
@@ -159,7 +160,11 @@ export function ListBox({
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
           const items = context.items();
-          let key = getRovingFocusTarget(items, selected, event.key, { orientation, loop: true });
+          let key = getRovingFocusTarget(items, selected, event.key, {
+            orientation,
+            dir: writingDirection(event.currentTarget),
+            loop: true,
+          });
           if (!key && event.key.length === 1) {
             key = findTypeaheadMatch(items, typeaheadSearch(event.key), selected);
           }

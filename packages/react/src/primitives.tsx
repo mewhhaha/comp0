@@ -4,3 +4,4 @@ export * from "./components/DropZone.js";
 export * from "./components/Separator.js";
 export * from "./components/SkipLink.js";
 export * from "./components/VisuallyHidden.js";
+export * from "./components/KeybindingHint.js";

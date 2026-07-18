@@ -115,6 +115,16 @@ describe("tree composition", () => {
     expect(document.activeElement).toBe(item("src"));
   });
 
+  it("mirrors branch arrows in right-to-left layouts", () => {
+    const { item } = renderTree({ defaultExpanded: [], style: { direction: "rtl" } });
+    item("src").focus();
+
+    fireKeyDown(document.activeElement!, "ArrowLeft");
+    expect(item("src").getAttribute("aria-expanded")).toBe("true");
+    fireKeyDown(document.activeElement!, "ArrowRight");
+    expect(item("src").getAttribute("aria-expanded")).toBe("false");
+  });
+
   it("moves over visible items only with ArrowDown and ArrowUp", () => {
     const { item } = renderTree();
     item("src").focus();

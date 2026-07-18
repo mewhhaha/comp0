@@ -176,6 +176,17 @@ describe("navigation menu composition", () => {
     expect(container.querySelector("nav")?.hasAttribute("data-open")).toBe(false);
   });
 
+  it("mirrors top-level arrow navigation in right-to-left layouts", () => {
+    const { container } = render(<SiteNavigation />);
+    const navigation = container.querySelector("nav")!;
+    const products = triggerNamed(container, "Products");
+    navigation.style.direction = "rtl";
+    products.focus();
+
+    fireKeyDown(products, "ArrowLeft");
+    expect(document.activeElement).toBe(triggerNamed(container, "Resources"));
+  });
+
   it("moves focus within the navigation menu's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
