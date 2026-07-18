@@ -8,9 +8,9 @@ import { getExampleSource } from "../examples/sources.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 73 unique component slugs", () => {
-    expect(components).toHaveLength(73);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(73);
+  it("contains 74 unique component slugs", () => {
+    expect(components).toHaveLength(74);
+    expect(new Set(components.map((component) => component.slug)).size).toBe(74);
   });
 
   it("resolves every related component link", () => {

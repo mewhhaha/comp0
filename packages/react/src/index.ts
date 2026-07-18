@@ -9,6 +9,7 @@ export * from "./disclosure.js";
 export * from "./drawer.js";
 export * from "./editable.js";
 export * from "./feed.js";
+export * from "./floating-panel.js";
 export * from "./inventory.js";
 export { Label, type LabelProps } from "./components/Label.js";
 export { Description, type DescriptionProps } from "./components/Description.js";

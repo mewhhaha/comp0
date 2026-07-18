@@ -14,6 +14,7 @@ const keyLabels: Record<KeyboardToken, { visual: string; spoken: string }> = {
   End: { visual: "End", spoken: "End" },
   Enter: { visual: "↵", spoken: "Enter" },
   Escape: { visual: "Esc", spoken: "Escape" },
+  F6: { visual: "F6", spoken: "F6" },
   F10: { visual: "F10", spoken: "F10" },
   Home: { visual: "Home", spoken: "Home" },
   PageDown: { visual: "PgDn", spoken: "Page down" },

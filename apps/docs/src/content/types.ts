@@ -48,6 +48,7 @@ export type KeyboardToken =
   | "End"
   | "Enter"
   | "Escape"
+  | "F6"
   | "F10"
   | "Home"
   | "PageDown"
