@@ -720,7 +720,7 @@ const accessibility: Record<string, string[]> = {
     "Use readOnly rather than disabled when people should still focus, scroll, select, and copy the code.",
     "CodeEditor is a native textarea, so it already exposes multi-line textbox semantics; do not add role=textbox, aria-multiline, or contentEditable.",
     "Tab moves to the next control. If an application adds Tab indentation, it must also provide and explain a keyboard command that leaves the editor.",
-    "Treat syntax colors, squiggles, and token hovers as supplemental. Keep the editable source in CodeEditor, hide duplicate highlighting from assistive technology, and expose every diagnostic as text and a keyboard-reachable action.",
+    "Treat syntax colors, squiggles, and token hovers as supplemental. Keep decorative highlighting hidden from assistive technology and pointer events, use Tooltip for hover surfaces, provide a documented command that shows the same information at the caret, and expose every diagnostic as text and a keyboard-reachable action.",
   ],
   fieldset: [
     "Put Legend first so the group has a name.",
@@ -867,6 +867,7 @@ const accessibility: Record<string, string[]> = {
     "Give the trigger its own accessible name.",
     "Keep tooltip text brief and descriptive.",
     "Do not put required interactive content inside a tooltip.",
+    "When the trigger is inline text, merge TooltipTrigger onto a focusable element so keyboard users can reveal the same description as pointer users.",
   ],
   meter: [
     "Always name the gauge with a Label or an aria-label.",
@@ -1867,13 +1868,13 @@ const field = [
       },
     ],
     "CodeEditor submits its native name and complete source value. Read-only editors still submit; disabled editors do not.",
-    ["text-area", "text-field", "editable"],
+    ["text-area", "text-field", "editable", "tooltip"],
     [
       {
         id: "diagnostics",
         title: "Syntax highlighting and diagnostics",
         description:
-          "Layer decorative syntax tokens and hover details over the native editor, then expose the same mocked LSP feedback as keyboard-reachable diagnostic actions.",
+          "Layer non-interactive syntax tokens over the native editor, add delayed pointer and keyboard-triggered hover details, then expose mocked LSP feedback as keyboard-reachable diagnostic actions.",
       },
     ],
   ),
@@ -5263,6 +5264,14 @@ const picker = [
     ],
     "No native form behavior.",
     ["popover", "visually-hidden"],
+    [
+      {
+        id: "type-info",
+        title: "Type information",
+        description:
+          "Merge the trigger onto a focusable inline code symbol and position a brief type description beside it.",
+      },
+    ],
   ),
   common(
     "calendar",

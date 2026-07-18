@@ -1,7 +1,17 @@
 "use client";
 
-import { Button, CodeEditor, Description, Label, TextField } from "@comp0/react";
-import { useRef, useState } from "react";
+import {
+  Button,
+  CodeEditor,
+  Description,
+  Label,
+  TextField,
+  Tooltip,
+  TooltipArrow,
+  TooltipPopover,
+  TooltipTrigger,
+} from "@comp0/react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 const initialCode = `type User = { name: string };
 type GreetingOptions = { excited: boolean };
@@ -37,12 +47,29 @@ type Diagnostic = {
   message: string;
 };
 
+type SymbolHover = {
+  detail: string;
+  height: number;
+  keyboard: boolean;
+  left: number;
+  start: number;
+  top: number;
+  width: number;
+};
+
 export function Example() {
   const [source, setSource] = useState(initialCode);
+  const [symbolHover, setSymbolHover] = useState<SymbolHover | null>(null);
+  const [hoverAnnouncement, setHoverAnnouncement] = useState("");
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const gutterRef = useRef<HTMLPreElement>(null);
   const syntaxRef = useRef<HTMLPreElement>(null);
-  const hoverRef = useRef<HTMLPreElement>(null);
+  const symbolElementsRef = useRef(new Map<number, HTMLSpanElement>());
+  const hoverTimerRef = useRef<number | undefined>(undefined);
+  const pendingSymbolStartRef = useRef<number | null>(null);
+
+  useEffect(() => () => window.clearTimeout(hoverTimerRef.current), []);
 
   const diagnostics: Diagnostic[] = [];
   const errorStart = source.indexOf("mesage");
@@ -86,16 +113,45 @@ export function Example() {
     return tokens;
   });
 
+  function closeSymbolHover() {
+    window.clearTimeout(hoverTimerRef.current);
+    pendingSymbolStartRef.current = null;
+    setSymbolHover(null);
+  }
+
+  function openSymbolHover(start: number, keyboard: boolean) {
+    const symbol = symbolDetails.find(({ name }) => source.startsWith(name, start));
+    const symbolElement = symbolElementsRef.current.get(start);
+    const editorContainer = editorContainerRef.current;
+    if (!symbol || !symbolElement || !editorContainer) return false;
+
+    const symbolRect = symbolElement.getBoundingClientRect();
+    const containerRect = editorContainer.getBoundingClientRect();
+    setSymbolHover({
+      detail: symbol.detail,
+      height: symbolRect.height,
+      keyboard,
+      left: symbolRect.left - containerRect.left,
+      start,
+      top: symbolRect.top - containerRect.top,
+      width: symbolRect.width,
+    });
+    return true;
+  }
+
   return (
     <TextField as="div" className="flex w-full max-w-2xl flex-col gap-2">
       <Label className="text-base font-medium text-zinc-900 sm:text-sm dark:text-zinc-100">
         TypeScript source
       </Label>
       <Description className="text-sm text-zinc-500 dark:text-zinc-400">
-        Hover User or message for type information. Scroll the source, or choose a diagnostic or
-        symbol below to move to it.
+        Hover User or message for type information. At the caret, press Alt/Option+Up Arrow. Scroll
+        the source, or choose a diagnostic or symbol below to move to it.
       </Description>
-      <div className="relative h-64 overflow-visible rounded border border-zinc-950/10 bg-zinc-950 shadow-sm dark:border-white/10">
+      <div
+        ref={editorContainerRef}
+        className="relative h-64 overflow-visible rounded border border-zinc-950/10 bg-zinc-950 shadow-sm dark:border-white/10"
+      >
         <pre
           ref={gutterRef}
           aria-hidden="true"
@@ -142,8 +198,17 @@ export function Example() {
                     className =
                       "text-zinc-100 underline decoration-red-400 decoration-wavy underline-offset-4";
                   }
+                  const detail = symbolDetails.find((symbol) => symbol.name === token.text)?.detail;
                   return (
-                    <span className={className} key={token.start}>
+                    <span
+                      ref={(element) => {
+                        if (!detail) return;
+                        if (element) symbolElementsRef.current.set(token.start, element);
+                        else symbolElementsRef.current.delete(token.start);
+                      }}
+                      className={className}
+                      key={token.start}
+                    >
                       {token.text}
                     </span>
                   );
@@ -155,46 +220,131 @@ export function Example() {
         <CodeEditor
           ref={editorRef}
           aria-label="TypeScript source"
+          aria-describedby={symbolHover?.keyboard ? "code-editor-symbol-content" : undefined}
           className="relative z-10 h-64 w-full resize-none overflow-auto rounded border-0 bg-transparent py-4 pr-4 pl-16 font-mono text-sm/6 text-transparent caret-white outline-teal-400 [tab-size:2] selection:bg-teal-400/40 selection:text-transparent focus-visible:outline-2 focus-visible:outline-offset-2"
           value={source}
-          onChange={(event) => setSource(event.currentTarget.value)}
+          onChange={(event) => {
+            closeSymbolHover();
+            setSource(event.currentTarget.value);
+          }}
+          onKeyDown={(event) => {
+            const showHover =
+              event.altKey &&
+              !event.ctrlKey &&
+              !event.metaKey &&
+              !event.shiftKey &&
+              event.key === "ArrowUp";
+            if (!showHover) return;
+
+            event.preventDefault();
+            const caret = event.currentTarget.selectionStart;
+            const token = lines
+              .flat()
+              .find(
+                ({ start, text }) =>
+                  symbolDetails.some(({ name }) => name === text) &&
+                  start <= caret &&
+                  caret <= start + text.length,
+              );
+            if (token && openSymbolHover(token.start, true)) {
+              const symbol = symbolDetails.find(({ name }) => name === token.text);
+              setHoverAnnouncement(symbol?.detail ?? "");
+            } else {
+              closeSymbolHover();
+              setHoverAnnouncement("No symbol information is available at the caret.");
+            }
+          }}
+          onPointerDown={closeSymbolHover}
+          onPointerLeave={() => {
+            window.clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = window.setTimeout(() => setSymbolHover(null), 150);
+          }}
+          onPointerMove={(event) => {
+            let symbolStart: number | null = null;
+            for (const [start, element] of symbolElementsRef.current) {
+              const rect = element.getBoundingClientRect();
+              if (
+                rect.left <= event.clientX &&
+                event.clientX <= rect.right &&
+                rect.top <= event.clientY &&
+                event.clientY <= rect.bottom
+              ) {
+                symbolStart = start;
+                break;
+              }
+            }
+            if (symbolStart === symbolHover?.start) {
+              window.clearTimeout(hoverTimerRef.current);
+              pendingSymbolStartRef.current = null;
+              return;
+            }
+            if (symbolStart === pendingSymbolStartRef.current) {
+              return;
+            }
+
+            window.clearTimeout(hoverTimerRef.current);
+            pendingSymbolStartRef.current = symbolStart;
+            if (symbolStart === null) {
+              hoverTimerRef.current = window.setTimeout(() => setSymbolHover(null), 150);
+              return;
+            }
+            setSymbolHover(null);
+            hoverTimerRef.current = window.setTimeout(() => {
+              pendingSymbolStartRef.current = null;
+              openSymbolHover(symbolStart, false);
+            }, 300);
+          }}
           onScroll={(event) => {
+            closeSymbolHover();
             if (gutterRef.current) gutterRef.current.scrollTop = event.currentTarget.scrollTop;
             if (syntaxRef.current) {
               syntaxRef.current.scrollLeft = event.currentTarget.scrollLeft;
               syntaxRef.current.scrollTop = event.currentTarget.scrollTop;
             }
-            if (hoverRef.current) {
-              hoverRef.current.scrollLeft = event.currentTarget.scrollLeft;
-              hoverRef.current.scrollTop = event.currentTarget.scrollTop;
-            }
           }}
         />
-        <pre
-          ref={hoverRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-20 m-0 overflow-hidden py-4 pr-4 pl-16 font-mono text-sm/6 text-transparent [tab-size:2]"
+        <Tooltip
+          id="code-editor-symbol"
+          open={symbolHover !== null}
+          onToggle={(open) => {
+            if (!open) closeSymbolHover();
+          }}
         >
-          <code>
-            {lines.map((tokens, lineIndex) => (
-              <span className="block min-h-6" key={lineIndex}>
-                {tokens.map((token) => {
-                  const detail = symbolDetails.find((symbol) => symbol.name === token.text)?.detail;
-                  if (!detail) return <span key={token.start}>{token.text}</span>;
-                  return (
-                    <span className="group/token pointer-events-auto relative" key={token.start}>
-                      {token.text}
-                      <span className="pointer-events-none absolute top-full left-0 z-30 mt-1 w-max max-w-64 rounded border border-white/10 bg-zinc-800 px-2 py-1 font-sans text-xs/5 text-zinc-100 opacity-0 shadow-lg group-hover/token:opacity-100">
-                        {detail}
-                      </span>
-                    </span>
-                  );
-                })}
-              </span>
-            ))}
-          </code>
-        </pre>
+          <TooltipTrigger as={Fragment}>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute z-20"
+              style={{
+                height: symbolHover?.height,
+                left: symbolHover?.left,
+                top: symbolHover?.top,
+                width: symbolHover?.width,
+              }}
+            />
+          </TooltipTrigger>
+          <TooltipPopover
+            as="span"
+            placement="top"
+            offset={6}
+            onPointerEnter={() => window.clearTimeout(hoverTimerRef.current)}
+            onPointerLeave={(event) => {
+              event.preventDefault();
+              window.clearTimeout(hoverTimerRef.current);
+              hoverTimerRef.current = window.setTimeout(() => setSymbolHover(null), 150);
+            }}
+            className="pointer-events-auto w-max max-w-64 translate-y-0 overflow-visible rounded border-0 bg-zinc-800 px-2 py-1 font-sans text-xs/5 text-zinc-100 opacity-100 shadow-lg transition-[opacity,translate] duration-100 starting:translate-y-1 starting:opacity-0 motion-reduce:transition-none"
+          >
+            {symbolHover?.detail}
+            <TooltipArrow
+              as="span"
+              className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-zinc-800"
+            />
+          </TooltipPopover>
+        </Tooltip>
       </div>
+      <output className="sr-only" aria-live="polite">
+        {hoverAnnouncement}
+      </output>
       <div className="rounded border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900">
         <p
           className="border-b border-zinc-950/10 px-3 py-2 text-sm font-medium text-zinc-700 dark:border-white/10 dark:text-zinc-300"

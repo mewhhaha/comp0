@@ -1,14 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#080808" />
-  <text
-    x="31"
-    y="28"
-    text-anchor="middle"
-    dominant-baseline="central"
-    font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
-    font-size="40"
-    font-weight="700"
-    fill="#ff9000"
-  >c0</text>
-  <rect x="12" y="48" width="40" height="6" rx="3" fill="#ff9000" opacity="0.9" />
+  <rect width="64" height="64" fill="#000" />
+  <path
+    d="M47.3 16.7a21.6 21.6 0 1 0 0 30.6"
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-width="7"
+  />
+  <path
+    d="M47.3 16.7a21.6 21.6 0 0 1 0 30.6"
+    fill="none"
+    stroke="#ff6b00"
+    stroke-linecap="round"
+    stroke-width="6"
+  />
+  <path
+    d="M4 54 60 10"
+    fill="none"
+    stroke="#ff6b00"
+    stroke-linecap="round"
+    stroke-width="6"
+  />
+  <path
+    d="m43.4 20.6 7.8-7.8m-7.8 30.6 7.8 7.8"
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-width="7"
+  />
 </svg>
