@@ -1,6 +1,6 @@
 {
   "name": "@comp0/core",
-  "version": "0.1.0-next.17",
+  "version": "0.1.0-next.18",
   "description": "React behavior hooks and DOM utilities for accessible headless interfaces.",
   "keywords": [
     "accessibility",

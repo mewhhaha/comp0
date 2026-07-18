@@ -113,12 +113,12 @@ export function FloatingPanel({
     if (!open || positionRef.current || !boundaryRect || !surfaceRect) return;
     const nextPosition = {
       x: Math.min(
-        Math.max(boundaryRect.left, surfaceRect.left),
-        Math.max(boundaryRect.left, boundaryRect.right - surfaceRect.width),
+        Math.max(0, surfaceRect.left - boundaryRect.left),
+        Math.max(0, boundaryRect.width - surfaceRect.width),
       ),
       y: Math.min(
-        Math.max(boundaryRect.top, surfaceRect.top),
-        Math.max(boundaryRect.top, boundaryRect.bottom - surfaceRect.height),
+        Math.max(0, surfaceRect.top - boundaryRect.top),
+        Math.max(0, boundaryRect.height - surfaceRect.height),
       ),
     };
     positionRef.current = nextPosition;
@@ -154,20 +154,21 @@ export function FloatingPanel({
   const measure = () => surfaceRef.current?.getBoundingClientRect();
   const getPosition = () => {
     const rect = measure();
-    return position ?? (rect ? { x: rect.left, y: rect.top } : undefined);
+    if (position || !rect) return position ?? undefined;
+    const boundaryRect = boundary?.current?.getBoundingClientRect();
+    if (!boundaryRect) return { x: rect.left, y: rect.top };
+    return { x: rect.left - boundaryRect.left, y: rect.top - boundaryRect.top };
   };
   const constrainPosition = (nextPosition: FloatingPanelPosition) => {
     const rect = measure();
     const ownerWindow = surfaceRef.current?.ownerDocument.defaultView;
     if (!rect || !ownerWindow) return nextPosition;
     const boundaryRect = boundary?.current?.getBoundingClientRect();
-    const left = boundaryRect?.left ?? 0;
-    const top = boundaryRect?.top ?? 0;
-    const right = boundaryRect?.right ?? ownerWindow.innerWidth;
-    const bottom = boundaryRect?.bottom ?? ownerWindow.innerHeight;
+    const right = boundaryRect?.width ?? ownerWindow.innerWidth;
+    const bottom = boundaryRect?.height ?? ownerWindow.innerHeight;
     return {
-      x: Math.min(Math.max(left, nextPosition.x), Math.max(left, right - rect.width)),
-      y: Math.min(Math.max(top, nextPosition.y), Math.max(top, bottom - rect.height)),
+      x: Math.min(Math.max(0, nextPosition.x), Math.max(0, right - rect.width)),
+      y: Math.min(Math.max(0, nextPosition.y), Math.max(0, bottom - rect.height)),
     };
   };
   const announcePosition = (nextPosition: FloatingPanelPosition) => {
@@ -234,37 +235,25 @@ export function FloatingPanel({
     const boundaryElement = boundary?.current;
     const ownerWindow = boundaryElement?.ownerDocument.defaultView;
     if (!boundaryElement || !ownerWindow) return;
-    let previousRect = boundaryElement.getBoundingClientRect();
-    const followBoundary = () => {
-      const nextRect = boundaryElement.getBoundingClientRect();
+    const constrainToBoundary = () => {
       const current = positionRef.current;
+      const boundaryRect = boundaryElement.getBoundingClientRect();
       const surfaceRect = surfaceRef.current?.getBoundingClientRect();
-      const deltaX = nextRect.left - previousRect.left;
-      const deltaY = nextRect.top - previousRect.top;
-      previousRect = nextRect;
       if (!current || !surfaceRect) return;
       const nextPosition = {
-        x: Math.min(
-          Math.max(nextRect.left, current.x + deltaX),
-          Math.max(nextRect.left, nextRect.right - surfaceRect.width),
-        ),
-        y: Math.min(
-          Math.max(nextRect.top, current.y + deltaY),
-          Math.max(nextRect.top, nextRect.bottom - surfaceRect.height),
-        ),
+        x: Math.min(Math.max(0, current.x), Math.max(0, boundaryRect.width - surfaceRect.width)),
+        y: Math.min(Math.max(0, current.y), Math.max(0, boundaryRect.height - surfaceRect.height)),
       };
       if (nextPosition.x === current.x && nextPosition.y === current.y) return;
       positionRef.current = nextPosition;
       setPosition(nextPosition);
     };
-    ownerWindow.addEventListener("scroll", followBoundary, true);
-    ownerWindow.addEventListener("resize", followBoundary);
+    ownerWindow.addEventListener("resize", constrainToBoundary);
     const observer =
-      typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(followBoundary);
+      typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(constrainToBoundary);
     observer?.observe(boundaryElement);
     return () => {
-      ownerWindow.removeEventListener("scroll", followBoundary, true);
-      ownerWindow.removeEventListener("resize", followBoundary);
+      ownerWindow.removeEventListener("resize", constrainToBoundary);
       observer?.disconnect();
     };
   }, [boundary, setPosition]);

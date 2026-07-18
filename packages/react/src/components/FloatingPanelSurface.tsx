@@ -45,18 +45,29 @@ export function FloatingPanelSurface({
     wasOpen.current = true;
   });
 
+  const bounded = Boolean(panel.boundary);
   let surfaceStyle = placementSurfaceStyle(placement, offset, panel.triggerId, style);
   if (panel.position) {
-    surfaceStyle = {
-      ...style,
-      position: "fixed",
-      inset: "auto",
-      margin: 0,
-      left: panel.position.x,
-      top: panel.position.y,
-    };
+    if (bounded) {
+      surfaceStyle = {
+        ...style,
+        position: "absolute",
+        inset: "0 auto auto 0",
+        margin: 0,
+        translate: `${panel.position.x}px ${panel.position.y}px`,
+      };
+    } else {
+      surfaceStyle = {
+        ...style,
+        position: "fixed",
+        inset: "auto",
+        margin: 0,
+        left: panel.position.x,
+        top: panel.position.y,
+      };
+    }
   } else {
-    surfaceStyle = { position: "fixed", ...surfaceStyle };
+    surfaceStyle = { position: bounded ? "absolute" : "fixed", ...surfaceStyle };
   }
   if (panel.size) {
     surfaceStyle = { ...surfaceStyle, width: panel.size.width, height: panel.size.height };
@@ -102,6 +113,6 @@ export function FloatingPanelSurface({
     </div>
   );
 
-  if (!portal || typeof document === "undefined") return surface;
+  if (!portal || bounded || typeof document === "undefined") return surface;
   return createPortal(surface, document.body);
 }

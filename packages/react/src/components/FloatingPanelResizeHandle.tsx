@@ -43,10 +43,10 @@ export function FloatingPanelResizeHandle({
       const parsed = Number.parseFloat(value);
       return Number.isFinite(parsed) ? parsed : fallback;
     };
-    const position = panel.position ?? panel.measure();
+    const position = panel.getPosition();
     const boundaryRect = panel.boundary?.current?.getBoundingClientRect();
-    const right = boundaryRect?.right ?? ownerWindow.innerWidth;
-    const bottom = boundaryRect?.bottom ?? ownerWindow.innerHeight;
+    const right = boundaryRect?.width ?? ownerWindow.innerWidth;
+    const bottom = boundaryRect?.height ?? ownerWindow.innerHeight;
     const availableWidth = Math.max(1, right - (position?.x ?? 0));
     const availableHeight = Math.max(1, bottom - (position?.y ?? 0));
     const minWidth = number(styles.minWidth, 1);

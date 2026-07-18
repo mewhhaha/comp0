@@ -6,7 +6,6 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from "react";
-import { createPortal } from "react-dom";
 import {
   FloatingPanel,
   FloatingPanelDragHandle,
@@ -244,11 +243,11 @@ export function Example() {
       const toolbarRect = toolbarRef.current?.getBoundingClientRect();
       const sideWidth = canvasRect.width < 500 ? 136 : 200;
       const noiseWidth = canvasRect.width < 500 ? 200 : 220;
-      const baseTop = Math.max(canvasRect.top + 112, (toolbarRect?.bottom ?? canvasRect.top) + 16);
+      const baseTop = Math.max(112, (toolbarRect?.bottom ?? canvasRect.top) - canvasRect.top + 16);
       setPositions({
-        coordinates: { x: canvasRect.left + 12, y: baseTop },
-        noise: { x: canvasRect.left + (canvasRect.width - noiseWidth) / 2, y: baseTop + 170 },
-        shader: { x: canvasRect.right - sideWidth - 12, y: baseTop },
+        coordinates: { x: 12, y: baseTop },
+        noise: { x: (canvasRect.width - noiseWidth) / 2, y: baseTop + 170 },
+        shader: { x: canvasRect.width - sideWidth - 12, y: baseTop },
       });
     };
 
@@ -274,13 +273,20 @@ export function Example() {
       );
       const startRect = start?.getBoundingClientRect();
       const endRect = end?.getBoundingClientRect();
-      if (!startRect || !endRect) return [];
+      const canvasRect = canvasRef.current?.getBoundingClientRect();
+      if (!startRect || !endRect || !canvasRect) return [];
       return [
         {
           ...connection,
           path: curvePath(
-            { x: startRect.left + startRect.width / 2, y: startRect.top + startRect.height / 2 },
-            { x: endRect.left + endRect.width / 2, y: endRect.top + endRect.height / 2 },
+            {
+              x: startRect.left - canvasRect.left + startRect.width / 2,
+              y: startRect.top - canvasRect.top + startRect.height / 2,
+            },
+            {
+              x: endRect.left - canvasRect.left + endRect.width / 2,
+              y: endRect.top - canvasRect.top + endRect.height / 2,
+            },
           ),
         },
       ];
@@ -366,10 +372,12 @@ export function Example() {
   };
   const beginPointerBinding = (event: PointerEvent<HTMLButtonElement>, from: OutputName) => {
     const output = outputPorts[from];
+    const canvasRect = canvasRef.current?.getBoundingClientRect();
+    if (!canvasRect) return;
     event.preventDefault();
     connectionPointer.current = event.pointerId;
     setConnectingFrom(from);
-    setPointerEnd({ x: event.clientX, y: event.clientY });
+    setPointerEnd({ x: event.clientX - canvasRect.left, y: event.clientY - canvasRect.top });
     setAnnouncement(
       `Connecting ${nodeLabels[output.node]} ${output.label}. Drag to an input port.`,
     );
@@ -377,7 +385,9 @@ export function Example() {
   };
   const continuePointerBinding = (event: PointerEvent<HTMLButtonElement>) => {
     if (connectionPointer.current !== event.pointerId) return;
-    setPointerEnd({ x: event.clientX, y: event.clientY });
+    const canvasRect = canvasRef.current?.getBoundingClientRect();
+    if (!canvasRect) return;
+    setPointerEnd({ x: event.clientX - canvasRect.left, y: event.clientY - canvasRect.top });
   };
   const finishPointerBinding = (event: PointerEvent<HTMLButtonElement>, from: OutputName) => {
     if (connectionPointer.current !== event.pointerId) return;
@@ -407,9 +417,13 @@ export function Example() {
       `[data-node-output="${connectingFrom}"]`,
     );
     const startRect = start?.getBoundingClientRect();
-    if (startRect) {
+    const canvasRect = canvasRef.current?.getBoundingClientRect();
+    if (startRect && canvasRect) {
       previewPath = curvePath(
-        { x: startRect.left + startRect.width / 2, y: startRect.top + startRect.height / 2 },
+        {
+          x: startRect.left - canvasRect.left + startRect.width / 2,
+          y: startRect.top - canvasRect.top + startRect.height / 2,
+        },
         pointerEnd,
       );
     }
@@ -418,7 +432,7 @@ export function Example() {
   const connectionLayer = (
     <svg
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[999] size-full overflow-visible"
+      className="pointer-events-none absolute inset-0 z-[999] size-full overflow-visible"
     >
       {connectionPaths.map((connection) => {
         const color = connectionColor[outputPorts[connection.from].type];
@@ -661,7 +675,7 @@ export function Example() {
         </FloatingPanelGroup>
       )}
 
-      {positions && typeof document !== "undefined" && createPortal(connectionLayer, document.body)}
+      {positions && connectionLayer}
       <output className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </output>

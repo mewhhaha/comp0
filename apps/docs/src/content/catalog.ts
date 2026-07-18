@@ -247,7 +247,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for inspectors, layers, properties, and other secondary tools people need while continuing to work in the application.",
     "Wrap related panels in FloatingPanelGroup, then give each FloatingPanel its own trigger and labelled surface.",
     "Build the draggable surface header from FloatingPanelTitle, FloatingPanelDragHandle, and FloatingPanelClose; add FloatingPanelResizeHandle at the resize corner.",
-    "Use position and size when geometry must persist, and pass a boundary ref to FloatingPanelGroup when panels must stay inside a workspace. Tab enters each panel normally; F6 is an optional shortcut between open panels and the application.",
+    "Use position and size when geometry must persist. For workspace-local coordinates, make the boundary a positioned containing block and pass its ref to FloatingPanelGroup. Tab enters each panel normally; F6 is an optional shortcut between open panels and the application.",
     "<FloatingPanelGroup>\n  <FloatingPanel>\n    <FloatingPanelTrigger>Layers</FloatingPanelTrigger>\n    <FloatingPanelSurface>\n      <FloatingPanelHeader>\n        <FloatingPanelDragHandle />\n        <FloatingPanelTitle>Layers</FloatingPanelTitle>\n        <FloatingPanelClose />\n      </FloatingPanelHeader>\n      <FloatingPanelResizeHandle />\n    </FloatingPanelSurface>\n  </FloatingPanel>\n</FloatingPanelGroup>;",
   ),
   inventory: lesson(
@@ -3437,7 +3437,7 @@ const navigation = [
           prop(
             "boundary",
             "RefObject<HTMLElement | null>",
-            "Limits moving and resizing to an element's client rectangle.",
+            "Contains panel positioning and resizing; the element must establish a positioned containing block.",
           ),
         ],
       ),
@@ -3451,7 +3451,11 @@ const navigation = [
           prop("open", "boolean", "Controlled open state."),
           prop("defaultOpen", "boolean", "Initial uncontrolled open state."),
           prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
-          prop("position", "FloatingPanelPosition | null", "Controlled viewport coordinates."),
+          prop(
+            "position",
+            "FloatingPanelPosition | null",
+            "Controlled viewport coordinates, or boundary-local coordinates when the group has a boundary.",
+          ),
           prop(
             "defaultPosition",
             "FloatingPanelPosition | null",
@@ -3481,14 +3485,18 @@ const navigation = [
       p(
         "FloatingPanelSurface",
         "content",
-        "Portaled non-modal dialog that starts beside its trigger and becomes viewport-positioned when moved.",
+        "Non-modal dialog that is fixed to the viewport or positioned within its group boundary.",
         true,
         false,
         [
           prop("aria-label", "string", "Names the panel when FloatingPanelTitle is omitted."),
           prop("placement", "PopoverPlacement", "Initial side and alignment beside the trigger."),
           prop("offset", "number", "Initial pixel gap from the trigger; defaults to 8."),
-          prop("portal", "boolean", "Renders into document.body; on by default."),
+          prop(
+            "portal",
+            "boolean",
+            "Renders unbounded panels into document.body; bounded panels remain inside their containing block.",
+          ),
         ],
       ),
       p(
@@ -3602,7 +3610,7 @@ const navigation = [
         id: "nodes",
         title: "Shader node graph",
         description:
-          "Compose fixed panels into a material graph with typed vector, value, color, and shader ports. Labelled port controls support pointer and keyboard reattachment while the aria-hidden SVG layer follows every node.",
+          "Compose bounded panels into a material graph with typed vector, value, color, and shader ports. Labelled port controls support pointer and keyboard reattachment while the aria-hidden SVG layer follows every node.",
       },
     ],
   ),

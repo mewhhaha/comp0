@@ -107,7 +107,14 @@ describe("floating panel composition", () => {
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
       .mockImplementation(function (this: HTMLElement) {
         if (this.hasAttribute("data-panel-boundary")) {
-          return { left: 100, top: 100, right: 400, bottom: 300 } as DOMRect;
+          return {
+            left: 100,
+            top: 100,
+            right: 400,
+            bottom: 300,
+            width: 300,
+            height: 200,
+          } as DOMRect;
         }
         if (this.dataset.slot === "floating-panel-surface") {
           return {
@@ -126,7 +133,7 @@ describe("floating panel composition", () => {
         <FloatingPanelGroup boundary={boundary}>
           <FloatingPanel
             defaultOpen
-            defaultPosition={{ x: 104, y: 104 }}
+            defaultPosition={{ x: 4, y: 4 }}
             defaultSize={{ width: 120, height: 80 }}
             onPositionChange={onPositionChange}
             onSizeChange={onSizeChange}
@@ -146,8 +153,8 @@ describe("floating panel composition", () => {
     fireKeyDown(move, "Enter");
     fireKeyDown(move, "ArrowLeft");
     fireKeyDown(move, "ArrowUp");
-    expect(onPositionChange).toHaveBeenNthCalledWith(1, { x: 100, y: 104 });
-    expect(onPositionChange).toHaveBeenNthCalledWith(2, { x: 100, y: 100 });
+    expect(onPositionChange).toHaveBeenNthCalledWith(1, { x: 0, y: 4 });
+    expect(onPositionChange).toHaveBeenNthCalledWith(2, { x: 0, y: 0 });
 
     fireKeyDown(resize, "Enter");
     for (let step = 0; step < 20; step += 1) {
@@ -156,6 +163,34 @@ describe("floating panel composition", () => {
     }
     expect(onSizeChange).toHaveBeenLastCalledWith({ width: 300, height: 200 });
     getBoundingClientRect.mockRestore();
+  });
+
+  it("keeps bounded panels in their local containing block without scroll updates", () => {
+    const boundary = createRef<HTMLDivElement>();
+    const onPositionChange = vi.fn();
+    const { baseElement } = render(
+      <div ref={boundary} style={{ position: "relative" }}>
+        <FloatingPanelGroup boundary={boundary}>
+          <FloatingPanel
+            defaultOpen
+            defaultPosition={{ x: 24, y: 32 }}
+            onPositionChange={onPositionChange}
+          >
+            <FloatingPanelSurface aria-label="Inspector" />
+          </FloatingPanel>
+        </FloatingPanelGroup>
+      </div>,
+    );
+    const surface = baseElement.querySelector<HTMLElement>("[data-slot='floating-panel-surface']")!;
+
+    expect(boundary.current?.contains(surface)).toBe(true);
+    expect(surface.style.position).toBe("absolute");
+    expect(surface.style.translate).toBe("24px 32px");
+
+    act(() => window.dispatchEvent(new Event("scroll")));
+
+    expect(onPositionChange).not.toHaveBeenCalled();
+    expect(surface.style.translate).toBe("24px 32px");
   });
 
   it("moves from the header without taking pointer gestures from its controls", () => {

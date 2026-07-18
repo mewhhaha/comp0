@@ -55,16 +55,17 @@ export function Example() {
     const propertiesTrigger = propertiesTriggerRef.current;
     if (!workspace || !layersTrigger || !propertiesTrigger || positions) return;
     const rect = workspace.getBoundingClientRect();
-    const panelTop = Math.min(
-      Math.max(
-        layersTrigger.getBoundingClientRect().bottom,
-        propertiesTrigger.getBoundingClientRect().bottom,
-      ) + 8,
-      rect.bottom - 196,
-    );
+    const panelTop =
+      Math.min(
+        Math.max(
+          layersTrigger.getBoundingClientRect().bottom,
+          propertiesTrigger.getBoundingClientRect().bottom,
+        ) + 8,
+        rect.bottom - 196,
+      ) - rect.top;
     setPositions({
-      layers: { x: rect.left + 20, y: panelTop },
-      properties: { x: rect.right - 308, y: panelTop },
+      layers: { x: 20, y: panelTop },
+      properties: { x: rect.width - 308, y: panelTop },
     });
   }, [positions]);
 
@@ -72,7 +73,7 @@ export function Example() {
     <FloatingPanelGroup boundary={workspaceRef}>
       <div
         ref={workspaceRef}
-        className="flex min-h-[30rem] flex-col items-start gap-4 rounded-xl border border-dashed border-zinc-950/15 bg-zinc-50 p-5 dark:border-white/15 dark:bg-zinc-950"
+        className="relative flex min-h-[30rem] flex-col items-start gap-4 rounded-xl border border-dashed border-zinc-950/15 bg-zinc-50 p-5 dark:border-white/15 dark:bg-zinc-950"
       >
         <div>
           <h2 className="font-semibold text-zinc-950 dark:text-white">Workspace</h2>
