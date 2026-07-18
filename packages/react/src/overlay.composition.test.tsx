@@ -154,4 +154,38 @@ describe("overlay composition", () => {
       HTMLDialogElement.prototype.close = originalClose;
     }
   });
+
+  it("restores focus inside the dialog's owning document", () => {
+    function Harness() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Dialog open={open} onToggle={setOpen}>
+          <DialogTrigger>Open</DialogTrigger>
+          <DialogContent portal={false}>Settings</DialogContent>
+        </Dialog>
+      );
+    }
+
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
+    const frameDocument = frame.contentDocument!;
+    const { container, unmount } = render(<Harness />, frameDocument);
+    const trigger = container.querySelector("button")!;
+    const content = container.querySelector("dialog")!;
+
+    act(() => {
+      trigger.focus();
+      trigger.dispatchEvent(
+        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
+      );
+    });
+    act(() =>
+      content.dispatchEvent(new frameWindow.Event("cancel", { bubbles: true, cancelable: true })),
+    );
+
+    expect(frameDocument.activeElement).toBe(trigger);
+    unmount();
+    frame.remove();
+  });
 });

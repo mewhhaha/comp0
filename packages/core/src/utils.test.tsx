@@ -12,6 +12,8 @@ import {
   useControllableState,
   useComposedRefs,
   useFocusRing,
+  useTypeahead,
+  useTypeaheadSearch,
 } from "./index.js";
 import { findTypeaheadMatch } from "./typeahead.js";
 
@@ -288,6 +290,40 @@ describe("focus navigation primitives", () => {
 
     expect(findTypeaheadMatch(items, "a", "alpha")).toBe("apricot");
     expect(findTypeaheadMatch(items, "ban", "alpha")).toBe("banana");
+  });
+
+  it("cancels pending typeahead resets when their consumer unmounts", () => {
+    vi.useFakeTimers();
+    function Typeahead() {
+      const search = useTypeaheadSearch();
+      const onKeyDown = useTypeahead({
+        items: [{ key: "alpha", textValue: "Alpha" }],
+        onMatch() {},
+      });
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            search("a");
+            onKeyDown(new KeyboardEvent("keydown", { key: "a" }));
+          }}
+        >
+          Search
+        </button>
+      );
+    }
+
+    try {
+      const result = render(<Typeahead />);
+      act(() => result.container.querySelector("button")?.click());
+      expect(vi.getTimerCount()).toBe(2);
+
+      result.unmount();
+
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

@@ -160,7 +160,7 @@ export function Select({
         onChange={() => undefined}
         onInvalid={(event) => {
           event.preventDefault();
-          document.getElementById(controlId)?.focus();
+          event.currentTarget.ownerDocument.getElementById(controlId)?.focus();
         }}
         required={resolvedRequired}
         style={nativeSelectStyle}

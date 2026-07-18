@@ -1,10 +1,11 @@
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 import { Tree, type TreeProps } from "./components/Tree.js";
 import { TreeGroup } from "./components/TreeGroup.js";
 import { TreeItem } from "./components/TreeItem.js";
 
-function renderTree(props: Partial<TreeProps> = {}) {
+function renderTree(props: Partial<TreeProps> = {}, ownerDocument?: Document) {
   const result = render(
     <Tree aria-label="Files" defaultExpanded={["src"]} {...props}>
       <TreeItem value="src" textValue="src">
@@ -22,6 +23,7 @@ function renderTree(props: Partial<TreeProps> = {}) {
       </TreeItem>
       <TreeItem value="readme">README.md</TreeItem>
     </Tree>,
+    ownerDocument,
   );
   const item = (value: string) =>
     result.container.querySelector<HTMLElement>(`[data-value="${value}"]`)!;
@@ -128,6 +130,30 @@ describe("tree composition", () => {
     expect(document.activeElement).toBe(item("readme"));
     fireKeyDown(document.activeElement!, "ArrowUp");
     expect(document.activeElement).toBe(item("index"));
+  });
+
+  it("moves focus within the tree's owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
+    const frameDocument = frame.contentDocument!;
+    const { item, unmount } = renderTree({}, frameDocument);
+    const source = item("src");
+
+    act(() => {
+      source.focus();
+      source.dispatchEvent(
+        new frameWindow.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+
+    expect(frameDocument.activeElement).toBe(item("components"));
+    unmount();
+    frame.remove();
   });
 
   it("jumps to the first and last visible item with Home and End", () => {

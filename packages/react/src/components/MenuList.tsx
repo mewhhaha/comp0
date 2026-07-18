@@ -122,8 +122,11 @@ export function MenuList({
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
-          const targetMenu =
-            event.target instanceof Element ? event.target.closest("[role='menu']") : null;
+          const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+          let targetMenu: Element | null = null;
+          if (ownerWindow && event.target instanceof ownerWindow.Element) {
+            targetMenu = event.target.closest("[role='menu']");
+          }
           if (targetMenu !== event.currentTarget) return;
           if (menu?.isSubmenu && event.key === "ArrowLeft") {
             event.preventDefault();
@@ -139,8 +142,7 @@ export function MenuList({
             }
           }
           const items = context.items();
-          const activeElement =
-            document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
+          const activeElement = event.currentTarget.ownerDocument.activeElement;
           const current = items.find((item) => item.element === activeElement)?.key;
           let key = getRovingFocusTarget(items, current, event.key, {
             orientation: "vertical",

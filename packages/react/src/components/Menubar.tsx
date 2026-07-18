@@ -86,7 +86,9 @@ export function Menubar({
         onFocus={(event) => {
           onFocus?.(event);
           if (event.defaultPrevented) return;
-          const target = event.target instanceof HTMLElement ? event.target : null;
+          const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+          const target =
+            ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
           if (!target || target === event.currentTarget) return;
           const item = items().find(
             (candidate) => candidate.element === target || candidate.element?.contains(target),
@@ -96,7 +98,9 @@ export function Menubar({
         onKeyDown={(event) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
-          const target = event.target instanceof Element ? event.target : null;
+          const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+          const target =
+            ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
           // Keys inside an open menu belong to that menu's popover.
           if (!target || target.closest("[role='menu']")) return;
           const current = items().find(

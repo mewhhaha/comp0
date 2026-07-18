@@ -143,7 +143,9 @@ export function Tree({
           onKeyDown={(event) => {
             onKeyDown?.(event);
             if (event.defaultPrevented) return;
-            const target = event.target instanceof HTMLElement ? event.target : null;
+            const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+            const target =
+              ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
             const itemElement = target?.closest('[role="treeitem"]');
             const visible = visibleItems();
             const current = visible.find((item) => item.element === itemElement);

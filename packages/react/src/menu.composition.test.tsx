@@ -75,6 +75,47 @@ describe("menu composition", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("navigates menu items in the menu's owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
+    const frameDocument = frame.contentDocument!;
+    const { container, unmount } = render(
+      <Menu>
+        <MenuTrigger>Actions</MenuTrigger>
+        <MenuPopover>
+          <MenuList>
+            <MenuItem>Copy</MenuItem>
+            <MenuItem>Paste</MenuItem>
+          </MenuList>
+        </MenuPopover>
+      </Menu>,
+      frameDocument,
+    );
+    const trigger = container.querySelector("button")!;
+    const menu = container.querySelector<HTMLElement>("[role='menu']")!;
+    const items = container.querySelectorAll<HTMLElement>("[role='menuitem']");
+
+    act(() =>
+      trigger.dispatchEvent(
+        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
+      ),
+    );
+    act(() =>
+      menu.dispatchEvent(
+        new frameWindow.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+    );
+
+    expect(frameDocument.activeElement).toBe(items[1]);
+    unmount();
+    frame.remove();
+  });
+
   it("closes after an item activation unless the item callback prevents it", () => {
     const prevented = vi.fn((event: React.MouseEvent) => event.preventDefault());
     const { container } = render(

@@ -14,7 +14,7 @@ export function DialogContent({
 }: DialogContentProps & RefProp<HTMLDialogElement>) {
   const dialog = useDialogContext();
   const contentRef = useRef<HTMLDialogElement | null>(null);
-  const restoreFocusRef = useRef<Element | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const dismissingRef = useRef(false);
   const wasOpenRef = useRef(false);
 
@@ -22,7 +22,12 @@ export function DialogContent({
     const element = contentRef.current;
     if (!element) return;
     if (dialog?.open) {
-      if (!wasOpenRef.current) restoreFocusRef.current = element.ownerDocument.activeElement;
+      if (!wasOpenRef.current) {
+        const activeElement = element.ownerDocument.activeElement;
+        const ownerWindow = element.ownerDocument.defaultView;
+        restoreFocusRef.current =
+          ownerWindow && activeElement instanceof ownerWindow.HTMLElement ? activeElement : null;
+      }
       wasOpenRef.current = true;
       if (!element.open && typeof element.showModal === "function") element.showModal();
       else element.setAttribute("open", "");
@@ -32,7 +37,7 @@ export function DialogContent({
     wasOpenRef.current = false;
     if (element.open && typeof element.close === "function") element.close();
     else element.removeAttribute("open");
-    if (restoreFocusRef.current instanceof HTMLElement) restoreFocusRef.current.focus();
+    restoreFocusRef.current?.focus();
   }, [dialog]);
 
   const content = (
@@ -60,7 +65,7 @@ export function DialogContent({
       onClose={(event) => {
         onClose?.(event);
         if (dialog?.open && !dismissingRef.current) dialog.setOpen(false);
-        if (restoreFocusRef.current instanceof HTMLElement) restoreFocusRef.current.focus();
+        restoreFocusRef.current?.focus();
       }}
     />
   );

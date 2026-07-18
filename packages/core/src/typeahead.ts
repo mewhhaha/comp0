@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 /** The search fields needed to match a collection item by typed text. */
 export interface TypeaheadItem {
@@ -28,6 +28,7 @@ export function findTypeaheadMatch(items: TypeaheadItem[], search: string, curre
 export function useTypeaheadSearch(timeout = 700) {
   const bufferRef = useRef("");
   const timeoutRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
 
   return (key: string) => {
     window.clearTimeout(timeoutRef.current);
@@ -48,6 +49,7 @@ export function useTypeahead(options: {
 }) {
   const bufferRef = useRef("");
   const timeoutRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
 
   return (event: Pick<KeyboardEvent, "key" | "preventDefault">) => {
     if (event.key.length !== 1 || event.key.trim() === "") return;

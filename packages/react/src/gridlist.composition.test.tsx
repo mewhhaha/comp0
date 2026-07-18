@@ -11,7 +11,7 @@ import {
   type GridListOrder,
 } from "./components/GridListReorderGroup.js";
 
-function renderGridList(onChange = vi.fn()) {
+function renderGridList(onChange = vi.fn(), ownerDocument?: Document) {
   const result = render(
     <GridList aria-label="Files" onChange={onChange}>
       <GridListItem value="report">
@@ -22,6 +22,7 @@ function renderGridList(onChange = vi.fn()) {
       </GridListItem>
       <GridListItem value="photo">photo.png</GridListItem>
     </GridList>,
+    ownerDocument,
   );
   const rows = result.container.querySelectorAll<HTMLElement>("[role='row']");
   return { ...result, onChange, rows };
@@ -210,6 +211,36 @@ describe("grid list composition", () => {
     expect(document.activeElement).toBe(buttons[0]);
     fireKeyDown(document.activeElement!, "ArrowLeft");
     expect(document.activeElement).toBe(rows[0]);
+  });
+
+  it("keeps row navigation and child actions in the grid's owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
+    const frameDocument = frame.contentDocument!;
+    const onChange = vi.fn();
+    const { rows, unmount } = renderGridList(onChange, frameDocument);
+    const share = rows[0]!.querySelector("button")!;
+
+    act(() => {
+      rows[0]!.focus();
+      rows[0]!.dispatchEvent(
+        new frameWindow.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    expect(frameDocument.activeElement).toBe(rows[2]);
+
+    act(() =>
+      share.dispatchEvent(new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true })),
+    );
+    expect(onChange).not.toHaveBeenCalled();
+
+    unmount();
+    frame.remove();
   });
 
   it("selects a focused row with Enter and click, but not via child actions", () => {

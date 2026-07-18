@@ -44,7 +44,8 @@ function canScrollTowardEdge(element: Element, side: DrawerSide) {
 }
 
 function targetOwnsGesture(target: EventTarget | null, panel: HTMLElement, side: DrawerSide) {
-  if (!(target instanceof Element)) return false;
+  const ownerWindow = panel.ownerDocument.defaultView;
+  if (!ownerWindow || !(target instanceof ownerWindow.Element)) return false;
   if (target.closest("button, a, input, select, textarea, [contenteditable]")) return true;
   for (
     let element: Element | null = target;
@@ -70,7 +71,7 @@ export function DrawerContent({
   const drawer = useDrawerContext();
   const side = drawer?.side ?? "right";
   const contentRef = useRef<HTMLDialogElement | null>(null);
-  const restoreFocusRef = useRef<Element | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const dismissingRef = useRef(false);
   const wasOpenRef = useRef(false);
   const dragRef = useRef<DrawerDrag | null>(null);
@@ -80,7 +81,12 @@ export function DrawerContent({
     const element = contentRef.current;
     if (!element) return;
     if (drawer?.open) {
-      if (!wasOpenRef.current) restoreFocusRef.current = element.ownerDocument.activeElement;
+      if (!wasOpenRef.current) {
+        const activeElement = element.ownerDocument.activeElement;
+        const ownerWindow = element.ownerDocument.defaultView;
+        restoreFocusRef.current =
+          ownerWindow && activeElement instanceof ownerWindow.HTMLElement ? activeElement : null;
+      }
       wasOpenRef.current = true;
       if (!element.open && typeof element.showModal === "function") element.showModal();
       else element.setAttribute("open", "");
@@ -90,7 +96,7 @@ export function DrawerContent({
     wasOpenRef.current = false;
     if (element.open && typeof element.close === "function") element.close();
     else element.removeAttribute("open");
-    if (restoreFocusRef.current instanceof HTMLElement) restoreFocusRef.current.focus();
+    restoreFocusRef.current?.focus();
   }, [drawer]);
 
   const content = (
@@ -120,7 +126,7 @@ export function DrawerContent({
       onClose={(event) => {
         onClose?.(event);
         if (drawer?.open && !dismissingRef.current) drawer.setOpen(false);
-        if (restoreFocusRef.current instanceof HTMLElement) restoreFocusRef.current.focus();
+        restoreFocusRef.current?.focus();
       }}
       onPointerDown={(event) => {
         onPointerDown?.(event);

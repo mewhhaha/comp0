@@ -205,6 +205,37 @@ describe("password field composition", () => {
     expect(input.type).toBe("password");
   });
 
+  it("conceals the password after a page restore in its owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
+    const { container, unmount } = render(
+      <PasswordField>
+        <PasswordFieldInput />
+        <PasswordFieldToggle />
+      </PasswordField>,
+      frame.contentDocument!,
+    );
+    const input = container.querySelector("input")!;
+    const toggle = container.querySelector("button")!;
+    act(() =>
+      toggle.dispatchEvent(
+        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
+      ),
+    );
+    expect(input.type).toBe("text");
+
+    act(() =>
+      frameWindow.dispatchEvent(
+        new frameWindow.PageTransitionEvent("pageshow", { persisted: true }),
+      ),
+    );
+
+    expect(input.type).toBe("password");
+    unmount();
+    frame.remove();
+  });
+
   it("renders hidden on the server and adds the toggle after hydration", async () => {
     const fixture = (
       <PasswordField id="hydrated-password" defaultValue="secret">

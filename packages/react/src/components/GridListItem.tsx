@@ -166,14 +166,18 @@ export function GridListItem({
         if (event.defaultPrevented) return;
         // Clicking an interactive child performs its action without
         // changing the selection.
-        const target = event.target instanceof HTMLElement ? event.target : null;
+        const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+        const target =
+          ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
         if (target && rowFocusables(event.currentTarget).some((el) => el.contains(target))) return;
         gridList?.setActiveKey(value);
         gridList?.setSelectedKey(value);
       }}
       onPointerDownCapture={(event) => {
         onPointerDownCapture?.(event);
-        const target = event.target instanceof Element ? event.target : null;
+        const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+        const target =
+          ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
         const dragHandle = target?.closest("[data-slot='grid-list-drag-handle']");
         const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
         pointerStartedOnControl.current = Boolean(
@@ -189,7 +193,9 @@ export function GridListItem({
       onDragStart={(event) => {
         onDragStart?.(event);
         if (event.defaultPrevented || !reorderable || !dnd) return;
-        const eventTarget = event.target instanceof Element ? event.target : null;
+        const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+        const eventTarget =
+          ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
         const dragHandle = eventTarget?.closest("[data-slot='grid-list-drag-handle']");
         const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
         const startsFromControl = rowFocusables(event.currentTarget).some((element) =>
