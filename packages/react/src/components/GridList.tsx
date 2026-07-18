@@ -440,7 +440,12 @@ export function GridList({
             if (event.defaultPrevented || !dndContext) return;
             // Leaving the grid entirely clears the drop preview.
             const next = event.relatedTarget;
-            if (!(next instanceof Node) || !event.currentTarget.contains(next)) {
+            const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+            if (
+              !ownerWindow ||
+              !(next instanceof ownerWindow.Node) ||
+              !event.currentTarget.contains(next)
+            ) {
               dndContext.setDropTarget(null);
             }
           }}
@@ -462,7 +467,9 @@ export function GridList({
           onKeyDown={(event) => {
             onKeyDown?.(event);
             if (event.defaultPrevented) return;
-            const target = event.target instanceof HTMLElement ? event.target : null;
+            const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+            const target =
+              ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
             if (!target) return;
             const rows = items();
             const rowRecord = rows.find((item) => item.element?.contains(target));
