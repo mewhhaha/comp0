@@ -689,6 +689,7 @@ const accessibility: Record<string, string[]> = {
     "Make link text say where it goes.",
     "Do not use a Link for an in-page action.",
     "Keep the current page identifiable in a breadcrumb trail.",
+    "For a linked surface, keep additional controls as siblings of the stretched anchor and layer them above its pseudo-element; interactive controls must never be nested inside the anchor.",
   ],
   "file-trigger": [
     "Name the visible trigger after the file task.",
@@ -1223,6 +1224,14 @@ const action = [
     ],
     "Links do not submit forms.",
     ["button", "breadcrumbs"],
+    [
+      {
+        id: "linked-surface",
+        title: "Linked property cards",
+        description:
+          "Stretch one native title link across each property while keeping its save toggle independently interactive.",
+      },
+    ],
   ),
   common(
     "file-trigger",
