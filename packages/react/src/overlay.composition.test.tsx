@@ -168,7 +168,7 @@ describe("overlay composition", () => {
 
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow!;
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
     const { container, unmount } = render(<Harness />, frameDocument);
     const trigger = container.querySelector("button")!;

@@ -216,7 +216,7 @@ describe("grid list composition", () => {
   it("keeps row navigation and child actions in the grid's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow!;
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
     const onChange = vi.fn();
     const { rows, unmount } = renderGridList(onChange, frameDocument);

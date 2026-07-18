@@ -10,7 +10,7 @@ import { MenuList } from "./components/MenuList.js";
 import { MenuPopover } from "./components/MenuPopover.js";
 import { MenuTrigger } from "./components/MenuTrigger.js";
 
-function renderMenubar() {
+function renderMenubar(ownerDocument?: Document) {
   const result = render(
     <Menubar aria-label="Notes">
       <Menu id="file">
@@ -39,11 +39,12 @@ function renderMenubar() {
         </MenuPopover>
       </Menu>
     </Menubar>,
+    ownerDocument,
   );
   const bar = result.container.querySelector<HTMLElement>("[role='menubar']")!;
-  const file = document.getElementById("file-trigger")!;
-  const edit = document.getElementById("edit-trigger")!;
-  const view = document.getElementById("view-trigger")!;
+  const file = result.container.querySelector<HTMLElement>("#file-trigger")!;
+  const edit = result.container.querySelector<HTMLElement>("#edit-trigger")!;
+  const view = result.container.querySelector<HTMLElement>("#view-trigger")!;
   const surfaces = [...result.container.querySelectorAll<HTMLElement>("[popover]")];
   return { ...result, bar, file, edit, view, surfaces };
 }
@@ -90,6 +91,30 @@ describe("menubar composition", () => {
     expect(document.activeElement).toBe(view);
     fireKeyDown(view, "Home");
     expect(document.activeElement).toBe(file);
+  });
+
+  it("roves within the menubar's owning document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
+    const frameDocument = frame.contentDocument!;
+    const { file, edit, unmount } = renderMenubar(frameDocument);
+
+    act(() => {
+      file.focus();
+      file.dispatchEvent(
+        new frameWindow.KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+
+    expect(frameDocument.activeElement).toBe(edit);
+    expect([file.tabIndex, edit.tabIndex]).toEqual([-1, 0]);
+    unmount();
+    frame.remove();
   });
 
   it("keeps the bar's arrows away from menus while closed", () => {

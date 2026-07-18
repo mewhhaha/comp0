@@ -179,7 +179,7 @@ describe("navigation menu composition", () => {
   it("moves focus within the navigation menu's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow!;
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
     const { container, unmount } = render(<SiteNavigation />, frameDocument);
     const products = triggerNamed(container, "Products");

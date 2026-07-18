@@ -135,7 +135,7 @@ describe("tree composition", () => {
   it("moves focus within the tree's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow!;
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
     const { item, unmount } = renderTree({}, frameDocument);
     const source = item("src");

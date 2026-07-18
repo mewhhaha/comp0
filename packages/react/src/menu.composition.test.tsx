@@ -78,7 +78,7 @@ describe("menu composition", () => {
   it("navigates menu items in the menu's owning document", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow!;
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
     const { container, unmount } = render(
       <Menu>

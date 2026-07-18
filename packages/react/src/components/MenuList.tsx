@@ -123,10 +123,10 @@ export function MenuList({
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
           const ownerWindow = event.currentTarget.ownerDocument.defaultView;
-          const targetMenu =
-            ownerWindow && event.target instanceof ownerWindow.Element
-              ? event.target.closest("[role='menu']")
-              : null;
+          let targetMenu: Element | null = null;
+          if (ownerWindow && event.target instanceof ownerWindow.Element) {
+            targetMenu = event.target.closest("[role='menu']");
+          }
           if (targetMenu !== event.currentTarget) return;
           if (menu?.isSubmenu && event.key === "ArrowLeft") {
             event.preventDefault();

@@ -181,7 +181,7 @@ describe("drawer composition", () => {
   it("leaves interactive elements in the drawer's owning document in charge of gestures", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow!;
+    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const { container, unmount } = render(
       <Drawer defaultOpen>
         <DrawerContent portal={false}>
