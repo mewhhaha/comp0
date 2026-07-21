@@ -1,6 +1,6 @@
 import * as api from "@comp0/react";
 import { describe, expect, it } from "vitest";
-import { componentBySlug, components } from "./catalog.js";
+import { componentBySlug, componentGroups, components } from "./catalog.js";
 import { learnDocs } from "./learn.js";
 import { getExample, exampleRegistry } from "../examples/registry.js";
 import { getExampleSource } from "../examples/sources.js";
@@ -8,9 +8,9 @@ import { getExampleSource } from "../examples/sources.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 79 unique component slugs", () => {
-    expect(components).toHaveLength(79);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(79);
+  it("contains 85 unique component slugs", () => {
+    expect(components).toHaveLength(85);
+    expect(new Set(components.map((component) => component.slug)).size).toBe(85);
   });
 
   it("resolves every related component link", () => {
@@ -19,6 +19,18 @@ describe("docs content catalog", () => {
         expect(componentBySlug.has(related), `${component.slug} -> ${related}`).toBe(true);
       }
     }
+  });
+
+  it("keeps data visualization in its own Charts section", () => {
+    const charts = componentGroups.find((group) => group.id === "charts");
+    expect(charts?.components.map((component) => component.slug)).toEqual([
+      "bar-chart",
+      "column-chart",
+      "line-chart",
+      "area-chart",
+      "pie-chart",
+      "candlestick-chart",
+    ]);
   });
 
   it("teaches Checkbox and CheckboxGroup on one Checkbox page", () => {

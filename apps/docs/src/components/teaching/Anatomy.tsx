@@ -37,6 +37,7 @@ type ControlShape =
   | "block";
 
 type ItemShape = "row" | "tab" | "crumb" | "radio" | "slide" | "cell";
+type GraphicShape = "area" | "bar" | "candlestick" | "column" | "line" | "pie";
 
 type DiagramNode =
   | { type: "frame"; owner: Numbered; variant: "provider" | "container"; children: DiagramNode[] }
@@ -55,6 +56,8 @@ type DiagramNode =
   | { type: "color-area"; owner: Numbered; thumb: Numbered }
   | { type: "chip"; owner: Numbered }
   | { type: "feedback"; owner: Numbered }
+  | { type: "graphic"; owner: Numbered; shape: GraphicShape }
+  | { type: "table"; owner: Numbered }
   | { type: "panel"; owner: Numbered; children: DiagramNode[] }
   | { type: "items"; owner: Numbered; shape: ItemShape };
 
@@ -84,6 +87,15 @@ function itemShape(name: string): ItemShape {
   if (/button|column/i.test(name)) return "tab";
   if (/breadcrumb/i.test(name)) return "crumb";
   return "row";
+}
+
+function graphicShape(name: string): GraphicShape {
+  if (/candlestick/i.test(name)) return "candlestick";
+  if (/pie/i.test(name)) return "pie";
+  if (/line/i.test(name)) return "line";
+  if (/area/i.test(name)) return "area";
+  if (/column/i.test(name)) return "column";
+  return "bar";
 }
 
 const triggerGlyphs: [RegExp, typeof XMarkIcon][] = [
@@ -128,6 +140,18 @@ function parseParts(list: Numbered[]): DiagramNode[] {
       i += 1;
     } else if (kind === "value") {
       nodes.push({ type: "chip", owner: entry });
+      i += 1;
+    } else if (kind === "graphic") {
+      const run: DiagramNode[] = [];
+      while (i < list.length) {
+        const current = list[i];
+        if (!current || current.part.kind !== "graphic") break;
+        run.push({ type: "graphic", owner: current, shape: graphicShape(current.part.name) });
+        i += 1;
+      }
+      nodes.push(run.length === 1 ? run[0]! : { type: "row", children: run });
+    } else if (kind === "table") {
+      nodes.push({ type: "table", owner: entry });
       i += 1;
     } else if (kind === "input") {
       const inputControlShape = inputShape(entry.part.name);
@@ -598,6 +622,140 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
   );
 }
 
+function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }> }) {
+  let graphic = (
+    <span className="flex h-14 flex-col justify-center gap-1.5" aria-hidden="true">
+      {[92, 70, 48, 28].map((width) => (
+        <span
+          key={width}
+          className="h-2 rounded-r-sm bg-teal-600/75 dark:bg-teal-400/75"
+          style={{ width: `${width}%` }}
+        />
+      ))}
+    </span>
+  );
+  if (node.shape === "column") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-1.5" aria-hidden="true">
+        {[70, 48, 32, 18].map((height) => (
+          <span
+            key={height}
+            className="w-3 rounded-t-sm bg-teal-600/75 dark:bg-teal-400/75"
+            style={{ height: `${height}%` }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "pie") {
+    graphic = (
+      <span
+        className="mx-auto size-14 rounded-full ring-1 ring-zinc-950/10 dark:ring-white/15"
+        style={{
+          background:
+            "conic-gradient(#0d9488 0 42%, #0284c7 42% 73%, #7c3aed 73% 91%, #f59e0b 91%)",
+        }}
+        aria-hidden="true"
+      />
+    );
+  }
+  if (node.shape === "line") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full overflow-visible" aria-hidden="true">
+        <path
+          d="M 3 52 L 34 20 L 66 36 L 97 8"
+          fill="none"
+          className="stroke-teal-600 dark:stroke-teal-400"
+          strokeWidth="4"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    );
+  }
+  if (node.shape === "area") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full overflow-visible" aria-hidden="true">
+        <path
+          d="M 3 57 L 3 52 L 34 20 L 66 36 L 97 8 L 97 57 Z"
+          className="fill-teal-600/20 dark:fill-teal-400/20"
+        />
+        <path
+          d="M 3 52 L 34 20 L 66 36 L 97 8"
+          fill="none"
+          className="stroke-teal-600 dark:stroke-teal-400"
+          strokeWidth="3"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    );
+  }
+  if (node.shape === "candlestick") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full overflow-visible" aria-hidden="true">
+        {[
+          { x: 14, high: 6, body: 18, height: 16, low: 48, direction: "up" },
+          { x: 38, high: 12, body: 20, height: 22, low: 54, direction: "down" },
+          { x: 62, high: 4, body: 14, height: 20, low: 46, direction: "up" },
+          { x: 86, high: 10, body: 18, height: 24, low: 52, direction: "down" },
+        ].map((candle) => (
+          <g key={candle.x}>
+            <line
+              x1={candle.x}
+              x2={candle.x}
+              y1={candle.high}
+              y2={candle.low}
+              data-direction={candle.direction}
+              className="stroke-rose-600 data-[direction=up]:stroke-teal-600"
+              strokeWidth="2"
+            />
+            <rect
+              x={candle.x - 5}
+              y={candle.body}
+              width="10"
+              height={candle.height}
+              data-direction={candle.direction}
+              className="fill-rose-600 stroke-rose-600 data-[direction=up]:fill-white data-[direction=up]:stroke-teal-600 dark:fill-rose-400 dark:stroke-rose-400 dark:data-[direction=up]:fill-zinc-800 dark:data-[direction=up]:stroke-teal-400"
+              strokeWidth="2"
+            />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+
+  return (
+    <div className="relative grid min-h-28 min-w-32 flex-1 gap-2 rounded-lg bg-white p-3 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/15">
+      <Pin number={node.owner.number} />
+      <PartName>{node.owner.part.name}</PartName>
+      {graphic}
+    </div>
+  );
+}
+
+function TableNode({ node }: { node: Extract<DiagramNode, { type: "table" }> }) {
+  return (
+    <div className="relative grid gap-2 rounded-lg bg-white p-3 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/15">
+      <Pin number={node.owner.number} />
+      <PartName>{node.owner.part.name}</PartName>
+      <span className="grid grid-cols-2 gap-x-6 gap-y-2" aria-hidden="true">
+        {["w-16", "w-10", "w-12", "w-8", "w-14", "w-9"].map((width, index) => (
+          <Skeleton
+            key={`${width}-${index}`}
+            className={cn(
+              width,
+              index < 2 &&
+                `
+                  bg-zinc-400
+                  dark:bg-zinc-500
+                `,
+            )}
+          />
+        ))}
+      </span>
+    </div>
+  );
+}
+
 function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
   return (
     <>
@@ -752,6 +910,12 @@ function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
         }
         if (node.type === "items") {
           return <ItemsNode key={key} node={node} />;
+        }
+        if (node.type === "graphic") {
+          return <GraphicNode key={key} node={node} />;
+        }
+        if (node.type === "table") {
+          return <TableNode key={key} node={node} />;
         }
         return <ControlNode key={key} node={node} />;
       })}

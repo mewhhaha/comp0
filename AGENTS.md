@@ -41,6 +41,8 @@ The anatomy wireframe is generated, not drawn: `parseParts` in `apps/docs/src/co
 - `trigger` — a button. Names matching clear/close/dismiss, previous/back, next/forward, play/pause, drag/handle, or resize render as small icon buttons; consecutive triggers sit together in one row (`CarouselPrevious`/`CarouselNext`). A trigger gets a dropdown chevron when items or an inline region follow it, and a wide silhouette when a floating panel follows.
 - `content` — a floating overlay panel with a dashed drop connector that consumes every later part. Only use it for parts that truly float: popovers, dialogs, tooltips, toasts.
 - `region` — an inline surface that wraps the run of `item`/`input` parts directly after it. Use it for content that stays in the page flow: viewports, tracks, tab and accordion panels, calendar grids.
+- `graphic` — a data graphic drawn from the part name. Bar, pie, line, and area graphics render their corresponding silhouettes, and consecutive graphics share one row.
+- `table` — a compact data table silhouette for a single part that owns the whole native table.
 - `item` — a repeated collection sketch, shaped by name: radios, tab/button chips, breadcrumbs, slides, calendar or table cells, generic rows.
 
 The wireframe failing to look like the component is a data bug before it is a parser bug: fix the entry's kinds and order first, and only extend `Anatomy.tsx` when the vocabulary genuinely lacks the shape. After editing parts, open the page and confirm the sketch reads as the component at a glance.

@@ -32,4 +32,37 @@ describe("Anatomy", () => {
     expect(gridListItem!.parentElement?.contains(dragHandlePin!)).toBe(true);
     expect(gridListItem!.parentElement?.contains(moveButtonPin!)).toBe(true);
   });
+
+  it("sketches every chart with its own graphic and exact-value table", () => {
+    const renderChart = (slug: string) => {
+      const chart = componentBySlug.get(slug);
+      if (!chart) throw new Error(`${slug} documentation is missing.`);
+      const container = document.createElement("div");
+      container.innerHTML = renderToStaticMarkup(<Anatomy parts={chart.parts} />);
+      return container;
+    };
+
+    const barChart = renderChart("bar-chart");
+    const columnChart = renderChart("column-chart");
+    const lineChart = renderChart("line-chart");
+    const areaChart = renderChart("area-chart");
+    const pieChart = renderChart("pie-chart");
+    const candlestickChart = renderChart("candlestick-chart");
+
+    expect(barChart.querySelectorAll("[style*='width']")).toHaveLength(4);
+    expect(columnChart.querySelectorAll("[style*='height']")).toHaveLength(4);
+    expect(lineChart.querySelectorAll("svg path")).toHaveLength(1);
+    expect(areaChart.querySelectorAll("svg path")).toHaveLength(2);
+    expect(pieChart.querySelector("[style*='conic-gradient']")).not.toBeNull();
+    expect(candlestickChart.querySelectorAll("svg rect")).toHaveLength(4);
+
+    for (const chart of [barChart, columnChart, lineChart, areaChart, pieChart, candlestickChart]) {
+      const chartTable = [...chart.querySelectorAll("span")].find(
+        (element) => element.textContent === "ChartTable",
+      );
+      expect(chartTable?.parentElement?.querySelectorAll("[aria-hidden=true] > span")).toHaveLength(
+        6,
+      );
+    }
+  });
 });

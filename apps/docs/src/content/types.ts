@@ -1,4 +1,4 @@
-type ComponentGroupId = "actions" | "fields" | "navigation" | "pickers";
+type ComponentGroupId = "actions" | "charts" | "fields" | "navigation" | "pickers";
 
 export type CodeLanguage = "bash" | "css" | "tsx";
 
@@ -11,7 +11,9 @@ type AnatomyKind =
   | "region"
   | "item"
   | "input"
-  | "feedback";
+  | "feedback"
+  | "graphic"
+  | "table";
 
 export type PartProp = {
   name: string;
