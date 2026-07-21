@@ -19,9 +19,28 @@ export * from "./components/AreaChart.js";
 export * from "./components/AreaChartPlot.js";
 export * from "./components/CandlestickChart.js";
 export * from "./components/CandlestickChartPlot.js";
+export * from "./components/ScatterChart.js";
+export * from "./components/ScatterChartPlot.js";
+export * from "./components/StackedBarChart.js";
+export * from "./components/StackedBarChartPlot.js";
+export * from "./components/StackedColumnChart.js";
+export * from "./components/StackedColumnChartPlot.js";
+export * from "./components/Histogram.js";
+export * from "./components/HistogramPlot.js";
+export * from "./components/Heatmap.js";
+export * from "./components/HeatmapPlot.js";
+export * from "./components/SankeyChart.js";
+export * from "./components/SankeyChartPlot.js";
 export {
   type CandlestickChartValue,
   type CartesianChartValue,
   type CategoricalChartValue,
   type ChartPoint,
+  type HeatmapChartValue,
+  type HistogramBinValue,
+  type SankeyChartLinkValue,
+  type SankeyChartNodeValue,
+  type ScatterChartValue,
+  type StackedChartSegment,
+  type StackedChartValue,
 } from "./components/chart-shared.js";

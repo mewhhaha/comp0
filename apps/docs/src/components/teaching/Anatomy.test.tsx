@@ -48,6 +48,12 @@ describe("Anatomy", () => {
     const areaChart = renderChart("area-chart");
     const pieChart = renderChart("pie-chart");
     const candlestickChart = renderChart("candlestick-chart");
+    const scatterChart = renderChart("scatter-chart");
+    const stackedBarChart = renderChart("stacked-bar-chart");
+    const stackedColumnChart = renderChart("stacked-column-chart");
+    const histogram = renderChart("histogram");
+    const heatmap = renderChart("heatmap");
+    const sankeyChart = renderChart("sankey-chart");
 
     expect(barChart.querySelectorAll("[style*='width']")).toHaveLength(4);
     expect(columnChart.querySelectorAll("[style*='height']")).toHaveLength(4);
@@ -55,8 +61,27 @@ describe("Anatomy", () => {
     expect(areaChart.querySelectorAll("svg path")).toHaveLength(2);
     expect(pieChart.querySelector("[style*='conic-gradient']")).not.toBeNull();
     expect(candlestickChart.querySelectorAll("svg rect")).toHaveLength(4);
+    expect(scatterChart.querySelectorAll("svg circle")).toHaveLength(5);
+    expect(stackedBarChart.querySelectorAll("[style*='width']")).toHaveLength(3);
+    expect(stackedColumnChart.querySelectorAll("[style*='height']")).toHaveLength(4);
+    expect(histogram.querySelectorAll("[style*='height']")).toHaveLength(5);
+    expect(heatmap.querySelectorAll("[style*='opacity']")).toHaveLength(12);
+    expect(sankeyChart.querySelectorAll("svg path")).toHaveLength(3);
 
-    for (const chart of [barChart, columnChart, lineChart, areaChart, pieChart, candlestickChart]) {
+    for (const chart of [
+      barChart,
+      columnChart,
+      lineChart,
+      areaChart,
+      pieChart,
+      candlestickChart,
+      scatterChart,
+      stackedBarChart,
+      stackedColumnChart,
+      histogram,
+      heatmap,
+      sankeyChart,
+    ]) {
       const chartTable = [...chart.querySelectorAll("span")].find(
         (element) => element.textContent === "ChartTable",
       );

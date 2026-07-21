@@ -7,6 +7,7 @@ import {
   type CategoricalChartValue,
   type ChartContextValue,
   numberOf,
+  type StackedChartValue,
 } from "./chart-shared.js";
 
 type ChartFigureProps = HTMLAttributes<HTMLElement> &
@@ -22,6 +23,52 @@ export function ChartFigure({ context, ref, ...props }: ChartFigureProps) {
       </ChartContext>
     </ChartInteractionProvider>
   );
+}
+
+export function stackedChartContext(
+  chartName: string,
+  kind: "stacked-bar" | "stacked-column",
+  values: readonly StackedChartValue[],
+  categoryLabel: string,
+  valueLabel: string,
+  formatY: ((value: number) => string) | undefined,
+): ChartContextValue {
+  if (!categoryLabel.trim()) throw new Error(`${chartName} category label must not be empty.`);
+  if (!valueLabel.trim()) throw new Error(`${chartName} value label must not be empty.`);
+  const expectedSegments = values[0]?.segments.map((segment) => segment.label) ?? [];
+  for (const [categoryIndex, value] of values.entries()) {
+    if (!value.label.trim()) {
+      throw new Error(`${chartName} value at index ${categoryIndex} has an empty label.`);
+    }
+    const segmentLabels = value.segments.map((segment) => segment.label);
+    if (
+      segmentLabels.length !== expectedSegments.length ||
+      segmentLabels.some((label, index) => label !== expectedSegments[index])
+    ) {
+      throw new Error(
+        `${chartName} category "${value.label}" must use the same ordered segments as the first category.`,
+      );
+    }
+    for (const [segmentIndex, segment] of value.segments.entries()) {
+      if (!segment.label.trim()) {
+        throw new Error(
+          `${chartName} segment at category ${categoryIndex}, index ${segmentIndex} has an empty label.`,
+        );
+      }
+      if (!Number.isFinite(segment.value) || segment.value < 0) {
+        throw new Error(
+          `${chartName} segment "${segment.label}" in "${value.label}" must be a finite non-negative number; received ${segment.value}.`,
+        );
+      }
+    }
+  }
+  return {
+    kind,
+    values,
+    categoryLabel,
+    valueLabel,
+    formatY: formatY ?? String,
+  };
 }
 
 export function categoricalChartContext(

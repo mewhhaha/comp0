@@ -18,6 +18,21 @@ import { LineChart } from "./components/LineChart.js";
 import { LineChartPlot, LineChartPoint } from "./components/LineChartPlot.js";
 import { PieChart } from "./components/PieChart.js";
 import { PieChartPlot, PieChartSlice } from "./components/PieChartPlot.js";
+import { Heatmap } from "./components/Heatmap.js";
+import { HeatmapCell, HeatmapPlot } from "./components/HeatmapPlot.js";
+import { Histogram } from "./components/Histogram.js";
+import { HistogramBin, HistogramPlot } from "./components/HistogramPlot.js";
+import { SankeyChart } from "./components/SankeyChart.js";
+import { SankeyChartLink, SankeyChartNode, SankeyChartPlot } from "./components/SankeyChartPlot.js";
+import { ScatterChart } from "./components/ScatterChart.js";
+import { ScatterChartPlot, ScatterChartPoint } from "./components/ScatterChartPlot.js";
+import { StackedBarChart } from "./components/StackedBarChart.js";
+import { StackedBarChartPlot, StackedBarChartSegment } from "./components/StackedBarChartPlot.js";
+import { StackedColumnChart } from "./components/StackedColumnChart.js";
+import {
+  StackedColumnChartPlot,
+  StackedColumnChartSegment,
+} from "./components/StackedColumnChartPlot.js";
 
 const quarterlyRevenue = [
   { label: "First quarter", value: 40 },
@@ -296,6 +311,7 @@ describe("chart composition", () => {
     expect(container.querySelector("[data-slot='pie-chart-slices']")?.nextElementSibling).toBe(
       activeOutline,
     );
+    expect(container.querySelector("[data-slot='chart-active-value-overlay']")).toBeNull();
     fireKeyDown(sliceGroups[1]!, "ArrowRight");
     expect(document.activeElement).toBe(sliceGroups[0]);
   });
@@ -409,6 +425,241 @@ describe("chart composition", () => {
     ).toThrow(
       "CandlestickChart high at index 0 must not be below open or close; received high=105, open=100, close=110.",
     );
+  });
+
+  it("positions scatter points independently and moves to the nearest point in a direction", () => {
+    const values = [
+      { label: "Alpha", x: 1, y: 1 },
+      { label: "Beta", x: 4, y: 2 },
+      { label: "Gamma", x: 2, y: 5 },
+    ] as const;
+    const { container } = render(
+      <ScatterChart values={values} xLabel="Effort" yLabel="Impact">
+        <ScatterChartPlot aria-label="Effort and impact scatter plot">
+          {(point) => (
+            <ScatterChartPoint key={point.index} point={point}>
+              <circle cx={point.x} cy={point.y} r="2" />
+            </ScatterChartPoint>
+          )}
+        </ScatterChartPlot>
+      </ScatterChart>,
+    );
+
+    const points = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='scatter-chart-point']"),
+    ];
+    expect(points[0]?.getAttribute("aria-label")).toBe("Alpha, Effort: 1, Impact: 1");
+    expect(points[1]?.querySelector("circle")?.getAttribute("cx")).toBe("116");
+    act(() => points[0]!.focus());
+    fireKeyDown(points[0]!, "ArrowUp");
+    expect(document.activeElement).toBe(points[2]);
+    fireKeyDown(points[2]!, "ArrowRight");
+    expect(document.activeElement).toBe(points[1]);
+  });
+
+  it("composes stacked bar and column segments with two-dimensional arrow navigation", () => {
+    const values = [
+      {
+        label: "Web",
+        segments: [
+          { label: "New", value: 30 },
+          { label: "Returning", value: 20 },
+        ],
+      },
+      {
+        label: "Store",
+        segments: [
+          { label: "New", value: 10 },
+          { label: "Returning", value: 40 },
+        ],
+      },
+    ] as const;
+    const { container } = render(
+      <>
+        <StackedBarChart values={values} categoryLabel="Channel" valueLabel="Orders">
+          <StackedBarChartPlot aria-label="Orders by channel and customer type">
+            {(segment) => (
+              <StackedBarChartSegment
+                key={`${segment.value.label}-${segment.segment.label}`}
+                segment={segment}
+              >
+                <rect x={segment.x} y={segment.y} width={segment.width} height={segment.height} />
+              </StackedBarChartSegment>
+            )}
+          </StackedBarChartPlot>
+        </StackedBarChart>
+        <StackedColumnChart values={values} categoryLabel="Channel" valueLabel="Orders">
+          <StackedColumnChartPlot aria-label="Orders by channel and customer type">
+            {(segment) => (
+              <StackedColumnChartSegment
+                key={`${segment.value.label}-${segment.segment.label}`}
+                segment={segment}
+              >
+                <rect x={segment.x} y={segment.y} width={segment.width} height={segment.height} />
+              </StackedColumnChartSegment>
+            )}
+          </StackedColumnChartPlot>
+        </StackedColumnChart>
+      </>,
+    );
+
+    const bars = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='stacked-bar-chart-segment']"),
+    ];
+    expect(bars.map((bar) => bar.getAttribute("aria-label"))).toEqual([
+      "Channel: Web, Segment: New, Orders: 30",
+      "Channel: Web, Segment: Returning, Orders: 20",
+      "Channel: Store, Segment: New, Orders: 10",
+      "Channel: Store, Segment: Returning, Orders: 40",
+    ]);
+    act(() => bars[0]!.focus());
+    fireKeyDown(bars[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(bars[1]);
+    fireKeyDown(bars[1]!, "ArrowDown");
+    expect(document.activeElement).toBe(bars[3]);
+
+    const columns = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='stacked-column-chart-segment']"),
+    ];
+    act(() => columns[0]!.focus());
+    fireKeyDown(columns[0]!, "ArrowUp");
+    expect(document.activeElement).toBe(columns[1]);
+    fireKeyDown(columns[1]!, "ArrowRight");
+    expect(document.activeElement).toBe(columns[3]);
+  });
+
+  it("groups histogram observations into inclusive end bins", () => {
+    const { container } = render(
+      <Histogram values={[0, 1, 2, 3, 4]} valueLabel="Duration" frequencyLabel="Sessions">
+        <HistogramPlot aria-label="Session duration distribution" binCount={2}>
+          {(bin) => (
+            <HistogramBin key={bin.index} bin={bin}>
+              <rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} />
+            </HistogramBin>
+          )}
+        </HistogramPlot>
+      </Histogram>,
+    );
+
+    const bins = [...container.querySelectorAll("[data-slot='histogram-bin']")];
+    expect(bins.map((bin) => bin.getAttribute("data-count"))).toEqual(["2", "3"]);
+    expect(bins[1]?.getAttribute("aria-label")).toBe("Duration: over 2 to 4, Sessions: 3");
+  });
+
+  it("orders heatmap cells into a matrix and follows row and column arrows", () => {
+    const values = [
+      { x: "Morning", y: "Monday", value: 4 },
+      { x: "Evening", y: "Monday", value: 8 },
+      { x: "Morning", y: "Tuesday", value: 6 },
+      { x: "Evening", y: "Tuesday", value: 3 },
+    ] as const;
+    const { container } = render(
+      <Heatmap
+        values={values}
+        xLabel="Time"
+        yLabel="Day"
+        valueLabel="Requests"
+        formatValue={(value) => `${value}k`}
+      >
+        <HeatmapPlot aria-label="Requests by day and time">
+          {(cell) => (
+            <HeatmapCell key={`${cell.value.x}-${cell.value.y}`} cell={cell}>
+              <rect x={cell.x} y={cell.y} width={cell.width} height={cell.height} />
+            </HeatmapCell>
+          )}
+        </HeatmapPlot>
+      </Heatmap>,
+    );
+
+    const cells = [...container.querySelectorAll<SVGGElement>("[data-slot='heatmap-cell']")];
+    const cellsGroup = container.querySelector("[data-slot='heatmap-cells']");
+    const activeOverlay = container.querySelector("[data-slot='chart-active-value-overlay']");
+    expect(cells[0]?.getAttribute("aria-label")).toBe("Time: Morning, Day: Monday, Requests: 4k");
+    expect(cellsGroup?.nextElementSibling).toBe(activeOverlay);
+    act(() => cells[0]!.focus());
+    expect(activeOverlay?.querySelector("use")?.getAttribute("href")).toBe(`#${cells[0]!.id}`);
+    fireKeyDown(cells[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(cells[1]);
+    expect(activeOverlay?.querySelector("use")?.getAttribute("href")).toBe(`#${cells[1]!.id}`);
+    fireKeyDown(cells[1]!, "ArrowDown");
+    expect(document.activeElement).toBe(cells[3]);
+  });
+
+  it("lays out sankey links behind navigable nodes and highlights connected flows", () => {
+    const nodes = [
+      { id: "visit", label: "Visit" },
+      { id: "cart", label: "Cart" },
+      { id: "leave", label: "Leave" },
+      { id: "buy", label: "Purchase" },
+    ] as const;
+    const links = [
+      { source: "visit", target: "cart", value: 60 },
+      { source: "visit", target: "leave", value: 40 },
+      { source: "cart", target: "buy", value: 35 },
+    ] as const;
+    const { container } = render(
+      <SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">
+        <SankeyChartPlot aria-label="Customer journey flow">
+          {({ links: positionedLinks, nodes: positionedNodes }) => (
+            <>
+              {positionedLinks.map((link) => (
+                <SankeyChartLink key={link.index} link={link}>
+                  <path d={link.path} strokeWidth={link.width} />
+                </SankeyChartLink>
+              ))}
+              {positionedNodes.map((node) => (
+                <SankeyChartNode key={node.value.id} node={node}>
+                  <rect x={node.x} y={node.y} width={node.width} height={node.height} />
+                </SankeyChartNode>
+              ))}
+            </>
+          )}
+        </SankeyChartPlot>
+      </SankeyChart>,
+    );
+
+    const nodesInPlot = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='sankey-chart-node']"),
+    ];
+    const visit = nodesInPlot.find((node) => node.getAttribute("data-node-id") === "visit")!;
+    const cart = nodesInPlot.find((node) => node.getAttribute("data-node-id") === "cart")!;
+    expect(visit.getAttribute("aria-label")).toBe(
+      "Step: Visit, Incoming People: 0 across 0 connections, Outgoing People: 100 across 2 connections",
+    );
+    expect(visit.getAttribute("pointer-events")).toBe("bounding-box");
+    expect(
+      [...container.querySelectorAll("[data-slot='sankey-chart-link']")].every(
+        (link) => link.getAttribute("pointer-events") === "none",
+      ),
+    ).toBe(true);
+    act(() => visit.focus());
+    const connectedLinks = [
+      ...container.querySelectorAll("[data-slot='sankey-chart-link'][data-connected]"),
+    ];
+    expect(connectedLinks).toHaveLength(2);
+    fireKeyDown(visit, "ArrowRight");
+    expect(document.activeElement).toBe(cart);
+    fireKeyDown(cart, "ArrowLeft");
+    expect(document.activeElement).toBe(visit);
+  });
+
+  it("rejects cyclic sankey links at the chart boundary", () => {
+    expect(() =>
+      render(
+        <SankeyChart
+          nodes={[
+            { id: "a", label: "A" },
+            { id: "b", label: "B" },
+          ]}
+          links={[
+            { source: "a", target: "b", value: 1 },
+            { source: "b", target: "a", value: 1 },
+          ]}
+          nodeLabel="Step"
+          valueLabel="People"
+        />,
+      ),
+    ).toThrow("SankeyChart links must form an acyclic flow from left to right.");
   });
 
   it("throws when a shared or chart-specific part has no matching root", () => {

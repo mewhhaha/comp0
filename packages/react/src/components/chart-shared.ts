@@ -10,6 +10,43 @@ export type CartesianChartValue = {
   y: number;
 };
 
+export type ScatterChartValue = CartesianChartValue & {
+  label: string;
+};
+
+export type StackedChartSegment = {
+  label: string;
+  value: number;
+};
+
+export type StackedChartValue = {
+  label: string;
+  segments: readonly StackedChartSegment[];
+};
+
+export type HeatmapChartValue = {
+  x: string;
+  y: string;
+  value: number;
+};
+
+export type HistogramBinValue = {
+  min: number;
+  max: number;
+  count: number;
+};
+
+export type SankeyChartNodeValue = {
+  id: string;
+  label: string;
+};
+
+export type SankeyChartLinkValue = {
+  source: string;
+  target: string;
+  value: number;
+};
+
 export type CandlestickChartValue = {
   x: number | Date;
   open: number;
@@ -39,6 +76,44 @@ export type ChartContextValue =
       xLabel: string;
       yLabel: string;
       formatX: (value: number | Date) => string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "scatter";
+      values: readonly ScatterChartValue[];
+      xLabel: string;
+      yLabel: string;
+      formatX: (value: number | Date) => string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "stacked-bar" | "stacked-column";
+      values: readonly StackedChartValue[];
+      categoryLabel: string;
+      valueLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "histogram";
+      values: readonly number[];
+      valueLabel: string;
+      frequencyLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "heatmap";
+      values: readonly HeatmapChartValue[];
+      xLabel: string;
+      yLabel: string;
+      valueLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "sankey";
+      nodes: readonly SankeyChartNodeValue[];
+      links: readonly SankeyChartLinkValue[];
+      nodeLabel: string;
+      valueLabel: string;
       formatY: (value: number) => string;
     }
   | {

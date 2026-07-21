@@ -11,6 +11,7 @@ import {
   type ReactNode,
   type SVGAttributes,
 } from "react";
+import { createPortal } from "react-dom";
 import { dataAttr, getRovingFocusTarget, useComposedRefs } from "@comp0/core";
 import { dataSlot, resolveChildren, type RefProp, type StateChildren } from "../shared.js";
 import {
@@ -23,6 +24,13 @@ import type {
   CandlestickChartValue,
   CartesianChartValue,
   CategoricalChartValue,
+  HeatmapChartValue,
+  HistogramBinValue,
+  SankeyChartLinkValue,
+  SankeyChartNodeValue,
+  ScatterChartValue,
+  StackedChartSegment,
+  StackedChartValue,
 } from "./chart-shared.js";
 
 /* oxlint-disable jsx-a11y/prefer-tag-over-role -- Each SVG group is an individually named graphic within the chart. */
@@ -61,6 +69,47 @@ export type ChartValueDetails =
       formattedHigh: string;
       formattedLow: string;
       formattedClose: string;
+    }
+  | {
+      kind: "scatter";
+      index: number;
+      label: string;
+      value: ScatterChartValue;
+      formattedX: string;
+      formattedY: string;
+    }
+  | {
+      kind: "stacked-bar" | "stacked-column";
+      index: number;
+      label: string;
+      value: StackedChartValue;
+      segment: StackedChartSegment;
+      formattedValue: string;
+    }
+  | {
+      kind: "histogram";
+      index: number;
+      label: string;
+      value: HistogramBinValue;
+      formattedMin: string;
+      formattedMax: string;
+    }
+  | {
+      kind: "heatmap";
+      index: number;
+      label: string;
+      value: HeatmapChartValue;
+      formattedValue: string;
+    }
+  | {
+      kind: "sankey";
+      index: number;
+      label: string;
+      value: SankeyChartNodeValue;
+      incoming: readonly SankeyChartLinkValue[];
+      outgoing: readonly SankeyChartLinkValue[];
+      formattedIncoming: string;
+      formattedOutgoing: string;
     };
 
 type ActiveChartValue = {
@@ -139,7 +188,9 @@ export function ChartInteractionProvider({ children }: { children: ReactNode }) 
 }
 
 type ChartNavigationContextValue = {
+  getTargetIndex?: ((currentIndex: number, key: string) => number | undefined) | undefined;
   loop: boolean;
+  overlayElement: SVGGElement | null;
   orientation: "horizontal" | "vertical" | "both";
   setTabStopIndex: (index: number) => void;
   tabStopIndex: number;
@@ -150,21 +201,41 @@ const ChartNavigationContext = createContext<ChartNavigationContextValue | null>
 export function ChartNavigationProvider({
   children,
   count,
+  getTargetIndex,
   loop = false,
   orientation,
+  paintActiveLast = true,
 }: {
   children: ReactNode;
   count: number;
+  getTargetIndex?: ChartNavigationContextValue["getTargetIndex"];
   loop?: boolean | undefined;
   orientation: ChartNavigationContextValue["orientation"];
+  paintActiveLast?: boolean | undefined;
 }) {
   const [tabStopIndex, setTabStopIndex] = useState(0);
+  const [overlayElement, setOverlayElement] = useState<SVGGElement | null>(null);
   const resolvedTabStopIndex = tabStopIndex < count ? tabStopIndex : 0;
   return (
     <ChartNavigationContext
-      value={{ loop, orientation, setTabStopIndex, tabStopIndex: resolvedTabStopIndex }}
+      value={{
+        getTargetIndex,
+        loop,
+        overlayElement,
+        orientation,
+        setTabStopIndex,
+        tabStopIndex: resolvedTabStopIndex,
+      }}
     >
       {children}
+      {paintActiveLast && (
+        <g
+          ref={setOverlayElement}
+          aria-hidden="true"
+          pointerEvents="none"
+          data-slot="chart-active-value-overlay"
+        />
+      )}
     </ChartNavigationContext>
   );
 }
@@ -182,6 +253,7 @@ export function ChartValue({
   children,
   details,
   fallbackSlot,
+  id,
   onBlur,
   onFocus,
   onKeyDown,
@@ -197,6 +269,7 @@ export function ChartValue({
   if (!interaction) throw new Error("Chart value components must be rendered inside a chart root.");
   if (!navigation) throw new Error("Chart value components must be rendered inside a chart plot.");
   const active = interaction.active?.key === generatedId;
+  const valueId = id ?? generatedId;
 
   const moveFocus = (event: KeyboardEvent<SVGGElement>) => {
     const plot = event.currentTarget.ownerSVGElement;
@@ -204,6 +277,12 @@ export function ChartValue({
     const values = [...plot.querySelectorAll<SVGGElement>("[data-chart-value]")];
     const currentIndex = values.indexOf(event.currentTarget);
     if (currentIndex === -1) return;
+    const customTargetIndex = navigation.getTargetIndex?.(currentIndex, event.key);
+    if (customTargetIndex !== undefined) {
+      event.preventDefault();
+      values[customTargetIndex]?.focus();
+      return;
+    }
     const targetKey = getRovingFocusTarget(
       values.map((_, index) => ({ key: String(index) })),
       String(currentIndex),
@@ -218,44 +297,62 @@ export function ChartValue({
     event.preventDefault();
     values[Number(targetKey)]?.focus();
   };
+  let activeOverlay: ReactNode;
+  if (active && navigation.overlayElement) {
+    activeOverlay = createPortal(
+      <g
+        aria-hidden="true"
+        pointerEvents="none"
+        data-active=""
+        data-slot={`${fallbackSlot}-active`}
+      >
+        <use href={`#${valueId}`} />
+      </g>,
+      navigation.overlayElement,
+    );
+  }
   return (
-    <g
-      {...props}
-      ref={ref}
-      role="img"
-      tabIndex={details.index === navigation.tabStopIndex ? 0 : -1}
-      aria-label={details.label}
-      style={style}
-      data-active={dataAttr(active)}
-      data-chart-value=""
-      data-slot={dataSlot(props, fallbackSlot)}
-      onFocus={(event) => {
-        onFocus?.(event);
-        if (event.defaultPrevented) return;
-        navigation.setTabStopIndex(details.index);
-        interaction.setFocused({ key: generatedId, details, element: event.currentTarget });
-      }}
-      onBlur={(event) => {
-        onBlur?.(event);
-        if (!event.defaultPrevented) interaction.clearFocused(generatedId);
-      }}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (!event.defaultPrevented) moveFocus(event);
-      }}
-      onPointerEnter={(event) => {
-        onPointerEnter?.(event);
-        if (!event.defaultPrevented) {
-          interaction.setHovered({ key: generatedId, details, element: event.currentTarget });
-        }
-      }}
-      onPointerLeave={(event) => {
-        onPointerLeave?.(event);
-        if (!event.defaultPrevented) interaction.scheduleHoverClear(generatedId);
-      }}
-    >
-      {children}
-    </g>
+    <>
+      <g
+        {...props}
+        ref={ref}
+        id={valueId}
+        role="img"
+        tabIndex={details.index === navigation.tabStopIndex ? 0 : -1}
+        aria-label={details.label}
+        style={style}
+        data-active={dataAttr(active)}
+        data-chart-value=""
+        data-slot={dataSlot(props, fallbackSlot)}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (event.defaultPrevented) return;
+          navigation.setTabStopIndex(details.index);
+          interaction.setFocused({ key: generatedId, details, element: event.currentTarget });
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          if (!event.defaultPrevented) interaction.clearFocused(generatedId);
+        }}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (!event.defaultPrevented) moveFocus(event);
+        }}
+        onPointerEnter={(event) => {
+          onPointerEnter?.(event);
+          if (!event.defaultPrevented) {
+            interaction.setHovered({ key: generatedId, details, element: event.currentTarget });
+          }
+        }}
+        onPointerLeave={(event) => {
+          onPointerLeave?.(event);
+          if (!event.defaultPrevented) interaction.scheduleHoverClear(generatedId);
+        }}
+      >
+        {children}
+      </g>
+      {activeOverlay}
+    </>
   );
 }
 

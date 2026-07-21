@@ -81,7 +81,7 @@ export function Example() {
           ))}
         </tbody>
       </ChartTable>
-      <ChartTooltip className="z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
+      <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </LineChart>
   );
 }

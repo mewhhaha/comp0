@@ -108,7 +108,12 @@ export function PieChartPlot({
       role="group"
       data-slot={dataSlot(props, "pie-chart-plot")}
     >
-      <ChartNavigationProvider count={slices.length} loop orientation="both">
+      <ChartNavigationProvider
+        count={slices.length}
+        loop
+        orientation="both"
+        paintActiveLast={false}
+      >
         <g role="presentation" data-slot="pie-chart-slices">
           {slices.map((slice) => {
             const { index, path, value } = slice;

@@ -8,9 +8,9 @@ import { getExampleSource } from "../examples/sources.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 85 unique component slugs", () => {
-    expect(components).toHaveLength(85);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(85);
+  it("contains 91 unique component slugs", () => {
+    expect(components).toHaveLength(91);
+    expect(new Set(components.map((component) => component.slug)).size).toBe(91);
   });
 
   it("resolves every related component link", () => {
@@ -30,6 +30,12 @@ describe("docs content catalog", () => {
       "area-chart",
       "pie-chart",
       "candlestick-chart",
+      "scatter-chart",
+      "stacked-bar-chart",
+      "stacked-column-chart",
+      "histogram",
+      "heatmap",
+      "sankey-chart",
     ]);
   });
 

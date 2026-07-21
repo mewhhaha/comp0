@@ -37,7 +37,19 @@ type ControlShape =
   | "block";
 
 type ItemShape = "row" | "tab" | "crumb" | "radio" | "slide" | "cell";
-type GraphicShape = "area" | "bar" | "candlestick" | "column" | "line" | "pie";
+type GraphicShape =
+  | "area"
+  | "bar"
+  | "candlestick"
+  | "column"
+  | "heatmap"
+  | "histogram"
+  | "line"
+  | "pie"
+  | "sankey"
+  | "scatter"
+  | "stacked-bar"
+  | "stacked-column";
 
 type DiagramNode =
   | { type: "frame"; owner: Numbered; variant: "provider" | "container"; children: DiagramNode[] }
@@ -91,6 +103,12 @@ function itemShape(name: string): ItemShape {
 
 function graphicShape(name: string): GraphicShape {
   if (/candlestick/i.test(name)) return "candlestick";
+  if (/stackedbar/i.test(name)) return "stacked-bar";
+  if (/stackedcolumn/i.test(name)) return "stacked-column";
+  if (/scatter/i.test(name)) return "scatter";
+  if (/histogram/i.test(name)) return "histogram";
+  if (/heatmap/i.test(name)) return "heatmap";
+  if (/sankey/i.test(name)) return "sankey";
   if (/pie/i.test(name)) return "pie";
   if (/line/i.test(name)) return "line";
   if (/area/i.test(name)) return "area";
@@ -719,6 +737,109 @@ function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }>
             />
           </g>
         ))}
+      </svg>
+    );
+  }
+  if (node.shape === "scatter") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[
+          [12, 45],
+          [31, 18],
+          [49, 35],
+          [68, 10],
+          [88, 27],
+        ].map(([cx, cy]) => (
+          <circle
+            key={`${cx}-${cy}`}
+            cx={cx}
+            cy={cy}
+            r="4"
+            className="fill-teal-600 dark:fill-teal-400"
+          />
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "histogram") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-px" aria-hidden="true">
+        {[32, 68, 92, 54, 20].map((height) => (
+          <span
+            key={height}
+            className="w-4 bg-teal-600/75 dark:bg-teal-400/75"
+            style={{ height: `${height}%` }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "heatmap") {
+    graphic = (
+      <span className="grid h-14 grid-cols-4 gap-1" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, index) => (
+          <span
+            key={index}
+            className="bg-teal-600 dark:bg-teal-400"
+            style={{ opacity: 0.2 + ((index * 3) % 8) / 10 }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "stacked-bar") {
+    graphic = (
+      <span className="flex h-14 flex-col justify-center gap-1.5" aria-hidden="true">
+        {[88, 72, 54].map((width) => (
+          <span key={width} className="flex h-3" style={{ width: `${width}%` }}>
+            <span className="w-2/5 bg-teal-600 dark:bg-teal-400" />
+            <span className="flex-1 bg-sky-600 dark:bg-sky-400" />
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "stacked-column") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-2" aria-hidden="true">
+        {[68, 92, 78, 54].map((height) => (
+          <span
+            key={height}
+            className="flex w-3 flex-col justify-end"
+            style={{ height: `${height}%` }}
+          >
+            <span className="h-2/5 bg-sky-600 dark:bg-sky-400" />
+            <span className="flex-1 bg-teal-600 dark:bg-teal-400" />
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "sankey") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        <path
+          d="M 10 25 C 35 25, 38 14, 62 14"
+          className="stroke-teal-600/40 dark:stroke-teal-400/40"
+          strokeWidth="10"
+          fill="none"
+        />
+        <path
+          d="M 10 35 C 35 35, 38 46, 62 46"
+          className="stroke-sky-600/40 dark:stroke-sky-400/40"
+          strokeWidth="7"
+          fill="none"
+        />
+        <path
+          d="M 68 14 C 80 14, 82 30, 92 30"
+          className="stroke-teal-600/40 dark:stroke-teal-400/40"
+          strokeWidth="8"
+          fill="none"
+        />
+        <rect x="6" y="17" width="5" height="26" className="fill-zinc-700 dark:fill-zinc-200" />
+        <rect x="62" y="8" width="6" height="14" className="fill-teal-600 dark:fill-teal-400" />
+        <rect x="62" y="41" width="6" height="10" className="fill-sky-600 dark:fill-sky-400" />
+        <rect x="92" y="24" width="5" height="13" className="fill-amber-500 dark:fill-amber-400" />
       </svg>
     );
   }
