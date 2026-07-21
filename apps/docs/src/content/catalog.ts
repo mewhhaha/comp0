@@ -1801,6 +1801,14 @@ const action = [
     [],
     "No form value; use it to report an advisory form or application result.",
     ["alert", "progress-bar", "toast"],
+    [
+      {
+        id: "approval-request",
+        title: "Inline approval request",
+        description:
+          "Compose advisory status, expandable evidence, and one-shot actions into a human approval checkpoint that resolves without opening a modal or stealing focus.",
+      },
+    ],
   ),
   common(
     "error-summary",
@@ -5398,6 +5406,12 @@ const navigation = [
         description:
           "Compose bounded panels into a material graph with typed vector, value, color, and shader ports. Labelled port controls support pointer and keyboard reattachment while the aria-hidden SVG layer follows every node.",
       },
+      {
+        id: "annotations",
+        title: "Anchored comment thread",
+        description:
+          "Attach a movable, non-modal discussion to highlighted document content, with a chronological message log, reply composer, resolve state, and focusable numbered pin.",
+      },
     ],
   ),
   common(
@@ -6266,6 +6280,14 @@ const navigation = [
     ],
     "Selection does not create a native form value; mirror it into a hidden input when a form needs it.",
     ["grid-list", "list-box"],
+    [
+      {
+        id: "activity",
+        title: "Live execution tree",
+        description:
+          "Show nested work as an arrow-key tree while a progress bar and polite status report meaningful workflow transitions instead of every low-level update.",
+      },
+    ],
   ),
   common(
     "carousel",
@@ -6484,6 +6506,14 @@ const navigation = [
     ],
     "Messages does not create form values; keep the message composer beside it, not inside it.",
     ["feed", "text-area", "toast"],
+    [
+      {
+        id: "streaming",
+        title: "Streaming response",
+        description:
+          "Keep visible response text moving while aria-busy defers the live log until the complete or interrupted response is ready to announce.",
+      },
+    ],
   ),
   common(
     "pagination",
@@ -6784,6 +6814,14 @@ const navigation = [
     ],
     "No native form behavior; the panels hold the real form fields.",
     ["tabs", "accordion", "progress-bar"],
+    [
+      {
+        id: "generated-surface",
+        title: "Constrained generated UI",
+        description:
+          "Stream a typed description into a trusted local registry that renders headings, summaries, steps, and actions without executing arbitrary generated code.",
+      },
+    ],
   ),
 ];
 
