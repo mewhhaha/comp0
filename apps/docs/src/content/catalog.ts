@@ -419,7 +419,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start BarChart with labelled values plus visible category and value axis labels.",
     "Add ChartTitle and BarChartPlot; wrap each rendered bar in BarChartBar so one bar is tabbable and arrow keys reveal the rest.",
     "Add ChartDescription and ChartTable for persistent context and exact values; optionally add ChartTooltip for pointer and keyboard details.",
-    '<BarChart values={performance} categoryLabel="Measure" valueLabel="Target met">\n  <ChartTitle>Performance against target</ChartTitle>\n  <BarChartPlot aria-label="Horizontal bar chart comparing performance against target">\n    {(bar) => (\n      <BarChartBar bar={bar}>\n        <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} />\n      </BarChartBar>\n    )}\n  </BarChartPlot>\n  <ChartDescription>Rendering has the largest gap.</ChartDescription>\n  <ChartTable caption="Performance values" />\n  <ChartTooltip />\n</BarChart>;',
+    '<BarChart values={performance} categoryLabel="Measure" valueLabel="Target met">\n  <ChartTitle>Performance against target</ChartTitle>\n  <BarChartPlot aria-label="Horizontal bar chart comparing performance against target">\n    {(bar) => (\n      <BarChartBar bar={bar}>\n        <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} />\n      </BarChartBar>\n    )}\n  </BarChartPlot>\n  <ChartDescription>Rendering has the largest gap.</ChartDescription>\n  <ChartTable>\n    <caption>Performance values</caption>\n    <thead>\n      <tr>\n        <th scope="col">Measure</th>\n        <th scope="col">Target met</th>\n      </tr>\n    </thead>\n    <tbody>\n      {performance.map((measure) => (\n        <tr key={measure.label}>\n          <th scope="row">{measure.label}</th>\n          <td>{measure.value}%</td>\n        </tr>\n      ))}\n    </tbody>\n  </ChartTable>\n  <ChartTooltip />\n</BarChart>;',
   ),
   "column-chart": lesson(
     "A vertical categorical comparison with visible axes and the same exact values in a native table.",
@@ -428,7 +428,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start ColumnChart with labelled values plus visible category and value axis labels.",
     "Add ChartTitle and ColumnChartPlot; wrap each rendered column in ColumnChartColumn so one column is tabbable and arrow keys reveal the rest.",
     "Add ChartDescription and ChartTable for persistent context and exact values; optionally add ChartTooltip for pointer and keyboard details.",
-    '<ColumnChart values={traffic} categoryLabel="Source" valueLabel="Share">\n  <ChartTitle>Traffic by source</ChartTitle>\n  <ColumnChartPlot aria-label="Column chart comparing traffic share by source">\n    {(column) => (\n      <ColumnChartColumn column={column}>\n        <rect x={column.x} y={column.y} width={column.width} height={column.height} />\n      </ColumnChartColumn>\n    )}\n  </ColumnChartPlot>\n  <ChartDescription>Direct visits are the largest source.</ChartDescription>\n  <ChartTable caption="Traffic source values" />\n  <ChartTooltip />\n</ColumnChart>;',
+    '<ColumnChart values={traffic} categoryLabel="Source" valueLabel="Share">\n  <ChartTitle>Traffic by source</ChartTitle>\n  <ColumnChartPlot aria-label="Column chart comparing traffic share by source">\n    {(column) => (\n      <ColumnChartColumn column={column}>\n        <rect x={column.x} y={column.y} width={column.width} height={column.height} />\n      </ColumnChartColumn>\n    )}\n  </ColumnChartPlot>\n  <ChartDescription>Direct visits are the largest source.</ChartDescription>\n  <ChartTable>\n    <caption>Traffic source values</caption>\n    <thead>\n      <tr>\n        <th scope="col">Source</th>\n        <th scope="col">Share</th>\n      </tr>\n    </thead>\n    <tbody>\n      {traffic.map((source) => (\n        <tr key={source.label}>\n          <th scope="row">{source.label}</th>\n          <td>{source.value}%</td>\n        </tr>\n      ))}\n    </tbody>\n  </ChartTable>\n  <ChartTooltip />\n</ColumnChart>;',
   ),
   "line-chart": lesson(
     "A trend across ordered numeric or date values, with visible axes and an exact-value table.",
@@ -437,7 +437,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start LineChart with strictly increasing x values and labels for both axes.",
     "Add ChartTitle and LineChartPlot; render each point with LineChartPoint so one point is tabbable and horizontal arrow keys reveal the rest.",
     "Add ChartDescription and ChartTable for persistent context and exact values; optionally add ChartTooltip for pointer and keyboard details.",
-    '<LineChart values={revenue} xLabel="Quarter" yLabel="Revenue">\n  <ChartTitle>Quarterly revenue</ChartTitle>\n  <LineChartPlot aria-label="Line chart showing quarterly revenue">\n    {({ path, points }) => (\n      <>\n        <path d={path} />\n        {points.map((point) => (\n          <LineChartPoint key={point.index} point={point}>\n            <circle cx={point.x} cy={point.y} />\n          </LineChartPoint>\n        ))}\n      </>\n    )}\n  </LineChartPlot>\n  <ChartDescription>Revenue finished at its highest point.</ChartDescription>\n  <ChartTable caption="Quarterly revenue values" />\n  <ChartTooltip />\n</LineChart>;',
+    '<LineChart values={revenue} xLabel="Quarter" yLabel="Revenue">\n  <ChartTitle>Quarterly revenue</ChartTitle>\n  <LineChartPlot aria-label="Line chart showing quarterly revenue">\n    {({ path, points }) => (\n      <>\n        <path d={path} />\n        {points.map((point) => (\n          <LineChartPoint key={point.index} point={point}>\n            <circle cx={point.x} cy={point.y} />\n          </LineChartPoint>\n        ))}\n      </>\n    )}\n  </LineChartPlot>\n  <ChartDescription>Revenue finished at its highest point.</ChartDescription>\n  <ChartTable>\n    <caption>Quarterly revenue values</caption>\n    <thead>\n      <tr>\n        <th scope="col">Quarter</th>\n        <th scope="col">Revenue</th>\n      </tr>\n    </thead>\n    <tbody>\n      {revenue.map((quarter) => (\n        <tr key={quarter.x}>\n          <th scope="row">Q{quarter.x}</th>\n          <td>${quarter.y}k</td>\n        </tr>\n      ))}\n    </tbody>\n  </ChartTable>\n  <ChartTooltip />\n</LineChart>;',
   ),
   "area-chart": lesson(
     "A trend whose filled area emphasizes magnitude, with visible axes and an exact-value table.",
@@ -446,7 +446,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start AreaChart with strictly increasing x values and labels for both axes.",
     "Add ChartTitle and AreaChartPlot; render each point with AreaChartPoint so one point is tabbable and horizontal arrow keys reveal the rest.",
     "Add ChartDescription and ChartTable for persistent context and exact values; optionally add ChartTooltip for pointer and keyboard details.",
-    '<AreaChart values={accounts} xLabel="Quarter" yLabel="Active accounts">\n  <ChartTitle>Active accounts</ChartTitle>\n  <AreaChartPlot aria-label="Area chart showing active accounts by quarter">\n    {({ areaPath, points }) => (\n      <>\n        <path d={areaPath} />\n        {points.map((point) => (\n          <AreaChartPoint key={point.index} point={point}>\n            <circle cx={point.x} cy={point.y} />\n          </AreaChartPoint>\n        ))}\n      </>\n    )}\n  </AreaChartPlot>\n  <ChartDescription>Active accounts grew every quarter.</ChartDescription>\n  <ChartTable caption="Active account values" />\n  <ChartTooltip />\n</AreaChart>;',
+    '<AreaChart values={accounts} xLabel="Quarter" yLabel="Active accounts">\n  <ChartTitle>Active accounts</ChartTitle>\n  <AreaChartPlot aria-label="Area chart showing active accounts by quarter">\n    {({ areaPath, points }) => (\n      <>\n        <path d={areaPath} />\n        {points.map((point) => (\n          <AreaChartPoint key={point.index} point={point}>\n            <circle cx={point.x} cy={point.y} />\n          </AreaChartPoint>\n        ))}\n      </>\n    )}\n  </AreaChartPlot>\n  <ChartDescription>Active accounts grew every quarter.</ChartDescription>\n  <ChartTable>\n    <caption>Active account values</caption>\n    <thead>\n      <tr>\n        <th scope="col">Quarter</th>\n        <th scope="col">Active accounts</th>\n      </tr>\n    </thead>\n    <tbody>\n      {accounts.map((quarter) => (\n        <tr key={quarter.x}>\n          <th scope="row">Q{quarter.x}</th>\n          <td>{quarter.y}k</td>\n        </tr>\n      ))}\n    </tbody>\n  </ChartTable>\n  <ChartTooltip />\n</AreaChart>;',
   ),
   "pie-chart": lesson(
     "A parts-of-a-whole comparison paired with a persistent legend and exact-value table.",
@@ -455,7 +455,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start PieChart with labelled values plus headings for categories and values.",
     "Add ChartTitle, PieChartPlot, and ChartLegend; wrap each rendered path in PieChartSlice so one slice is tabbable and arrow keys reveal the rest.",
     "Add ChartDescription and ChartTable for persistent context and exact values; optionally add ChartTooltip for pointer and keyboard details.",
-    '<PieChart values={traffic} categoryLabel="Source" valueLabel="Share">\n  <ChartTitle>Traffic by source</ChartTitle>\n  <PieChartPlot aria-label="Pie chart showing traffic share by source">\n    {(slice) => (\n      <PieChartSlice slice={slice}>\n        <path d={slice.path} />\n      </PieChartSlice>\n    )}\n  </PieChartPlot>\n  <ChartLegend />\n  <ChartDescription>Direct visits are the largest source.</ChartDescription>\n  <ChartTable caption="Traffic source values" />\n  <ChartTooltip />\n</PieChart>;',
+    '<PieChart values={traffic} categoryLabel="Source" valueLabel="Share">\n  <ChartTitle>Traffic by source</ChartTitle>\n  <PieChartPlot aria-label="Pie chart showing traffic share by source">\n    {(slice) => (\n      <PieChartSlice slice={slice}>\n        <path d={slice.path} />\n      </PieChartSlice>\n    )}\n  </PieChartPlot>\n  <ChartLegend />\n  <ChartDescription>Direct visits are the largest source.</ChartDescription>\n  <ChartTable>\n    <caption>Traffic source values</caption>\n    <thead>\n      <tr>\n        <th scope="col">Source</th>\n        <th scope="col">Share</th>\n      </tr>\n    </thead>\n    <tbody>\n      {traffic.map((source) => (\n        <tr key={source.label}>\n          <th scope="row">{source.label}</th>\n          <td>{source.value}%</td>\n        </tr>\n      ))}\n    </tbody>\n  </ChartTable>\n  <ChartTooltip />\n</PieChart>;',
   ),
   "candlestick-chart": lesson(
     "An open-high-low-close financial series with visible axes and every exact value in a native table.",
@@ -464,7 +464,7 @@ const lessons: Record<string, LessonCopy> = {
     "Start CandlestickChart with strictly increasing x values and valid open, high, low, and close prices.",
     "Add ChartTitle and CandlestickChartPlot; wrap each rendered candle in CandlestickChartCandle so one candle is tabbable and horizontal arrow keys reveal the rest.",
     "Add ChartDescription and ChartTable for persistent context and exact OHLC values; optionally add ChartTooltip for pointer and keyboard details.",
-    '<CandlestickChart values={prices} xLabel="Trading day" yLabel="Share price">\n  <ChartTitle>Four-day share price</ChartTitle>\n  <CandlestickChartPlot aria-label="Candlestick chart showing four days of share prices">\n    {(candle) => (\n      <CandlestickChartCandle candle={candle}>\n        <rect\n          x={candle.x - candle.width / 2}\n          y={candle.bodyY}\n          width={candle.width}\n          height={candle.bodyHeight}\n        />\n      </CandlestickChartCandle>\n    )}\n  </CandlestickChartPlot>\n  <ChartDescription>The highest close occurred on day three.</ChartDescription>\n  <ChartTable caption="Daily open, high, low, and close prices" />\n  <ChartTooltip />\n</CandlestickChart>;',
+    '<CandlestickChart values={prices} xLabel="Trading day" yLabel="Share price">\n  <ChartTitle>Four-day share price</ChartTitle>\n  <CandlestickChartPlot aria-label="Candlestick chart showing four days of share prices">\n    {(candle) => (\n      <CandlestickChartCandle candle={candle}>\n        <rect\n          x={candle.x - candle.width / 2}\n          y={candle.bodyY}\n          width={candle.width}\n          height={candle.bodyHeight}\n        />\n      </CandlestickChartCandle>\n    )}\n  </CandlestickChartPlot>\n  <ChartDescription>The highest close occurred on day three.</ChartDescription>\n  <ChartTable>\n    <caption>Daily OHLC values</caption>\n    <thead>\n      <tr>\n        <th scope="col">Day</th>\n        <th scope="col">Open</th>\n        <th scope="col">High</th>\n        <th scope="col">Low</th>\n        <th scope="col">Close</th>\n      </tr>\n    </thead>\n    <tbody>\n      {prices.map((price) => (\n        <tr key={price.x}>\n          <th scope="row">Day {price.x}</th>\n          <td>${price.open}</td>\n          <td>${price.high}</td>\n          <td>${price.low}</td>\n          <td>${price.close}</td>\n        </tr>\n      ))}\n    </tbody>\n  </ChartTable>\n  <ChartTooltip />\n</CandlestickChart>;',
   ),
   alert: lesson(
     "An assertive live message for important feedback that needs immediate attention.",
@@ -2137,7 +2137,7 @@ const chart = [
       "ChartTitle",
       "ChartTooltip",
     ],
-    '<BarChart values={performance} categoryLabel="Measure" valueLabel="Target met"><ChartTitle>Performance against target</ChartTitle><BarChartPlot aria-label="Horizontal bar chart comparing performance against target">{(bar) => <BarChartBar bar={bar}><rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} /></BarChartBar>}</BarChartPlot><ChartDescription>Rendering has the largest gap.</ChartDescription><ChartTable caption="Performance values" /><ChartTooltip /></BarChart>',
+    '<BarChart values={performance} categoryLabel="Measure" valueLabel="Target met"><ChartTitle>Performance against target</ChartTitle><BarChartPlot aria-label="Horizontal bar chart comparing performance against target">{(bar) => <BarChartBar bar={bar}><rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} /></BarChartBar>}</BarChartPlot><ChartDescription>Rendering has the largest gap.</ChartDescription><ChartTable><caption>Performance values</caption><thead><tr><th scope="col">Measure</th><th scope="col">Target met</th></tr></thead><tbody>{performance.map((measure) => <tr key={measure.label}><th scope="row">{measure.label}</th><td>{measure.value}%</td></tr>)}</tbody></ChartTable><ChartTooltip /></BarChart>',
     [
       p(
         "BarChart",
@@ -2192,10 +2192,10 @@ const chart = [
       p(
         "ChartTable",
         "table",
-        "Native table generated from the same category labels, values, and formatter.",
+        "Native table composed with an explicit caption, headers, and rows from the chart values.",
         true,
         false,
-        [prop("caption", "ReactNode", "Accessible name for the tabular representation.")],
+        [prop("children", "ReactNode", "Native caption, thead, tbody, and optional tfoot markup.")],
       ),
       p(
         "ChartTooltip",
@@ -2254,7 +2254,7 @@ const chart = [
       "ColumnChartColumn",
       "ColumnChartPlot",
     ],
-    '<ColumnChart values={traffic} categoryLabel="Source" valueLabel="Share"><ChartTitle>Traffic by source</ChartTitle><ColumnChartPlot aria-label="Column chart comparing traffic share by source">{(column) => <ColumnChartColumn column={column}><rect x={column.x} y={column.y} width={column.width} height={column.height} /></ColumnChartColumn>}</ColumnChartPlot><ChartDescription>Direct visits are the largest source.</ChartDescription><ChartTable caption="Traffic source values" /><ChartTooltip /></ColumnChart>',
+    '<ColumnChart values={traffic} categoryLabel="Source" valueLabel="Share"><ChartTitle>Traffic by source</ChartTitle><ColumnChartPlot aria-label="Column chart comparing traffic share by source">{(column) => <ColumnChartColumn column={column}><rect x={column.x} y={column.y} width={column.width} height={column.height} /></ColumnChartColumn>}</ColumnChartPlot><ChartDescription>Direct visits are the largest source.</ChartDescription><ChartTable><caption>Traffic source values</caption><thead><tr><th scope="col">Source</th><th scope="col">Share</th></tr></thead><tbody>{traffic.map((source) => <tr key={source.label}><th scope="row">{source.label}</th><td>{source.value}%</td></tr>)}</tbody></ChartTable><ChartTooltip /></ColumnChart>',
     [
       p(
         "ColumnChart",
@@ -2313,10 +2313,10 @@ const chart = [
       p(
         "ChartTable",
         "table",
-        "Native table generated from the same category labels, values, and formatter.",
+        "Native table composed with an explicit caption, headers, and rows from the chart values.",
         true,
         false,
-        [prop("caption", "ReactNode", "Accessible name for the tabular representation.")],
+        [prop("children", "ReactNode", "Native caption, thead, tbody, and optional tfoot markup.")],
       ),
       p(
         "ChartTooltip",
@@ -2375,7 +2375,7 @@ const chart = [
       "LineChartPlot",
       "LineChartPoint",
     ],
-    '<LineChart values={revenue} xLabel="Quarter" yLabel="Revenue"><ChartTitle>Quarterly revenue</ChartTitle><LineChartPlot aria-label="Line chart showing quarterly revenue">{({ path, points }) => <><path d={path} />{points.map((point) => <LineChartPoint key={point.index} point={point}><circle cx={point.x} cy={point.y} /></LineChartPoint>)}</>}</LineChartPlot><ChartDescription>Revenue finished at its highest point.</ChartDescription><ChartTable caption="Quarterly revenue values" /><ChartTooltip /></LineChart>',
+    '<LineChart values={revenue} xLabel="Quarter" yLabel="Revenue"><ChartTitle>Quarterly revenue</ChartTitle><LineChartPlot aria-label="Line chart showing quarterly revenue">{({ path, points }) => <><path d={path} />{points.map((point) => <LineChartPoint key={point.index} point={point}><circle cx={point.x} cy={point.y} /></LineChartPoint>)}</>}</LineChartPlot><ChartDescription>Revenue finished at its highest point.</ChartDescription><ChartTable><caption>Quarterly revenue values</caption><thead><tr><th scope="col">Quarter</th><th scope="col">Revenue</th></tr></thead><tbody>{revenue.map((quarter) => <tr key={quarter.x}><th scope="row">Q{quarter.x}</th><td>${quarter.y}k</td></tr>)}</tbody></ChartTable><ChartTooltip /></LineChart>',
     [
       p(
         "LineChart",
@@ -2429,10 +2429,10 @@ const chart = [
       p(
         "ChartTable",
         "table",
-        "Native table generated from the same formatted x and y values.",
+        "Native table composed with an explicit caption, headers, and rows from the chart values.",
         true,
         false,
-        [prop("caption", "ReactNode", "Accessible name for the tabular representation.")],
+        [prop("children", "ReactNode", "Native caption, thead, tbody, and optional tfoot markup.")],
       ),
       p(
         "ChartTooltip",
@@ -2486,7 +2486,7 @@ const chart = [
       "ChartTitle",
       "ChartTooltip",
     ],
-    '<AreaChart values={accounts} xLabel="Quarter" yLabel="Active accounts"><ChartTitle>Active accounts</ChartTitle><AreaChartPlot aria-label="Area chart showing active accounts by quarter">{({ areaPath, points }) => <><path d={areaPath} />{points.map((point) => <AreaChartPoint key={point.index} point={point}><circle cx={point.x} cy={point.y} /></AreaChartPoint>)}</>}</AreaChartPlot><ChartDescription>Active accounts grew every quarter.</ChartDescription><ChartTable caption="Active account values" /><ChartTooltip /></AreaChart>',
+    '<AreaChart values={accounts} xLabel="Quarter" yLabel="Active accounts"><ChartTitle>Active accounts</ChartTitle><AreaChartPlot aria-label="Area chart showing active accounts by quarter">{({ areaPath, points }) => <><path d={areaPath} />{points.map((point) => <AreaChartPoint key={point.index} point={point}><circle cx={point.x} cy={point.y} /></AreaChartPoint>)}</>}</AreaChartPlot><ChartDescription>Active accounts grew every quarter.</ChartDescription><ChartTable><caption>Active account values</caption><thead><tr><th scope="col">Quarter</th><th scope="col">Active accounts</th></tr></thead><tbody>{accounts.map((quarter) => <tr key={quarter.x}><th scope="row">Q{quarter.x}</th><td>{quarter.y}k</td></tr>)}</tbody></ChartTable><ChartTooltip /></AreaChart>',
     [
       p(
         "AreaChart",
@@ -2540,10 +2540,10 @@ const chart = [
       p(
         "ChartTable",
         "table",
-        "Native table generated from the same formatted x and y values.",
+        "Native table composed with an explicit caption, headers, and rows from the chart values.",
         true,
         false,
-        [prop("caption", "ReactNode", "Accessible name for the tabular representation.")],
+        [prop("children", "ReactNode", "Native caption, thead, tbody, and optional tfoot markup.")],
       ),
       p(
         "ChartTooltip",
@@ -2598,7 +2598,7 @@ const chart = [
       "PieChartPlot",
       "PieChartSlice",
     ],
-    '<PieChart values={traffic} categoryLabel="Source" valueLabel="Share"><ChartTitle>Traffic by source</ChartTitle><PieChartPlot aria-label="Pie chart showing traffic share by source">{(slice) => <PieChartSlice slice={slice}><path d={slice.path} /></PieChartSlice>}</PieChartPlot><ChartLegend /><ChartDescription>Direct visits are the largest source.</ChartDescription><ChartTable caption="Traffic source values" /><ChartTooltip /></PieChart>',
+    '<PieChart values={traffic} categoryLabel="Source" valueLabel="Share"><ChartTitle>Traffic by source</ChartTitle><PieChartPlot aria-label="Pie chart showing traffic share by source">{(slice) => <PieChartSlice slice={slice}><path d={slice.path} /></PieChartSlice>}</PieChartPlot><ChartLegend /><ChartDescription>Direct visits are the largest source.</ChartDescription><ChartTable><caption>Traffic source values</caption><thead><tr><th scope="col">Source</th><th scope="col">Share</th></tr></thead><tbody>{traffic.map((source) => <tr key={source.label}><th scope="row">{source.label}</th><td>{source.value}%</td></tr>)}</tbody></ChartTable><ChartTooltip /></PieChart>',
     [
       p(
         "PieChart",
@@ -2664,10 +2664,10 @@ const chart = [
       p(
         "ChartTable",
         "table",
-        "Native table generated from the same category labels and formatted values.",
+        "Native table composed with an explicit caption, headers, and rows from the chart values.",
         true,
         false,
-        [prop("caption", "ReactNode", "Accessible name for the tabular representation.")],
+        [prop("children", "ReactNode", "Native caption, thead, tbody, and optional tfoot markup.")],
       ),
       p(
         "ChartTooltip",
@@ -2732,7 +2732,7 @@ const chart = [
       "ChartTitle",
       "ChartTooltip",
     ],
-    '<CandlestickChart values={prices} xLabel="Trading day" yLabel="Share price"><ChartTitle>Four-day share price</ChartTitle><CandlestickChartPlot aria-label="Candlestick chart showing four days of share prices">{(candle) => <CandlestickChartCandle candle={candle}><rect x={candle.x - candle.width / 2} y={candle.bodyY} width={candle.width} height={candle.bodyHeight} /></CandlestickChartCandle>}</CandlestickChartPlot><ChartDescription>The highest close occurred on day three.</ChartDescription><ChartTable caption="Daily open, high, low, and close prices" /><ChartTooltip /></CandlestickChart>',
+    '<CandlestickChart values={prices} xLabel="Trading day" yLabel="Share price"><ChartTitle>Four-day share price</ChartTitle><CandlestickChartPlot aria-label="Candlestick chart showing four days of share prices">{(candle) => <CandlestickChartCandle candle={candle}><rect x={candle.x - candle.width / 2} y={candle.bodyY} width={candle.width} height={candle.bodyHeight} /></CandlestickChartCandle>}</CandlestickChartPlot><ChartDescription>The highest close occurred on day three.</ChartDescription><ChartTable><caption>Daily OHLC values</caption><thead><tr><th scope="col">Day</th><th scope="col">Open</th><th scope="col">High</th><th scope="col">Low</th><th scope="col">Close</th></tr></thead><tbody>{prices.map((price) => <tr key={price.x}><th scope="row">Day {price.x}</th><td>${price.open}</td><td>${price.high}</td><td>${price.low}</td><td>${price.close}</td></tr>)}</tbody></ChartTable><ChartTooltip /></CandlestickChart>',
     [
       p(
         "CandlestickChart",
@@ -2795,10 +2795,10 @@ const chart = [
       p(
         "ChartTable",
         "table",
-        "Native table generated from the same formatted OHLC values.",
+        "Native table composed with an explicit caption, headers, and rows from the chart values.",
         true,
         false,
-        [prop("caption", "ReactNode", "Accessible name for the tabular representation.")],
+        [prop("children", "ReactNode", "Native caption, thead, tbody, and optional tfoot markup.")],
       ),
       p(
         "ChartTooltip",

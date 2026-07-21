@@ -15,14 +15,17 @@ const activeAccounts = [
   { x: 4, y: 51 },
 ] as const;
 
+const formatQuarter = (value: number | Date) => `Q${value}`;
+const formatAccounts = (value: number) => `${value}k`;
+
 export function Example() {
   return (
     <AreaChart
       values={activeAccounts}
       xLabel="Quarter"
       yLabel="Active accounts"
-      formatX={(value) => `Q${value}`}
-      formatY={(value) => `${value}k`}
+      formatX={formatQuarter}
+      formatY={formatAccounts}
       className="w-full max-w-2xl rounded-lg has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-teal-600 dark:has-[:focus-visible]:outline-teal-400"
     >
       <ChartTitle className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
@@ -66,10 +69,23 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         Active accounts grew every quarter and more than quadrupled across the year.
       </ChartDescription>
-      <ChartTable
-        caption="Active account values"
-        className="mt-4 w-full border-collapse text-left text-sm [&_caption]:sr-only [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800"
-      />
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
+        <caption className="sr-only">Active account values</caption>
+        <thead>
+          <tr>
+            <th scope="col">Quarter</th>
+            <th scope="col">Active accounts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {activeAccounts.map((quarter) => (
+            <tr key={quarter.x}>
+              <th scope="row">{formatQuarter(quarter.x)}</th>
+              <td>{formatAccounts(quarter.y)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </ChartTable>
       <ChartTooltip className="z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </AreaChart>
   );

@@ -22,13 +22,15 @@ const colors = [
   "fill-amber-500 dark:fill-amber-400",
 ] as const;
 
+const formatPercent = (value: number) => `${value}%`;
+
 export function Example() {
   return (
     <ColumnChart
       values={traffic}
       categoryLabel="Source"
       valueLabel="Share"
-      formatValue={(value) => `${value}%`}
+      formatValue={formatPercent}
       className="w-full max-w-2xl rounded-lg has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-teal-600 dark:has-[:focus-visible]:outline-teal-400"
     >
       <ChartTitle className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
@@ -56,10 +58,23 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         Direct visits are the largest source, while social accounts for less than one tenth.
       </ChartDescription>
-      <ChartTable
-        caption="Traffic source values"
-        className="mt-4 w-full border-collapse text-left text-sm [&_caption]:sr-only [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800"
-      />
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
+        <caption className="sr-only">Traffic source values</caption>
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          {traffic.map((source) => (
+            <tr key={source.label}>
+              <th scope="row">{source.label}</th>
+              <td>{formatPercent(source.value)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </ChartTable>
       <ChartTooltip className="z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </ColumnChart>
   );

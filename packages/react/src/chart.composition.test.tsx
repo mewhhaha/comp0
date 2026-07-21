@@ -56,7 +56,23 @@ describe("chart composition", () => {
         <ChartTitle>Quarterly revenue</ChartTitle>
         <BarChartPlot ref={plotRef} aria-label="Bar chart of quarterly revenue" />
         <ChartDescription>Revenue fell in the second quarter.</ChartDescription>
-        <ChartTable caption="Quarterly revenue values" />
+        <ChartTable>
+          <caption>Quarterly revenue values</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quarter</th>
+              <th scope="col">Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {quarterlyRevenue.map((quarter) => (
+              <tr key={quarter.label}>
+                <th scope="row">{quarter.label}</th>
+                <td>{`$${quarter.value}k`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
       </BarChart>,
     );
 
@@ -187,7 +203,17 @@ describe("chart composition", () => {
             <path d={path} data-points={points.map((point) => point.value.x).join(",")} />
           )}
         </LineChartPlot>
-        <ChartTable caption="Quarterly revenue values" />
+        <ChartTable>
+          <caption>Quarterly revenue values</caption>
+          <tbody>
+            {revenueTrend.map((quarter) => (
+              <tr key={quarter.x}>
+                <th scope="row">{`Q${quarter.x}`}</th>
+                <td>{quarter.y}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
       </LineChart>,
     );
 
@@ -236,7 +262,17 @@ describe("chart composition", () => {
           )}
         </PieChartPlot>
         <ChartLegend />
-        <ChartTable caption="Revenue share values" />
+        <ChartTable>
+          <caption>Revenue share values</caption>
+          <tbody>
+            {shares.map((quarter) => (
+              <tr key={quarter.label}>
+                <th scope="row">{quarter.label}</th>
+                <td>{`${quarter.value}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
       </PieChart>,
     );
 
@@ -289,7 +325,29 @@ describe("chart composition", () => {
         formatY={(value) => `$${value}`}
       >
         <CandlestickChartPlot aria-label="Two-day share price candlestick chart" />
-        <ChartTable caption="Daily share prices" />
+        <ChartTable>
+          <caption>Daily share prices</caption>
+          <thead>
+            <tr>
+              <th scope="col">Day</th>
+              <th scope="col">Open</th>
+              <th scope="col">High</th>
+              <th scope="col">Low</th>
+              <th scope="col">Close</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sharePrices.map((price) => (
+              <tr key={price.x}>
+                <th scope="row">{`Day ${price.x}`}</th>
+                <td>{`$${price.open}`}</td>
+                <td>{`$${price.high}`}</td>
+                <td>{`$${price.low}`}</td>
+                <td>{`$${price.close}`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
       </CandlestickChart>,
     );
 
@@ -354,9 +412,6 @@ describe("chart composition", () => {
   });
 
   it("throws when a shared or chart-specific part has no matching root", () => {
-    expect(() => render(<ChartTable caption="Orphaned values" />)).toThrow(
-      "ChartTable must be rendered inside a chart root.",
-    );
     expect(() => render(<BarChartPlot aria-label="Orphaned plot" />)).toThrow(
       "BarChartPlot must be rendered inside BarChart.",
     );
