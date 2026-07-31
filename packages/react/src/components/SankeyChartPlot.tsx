@@ -158,6 +158,11 @@ export function SankeyChartPlot({
         (sum, link) => sum + link.value,
         0,
       );
+      if (!Number.isFinite(incoming) || !Number.isFinite(outgoing)) {
+        throw new Error(
+          `SankeyChartPlot node "${node.id}" aggregate flow must be finite; received incoming=${incoming}, outgoing=${outgoing}.`,
+        );
+      }
       return [node.id, Math.max(incoming, outgoing)];
     }),
   );
@@ -167,19 +172,31 @@ export function SankeyChartPlot({
   const right = 112;
   const nodeWidth = 6;
   const nodeGap = 5;
+  const availableHeight = bottom - top;
   const scaleCandidates = nodesByLayer
     .map((nodes) => {
       const total = nodes.reduce((sum, node) => sum + (nodeTotals.get(node.id) ?? 0), 0);
-      const available = bottom - top - Math.max(0, nodes.length - 1) * nodeGap;
+      if (!Number.isFinite(total)) {
+        throw new Error(`SankeyChartPlot layer flow must be finite; received ${total}.`);
+      }
+      const available = availableHeight - Math.max(0, nodes.length - 1) * nodeGap;
       return total > 0 ? available / total : Number.POSITIVE_INFINITY;
     })
     .filter(Number.isFinite);
   const flowScale = Math.min(...scaleCandidates, 1);
+  if (!Number.isFinite(flowScale) || flowScale < 0) {
+    throw new Error(`SankeyChartPlot cannot fit its node layers within the available height.`);
+  }
   const nodeStates: SankeyChartNodeState[] = [];
   for (const [layer, nodes] of nodesByLayer.entries()) {
     const heights = nodes.map((node) => Math.max(4, (nodeTotals.get(node.id) ?? 0) * flowScale));
     const groupHeight =
       heights.reduce((sum, height) => sum + height, 0) + Math.max(0, nodes.length - 1) * nodeGap;
+    if (groupHeight > availableHeight) {
+      throw new Error(
+        `SankeyChartPlot layer ${layer} with ${nodes.length} nodes exceeds the available height of ${availableHeight}.`,
+      );
+    }
     let y = top + (bottom - top - groupHeight) / 2;
     for (const [layerIndex, node] of nodes.entries()) {
       let x = (left + right - nodeWidth) / 2;

@@ -14,13 +14,25 @@ export function createChartScale(
   values: readonly ChartScaleValue[],
   options: ChartScaleOptions,
 ) {
-  const measuredMin = Math.min(...values.map((value) => value.value));
-  const measuredMax = Math.max(...values.map((value) => value.value));
+  let measuredMin = Number.POSITIVE_INFINITY;
+  let measuredMax = Number.NEGATIVE_INFINITY;
+  for (const value of values) {
+    measuredMin = Math.min(measuredMin, value.value);
+    measuredMax = Math.max(measuredMax, value.value);
+  }
   let scaleMin = options.min ?? measuredMin;
   let scaleMax = options.max ?? measuredMax;
   if (values.length === 0) {
-    scaleMin = options.min ?? 0;
-    scaleMax = options.max ?? 1;
+    if (options.min !== undefined && options.max === undefined) {
+      scaleMin = options.min;
+      scaleMax = options.min + 1;
+    } else if (options.max !== undefined && options.min === undefined) {
+      scaleMin = options.max - 1;
+      scaleMax = options.max;
+    } else {
+      scaleMin = options.min ?? 0;
+      scaleMax = options.max ?? 1;
+    }
   }
   if (options.domain === "include-zero") {
     scaleMin = options.min ?? Math.min(0, scaleMin);

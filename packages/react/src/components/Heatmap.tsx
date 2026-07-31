@@ -33,7 +33,7 @@ export function Heatmap({
         `Heatmap value at x="${value.x}", y="${value.y}" must be finite; received ${value.value}.`,
       );
     }
-    const coordinate = `${value.x}\u0000${value.y}`;
+    const coordinate = JSON.stringify([value.x, value.y]);
     if (coordinates.has(coordinate)) {
       throw new Error(`Heatmap contains more than one value at x="${value.x}", y="${value.y}".`);
     }

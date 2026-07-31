@@ -579,6 +579,50 @@ describe("chart composition", () => {
     ).toThrow('BoxPlotChart value "Invalid" must satisfy min ≤ q1 ≤ median ≤ q3 ≤ max');
   });
 
+  it("rejects overflowing pie totals before angles and percentages become non-finite", () => {
+    expect(() =>
+      render(
+        <PieChart
+          values={[
+            { label: "First", value: Number.MAX_VALUE },
+            { label: "Second", value: Number.MAX_VALUE },
+          ]}
+          categoryLabel="Category"
+          valueLabel="Share"
+        />,
+      ),
+    ).toThrow("PieChart values must have a finite positive total; received Infinity.");
+  });
+
+  it("derives the missing scale bound for empty plots", () => {
+    const { container } = render(
+      <BarChart values={[]} categoryLabel="Category" valueLabel="Value">
+        <BarChartPlot aria-label="Empty values" xMin={5} />
+      </BarChart>,
+    );
+    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("5");
+  });
+
+  it("rejects duplicate stacked segment labels before rendering ambiguous keys", () => {
+    expect(() =>
+      render(
+        <StackedBarChart
+          values={[
+            {
+              label: "Web",
+              segments: [
+                { label: "New", value: 20 },
+                { label: "New", value: 10 },
+              ],
+            },
+          ]}
+          categoryLabel="Channel"
+          valueLabel="Orders"
+        />,
+      ),
+    ).toThrow('StackedBarChart category "Web" has duplicate segment label "New".');
+  });
+
   it("matches caller-defined map paths to values and navigates by region centers", () => {
     const values = [
       { id: "west", label: "West", value: 10 },
@@ -711,7 +755,7 @@ describe("chart composition", () => {
 
     const bins = [...container.querySelectorAll("[data-slot='histogram-bin']")];
     expect(bins.map((bin) => bin.getAttribute("data-count"))).toEqual(["2", "3"]);
-    expect(bins[1]?.getAttribute("aria-label")).toBe("Duration: over 2 to 4, Sessions: 3");
+    expect(bins[1]?.getAttribute("aria-label")).toBe("Duration: 2 to 4, Sessions: 3");
   });
 
   it("orders heatmap cells into a matrix and follows row and column arrows", () => {
@@ -751,6 +795,37 @@ describe("chart composition", () => {
     expect(activeOverlay?.querySelector("use")?.getAttribute("href")).toBe(`#${cells[1]!.id}`);
     fireKeyDown(cells[1]!, "ArrowDown");
     expect(document.activeElement).toBe(cells[3]);
+  });
+
+  it("skips empty heatmap coordinates when moving in a direction", () => {
+    const { container } = render(
+      <Heatmap
+        values={[
+          { x: "A", y: "Top", value: 1 },
+          { x: "C", y: "Top", value: 2 },
+          { x: "A", y: "Bottom", value: 3 },
+        ]}
+        xLabel="Column"
+        yLabel="Row"
+        valueLabel="Count"
+      >
+        <HeatmapPlot aria-label="Sparse counts">
+          {(cell) => (
+            <HeatmapCell cell={cell}>
+              <rect x={cell.x} y={cell.y} width={cell.width} height={cell.height} />
+            </HeatmapCell>
+          )}
+        </HeatmapPlot>
+      </Heatmap>,
+    );
+    const cells = [...container.querySelectorAll<SVGGElement>("[data-slot='heatmap-cell']")];
+    act(() => cells[0]!.focus());
+    fireKeyDown(cells[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(cells[1]);
+    fireKeyDown(cells[1]!, "ArrowDown");
+    expect(document.activeElement).toBe(cells[1]);
+    fireKeyDown(cells[0]!, "ArrowDown");
+    expect(document.activeElement).toBe(cells[2]);
   });
 
   it("lays out sankey links behind navigable nodes and highlights connected flows", () => {
@@ -828,6 +903,22 @@ describe("chart composition", () => {
         />,
       ),
     ).toThrow("SankeyChart links must form an acyclic flow from left to right.");
+  });
+
+  it("rejects Sankey layers that cannot fit their minimum node sizes", () => {
+    const targets = Array.from({ length: 11 }, (_, index) => ({
+      id: `target-${index}`,
+      label: `Target ${index}`,
+    }));
+    const nodes = [{ id: "source", label: "Source" }, ...targets];
+    const links = targets.map((target) => ({ source: "source", target: target.id, value: 1 }));
+    expect(() =>
+      render(
+        <SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">
+          <SankeyChartPlot aria-label="Crowded Sankey flow" />
+        </SankeyChart>,
+      ),
+    ).toThrow("SankeyChartPlot layer 1 with 11 nodes exceeds the available height");
   });
 
   it("throws when a shared or chart-specific part has no matching root", () => {

@@ -90,15 +90,28 @@ export function HeatmapPlot({
   const getTargetIndex = (currentIndex: number, key: string) => {
     const current = cells[currentIndex];
     if (!current || !key.startsWith("Arrow")) return undefined;
-    let columnIndex = current.columnIndex;
-    let rowIndex = current.rowIndex;
-    if (key === "ArrowLeft") columnIndex -= 1;
-    if (key === "ArrowRight") columnIndex += 1;
-    if (key === "ArrowUp") rowIndex -= 1;
-    if (key === "ArrowDown") rowIndex += 1;
-    const target = cells.find(
-      (cell) => cell.columnIndex === columnIndex && cell.rowIndex === rowIndex,
-    );
+    const candidates = cells.filter((cell) => {
+      if (key === "ArrowLeft") {
+        return cell.rowIndex === current.rowIndex && cell.columnIndex < current.columnIndex;
+      }
+      if (key === "ArrowRight") {
+        return cell.rowIndex === current.rowIndex && cell.columnIndex > current.columnIndex;
+      }
+      if (key === "ArrowUp") {
+        return cell.columnIndex === current.columnIndex && cell.rowIndex < current.rowIndex;
+      }
+      return cell.columnIndex === current.columnIndex && cell.rowIndex > current.rowIndex;
+    });
+    candidates.sort((first, second) => {
+      const firstDistance =
+        Math.abs(first.columnIndex - current.columnIndex) +
+        Math.abs(first.rowIndex - current.rowIndex);
+      const secondDistance =
+        Math.abs(second.columnIndex - current.columnIndex) +
+        Math.abs(second.rowIndex - current.rowIndex);
+      return firstDistance - secondDistance;
+    });
+    const target = candidates[0];
     return target?.index ?? currentIndex;
   };
   const xTicks = columns.map((label, index) => ({
@@ -132,7 +145,7 @@ export function HeatmapPlot({
       >
         <g role="presentation" data-slot="heatmap-cells">
           {cells.map((cell) => (
-            <Fragment key={`${cell.value.x}-${cell.value.y}`}>
+            <Fragment key={JSON.stringify([cell.value.x, cell.value.y])}>
               {children ? (
                 children(cell)
               ) : (

@@ -44,8 +44,7 @@ export function HistogramBin({ bin, ref, ...props }: HistogramBinProps & RefProp
   }
   const formattedMin = context.formatY(bin.min);
   const formattedMax = context.formatY(bin.max);
-  let range = `${formattedMin} to ${formattedMax}`;
-  if (bin.index > 0) range = `over ${formattedMin} to ${formattedMax}`;
+  const range = `${formattedMin} to ${formattedMax}`;
   return (
     <ChartValue
       {...props}

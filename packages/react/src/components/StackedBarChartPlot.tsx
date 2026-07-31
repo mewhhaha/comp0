@@ -166,7 +166,14 @@ export function StackedBarChartPlot({
       >
         <g role="presentation" data-slot="stacked-bar-chart-segments">
           {segments.map((segment) => (
-            <Fragment key={`${segment.value.label}-${segment.segment.label}`}>
+            <Fragment
+              key={JSON.stringify([
+                segment.value.label,
+                segment.segment.label,
+                segment.categoryIndex,
+                segment.segmentIndex,
+              ])}
+            >
               {children ? (
                 children(segment)
               ) : (

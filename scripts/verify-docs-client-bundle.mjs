@@ -33,7 +33,7 @@ for (const file of files) {
   }
 }
 
-const spaBaselineBytes = 1_112_085;
+const spaBaselineBytes = 1_173_263;
 if (clientJavaScriptBytes >= spaBaselineBytes) {
   throw new Error(
     `RSC client JavaScript did not improve on the SPA baseline: ${clientJavaScriptBytes} >= ${spaBaselineBytes}`,

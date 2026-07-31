@@ -38,6 +38,8 @@ export function PieChart({
     }
   }
   const total = values.reduce((sum, value) => sum + value.value, 0);
-  if (total <= 0) throw new Error(`PieChart values must have a positive total; received ${total}.`);
+  if (!Number.isFinite(total) || total <= 0) {
+    throw new Error(`PieChart values must have a finite positive total; received ${total}.`);
+  }
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

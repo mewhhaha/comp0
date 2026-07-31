@@ -41,6 +41,14 @@ export function stackedChartContext(
       throw new Error(`${chartName} value at index ${categoryIndex} has an empty label.`);
     }
     const segmentLabels = value.segments.map((segment) => segment.label);
+    const duplicateSegment = segmentLabels.find(
+      (label, index) => segmentLabels.indexOf(label) !== index,
+    );
+    if (duplicateSegment !== undefined) {
+      throw new Error(
+        `${chartName} category "${value.label}" has duplicate segment label "${duplicateSegment}".`,
+      );
+    }
     if (
       segmentLabels.length !== expectedSegments.length ||
       segmentLabels.some((label, index) => label !== expectedSegments[index])
