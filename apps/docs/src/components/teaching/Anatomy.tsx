@@ -37,6 +37,24 @@ type ControlShape =
   | "block";
 
 type ItemShape = "row" | "tab" | "crumb" | "radio" | "slide" | "cell";
+type GraphicShape =
+  | "area"
+  | "bar"
+  | "boxplot"
+  | "candlestick"
+  | "column"
+  | "dumbbell"
+  | "heatmap"
+  | "histogram"
+  | "line"
+  | "lollipop"
+  | "map"
+  | "open-to-close"
+  | "pie"
+  | "sankey"
+  | "scatter"
+  | "stacked-bar"
+  | "stacked-column";
 
 type DiagramNode =
   | { type: "frame"; owner: Numbered; variant: "provider" | "container"; children: DiagramNode[] }
@@ -55,6 +73,8 @@ type DiagramNode =
   | { type: "color-area"; owner: Numbered; thumb: Numbered }
   | { type: "chip"; owner: Numbered }
   | { type: "feedback"; owner: Numbered }
+  | { type: "graphic"; owner: Numbered; shape: GraphicShape }
+  | { type: "table"; owner: Numbered }
   | { type: "panel"; owner: Numbered; children: DiagramNode[] }
   | { type: "items"; owner: Numbered; shape: ItemShape };
 
@@ -84,6 +104,26 @@ function itemShape(name: string): ItemShape {
   if (/button|column/i.test(name)) return "tab";
   if (/breadcrumb/i.test(name)) return "crumb";
   return "row";
+}
+
+function graphicShape(name: string): GraphicShape {
+  if (/boxplot/i.test(name)) return "boxplot";
+  if (/dumbbell/i.test(name)) return "dumbbell";
+  if (/open.?to.?close/i.test(name)) return "open-to-close";
+  if (/lollipop/i.test(name)) return "lollipop";
+  if (/mapchart/i.test(name)) return "map";
+  if (/candlestick/i.test(name)) return "candlestick";
+  if (/stackedbar/i.test(name)) return "stacked-bar";
+  if (/stackedcolumn/i.test(name)) return "stacked-column";
+  if (/scatter/i.test(name)) return "scatter";
+  if (/histogram/i.test(name)) return "histogram";
+  if (/heatmap/i.test(name)) return "heatmap";
+  if (/sankey/i.test(name)) return "sankey";
+  if (/pie/i.test(name)) return "pie";
+  if (/line/i.test(name)) return "line";
+  if (/area/i.test(name)) return "area";
+  if (/column/i.test(name)) return "column";
+  return "bar";
 }
 
 const triggerGlyphs: [RegExp, typeof XMarkIcon][] = [
@@ -128,6 +168,18 @@ function parseParts(list: Numbered[]): DiagramNode[] {
       i += 1;
     } else if (kind === "value") {
       nodes.push({ type: "chip", owner: entry });
+      i += 1;
+    } else if (kind === "graphic") {
+      const run: DiagramNode[] = [];
+      while (i < list.length) {
+        const current = list[i];
+        if (!current || current.part.kind !== "graphic") break;
+        run.push({ type: "graphic", owner: current, shape: graphicShape(current.part.name) });
+        i += 1;
+      }
+      nodes.push(run.length === 1 ? run[0]! : { type: "row", children: run });
+    } else if (kind === "table") {
+      nodes.push({ type: "table", owner: entry });
       i += 1;
     } else if (kind === "input") {
       const inputControlShape = inputShape(entry.part.name);
@@ -598,6 +650,373 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
   );
 }
 
+function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }> }) {
+  let graphic = (
+    <span className="flex h-14 flex-col justify-center gap-1.5" aria-hidden="true">
+      {[92, 70, 48, 28].map((width) => (
+        <span
+          key={width}
+          className="h-2 rounded-r-sm bg-teal-600/75 dark:bg-teal-400/75"
+          style={{ width: `${width}%` }}
+        />
+      ))}
+    </span>
+  );
+  if (node.shape === "column") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-1.5" aria-hidden="true">
+        {[70, 48, 32, 18].map((height) => (
+          <span
+            key={height}
+            className="w-3 rounded-t-sm bg-teal-600/75 dark:bg-teal-400/75"
+            style={{ height: `${height}%` }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "pie") {
+    graphic = (
+      <span
+        className="mx-auto size-14 rounded-full ring-1 ring-zinc-950/10 dark:ring-white/15"
+        style={{
+          background:
+            "conic-gradient(#0d9488 0 42%, #0284c7 42% 73%, #7c3aed 73% 91%, #f59e0b 91%)",
+        }}
+        aria-hidden="true"
+      />
+    );
+  }
+  if (node.shape === "line") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full overflow-visible" aria-hidden="true">
+        <path
+          d="M 3 52 L 34 20 L 66 36 L 97 8"
+          fill="none"
+          className="stroke-teal-600 dark:stroke-teal-400"
+          strokeWidth="4"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    );
+  }
+  if (node.shape === "area") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full overflow-visible" aria-hidden="true">
+        <path
+          d="M 3 57 L 3 52 L 34 20 L 66 36 L 97 8 L 97 57 Z"
+          className="fill-teal-600/20 dark:fill-teal-400/20"
+        />
+        <path
+          d="M 3 52 L 34 20 L 66 36 L 97 8"
+          fill="none"
+          className="stroke-teal-600 dark:stroke-teal-400"
+          strokeWidth="3"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    );
+  }
+  if (node.shape === "candlestick") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full overflow-visible" aria-hidden="true">
+        {[
+          { x: 14, high: 6, body: 18, height: 16, low: 48, direction: "up" },
+          { x: 38, high: 12, body: 20, height: 22, low: 54, direction: "down" },
+          { x: 62, high: 4, body: 14, height: 20, low: 46, direction: "up" },
+          { x: 86, high: 10, body: 18, height: 24, low: 52, direction: "down" },
+        ].map((candle) => (
+          <g key={candle.x}>
+            <line
+              x1={candle.x}
+              x2={candle.x}
+              y1={candle.high}
+              y2={candle.low}
+              data-direction={candle.direction}
+              className="stroke-rose-600 data-[direction=up]:stroke-teal-600"
+              strokeWidth="2"
+            />
+            <rect
+              x={candle.x - 5}
+              y={candle.body}
+              width="10"
+              height={candle.height}
+              data-direction={candle.direction}
+              className="fill-rose-600 stroke-rose-600 data-[direction=up]:fill-white data-[direction=up]:stroke-teal-600 dark:fill-rose-400 dark:stroke-rose-400 dark:data-[direction=up]:fill-zinc-800 dark:data-[direction=up]:stroke-teal-400"
+              strokeWidth="2"
+            />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "scatter") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[
+          [12, 45],
+          [31, 18],
+          [49, 35],
+          [68, 10],
+          [88, 27],
+        ].map(([cx, cy]) => (
+          <circle
+            key={`${cx}-${cy}`}
+            cx={cx}
+            cy={cy}
+            r="4"
+            className="fill-teal-600 dark:fill-teal-400"
+          />
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "map") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        <path
+          d="M 5 8 H 30 V 44 H 5 Z"
+          className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 30 8 H 61 V 32 H 30 Z"
+          className="fill-teal-200 stroke-teal-700 dark:fill-teal-900 dark:stroke-teal-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 61 8 H 95 V 32 H 61 Z"
+          className="fill-rose-100 stroke-rose-700 dark:fill-rose-950 dark:stroke-rose-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 30 32 H 70 V 54 H 30 Z"
+          className="fill-rose-100 stroke-rose-700 dark:fill-rose-950 dark:stroke-rose-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 70 32 H 95 V 54 H 70 Z"
+          className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
+          strokeWidth="2"
+        />
+      </svg>
+    );
+  }
+  if (node.shape === "dumbbell") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[16, 30, 44].map((y, index) => (
+          <g key={y}>
+            <line
+              x1={18 + index * 6}
+              x2={78 - index * 4}
+              y1={y}
+              y2={y}
+              className="stroke-teal-600 dark:stroke-teal-400"
+              strokeWidth="3"
+            />
+            <circle
+              cx={18 + index * 6}
+              cy={y}
+              r="4"
+              className="fill-white stroke-teal-700 dark:fill-zinc-900 dark:stroke-teal-300"
+              strokeWidth="2"
+            />
+            <circle cx={78 - index * 4} cy={y} r="4" className="fill-teal-700 dark:fill-teal-300" />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "boxplot") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[22, 50, 78].map((x, index) => (
+          <g key={x}>
+            <line
+              x1={x}
+              x2={x}
+              y1={8 + index * 3}
+              y2={52 - index * 2}
+              className="stroke-teal-700 dark:stroke-teal-300"
+              strokeWidth="2"
+            />
+            <rect
+              x={x - 7}
+              y={20 + index * 2}
+              width="14"
+              height={16 - index}
+              className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
+              strokeWidth="2"
+            />
+            <line
+              x1={x - 7}
+              x2={x + 7}
+              y1={28 + index}
+              y2={28 + index}
+              className="stroke-zinc-950 dark:stroke-white"
+              strokeWidth="2"
+            />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "open-to-close") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[18, 40, 62, 84].map((x, index) => (
+          <g key={x}>
+            <line
+              x1={x}
+              x2={x}
+              y1={39 - index * 3}
+              y2={18 + index * 2}
+              className="stroke-teal-600 dark:stroke-teal-400"
+              strokeWidth="3"
+            />
+            <line
+              x1={x - 5}
+              x2={x + 5}
+              y1={39 - index * 3}
+              y2={39 - index * 3}
+              className="stroke-zinc-700 dark:stroke-zinc-300"
+              strokeWidth="2"
+            />
+            <circle cx={x} cy={18 + index * 2} r="3" className="fill-zinc-950 dark:fill-white" />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "lollipop") {
+    graphic = (
+      <span className="flex h-14 flex-col justify-center gap-2" aria-hidden="true">
+        {[88, 66, 48, 30].map((width) => (
+          <span key={width} className="flex items-center">
+            <span className="h-1 bg-teal-600 dark:bg-teal-400" style={{ width: `${width}%` }} />
+            <span className="-ml-1 h-3 w-3 rounded-full bg-teal-700 dark:bg-teal-300" />
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "histogram") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-px" aria-hidden="true">
+        {[32, 68, 92, 54, 20].map((height) => (
+          <span
+            key={height}
+            className="w-4 bg-teal-600/75 dark:bg-teal-400/75"
+            style={{ height: `${height}%` }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "heatmap") {
+    graphic = (
+      <span className="grid h-14 grid-cols-4 gap-1" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, index) => (
+          <span
+            key={index}
+            className="bg-teal-600 dark:bg-teal-400"
+            style={{ opacity: 0.2 + ((index * 3) % 8) / 10 }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "stacked-bar") {
+    graphic = (
+      <span className="flex h-14 flex-col justify-center gap-1.5" aria-hidden="true">
+        {[88, 72, 54].map((width) => (
+          <span key={width} className="flex h-3" style={{ width: `${width}%` }}>
+            <span className="w-2/5 bg-teal-600 dark:bg-teal-400" />
+            <span className="flex-1 bg-sky-600 dark:bg-sky-400" />
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "stacked-column") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-2" aria-hidden="true">
+        {[68, 92, 78, 54].map((height) => (
+          <span
+            key={height}
+            className="flex w-3 flex-col justify-end"
+            style={{ height: `${height}%` }}
+          >
+            <span className="h-2/5 bg-sky-600 dark:bg-sky-400" />
+            <span className="flex-1 bg-teal-600 dark:bg-teal-400" />
+          </span>
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "sankey") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        <path
+          d="M 10 25 C 35 25, 38 14, 62 14"
+          className="stroke-teal-600/40 dark:stroke-teal-400/40"
+          strokeWidth="10"
+          fill="none"
+        />
+        <path
+          d="M 10 35 C 35 35, 38 46, 62 46"
+          className="stroke-sky-600/40 dark:stroke-sky-400/40"
+          strokeWidth="7"
+          fill="none"
+        />
+        <path
+          d="M 68 14 C 80 14, 82 30, 92 30"
+          className="stroke-teal-600/40 dark:stroke-teal-400/40"
+          strokeWidth="8"
+          fill="none"
+        />
+        <rect x="6" y="17" width="5" height="26" className="fill-zinc-700 dark:fill-zinc-200" />
+        <rect x="62" y="8" width="6" height="14" className="fill-teal-600 dark:fill-teal-400" />
+        <rect x="62" y="41" width="6" height="10" className="fill-sky-600 dark:fill-sky-400" />
+        <rect x="92" y="24" width="5" height="13" className="fill-amber-500 dark:fill-amber-400" />
+      </svg>
+    );
+  }
+
+  return (
+    <div className="relative grid min-h-28 min-w-32 flex-1 gap-2 rounded-lg bg-white p-3 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/15">
+      <Pin number={node.owner.number} />
+      <PartName>{node.owner.part.name}</PartName>
+      {graphic}
+    </div>
+  );
+}
+
+function TableNode({ node }: { node: Extract<DiagramNode, { type: "table" }> }) {
+  return (
+    <div className="relative grid gap-2 rounded-lg bg-white p-3 ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:ring-white/15">
+      <Pin number={node.owner.number} />
+      <PartName>{node.owner.part.name}</PartName>
+      <span className="grid grid-cols-2 gap-x-6 gap-y-2" aria-hidden="true">
+        {["w-16", "w-10", "w-12", "w-8", "w-14", "w-9"].map((width, index) => (
+          <Skeleton
+            key={`${width}-${index}`}
+            className={cn(
+              width,
+              index < 2 &&
+                `
+                  bg-zinc-400
+                  dark:bg-zinc-500
+                `,
+            )}
+          />
+        ))}
+      </span>
+    </div>
+  );
+}
+
 function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
   return (
     <>
@@ -752,6 +1171,12 @@ function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
         }
         if (node.type === "items") {
           return <ItemsNode key={key} node={node} />;
+        }
+        if (node.type === "graphic") {
+          return <GraphicNode key={key} node={node} />;
+        }
+        if (node.type === "table") {
+          return <TableNode key={key} node={node} />;
         }
         return <ControlNode key={key} node={node} />;
       })}

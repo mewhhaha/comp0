@@ -1,0 +1,949 @@
+import { act, createRef } from "react";
+import { describe, expect, it } from "vitest";
+import { fireKeyDown, render } from "../test/render.js";
+import { AreaChart } from "./components/AreaChart.js";
+import { AreaChartPlot } from "./components/AreaChartPlot.js";
+import { BarChart } from "./components/BarChart.js";
+import { BarChartBar, BarChartPlot } from "./components/BarChartPlot.js";
+import { BoxPlotChart } from "./components/BoxPlotChart.js";
+import { BoxPlotChartBox, BoxPlotChartPlot } from "./components/BoxPlotChartPlot.js";
+import { CandlestickChart } from "./components/CandlestickChart.js";
+import { CandlestickChartPlot } from "./components/CandlestickChartPlot.js";
+import { ChartDescription } from "./components/ChartDescription.js";
+import { ChartLegend } from "./components/ChartLegend.js";
+import { ChartTable } from "./components/ChartTable.js";
+import { ChartTitle } from "./components/ChartTitle.js";
+import { ChartTooltip } from "./components/chart-interaction.js";
+import { ColumnChart } from "./components/ColumnChart.js";
+import { ColumnChartPlot } from "./components/ColumnChartPlot.js";
+import { DumbbellChart } from "./components/DumbbellChart.js";
+import { DumbbellChartDumbbell, DumbbellChartPlot } from "./components/DumbbellChartPlot.js";
+import { LineChart } from "./components/LineChart.js";
+import { LineChartPlot, LineChartPoint } from "./components/LineChartPlot.js";
+import { LollipopChart } from "./components/LollipopChart.js";
+import { LollipopChartLollipop, LollipopChartPlot } from "./components/LollipopChartPlot.js";
+import { MapChart } from "./components/MapChart.js";
+import { MapChartPlot, MapChartRegion } from "./components/MapChartPlot.js";
+import { OpenToCloseChart } from "./components/OpenToCloseChart.js";
+import { OpenToCloseChartPlot, OpenToCloseChartRange } from "./components/OpenToCloseChartPlot.js";
+import { PieChart } from "./components/PieChart.js";
+import { PieChartPlot, PieChartSlice } from "./components/PieChartPlot.js";
+import { Heatmap } from "./components/Heatmap.js";
+import { HeatmapCell, HeatmapPlot } from "./components/HeatmapPlot.js";
+import { Histogram } from "./components/Histogram.js";
+import { HistogramBin, HistogramPlot } from "./components/HistogramPlot.js";
+import { SankeyChart } from "./components/SankeyChart.js";
+import { SankeyChartLink, SankeyChartNode, SankeyChartPlot } from "./components/SankeyChartPlot.js";
+import { ScatterChart } from "./components/ScatterChart.js";
+import { ScatterChartPlot, ScatterChartPoint } from "./components/ScatterChartPlot.js";
+import { StackedBarChart } from "./components/StackedBarChart.js";
+import { StackedBarChartPlot, StackedBarChartSegment } from "./components/StackedBarChartPlot.js";
+import { StackedColumnChart } from "./components/StackedColumnChart.js";
+import {
+  StackedColumnChartPlot,
+  StackedColumnChartSegment,
+} from "./components/StackedColumnChartPlot.js";
+
+const quarterlyRevenue = [
+  { label: "First quarter", value: 40 },
+  { label: "Second quarter", value: -20 },
+] as const;
+
+const revenueTrend = [
+  { x: 1, y: 40 },
+  { x: 2, y: -20 },
+  { x: 4, y: 10 },
+] as const;
+
+const sharePrices = [
+  { x: 1, open: 100, high: 112, low: 96, close: 108 },
+  { x: 2, open: 108, high: 110, low: 90, close: 94 },
+] as const;
+
+function firePointerOver(element: Element) {
+  act(() => {
+    element.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
+  });
+}
+
+describe("chart composition", () => {
+  it("renders a bar chart as a labelled figure with axes and an exact-value table", () => {
+    const chartRef = createRef<HTMLElement>();
+    const plotRef = createRef<SVGSVGElement>();
+    const { container } = render(
+      <BarChart
+        ref={chartRef}
+        values={quarterlyRevenue}
+        categoryLabel="Quarter"
+        valueLabel="Revenue"
+        formatValue={(value) => `$${value}k`}
+      >
+        <ChartTitle>Quarterly revenue</ChartTitle>
+        <BarChartPlot ref={plotRef} aria-label="Bar chart of quarterly revenue" />
+        <ChartDescription>Revenue fell in the second quarter.</ChartDescription>
+        <ChartTable>
+          <caption>Quarterly revenue values</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quarter</th>
+              <th scope="col">Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {quarterlyRevenue.map((quarter) => (
+              <tr key={quarter.label}>
+                <th scope="row">{quarter.label}</th>
+                <td>{`$${quarter.value}k`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
+      </BarChart>,
+    );
+
+    expect(chartRef.current).toBe(container.querySelector("figure"));
+    expect(plotRef.current?.getAttribute("role")).toBe("group");
+    expect(container.querySelector("figcaption")?.textContent).toBe("Quarterly revenue");
+    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("Revenue");
+    expect(container.querySelector("[data-slot='chart-y-axis']")?.textContent).toContain("Quarter");
+    expect(
+      [...container.querySelectorAll("tbody tr")].map((row) =>
+        [...row.children].map((cell) => cell.textContent),
+      ),
+    ).toEqual([
+      ["First quarter", "$40k"],
+      ["Second quarter", "$-20k"],
+    ]);
+  });
+
+  it("draws positive and negative horizontal bars from the visible zero baseline", () => {
+    const { container } = render(
+      <BarChart values={quarterlyRevenue} categoryLabel="Quarter" valueLabel="Revenue">
+        <BarChartPlot aria-label="Revenue bars" />
+      </BarChart>,
+    );
+
+    const bars = [...container.querySelectorAll("rect")];
+    const firstX = Number(bars[0]?.getAttribute("x"));
+    const secondX = Number(bars[1]?.getAttribute("x"));
+    const secondWidth = Number(bars[1]?.getAttribute("width"));
+    expect(firstX).toBeCloseTo(secondX + secondWidth);
+    expect(secondX).toBeCloseTo(32);
+  });
+
+  it("roves through chart values from one tab stop and exposes formatted labels", () => {
+    const { container } = render(
+      <LineChart
+        values={revenueTrend}
+        xLabel="Quarter"
+        yLabel="Revenue"
+        formatX={(value) => `Q${value}`}
+        formatY={(value) => `$${value}k`}
+      >
+        <LineChartPlot aria-label="Quarterly revenue line chart">
+          {({ path, points }) => (
+            <>
+              <path aria-hidden="true" d={path} />
+              {points.map((point) => (
+                <LineChartPoint key={point.index} point={point}>
+                  <circle cx={point.x} cy={point.y} r="2" />
+                </LineChartPoint>
+              ))}
+            </>
+          )}
+        </LineChartPlot>
+        <ChartTooltip />
+      </LineChart>,
+    );
+
+    const points = [...container.querySelectorAll<SVGGElement>("[data-slot='line-chart-point']")];
+    const tooltip = container.querySelector<HTMLElement>("[data-slot='chart-tooltip']")!;
+    expect(points.map((point) => point.tabIndex)).toEqual([0, -1, -1]);
+    expect(points[0]?.getAttribute("aria-label")).toBe("Quarter: Q1, Revenue: $40k");
+
+    firePointerOver(points[0]!);
+    expect(tooltip.hidden).toBe(false);
+    expect(tooltip.textContent).toBe("Quarter: Q1, Revenue: $40k");
+    act(() => points[0]!.focus());
+    expect(tooltip.hidden).toBe(false);
+    expect(tooltip.textContent).toBe("Quarter: Q1, Revenue: $40k");
+    fireKeyDown(points[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(points[1]);
+    expect(points.map((point) => point.tabIndex)).toEqual([-1, 0, -1]);
+    expect(tooltip.textContent).toBe("Quarter: Q2, Revenue: $-20k");
+    fireKeyDown(points[1]!, "End");
+    expect(document.activeElement).toBe(points[2]);
+    fireKeyDown(points[2]!, "ArrowRight");
+    expect(document.activeElement).toBe(points[2]);
+    fireKeyDown(points[2]!, "Escape");
+    expect(tooltip.hidden).toBe(true);
+  });
+
+  it("uses vertical arrows for horizontal bar values", () => {
+    const { container } = render(
+      <BarChart values={quarterlyRevenue} categoryLabel="Quarter" valueLabel="Revenue">
+        <BarChartPlot aria-label="Quarterly revenue bars">
+          {(bar) => (
+            <BarChartBar bar={bar}>
+              <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} />
+            </BarChartBar>
+          )}
+        </BarChartPlot>
+      </BarChart>,
+    );
+    const bars = [...container.querySelectorAll<SVGGElement>("[data-slot='bar-chart-bar']")];
+    act(() => bars[0]!.focus());
+    fireKeyDown(bars[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(bars[0]);
+    fireKeyDown(bars[0]!, "ArrowDown");
+    expect(document.activeElement).toBe(bars[1]);
+  });
+
+  it("draws positive and negative columns from the visible zero baseline", () => {
+    const { container } = render(
+      <ColumnChart values={quarterlyRevenue} categoryLabel="Quarter" valueLabel="Revenue">
+        <ColumnChartPlot aria-label="Revenue columns" />
+      </ColumnChart>,
+    );
+
+    const columns = [...container.querySelectorAll("rect")];
+    const firstY = Number(columns[0]?.getAttribute("y"));
+    const firstHeight = Number(columns[0]?.getAttribute("height"));
+    const secondY = Number(columns[1]?.getAttribute("y"));
+    const secondHeight = Number(columns[1]?.getAttribute("height"));
+    expect(firstY + firstHeight).toBeCloseTo(secondY);
+    expect(secondY + secondHeight).toBeCloseTo(94);
+  });
+
+  it("positions line values using their numeric x distances", () => {
+    const { container } = render(
+      <LineChart
+        values={revenueTrend}
+        xLabel="Quarter"
+        yLabel="Revenue"
+        formatX={(value) => `Q${value}`}
+      >
+        <LineChartPlot aria-label="Quarterly revenue line chart">
+          {({ path, points }) => (
+            <path d={path} data-points={points.map((point) => point.value.x).join(",")} />
+          )}
+        </LineChartPlot>
+        <ChartTable>
+          <caption>Quarterly revenue values</caption>
+          <tbody>
+            {revenueTrend.map((quarter) => (
+              <tr key={quarter.x}>
+                <th scope="row">{`Q${quarter.x}`}</th>
+                <td>{quarter.y}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
+      </LineChart>,
+    );
+
+    const line = container.querySelector("[data-slot='line-chart-line'] path");
+    expect(line?.getAttribute("d")).toMatch(/^M 20 .* L 52 .* L 116 .*/);
+    expect(line?.getAttribute("data-points")).toBe("1,2,4");
+    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("Q4");
+    expect(container.querySelector("tbody")?.textContent).toContain("Q2");
+  });
+
+  it("closes an area chart against the visible zero baseline", () => {
+    const { container } = render(
+      <AreaChart values={revenueTrend} xLabel="Quarter" yLabel="Revenue">
+        <AreaChartPlot aria-label="Quarterly revenue area chart">
+          {({ areaPath, baseline, linePath }) => (
+            <path d={areaPath} data-baseline={baseline} data-line={linePath} />
+          )}
+        </AreaChartPlot>
+      </AreaChart>,
+    );
+
+    const area = container.querySelector("[data-slot='area-chart-area'] path");
+    expect(Number(area?.getAttribute("data-baseline"))).toBeCloseTo(64);
+    expect(area?.getAttribute("data-line")).toMatch(/^M 20 .* L 52 .* L 116 .*/);
+    expect(area?.getAttribute("d")).toMatch(/^M 20 64 L 20 .* L 52 .* L 116 .* L 116 64 Z$/);
+  });
+
+  it("pairs pie slices with a persistent legend and table", () => {
+    const shares = quarterlyRevenue.map((value) => ({ ...value, value: Math.abs(value.value) }));
+    const { container } = render(
+      <PieChart
+        values={shares}
+        categoryLabel="Quarter"
+        valueLabel="Share"
+        formatValue={(value) => `${value}%`}
+      >
+        <PieChartPlot aria-label="Revenue share pie chart">
+          {(slice) => (
+            <PieChartSlice slice={slice}>
+              <path
+                d={slice.path}
+                data-label={slice.value.label}
+                data-percentage={slice.percentage}
+              />
+            </PieChartSlice>
+          )}
+        </PieChartPlot>
+        <ChartLegend />
+        <ChartTable>
+          <caption>Revenue share values</caption>
+          <tbody>
+            {shares.map((quarter) => (
+              <tr key={quarter.label}>
+                <th scope="row">{quarter.label}</th>
+                <td>{`${quarter.value}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
+      </PieChart>,
+    );
+
+    const slices = [...container.querySelectorAll("[data-slot='pie-chart-slice'] path")];
+    for (const slice of slices) expect(slice.getAttribute("d")).not.toMatch(/\.\d{7}/);
+    expect(Number(slices[0]?.getAttribute("data-percentage"))).toBeCloseTo(200 / 3);
+    expect(Number(slices[1]?.getAttribute("data-percentage"))).toBeCloseTo(100 / 3);
+    expect(container.querySelector("[data-slot='chart-legend']")?.textContent).toContain(
+      "First quarter40%66.7%",
+    );
+    expect(container.querySelector("tbody")?.textContent).toContain("Second quarter20%");
+
+    const sliceGroups = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='pie-chart-slice']"),
+    ];
+    act(() => sliceGroups[0]!.focus());
+    fireKeyDown(sliceGroups[0]!, "ArrowLeft");
+    expect(document.activeElement).toBe(sliceGroups[1]);
+    const activeOutline = container.querySelector("[data-slot='pie-chart-active-slice']");
+    expect(activeOutline?.getAttribute("d")).toBe(slices[1]?.getAttribute("d"));
+    expect(container.querySelector("[data-slot='pie-chart-slices']")?.nextElementSibling).toBe(
+      activeOutline,
+    );
+    expect(container.querySelector("[data-slot='chart-active-value-overlay']")).toBeNull();
+    fireKeyDown(sliceGroups[1]!, "ArrowRight");
+    expect(document.activeElement).toBe(sliceGroups[0]);
+  });
+
+  it("draws a one-value pie as a complete circle", () => {
+    const { container } = render(
+      <PieChart
+        values={[{ label: "Direct", value: 100 }]}
+        categoryLabel="Source"
+        valueLabel="Share"
+      >
+        <PieChartPlot aria-label="Traffic share pie chart" />
+      </PieChart>,
+    );
+
+    const path = container.querySelector("path")?.getAttribute("d") ?? "";
+    expect(path.match(/ A 50 50 /g)).toHaveLength(2);
+  });
+
+  it("draws rising and falling candlesticks and tabulates every OHLC value", () => {
+    const { container } = render(
+      <CandlestickChart
+        values={sharePrices}
+        xLabel="Day"
+        yLabel="Share price"
+        formatX={(value) => `Day ${value}`}
+        formatY={(value) => `$${value}`}
+      >
+        <CandlestickChartPlot aria-label="Two-day share price candlestick chart" />
+        <ChartTable>
+          <caption>Daily share prices</caption>
+          <thead>
+            <tr>
+              <th scope="col">Day</th>
+              <th scope="col">Open</th>
+              <th scope="col">High</th>
+              <th scope="col">Low</th>
+              <th scope="col">Close</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sharePrices.map((price) => (
+              <tr key={price.x}>
+                <th scope="row">{`Day ${price.x}`}</th>
+                <td>{`$${price.open}`}</td>
+                <td>{`$${price.high}`}</td>
+                <td>{`$${price.low}`}</td>
+                <td>{`$${price.close}`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </ChartTable>
+      </CandlestickChart>,
+    );
+
+    const candles = [...container.querySelectorAll("[data-slot='candlestick-chart-candle']")];
+    expect(candles.map((candle) => candle.getAttribute("data-direction"))).toEqual(["up", "down"]);
+    expect(candles[0]?.querySelectorAll("line")).toHaveLength(1);
+    expect(candles[0]?.querySelector("rect")).not.toBeNull();
+    const candleBodies = [
+      ...container.querySelectorAll("[data-slot='candlestick-chart-candle'] rect"),
+    ];
+    const firstBodyX = Number(candleBodies[0]?.getAttribute("x"));
+    const lastBody = candleBodies.at(-1)!;
+    const lastBodyRight =
+      Number(lastBody.getAttribute("x")) + Number(lastBody.getAttribute("width"));
+    expect(firstBodyX).toBeGreaterThanOrEqual(32);
+    expect(lastBodyRight).toBeLessThanOrEqual(112);
+    expect(
+      [...container.querySelectorAll("tbody tr")].map((row) =>
+        [...row.children].map((cell) => cell.textContent),
+      ),
+    ).toEqual([
+      ["Day 1", "$100", "$112", "$96", "$108"],
+      ["Day 2", "$108", "$110", "$90", "$94"],
+    ]);
+  });
+
+  it("rejects malformed and unordered chart values at their roots", () => {
+    expect(() =>
+      render(
+        <BarChart
+          values={[{ label: "Unknown", value: Number.NaN }]}
+          categoryLabel="Quarter"
+          valueLabel="Revenue"
+        />,
+      ),
+    ).toThrow('BarChart value "Unknown" must be finite; received NaN.');
+
+    expect(() =>
+      render(
+        <LineChart
+          values={[
+            { x: 2, y: 10 },
+            { x: 1, y: 20 },
+          ]}
+          xLabel="Quarter"
+          yLabel="Revenue"
+        />,
+      ),
+    ).toThrow("LineChart x values must increase; index 0 is 2 and index 1 is 1.");
+
+    expect(() =>
+      render(
+        <CandlestickChart
+          values={[{ x: 1, open: 100, high: 105, low: 90, close: 110 }]}
+          xLabel="Day"
+          yLabel="Price"
+        />,
+      ),
+    ).toThrow(
+      "CandlestickChart high at index 0 must not be below open or close; received high=105, open=100, close=110.",
+    );
+  });
+
+  it("positions scatter points independently and moves to the nearest point in a direction", () => {
+    const values = [
+      { label: "Alpha", x: 1, y: 1 },
+      { label: "Beta", x: 4, y: 2 },
+      { label: "Gamma", x: 2, y: 5 },
+    ] as const;
+    const { container } = render(
+      <ScatterChart values={values} xLabel="Effort" yLabel="Impact">
+        <ScatterChartPlot aria-label="Effort and impact scatter plot">
+          {(point) => (
+            <ScatterChartPoint key={point.index} point={point}>
+              <circle cx={point.x} cy={point.y} r="2" />
+            </ScatterChartPoint>
+          )}
+        </ScatterChartPlot>
+      </ScatterChart>,
+    );
+
+    const points = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='scatter-chart-point']"),
+    ];
+    expect(points[0]?.getAttribute("aria-label")).toBe("Alpha, Effort: 1, Impact: 1");
+    expect(points[1]?.querySelector("circle")?.getAttribute("cx")).toBe("116");
+    act(() => points[0]!.focus());
+    fireKeyDown(points[0]!, "ArrowUp");
+    expect(document.activeElement).toBe(points[2]);
+    fireKeyDown(points[2]!, "ArrowRight");
+    expect(document.activeElement).toBe(points[1]);
+  });
+
+  it("renders range, summary, and lollipop marks with named keyboard stops", () => {
+    const { container: dumbbellContainer } = render(
+      <DumbbellChart
+        values={[
+          { label: "Standard", start: 2, end: 8 },
+          { label: "Express", start: 4, end: 10 },
+        ]}
+        categoryLabel="Service"
+        valueLabel="Hours"
+        formatValue={(value) => `${value}h`}
+      >
+        <DumbbellChartPlot aria-label="Delivery ranges">
+          {(dumbbell) => (
+            <DumbbellChartDumbbell dumbbell={dumbbell}>
+              <line x1={dumbbell.startX} x2={dumbbell.endX} y1={dumbbell.y} y2={dumbbell.y} />
+            </DumbbellChartDumbbell>
+          )}
+        </DumbbellChartPlot>
+      </DumbbellChart>,
+    );
+    const dumbbells = [
+      ...dumbbellContainer.querySelectorAll<SVGGElement>("[data-slot='dumbbell-chart-dumbbell']"),
+    ];
+    expect(dumbbells).toHaveLength(2);
+    expect(dumbbells[0]?.getAttribute("aria-label")).toBe(
+      "Service: Standard, Hours Start: 2h, Hours End: 8h",
+    );
+    act(() => dumbbells[0]!.focus());
+    fireKeyDown(dumbbells[0]!, "ArrowDown");
+    expect(document.activeElement).toBe(dumbbells[1]);
+
+    const { container: boxContainer } = render(
+      <BoxPlotChart
+        values={[{ label: "Read", min: 1, q1: 2, median: 3, q3: 4, max: 6 }]}
+        categoryLabel="Operation"
+        valueLabel="Latency"
+      >
+        <BoxPlotChartPlot aria-label="Latency spread">
+          {(box) => (
+            <BoxPlotChartBox box={box}>
+              <rect x={box.x} y={box.q3Y} width={box.width} height={box.q1Y - box.q3Y} />
+            </BoxPlotChartBox>
+          )}
+        </BoxPlotChartPlot>
+      </BoxPlotChart>,
+    );
+    expect(
+      boxContainer.querySelector("[data-slot='boxplot-chart-box']")?.getAttribute("aria-label"),
+    ).toBe(
+      "Operation: Read, Latency min: 1, Latency first quartile: 2, Latency median: 3, Latency third quartile: 4, Latency max: 6",
+    );
+
+    const { container: openToCloseContainer } = render(
+      <OpenToCloseChart
+        values={[
+          { x: 1, open: 10, close: 12 },
+          { x: 2, open: 12, close: 9 },
+        ]}
+        xLabel="Day"
+        yLabel="Price"
+      >
+        <OpenToCloseChartPlot aria-label="Opening and closing prices">
+          {(range) => (
+            <OpenToCloseChartRange range={range}>
+              <line x1={range.x} x2={range.x} y1={range.openY} y2={range.closeY} />
+            </OpenToCloseChartRange>
+          )}
+        </OpenToCloseChartPlot>
+      </OpenToCloseChart>,
+    );
+    expect(
+      [
+        ...openToCloseContainer.querySelectorAll<SVGGElement>(
+          "[data-slot='open-to-close-chart-range']",
+        ),
+      ].map((range) => range.getAttribute("data-direction")),
+    ).toEqual(["up", "down"]);
+
+    const { container: lollipopContainer } = render(
+      <LollipopChart
+        values={[{ label: "Email", value: 82 }]}
+        categoryLabel="Feature"
+        valueLabel="Adoption"
+      >
+        <LollipopChartPlot aria-label="Feature adoption">
+          {(lollipop) => (
+            <LollipopChartLollipop lollipop={lollipop}>
+              <circle cx={lollipop.x} cy={lollipop.y} r="2" />
+            </LollipopChartLollipop>
+          )}
+        </LollipopChartPlot>
+      </LollipopChart>,
+    );
+    expect(
+      lollipopContainer
+        .querySelector("[data-slot='lollipop-chart-lollipop']")
+        ?.getAttribute("data-value"),
+    ).toBe("82");
+  });
+
+  it("validates boxplot order", () => {
+    expect(() =>
+      render(
+        <BoxPlotChart
+          values={[{ label: "Invalid", min: 3, q1: 2, median: 4, q3: 5, max: 6 }]}
+          categoryLabel="Group"
+          valueLabel="Value"
+        />,
+      ),
+    ).toThrow('BoxPlotChart value "Invalid" must satisfy min ≤ q1 ≤ median ≤ q3 ≤ max');
+  });
+
+  it("rejects overflowing pie totals before angles and percentages become non-finite", () => {
+    expect(() =>
+      render(
+        <PieChart
+          values={[
+            { label: "First", value: Number.MAX_VALUE },
+            { label: "Second", value: Number.MAX_VALUE },
+          ]}
+          categoryLabel="Category"
+          valueLabel="Share"
+        />,
+      ),
+    ).toThrow("PieChart values must have a finite positive total; received Infinity.");
+  });
+
+  it("derives the missing scale bound for empty plots", () => {
+    const { container } = render(
+      <BarChart values={[]} categoryLabel="Category" valueLabel="Value">
+        <BarChartPlot aria-label="Empty values" xMin={5} />
+      </BarChart>,
+    );
+    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("5");
+  });
+
+  it("rejects duplicate stacked segment labels before rendering ambiguous keys", () => {
+    expect(() =>
+      render(
+        <StackedBarChart
+          values={[
+            {
+              label: "Web",
+              segments: [
+                { label: "New", value: 20 },
+                { label: "New", value: 10 },
+              ],
+            },
+          ]}
+          categoryLabel="Channel"
+          valueLabel="Orders"
+        />,
+      ),
+    ).toThrow('StackedBarChart category "Web" has duplicate segment label "New".');
+  });
+
+  it("matches caller-defined map paths to values and navigates by region centers", () => {
+    const values = [
+      { id: "west", label: "West", value: 10 },
+      { id: "east", label: "East", value: 12 },
+    ] as const;
+    const regions = [
+      { id: "west", d: "M 2 2 H 48 V 48 H 2 Z", centerX: 25, centerY: 25 },
+      { id: "east", d: "M 52 2 H 98 V 48 H 52 Z", centerX: 75, centerY: 25 },
+    ] as const;
+    const { container } = render(
+      <MapChart values={values} regionLabel="Region" valueLabel="Votes">
+        <MapChartPlot aria-label="Regional votes" viewBox="0 0 100 50" regions={regions}>
+          {(region) => (
+            <MapChartRegion region={region}>
+              <path d={region.region.d} />
+            </MapChartRegion>
+          )}
+        </MapChartPlot>
+      </MapChart>,
+    );
+    const mapRegions = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='map-chart-region']"),
+    ];
+    expect(mapRegions).toHaveLength(2);
+    expect(mapRegions[0]?.getAttribute("role")).toBe("img");
+    expect(mapRegions[0]?.getAttribute("aria-label")).toBe("Region: West, Votes: 10");
+    expect(mapRegions[1]?.getAttribute("data-region-id")).toBe("east");
+    act(() => mapRegions[0]!.focus());
+    fireKeyDown(mapRegions[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(mapRegions[1]);
+    expect(() =>
+      render(
+        <MapChart values={values} regionLabel="Region" valueLabel="Votes">
+          <MapChartPlot aria-label="Regional votes" viewBox="0 0 100 50" regions={[regions[0]!]} />
+        </MapChart>,
+      ),
+    ).toThrow('MapChart value "east" has no matching MapChartPlot region.');
+    expect(() =>
+      render(
+        <MapChart values={values} regionLabel="Region" valueLabel="Votes">
+          <MapChartPlot aria-label="Regional votes" viewBox="0 0 0 50" regions={regions} />
+        </MapChart>,
+      ),
+    ).toThrow("MapChartPlot viewBox must contain x, y, width, and height with positive dimensions");
+  });
+
+  it("composes stacked bar and column segments with two-dimensional arrow navigation", () => {
+    const values = [
+      {
+        label: "Web",
+        segments: [
+          { label: "New", value: 30 },
+          { label: "Returning", value: 20 },
+        ],
+      },
+      {
+        label: "Store",
+        segments: [
+          { label: "New", value: 10 },
+          { label: "Returning", value: 40 },
+        ],
+      },
+    ] as const;
+    const { container } = render(
+      <>
+        <StackedBarChart values={values} categoryLabel="Channel" valueLabel="Orders">
+          <StackedBarChartPlot aria-label="Orders by channel and customer type">
+            {(segment) => (
+              <StackedBarChartSegment
+                key={`${segment.value.label}-${segment.segment.label}`}
+                segment={segment}
+              >
+                <rect x={segment.x} y={segment.y} width={segment.width} height={segment.height} />
+              </StackedBarChartSegment>
+            )}
+          </StackedBarChartPlot>
+        </StackedBarChart>
+        <StackedColumnChart values={values} categoryLabel="Channel" valueLabel="Orders">
+          <StackedColumnChartPlot aria-label="Orders by channel and customer type">
+            {(segment) => (
+              <StackedColumnChartSegment
+                key={`${segment.value.label}-${segment.segment.label}`}
+                segment={segment}
+              >
+                <rect x={segment.x} y={segment.y} width={segment.width} height={segment.height} />
+              </StackedColumnChartSegment>
+            )}
+          </StackedColumnChartPlot>
+        </StackedColumnChart>
+      </>,
+    );
+
+    const bars = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='stacked-bar-chart-segment']"),
+    ];
+    expect(bars.map((bar) => bar.getAttribute("aria-label"))).toEqual([
+      "Channel: Web, Segment: New, Orders: 30",
+      "Channel: Web, Segment: Returning, Orders: 20",
+      "Channel: Store, Segment: New, Orders: 10",
+      "Channel: Store, Segment: Returning, Orders: 40",
+    ]);
+    act(() => bars[0]!.focus());
+    fireKeyDown(bars[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(bars[1]);
+    fireKeyDown(bars[1]!, "ArrowDown");
+    expect(document.activeElement).toBe(bars[3]);
+
+    const columns = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='stacked-column-chart-segment']"),
+    ];
+    act(() => columns[0]!.focus());
+    fireKeyDown(columns[0]!, "ArrowUp");
+    expect(document.activeElement).toBe(columns[1]);
+    fireKeyDown(columns[1]!, "ArrowRight");
+    expect(document.activeElement).toBe(columns[3]);
+  });
+
+  it("groups histogram observations into inclusive end bins", () => {
+    const { container } = render(
+      <Histogram values={[0, 1, 2, 3, 4]} valueLabel="Duration" frequencyLabel="Sessions">
+        <HistogramPlot aria-label="Session duration distribution" binCount={2}>
+          {(bin) => (
+            <HistogramBin key={bin.index} bin={bin}>
+              <rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} />
+            </HistogramBin>
+          )}
+        </HistogramPlot>
+      </Histogram>,
+    );
+
+    const bins = [...container.querySelectorAll("[data-slot='histogram-bin']")];
+    expect(bins.map((bin) => bin.getAttribute("data-count"))).toEqual(["2", "3"]);
+    expect(bins[1]?.getAttribute("aria-label")).toBe("Duration: 2 to 4, Sessions: 3");
+  });
+
+  it("orders heatmap cells into a matrix and follows row and column arrows", () => {
+    const values = [
+      { x: "Morning", y: "Monday", value: 4 },
+      { x: "Evening", y: "Monday", value: 8 },
+      { x: "Morning", y: "Tuesday", value: 6 },
+      { x: "Evening", y: "Tuesday", value: 3 },
+    ] as const;
+    const { container } = render(
+      <Heatmap
+        values={values}
+        xLabel="Time"
+        yLabel="Day"
+        valueLabel="Requests"
+        formatValue={(value) => `${value}k`}
+      >
+        <HeatmapPlot aria-label="Requests by day and time">
+          {(cell) => (
+            <HeatmapCell key={`${cell.value.x}-${cell.value.y}`} cell={cell}>
+              <rect x={cell.x} y={cell.y} width={cell.width} height={cell.height} />
+            </HeatmapCell>
+          )}
+        </HeatmapPlot>
+      </Heatmap>,
+    );
+
+    const cells = [...container.querySelectorAll<SVGGElement>("[data-slot='heatmap-cell']")];
+    const cellsGroup = container.querySelector("[data-slot='heatmap-cells']");
+    const activeOverlay = container.querySelector("[data-slot='chart-active-value-overlay']");
+    expect(cells[0]?.getAttribute("aria-label")).toBe("Time: Morning, Day: Monday, Requests: 4k");
+    expect(cellsGroup?.nextElementSibling).toBe(activeOverlay);
+    act(() => cells[0]!.focus());
+    expect(activeOverlay?.querySelector("use")?.getAttribute("href")).toBe(`#${cells[0]!.id}`);
+    fireKeyDown(cells[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(cells[1]);
+    expect(activeOverlay?.querySelector("use")?.getAttribute("href")).toBe(`#${cells[1]!.id}`);
+    fireKeyDown(cells[1]!, "ArrowDown");
+    expect(document.activeElement).toBe(cells[3]);
+  });
+
+  it("skips empty heatmap coordinates when moving in a direction", () => {
+    const { container } = render(
+      <Heatmap
+        values={[
+          { x: "A", y: "Top", value: 1 },
+          { x: "C", y: "Top", value: 2 },
+          { x: "A", y: "Bottom", value: 3 },
+        ]}
+        xLabel="Column"
+        yLabel="Row"
+        valueLabel="Count"
+      >
+        <HeatmapPlot aria-label="Sparse counts">
+          {(cell) => (
+            <HeatmapCell cell={cell}>
+              <rect x={cell.x} y={cell.y} width={cell.width} height={cell.height} />
+            </HeatmapCell>
+          )}
+        </HeatmapPlot>
+      </Heatmap>,
+    );
+    const cells = [...container.querySelectorAll<SVGGElement>("[data-slot='heatmap-cell']")];
+    act(() => cells[0]!.focus());
+    fireKeyDown(cells[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(cells[1]);
+    fireKeyDown(cells[1]!, "ArrowDown");
+    expect(document.activeElement).toBe(cells[1]);
+    fireKeyDown(cells[0]!, "ArrowDown");
+    expect(document.activeElement).toBe(cells[2]);
+  });
+
+  it("lays out sankey links behind navigable nodes and highlights connected flows", () => {
+    const nodes = [
+      { id: "visit", label: "Visit" },
+      { id: "cart", label: "Cart" },
+      { id: "leave", label: "Leave" },
+      { id: "buy", label: "Purchase" },
+    ] as const;
+    const links = [
+      { source: "visit", target: "cart", value: 60 },
+      { source: "visit", target: "leave", value: 40 },
+      { source: "cart", target: "buy", value: 35 },
+    ] as const;
+    const { container } = render(
+      <SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">
+        <SankeyChartPlot aria-label="Customer journey flow">
+          {({ links: positionedLinks, nodes: positionedNodes }) => (
+            <>
+              {positionedLinks.map((link) => (
+                <SankeyChartLink key={link.index} link={link}>
+                  <path d={link.path} strokeWidth={link.width} />
+                </SankeyChartLink>
+              ))}
+              {positionedNodes.map((node) => (
+                <SankeyChartNode key={node.value.id} node={node}>
+                  <rect x={node.x} y={node.y} width={node.width} height={node.height} />
+                </SankeyChartNode>
+              ))}
+            </>
+          )}
+        </SankeyChartPlot>
+      </SankeyChart>,
+    );
+
+    const nodesInPlot = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='sankey-chart-node']"),
+    ];
+    const visit = nodesInPlot.find((node) => node.getAttribute("data-node-id") === "visit")!;
+    const cart = nodesInPlot.find((node) => node.getAttribute("data-node-id") === "cart")!;
+    expect(visit.getAttribute("aria-label")).toBe(
+      "Step: Visit, Incoming People: 0 across 0 connections, Outgoing People: 100 across 2 connections",
+    );
+    expect(visit.getAttribute("pointer-events")).toBe("bounding-box");
+    expect(
+      [...container.querySelectorAll("[data-slot='sankey-chart-link']")].every(
+        (link) => link.getAttribute("pointer-events") === "none",
+      ),
+    ).toBe(true);
+    act(() => visit.focus());
+    const connectedLinks = [
+      ...container.querySelectorAll("[data-slot='sankey-chart-link'][data-connected]"),
+    ];
+    expect(connectedLinks).toHaveLength(2);
+    fireKeyDown(visit, "ArrowRight");
+    expect(document.activeElement).toBe(cart);
+    fireKeyDown(cart, "ArrowLeft");
+    expect(document.activeElement).toBe(visit);
+  });
+
+  it("rejects cyclic sankey links at the chart boundary", () => {
+    expect(() =>
+      render(
+        <SankeyChart
+          nodes={[
+            { id: "a", label: "A" },
+            { id: "b", label: "B" },
+          ]}
+          links={[
+            { source: "a", target: "b", value: 1 },
+            { source: "b", target: "a", value: 1 },
+          ]}
+          nodeLabel="Step"
+          valueLabel="People"
+        />,
+      ),
+    ).toThrow("SankeyChart links must form an acyclic flow from left to right.");
+  });
+
+  it("rejects Sankey layers that cannot fit their minimum node sizes", () => {
+    const targets = Array.from({ length: 11 }, (_, index) => ({
+      id: `target-${index}`,
+      label: `Target ${index}`,
+    }));
+    const nodes = [{ id: "source", label: "Source" }, ...targets];
+    const links = targets.map((target) => ({ source: "source", target: target.id, value: 1 }));
+    expect(() =>
+      render(
+        <SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">
+          <SankeyChartPlot aria-label="Crowded Sankey flow" />
+        </SankeyChart>,
+      ),
+    ).toThrow("SankeyChartPlot layer 1 with 11 nodes exceeds the available height");
+  });
+
+  it("throws when a shared or chart-specific part has no matching root", () => {
+    expect(() => render(<BarChartPlot aria-label="Orphaned plot" />)).toThrow(
+      "BarChartPlot must be rendered inside BarChart.",
+    );
+    expect(() => render(<ColumnChartPlot aria-label="Orphaned plot" />)).toThrow(
+      "ColumnChartPlot must be rendered inside ColumnChart.",
+    );
+    expect(() => render(<CandlestickChartPlot aria-label="Orphaned plot" />)).toThrow(
+      "CandlestickChartPlot must be rendered inside CandlestickChart.",
+    );
+    expect(() =>
+      render(
+        <BarChart values={quarterlyRevenue} categoryLabel="Quarter" valueLabel="Revenue">
+          <ChartLegend />
+        </BarChart>,
+      ),
+    ).toThrow("ChartLegend must be rendered inside PieChart.");
+    expect(() =>
+      render(
+        <AreaChart values={revenueTrend} xLabel="Quarter" yLabel="Revenue">
+          <LineChartPlot aria-label="Wrong plot" />
+        </AreaChart>,
+      ),
+    ).toThrow("LineChartPlot must be rendered inside LineChart.");
+  });
+});
