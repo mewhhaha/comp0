@@ -56,7 +56,6 @@ describe("Anatomy", () => {
     const stackedBarChart = renderChart("stacked-bar-chart");
     const stackedColumnChart = renderChart("stacked-column-chart");
     const histogram = renderChart("histogram");
-    const cumulativeHistogram = renderChart("cumulative-histogram");
     const heatmap = renderChart("heatmap");
     const sankeyChart = renderChart("sankey-chart");
     const mapChart = renderChart("map-chart");
@@ -75,7 +74,6 @@ describe("Anatomy", () => {
     expect(stackedBarChart.querySelectorAll("[style*='width']")).toHaveLength(3);
     expect(stackedColumnChart.querySelectorAll("[style*='height']")).toHaveLength(4);
     expect(histogram.querySelectorAll("[style*='height']")).toHaveLength(5);
-    expect(cumulativeHistogram.querySelectorAll("[style*='height']")).toHaveLength(5);
     expect(heatmap.querySelectorAll("[style*='opacity']")).toHaveLength(12);
     expect(sankeyChart.querySelectorAll("svg path")).toHaveLength(3);
     expect(mapChart.querySelectorAll("svg path")).toHaveLength(5);
@@ -95,7 +93,6 @@ describe("Anatomy", () => {
       stackedBarChart,
       stackedColumnChart,
       histogram,
-      cumulativeHistogram,
       heatmap,
       sankeyChart,
       mapChart,

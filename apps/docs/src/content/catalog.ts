@@ -538,15 +538,6 @@ const lessons: Record<string, LessonCopy> = {
     "Describe the distribution and keep the underlying observations or bin counts in a native ChartTable.",
     '<Histogram values={responseTimes} valueLabel="Response time" frequencyLabel="Requests">\n  <ChartTitle>Response-time distribution</ChartTitle>\n  <HistogramPlot aria-label="Histogram of response times">\n    {(bin) => (\n      <HistogramBin bin={bin}>\n        <rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} />\n      </HistogramBin>\n    )}\n  </HistogramPlot>\n  <ChartTable>\n    <caption>Response times</caption>\n  </ChartTable>\n  <ChartTooltip />\n</Histogram>;',
   ),
-  "cumulative-histogram": lesson(
-    "A numeric distribution whose bars show the running count at or below each range.",
-    "Like a growing tally beside sorted buckets: every bar includes the observations in earlier buckets.",
-    "Use it to answer threshold questions such as how many observations finish below a target.",
-    "Start CumulativeHistogram with finite observations and a frequency label that describes the running count.",
-    "Choose a binCount and render each range with CumulativeHistogramBin so its count and cumulative count are reachable.",
-    "Describe the threshold story and retain the observations or exact bins in a native table.",
-    '<CumulativeHistogram\n  values={responseTimes}\n  valueLabel="Response time"\n  frequencyLabel="Requests at or below"\n>\n  <ChartTitle>Cumulative response-time distribution</ChartTitle>\n  <CumulativeHistogramPlot aria-label="Cumulative histogram of response times">\n    {(bin) => (\n      <CumulativeHistogramBin bin={bin}>\n        <rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} />\n      </CumulativeHistogramBin>\n    )}\n  </CumulativeHistogramPlot>\n  <ChartTable>\n    <caption>Response times</caption>\n  </ChartTable>\n  <ChartTooltip />\n</CumulativeHistogram>;',
-  ),
   heatmap: lesson(
     "A two-dimensional category matrix whose cells encode a numeric magnitude.",
     "Like a timetable shaded by activity: rows and columns locate the period, and intensity shows the amount.",
@@ -1246,13 +1237,6 @@ const accessibility: Record<string, string[]> = {
     "Choose bins that communicate the distribution honestly; changing bin count can materially change its appearance.",
     "Wrap each custom bar in HistogramBin so its range and count are keyboard reachable.",
     "Keep the underlying observations or exact bin counts available in a native table.",
-    "Adjacent bins should remain visibly separable in every color scheme.",
-  ],
-  "cumulative-histogram": [
-    "Name the measured value axis and make the frequency label describe the running cumulative count.",
-    "Choose bins that communicate threshold behavior honestly; changing bin count changes the curve of the running total.",
-    "Wrap each custom bar in CumulativeHistogramBin so its range, raw count, and cumulative count are keyboard reachable.",
-    "Keep the underlying observations or exact cumulative bins available in a native table.",
     "Adjacent bins should remain visibly separable in every color scheme.",
   ],
   heatmap: [
@@ -3830,115 +3814,6 @@ const chart = [
     ],
     "Charts are descriptive content and do not create form values.",
     ["bar-chart", "scatter-chart", "table"],
-  ),
-  common(
-    "cumulative-histogram",
-    "Cumulative Histogram",
-    "charts",
-    [
-      "ChartDescription",
-      "ChartTable",
-      "ChartTitle",
-      "ChartTooltip",
-      "CumulativeHistogram",
-      "CumulativeHistogramBin",
-      "CumulativeHistogramPlot",
-    ],
-    '<CumulativeHistogram values={responseTimes} valueLabel="Response time" frequencyLabel="Requests at or below"><ChartTitle>Cumulative response-time distribution</ChartTitle><CumulativeHistogramPlot aria-label="Cumulative histogram of response times">{(bin) => <CumulativeHistogramBin bin={bin}><rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} /></CumulativeHistogramBin>}</CumulativeHistogramPlot><ChartDescription>The running count reaches every observation by the final bin.</ChartDescription><ChartTable><caption>Response times</caption></ChartTable><ChartTooltip /></CumulativeHistogram>',
-    [
-      p(
-        "CumulativeHistogram",
-        "root",
-        "Native figure sharing observations, labels, and cumulative frequency formatting.",
-        true,
-        false,
-        [
-          prop(
-            "values",
-            "readonly number[]",
-            "Finite observations grouped into equal-width ranges.",
-          ),
-          prop(
-            "valueLabel / frequencyLabel",
-            "string",
-            "Visible headings for values and running counts.",
-          ),
-          prop(
-            "formatValue",
-            "(value: number) => string",
-            "Formats range boundaries and horizontal ticks.",
-          ),
-        ],
-      ),
-      p("ChartTitle", "label", "Native figcaption that visibly names the figure."),
-      p(
-        "CumulativeHistogramPlot / CumulativeHistogramBin",
-        "graphic",
-        "Adjacent SVG bins whose heights show running cumulative counts.",
-        true,
-        false,
-        [
-          prop(
-            "aria-label",
-            "string",
-            "Concise text alternative naming the cumulative distribution.",
-          ),
-          prop("binCount", "number", "Positive number of equal-width bins."),
-          prop(
-            "xMin / xMax / xTickCount / yTickCount",
-            "number",
-            "Optional value bounds and visible tick counts.",
-          ),
-          prop(
-            "children",
-            "(bin: CumulativeHistogramBinState) => ReactNode",
-            "Custom cumulative bin renderer.",
-          ),
-          prop(
-            "bin",
-            "CumulativeHistogramBinState",
-            "Bin state including raw and cumulative counts.",
-          ),
-        ],
-      ),
-      p("ChartDescription", "feedback", "Visible prose summarizing threshold behavior."),
-      p(
-        "ChartTable",
-        "table",
-        "Native table containing underlying observations or exact cumulative bins.",
-      ),
-      p(
-        "ChartTooltip",
-        "content",
-        "Optional floating range and cumulative count shown on hover or focus.",
-        true,
-        true,
-      ),
-    ],
-    [
-      {
-        keys: ["Tab"],
-        action: "Enters the chart at its current bin and leaves with one more Tab.",
-      },
-      { keys: ["ArrowLeft", "ArrowRight"], action: "Moves between adjacent cumulative bins." },
-      { keys: ["Home", "End"], action: "Moves to the first or last cumulative bin." },
-      { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
-    ],
-    [
-      {
-        attribute: "[data-count] / [data-cumulative-count]",
-        on: "CumulativeHistogramBin",
-        meaning: "The raw and running counts in this bin.",
-      },
-      {
-        attribute: "[data-active]",
-        on: "CumulativeHistogramBin",
-        meaning: "The bin currently reached by pointer or keyboard.",
-      },
-      { attribute: "[data-open]", on: "ChartTooltip", meaning: "A value tooltip is visible." },
-    ],
-    "Charts are descriptive content and do not create form values.",
-    ["histogram", "bar-chart", "table"],
   ),
   common(
     "heatmap",

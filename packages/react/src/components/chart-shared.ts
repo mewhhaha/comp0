@@ -36,10 +36,6 @@ export type HistogramBinValue = {
   count: number;
 };
 
-export type CumulativeHistogramBinValue = HistogramBinValue & {
-  cumulativeCount: number;
-};
-
 export type SankeyChartNodeValue = {
   id: string;
   label: string;
@@ -197,13 +193,6 @@ export type ChartContextValue =
       values: readonly CategoricalChartValue[];
       categoryLabel: string;
       valueLabel: string;
-      formatY: (value: number) => string;
-    }
-  | {
-      kind: "cumulative-histogram";
-      values: readonly number[];
-      valueLabel: string;
-      frequencyLabel: string;
       formatY: (value: number) => string;
     }
   | {

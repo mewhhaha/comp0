@@ -35,8 +35,6 @@ export * from "./components/StackedColumnChart.js";
 export * from "./components/StackedColumnChartPlot.js";
 export * from "./components/Histogram.js";
 export * from "./components/HistogramPlot.js";
-export * from "./components/CumulativeHistogram.js";
-export * from "./components/CumulativeHistogramPlot.js";
 export * from "./components/MapChart.js";
 export * from "./components/MapChartPlot.js";
 export * from "./components/Heatmap.js";
@@ -47,7 +45,6 @@ export {
   type CandlestickChartValue,
   type DumbbellChartValue,
   type BoxPlotChartValue,
-  type CumulativeHistogramBinValue,
   type OpenToCloseChartValue,
   type CartesianChartValue,
   type CategoricalChartValue,

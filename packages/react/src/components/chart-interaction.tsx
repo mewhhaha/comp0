@@ -25,7 +25,6 @@ import type {
   CandlestickChartValue,
   CartesianChartValue,
   CategoricalChartValue,
-  CumulativeHistogramBinValue,
   DumbbellChartValue,
   HeatmapChartValue,
   HistogramBinValue,
@@ -131,14 +130,6 @@ export type ChartValueDetails =
       index: number;
       label: string;
       value: HistogramBinValue;
-      formattedMin: string;
-      formattedMax: string;
-    }
-  | {
-      kind: "cumulative-histogram";
-      index: number;
-      label: string;
-      value: CumulativeHistogramBinValue;
       formattedMin: string;
       formattedMax: string;
     }

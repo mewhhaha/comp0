@@ -43,7 +43,6 @@ type GraphicShape =
   | "boxplot"
   | "candlestick"
   | "column"
-  | "cumulative-histogram"
   | "dumbbell"
   | "heatmap"
   | "histogram"
@@ -113,7 +112,6 @@ function graphicShape(name: string): GraphicShape {
   if (/open.?to.?close/i.test(name)) return "open-to-close";
   if (/lollipop/i.test(name)) return "lollipop";
   if (/mapchart/i.test(name)) return "map";
-  if (/cumulative.?histogram/i.test(name)) return "cumulative-histogram";
   if (/candlestick/i.test(name)) return "candlestick";
   if (/stackedbar/i.test(name)) return "stacked-bar";
   if (/stackedcolumn/i.test(name)) return "stacked-column";
@@ -907,19 +905,6 @@ function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }>
     graphic = (
       <span className="flex h-14 items-end justify-center gap-px" aria-hidden="true">
         {[32, 68, 92, 54, 20].map((height) => (
-          <span
-            key={height}
-            className="w-4 bg-teal-600/75 dark:bg-teal-400/75"
-            style={{ height: `${height}%` }}
-          />
-        ))}
-      </span>
-    );
-  }
-  if (node.shape === "cumulative-histogram") {
-    graphic = (
-      <span className="flex h-14 items-end justify-center gap-px" aria-hidden="true">
-        {[18, 34, 54, 76, 94].map((height) => (
           <span
             key={height}
             className="w-4 bg-teal-600/75 dark:bg-teal-400/75"

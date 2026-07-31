@@ -16,11 +16,6 @@ import { ChartTitle } from "./components/ChartTitle.js";
 import { ChartTooltip } from "./components/chart-interaction.js";
 import { ColumnChart } from "./components/ColumnChart.js";
 import { ColumnChartPlot } from "./components/ColumnChartPlot.js";
-import { CumulativeHistogram } from "./components/CumulativeHistogram.js";
-import {
-  CumulativeHistogramBin,
-  CumulativeHistogramPlot,
-} from "./components/CumulativeHistogramPlot.js";
 import { DumbbellChart } from "./components/DumbbellChart.js";
 import { DumbbellChartDumbbell, DumbbellChartPlot } from "./components/DumbbellChartPlot.js";
 import { LineChart } from "./components/LineChart.js";
@@ -572,30 +567,7 @@ describe("chart composition", () => {
     ).toBe("82");
   });
 
-  it("keeps cumulative histogram counts monotonic and validates boxplot order", () => {
-    const { container } = render(
-      <CumulativeHistogram
-        values={[1, 2, 2, 4]}
-        valueLabel="Value"
-        frequencyLabel="Cumulative count"
-      >
-        <CumulativeHistogramPlot aria-label="Cumulative values" binCount={3}>
-          {(bin) => (
-            <CumulativeHistogramBin bin={bin}>
-              <rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} />
-            </CumulativeHistogramBin>
-          )}
-        </CumulativeHistogramPlot>
-      </CumulativeHistogram>,
-    );
-    expect(
-      [...container.querySelectorAll<SVGGElement>("[data-slot='cumulative-histogram-bin']")].map(
-        (bin) => Number(bin.getAttribute("data-cumulative-count")),
-      ),
-    ).toEqual([1, 3, 4]);
-    expect(
-      container.querySelector("[data-slot='cumulative-histogram-bin']")?.getAttribute("aria-label"),
-    ).toBe("Value: 1 to 2, count: 1, cumulative Cumulative count: 1");
+  it("validates boxplot order", () => {
     expect(() =>
       render(
         <BoxPlotChart
