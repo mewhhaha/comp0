@@ -29,6 +29,7 @@ import type {
   DumbbellChartValue,
   HeatmapChartValue,
   HistogramBinValue,
+  MapChartValue,
   OpenToCloseChartValue,
   SankeyChartLinkValue,
   SankeyChartNodeValue,
@@ -140,6 +141,13 @@ export type ChartValueDetails =
       value: CumulativeHistogramBinValue;
       formattedMin: string;
       formattedMax: string;
+    }
+  | {
+      kind: "map";
+      index: number;
+      label: string;
+      value: MapChartValue;
+      formattedValue: string;
     }
   | {
       kind: "heatmap";

@@ -27,6 +27,8 @@ import { LineChart } from "./components/LineChart.js";
 import { LineChartPlot, LineChartPoint } from "./components/LineChartPlot.js";
 import { LollipopChart } from "./components/LollipopChart.js";
 import { LollipopChartLollipop, LollipopChartPlot } from "./components/LollipopChartPlot.js";
+import { MapChart } from "./components/MapChart.js";
+import { MapChartPlot, MapChartRegion } from "./components/MapChartPlot.js";
 import { OpenToCloseChart } from "./components/OpenToCloseChart.js";
 import { OpenToCloseChartPlot, OpenToCloseChartRange } from "./components/OpenToCloseChartPlot.js";
 import { PieChart } from "./components/PieChart.js";
@@ -603,6 +605,52 @@ describe("chart composition", () => {
         />,
       ),
     ).toThrow('BoxPlotChart value "Invalid" must satisfy min ≤ q1 ≤ median ≤ q3 ≤ max');
+  });
+
+  it("matches caller-defined map paths to values and navigates by region centers", () => {
+    const values = [
+      { id: "west", label: "West", value: 10 },
+      { id: "east", label: "East", value: 12 },
+    ] as const;
+    const regions = [
+      { id: "west", d: "M 2 2 H 48 V 48 H 2 Z", centerX: 25, centerY: 25 },
+      { id: "east", d: "M 52 2 H 98 V 48 H 52 Z", centerX: 75, centerY: 25 },
+    ] as const;
+    const { container } = render(
+      <MapChart values={values} regionLabel="Region" valueLabel="Votes">
+        <MapChartPlot aria-label="Regional votes" viewBox="0 0 100 50" regions={regions}>
+          {(region) => (
+            <MapChartRegion region={region}>
+              <path d={region.region.d} />
+            </MapChartRegion>
+          )}
+        </MapChartPlot>
+      </MapChart>,
+    );
+    const mapRegions = [
+      ...container.querySelectorAll<SVGGElement>("[data-slot='map-chart-region']"),
+    ];
+    expect(mapRegions).toHaveLength(2);
+    expect(mapRegions[0]?.getAttribute("role")).toBe("img");
+    expect(mapRegions[0]?.getAttribute("aria-label")).toBe("Region: West, Votes: 10");
+    expect(mapRegions[1]?.getAttribute("data-region-id")).toBe("east");
+    act(() => mapRegions[0]!.focus());
+    fireKeyDown(mapRegions[0]!, "ArrowRight");
+    expect(document.activeElement).toBe(mapRegions[1]);
+    expect(() =>
+      render(
+        <MapChart values={values} regionLabel="Region" valueLabel="Votes">
+          <MapChartPlot aria-label="Regional votes" viewBox="0 0 100 50" regions={[regions[0]!]} />
+        </MapChart>,
+      ),
+    ).toThrow('MapChart value "east" has no matching MapChartPlot region.');
+    expect(() =>
+      render(
+        <MapChart values={values} regionLabel="Region" valueLabel="Votes">
+          <MapChartPlot aria-label="Regional votes" viewBox="0 0 0 50" regions={regions} />
+        </MapChart>,
+      ),
+    ).toThrow("MapChartPlot viewBox must contain x, y, width, and height with positive dimensions");
   });
 
   it("composes stacked bar and column segments with two-dimensional arrow navigation", () => {

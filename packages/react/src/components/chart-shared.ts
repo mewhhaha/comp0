@@ -80,6 +80,19 @@ export type OpenToCloseChartValue = {
   close: number;
 };
 
+export type MapChartValue = {
+  id: string;
+  label: string;
+  value: number;
+};
+
+export type MapChartRegionGeometry = {
+  id: string;
+  d: string;
+  centerX: number;
+  centerY: number;
+};
+
 export type ChartPoint = {
   value: CartesianChartValue;
   index: number;
@@ -191,6 +204,13 @@ export type ChartContextValue =
       values: readonly number[];
       valueLabel: string;
       frequencyLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "map";
+      values: readonly MapChartValue[];
+      regionLabel: string;
+      valueLabel: string;
       formatY: (value: number) => string;
     };
 

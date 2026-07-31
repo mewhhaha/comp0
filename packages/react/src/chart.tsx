@@ -37,6 +37,8 @@ export * from "./components/Histogram.js";
 export * from "./components/HistogramPlot.js";
 export * from "./components/CumulativeHistogram.js";
 export * from "./components/CumulativeHistogramPlot.js";
+export * from "./components/MapChart.js";
+export * from "./components/MapChartPlot.js";
 export * from "./components/Heatmap.js";
 export * from "./components/HeatmapPlot.js";
 export * from "./components/SankeyChart.js";
@@ -52,6 +54,8 @@ export {
   type ChartPoint,
   type HeatmapChartValue,
   type HistogramBinValue,
+  type MapChartRegionGeometry,
+  type MapChartValue,
   type SankeyChartLinkValue,
   type SankeyChartNodeValue,
   type ScatterChartValue,

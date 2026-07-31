@@ -49,6 +49,7 @@ type GraphicShape =
   | "histogram"
   | "line"
   | "lollipop"
+  | "map"
   | "open-to-close"
   | "pie"
   | "sankey"
@@ -111,6 +112,7 @@ function graphicShape(name: string): GraphicShape {
   if (/dumbbell/i.test(name)) return "dumbbell";
   if (/open.?to.?close/i.test(name)) return "open-to-close";
   if (/lollipop/i.test(name)) return "lollipop";
+  if (/mapchart/i.test(name)) return "map";
   if (/cumulative.?histogram/i.test(name)) return "cumulative-histogram";
   if (/candlestick/i.test(name)) return "candlestick";
   if (/stackedbar/i.test(name)) return "stacked-bar";
@@ -768,6 +770,37 @@ function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }>
             className="fill-teal-600 dark:fill-teal-400"
           />
         ))}
+      </svg>
+    );
+  }
+  if (node.shape === "map") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        <path
+          d="M 5 8 H 30 V 44 H 5 Z"
+          className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 30 8 H 61 V 32 H 30 Z"
+          className="fill-teal-200 stroke-teal-700 dark:fill-teal-900 dark:stroke-teal-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 61 8 H 95 V 32 H 61 Z"
+          className="fill-rose-100 stroke-rose-700 dark:fill-rose-950 dark:stroke-rose-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 30 32 H 70 V 54 H 30 Z"
+          className="fill-rose-100 stroke-rose-700 dark:fill-rose-950 dark:stroke-rose-300"
+          strokeWidth="2"
+        />
+        <path
+          d="M 70 32 H 95 V 54 H 70 Z"
+          className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
+          strokeWidth="2"
+        />
       </svg>
     );
   }

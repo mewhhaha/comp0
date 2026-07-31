@@ -565,6 +565,15 @@ const lessons: Record<string, LessonCopy> = {
     "Include a native flow table because link widths alone are not an exact or sufficient text alternative.",
     '<SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">\n  <ChartTitle>Customer journey</ChartTitle>\n  <SankeyChartPlot aria-label="Sankey chart of the customer journey">\n    {({ links, nodes }) => (\n      <>\n        {links.map((link) => (\n          <SankeyChartLink link={link}>\n            <path d={link.path} />\n          </SankeyChartLink>\n        ))}\n        {nodes.map((node) => (\n          <SankeyChartNode node={node}>\n            <rect x={node.x} y={node.y} width={node.width} height={node.height} />\n          </SankeyChartNode>\n        ))}\n      </>\n    )}\n  </SankeyChartPlot>\n  <ChartTable>\n    <caption>Journey flows</caption>\n  </ChartTable>\n  <ChartTooltip />\n</SankeyChart>;',
   ),
+  "map-chart": lesson(
+    "A caller-defined SVG map whose regions carry values and remain keyboard reachable.",
+    "Like a paper atlas with a data label on every shape: you own the geography while the chart owns the semantics.",
+    "Use it for custom boundaries such as countries, states, campuses, or voting regions that do not fit a fixed chart type.",
+    "Start MapChart with one labelled numeric value for each region id.",
+    "Give MapChartPlot matching SVG region paths, a viewBox, and center points in that viewBox; wrap each rendered path in MapChartRegion.",
+    "Keep a visible table and non-color region labels so the geography never becomes the only way to read a value.",
+    '<MapChart values={electionRegions} regionLabel="US region" valueLabel="Electoral votes">\n  <ChartTitle>Electoral map by region</ChartTitle>\n  <MapChartPlot\n    aria-label="Map of regional electoral votes by party"\n    viewBox="0 0 100 65"\n    regions={electionGeometry}\n  >\n    {(region) => (\n      <MapChartRegion region={region}>\n        <path d={region.region.d} />\n      </MapChartRegion>\n    )}\n  </MapChartPlot>\n  <ChartTable>\n    <caption>Regional electoral vote totals</caption>\n  </ChartTable>\n  <ChartTooltip />\n</MapChart>;',
+  ),
   alert: lesson(
     "An assertive live message for important feedback that needs immediate attention.",
     "Like a clear interruption when a payment fails.",
@@ -1260,6 +1269,13 @@ const accessibility: Record<string, string[]> = {
     "Each node announces incoming and outgoing totals and connection counts.",
     "Include a native table listing every source, target, and exact flow value.",
     "Do not encode flow meaning through color alone.",
+  ],
+  "map-chart": [
+    "Treat the caller-owned paths as visual context, not as the text alternative; keep a native table with every region and value.",
+    "Give every region a unique id, path, and center point in the plot so directional arrows can choose the nearest spatial region.",
+    "Wrap every custom path in MapChartRegion so it receives a formatted region-and-value name and one roving tab stop.",
+    "Pair party or category colors with visible labels, patterns, or text inside the regions; never rely on color alone.",
+    "Use ChartTooltip as an enhancement while retaining the visible table and description.",
   ],
   alert: [
     "Mount Alert when new urgent information appears; content present before assistive technology starts observing may not be announced as a change.",
@@ -4124,6 +4140,111 @@ const chart = [
     ],
     "Charts are descriptive content and do not create form values.",
     ["heatmap", "tree", "table"],
+  ),
+  common(
+    "map-chart",
+    "Map Chart",
+    "charts",
+    [
+      "ChartDescription",
+      "ChartTable",
+      "ChartTitle",
+      "ChartTooltip",
+      "MapChart",
+      "MapChartPlot",
+      "MapChartRegion",
+    ],
+    '<MapChart values={electionRegions} regionLabel="US region" valueLabel="Electoral votes"><ChartTitle>Electoral map by region</ChartTitle><MapChartPlot aria-label="Map of regional electoral votes by party" viewBox="0 0 100 65" regions={electionGeometry}>{(region) => <MapChartRegion region={region}><path d={region.region.d} /></MapChartRegion>}</MapChartPlot><ChartDescription>Regional party labels remain visible in the map.</ChartDescription><ChartTable><caption>Regional electoral vote totals</caption></ChartTable><ChartTooltip /></MapChart>',
+    [
+      p(
+        "MapChart",
+        "root",
+        "Native figure sharing region values, labels, and formatting with every map part.",
+        true,
+        false,
+        [
+          prop(
+            "values",
+            "readonly MapChartValue[]",
+            "Unique region ids, labels, and finite numeric values.",
+          ),
+          prop(
+            "regionLabel / valueLabel",
+            "string",
+            "Visible names for map regions and measured values.",
+          ),
+          prop(
+            "formatValue",
+            "(value: number) => string",
+            "Formats region announcements and tooltip values.",
+          ),
+        ],
+      ),
+      p("ChartTitle", "label", "Native figcaption that visibly names the figure."),
+      p(
+        "MapChartPlot / MapChartRegion",
+        "graphic",
+        "Caller-defined SVG paths with spatially navigable region marks.",
+        true,
+        false,
+        [
+          prop("aria-label", "string", "Concise text alternative naming the map and subject."),
+          prop("viewBox", "string", "Four finite numbers describing the SVG coordinate system."),
+          prop(
+            "regions",
+            "readonly MapChartRegionGeometry[]",
+            "Unique paths and center points in viewBox coordinates matching every MapChart value id.",
+          ),
+          prop(
+            "children",
+            "(region: MapChartRegionState) => ReactNode",
+            "Custom region renderer receiving geometry and value state.",
+          ),
+          prop(
+            "region",
+            "MapChartRegionState",
+            "Geometry and value state passed to MapChartRegion.",
+          ),
+        ],
+      ),
+      p("ChartDescription", "feedback", "Visible prose explaining the map's important pattern."),
+      p("ChartTable", "table", "Native table listing every region and exact value."),
+      p(
+        "ChartTooltip",
+        "content",
+        "Optional floating region label shown on hover or focus.",
+        true,
+        true,
+      ),
+    ],
+    [
+      {
+        keys: ["Tab"],
+        action: "Enters the map at its current region and leaves with one more Tab.",
+      },
+      {
+        keys: ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"],
+        action: "Moves to the nearest region in the requested direction.",
+      },
+      { keys: ["Home"], action: "Moves to the first region." },
+      { keys: ["End"], action: "Moves to the last region." },
+      { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
+    ],
+    [
+      {
+        attribute: "[data-region-id]",
+        on: "MapChartRegion",
+        meaning: "The caller-defined region id.",
+      },
+      {
+        attribute: "[data-active]",
+        on: "MapChartRegion",
+        meaning: "The region currently reached by pointer or keyboard.",
+      },
+      { attribute: "[data-open]", on: "ChartTooltip", meaning: "A value tooltip is visible." },
+    ],
+    "Charts are descriptive content and do not create form values.",
+    ["heatmap", "scatter-chart", "table"],
   ),
 ];
 

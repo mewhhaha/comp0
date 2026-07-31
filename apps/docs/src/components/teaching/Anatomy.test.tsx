@@ -59,6 +59,7 @@ describe("Anatomy", () => {
     const cumulativeHistogram = renderChart("cumulative-histogram");
     const heatmap = renderChart("heatmap");
     const sankeyChart = renderChart("sankey-chart");
+    const mapChart = renderChart("map-chart");
 
     expect(barChart.querySelectorAll("[style*='width']")).toHaveLength(4);
     expect(columnChart.querySelectorAll("[style*='height']")).toHaveLength(4);
@@ -77,6 +78,7 @@ describe("Anatomy", () => {
     expect(cumulativeHistogram.querySelectorAll("[style*='height']")).toHaveLength(5);
     expect(heatmap.querySelectorAll("[style*='opacity']")).toHaveLength(12);
     expect(sankeyChart.querySelectorAll("svg path")).toHaveLength(3);
+    expect(mapChart.querySelectorAll("svg path")).toHaveLength(5);
 
     for (const chart of [
       barChart,
@@ -96,6 +98,7 @@ describe("Anatomy", () => {
       cumulativeHistogram,
       heatmap,
       sankeyChart,
+      mapChart,
     ]) {
       const chartTable = [...chart.querySelectorAll("span")].find(
         (element) => element.textContent === "ChartTable",
