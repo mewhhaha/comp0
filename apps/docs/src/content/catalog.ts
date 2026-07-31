@@ -557,13 +557,13 @@ const lessons: Record<string, LessonCopy> = {
     '<SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">\n  <ChartTitle>Customer journey</ChartTitle>\n  <SankeyChartPlot aria-label="Sankey chart of the customer journey">\n    {({ links, nodes }) => (\n      <>\n        {links.map((link) => (\n          <SankeyChartLink link={link}>\n            <path d={link.path} />\n          </SankeyChartLink>\n        ))}\n        {nodes.map((node) => (\n          <SankeyChartNode node={node}>\n            <rect x={node.x} y={node.y} width={node.width} height={node.height} />\n          </SankeyChartNode>\n        ))}\n      </>\n    )}\n  </SankeyChartPlot>\n  <ChartTable>\n    <caption>Journey flows</caption>\n  </ChartTable>\n  <ChartTooltip />\n</SankeyChart>;',
   ),
   "map-chart": lesson(
-    "A caller-defined SVG map of a simplified U.S. outline whose regions carry values and remain keyboard reachable.",
+    "A caller-defined SVG map whose state paths carry values and remain keyboard reachable.",
     "Like a paper atlas with a data label on every shape: you own the geography while the chart owns the semantics.",
     "Use it for custom boundaries such as countries, states, campuses, or voting regions that do not fit a fixed chart type.",
     "Start MapChart with one labelled numeric value for each region id.",
     "Give MapChartPlot matching SVG region paths, a viewBox, and center points in that viewBox; wrap each rendered path in MapChartRegion.",
     "Keep a visible table and non-color region labels so the geography never becomes the only way to read a value.",
-    '<MapChart values={electionRegions} regionLabel="US region" valueLabel="Electoral votes">\n  <ChartTitle>Electoral map by region</ChartTitle>\n  <MapChartPlot\n    aria-label="Map of regional electoral votes by party"\n    viewBox="0 0 100 65"\n    regions={electionGeometry}\n  >\n    {(region) => (\n      <MapChartRegion region={region}>\n        <path d={region.region.d} />\n      </MapChartRegion>\n    )}\n  </MapChartPlot>\n  <ChartTable>\n    <caption>Regional electoral vote totals</caption>\n  </ChartTable>\n  <ChartTooltip />\n</MapChart>;',
+    '<MapChart values={electionStates} regionLabel="US state" valueLabel="Electoral votes">\n  <ChartTitle>Illustrative electoral map by state</ChartTitle>\n  <MapChartPlot\n    aria-label="Map of state electoral votes by party"\n    viewBox="0 0 959 593"\n    regions={usStateGeometry}\n  >\n    {(region) => (\n      <MapChartRegion region={region}>\n        <path d={region.region.d} />\n      </MapChartRegion>\n    )}\n  </MapChartPlot>\n  <ChartTable>\n    <caption>State electoral vote totals</caption>\n  </ChartTable>\n  <ChartTooltip />\n</MapChart>;',
   ),
   alert: lesson(
     "An assertive live message for important feedback that needs immediate attention.",
@@ -4029,7 +4029,7 @@ const chart = [
       "MapChartPlot",
       "MapChartRegion",
     ],
-    '<MapChart values={electionRegions} regionLabel="US region" valueLabel="Electoral votes"><ChartTitle>Electoral map by region</ChartTitle><MapChartPlot aria-label="Map of regional electoral votes by party" viewBox="0 0 100 65" regions={electionGeometry}>{(region) => <MapChartRegion region={region}><path d={region.region.d} /></MapChartRegion>}</MapChartPlot><ChartDescription>A simplified U.S. outline keeps regional party labels visible.</ChartDescription><ChartTable><caption>Regional electoral vote totals</caption></ChartTable><ChartTooltip /></MapChart>',
+    '<MapChart values={electionStates} regionLabel="US state" valueLabel="Electoral votes"><ChartTitle>Illustrative electoral map by state</ChartTitle><MapChartPlot aria-label="Map of state electoral votes by party" viewBox="0 0 959 593" regions={usStateGeometry}>{(region) => <MapChartRegion region={region}><path d={region.region.d} /></MapChartRegion>}</MapChartPlot><ChartDescription>Every state has its own SVG path and illustrative party assignment.</ChartDescription><ChartTable><caption>State electoral vote totals</caption></ChartTable><ChartTooltip /></MapChart>',
     [
       p(
         "MapChart",
