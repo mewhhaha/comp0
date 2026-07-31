@@ -557,7 +557,7 @@ const lessons: Record<string, LessonCopy> = {
     '<SankeyChart nodes={nodes} links={links} nodeLabel="Step" valueLabel="People">\n  <ChartTitle>Customer journey</ChartTitle>\n  <SankeyChartPlot aria-label="Sankey chart of the customer journey">\n    {({ links, nodes }) => (\n      <>\n        {links.map((link) => (\n          <SankeyChartLink link={link}>\n            <path d={link.path} />\n          </SankeyChartLink>\n        ))}\n        {nodes.map((node) => (\n          <SankeyChartNode node={node}>\n            <rect x={node.x} y={node.y} width={node.width} height={node.height} />\n          </SankeyChartNode>\n        ))}\n      </>\n    )}\n  </SankeyChartPlot>\n  <ChartTable>\n    <caption>Journey flows</caption>\n  </ChartTable>\n  <ChartTooltip />\n</SankeyChart>;',
   ),
   "map-chart": lesson(
-    "A caller-defined SVG map whose regions carry values and remain keyboard reachable.",
+    "A caller-defined SVG map of a simplified U.S. outline whose regions carry values and remain keyboard reachable.",
     "Like a paper atlas with a data label on every shape: you own the geography while the chart owns the semantics.",
     "Use it for custom boundaries such as countries, states, campuses, or voting regions that do not fit a fixed chart type.",
     "Start MapChart with one labelled numeric value for each region id.",
@@ -4029,7 +4029,7 @@ const chart = [
       "MapChartPlot",
       "MapChartRegion",
     ],
-    '<MapChart values={electionRegions} regionLabel="US region" valueLabel="Electoral votes"><ChartTitle>Electoral map by region</ChartTitle><MapChartPlot aria-label="Map of regional electoral votes by party" viewBox="0 0 100 65" regions={electionGeometry}>{(region) => <MapChartRegion region={region}><path d={region.region.d} /></MapChartRegion>}</MapChartPlot><ChartDescription>Regional party labels remain visible in the map.</ChartDescription><ChartTable><caption>Regional electoral vote totals</caption></ChartTable><ChartTooltip /></MapChart>',
+    '<MapChart values={electionRegions} regionLabel="US region" valueLabel="Electoral votes"><ChartTitle>Electoral map by region</ChartTitle><MapChartPlot aria-label="Map of regional electoral votes by party" viewBox="0 0 100 65" regions={electionGeometry}>{(region) => <MapChartRegion region={region}><path d={region.region.d} /></MapChartRegion>}</MapChartPlot><ChartDescription>A simplified U.S. outline keeps regional party labels visible.</ChartDescription><ChartTable><caption>Regional electoral vote totals</caption></ChartTable><ChartTooltip /></MapChart>',
     [
       p(
         "MapChart",
