@@ -48,10 +48,15 @@ describe("Anatomy", () => {
     const areaChart = renderChart("area-chart");
     const pieChart = renderChart("pie-chart");
     const candlestickChart = renderChart("candlestick-chart");
+    const dumbbellChart = renderChart("dumbbell-chart");
+    const boxplotChart = renderChart("boxplot-chart");
+    const openToCloseChart = renderChart("open-to-close-chart");
     const scatterChart = renderChart("scatter-chart");
+    const lollipopChart = renderChart("lollipop-chart");
     const stackedBarChart = renderChart("stacked-bar-chart");
     const stackedColumnChart = renderChart("stacked-column-chart");
     const histogram = renderChart("histogram");
+    const cumulativeHistogram = renderChart("cumulative-histogram");
     const heatmap = renderChart("heatmap");
     const sankeyChart = renderChart("sankey-chart");
 
@@ -61,10 +66,15 @@ describe("Anatomy", () => {
     expect(areaChart.querySelectorAll("svg path")).toHaveLength(2);
     expect(pieChart.querySelector("[style*='conic-gradient']")).not.toBeNull();
     expect(candlestickChart.querySelectorAll("svg rect")).toHaveLength(4);
+    expect(dumbbellChart.querySelectorAll("svg circle")).toHaveLength(6);
+    expect(boxplotChart.querySelectorAll("svg rect")).toHaveLength(3);
+    expect(openToCloseChart.querySelectorAll("svg circle")).toHaveLength(4);
     expect(scatterChart.querySelectorAll("svg circle")).toHaveLength(5);
+    expect(lollipopChart.querySelectorAll("span[style*='width']")).toHaveLength(4);
     expect(stackedBarChart.querySelectorAll("[style*='width']")).toHaveLength(3);
     expect(stackedColumnChart.querySelectorAll("[style*='height']")).toHaveLength(4);
     expect(histogram.querySelectorAll("[style*='height']")).toHaveLength(5);
+    expect(cumulativeHistogram.querySelectorAll("[style*='height']")).toHaveLength(5);
     expect(heatmap.querySelectorAll("[style*='opacity']")).toHaveLength(12);
     expect(sankeyChart.querySelectorAll("svg path")).toHaveLength(3);
 
@@ -75,10 +85,15 @@ describe("Anatomy", () => {
       areaChart,
       pieChart,
       candlestickChart,
+      dumbbellChart,
+      boxplotChart,
+      openToCloseChart,
       scatterChart,
+      lollipopChart,
       stackedBarChart,
       stackedColumnChart,
       histogram,
+      cumulativeHistogram,
       heatmap,
       sankeyChart,
     ]) {

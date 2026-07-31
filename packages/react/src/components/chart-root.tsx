@@ -73,7 +73,7 @@ export function stackedChartContext(
 
 export function categoricalChartContext(
   chartName: string,
-  kind: "bar" | "column" | "pie",
+  kind: "bar" | "column" | "pie" | "lollipop",
   values: readonly CategoricalChartValue[],
   categoryLabel: string,
   valueLabel: string,

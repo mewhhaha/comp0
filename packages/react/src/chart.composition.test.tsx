@@ -5,6 +5,8 @@ import { AreaChart } from "./components/AreaChart.js";
 import { AreaChartPlot } from "./components/AreaChartPlot.js";
 import { BarChart } from "./components/BarChart.js";
 import { BarChartBar, BarChartPlot } from "./components/BarChartPlot.js";
+import { BoxPlotChart } from "./components/BoxPlotChart.js";
+import { BoxPlotChartBox, BoxPlotChartPlot } from "./components/BoxPlotChartPlot.js";
 import { CandlestickChart } from "./components/CandlestickChart.js";
 import { CandlestickChartPlot } from "./components/CandlestickChartPlot.js";
 import { ChartDescription } from "./components/ChartDescription.js";
@@ -14,8 +16,19 @@ import { ChartTitle } from "./components/ChartTitle.js";
 import { ChartTooltip } from "./components/chart-interaction.js";
 import { ColumnChart } from "./components/ColumnChart.js";
 import { ColumnChartPlot } from "./components/ColumnChartPlot.js";
+import { CumulativeHistogram } from "./components/CumulativeHistogram.js";
+import {
+  CumulativeHistogramBin,
+  CumulativeHistogramPlot,
+} from "./components/CumulativeHistogramPlot.js";
+import { DumbbellChart } from "./components/DumbbellChart.js";
+import { DumbbellChartDumbbell, DumbbellChartPlot } from "./components/DumbbellChartPlot.js";
 import { LineChart } from "./components/LineChart.js";
 import { LineChartPlot, LineChartPoint } from "./components/LineChartPlot.js";
+import { LollipopChart } from "./components/LollipopChart.js";
+import { LollipopChartLollipop, LollipopChartPlot } from "./components/LollipopChartPlot.js";
+import { OpenToCloseChart } from "./components/OpenToCloseChart.js";
+import { OpenToCloseChartPlot, OpenToCloseChartRange } from "./components/OpenToCloseChartPlot.js";
 import { PieChart } from "./components/PieChart.js";
 import { PieChartPlot, PieChartSlice } from "./components/PieChartPlot.js";
 import { Heatmap } from "./components/Heatmap.js";
@@ -455,6 +468,141 @@ describe("chart composition", () => {
     expect(document.activeElement).toBe(points[2]);
     fireKeyDown(points[2]!, "ArrowRight");
     expect(document.activeElement).toBe(points[1]);
+  });
+
+  it("renders range, summary, and lollipop marks with named keyboard stops", () => {
+    const { container: dumbbellContainer } = render(
+      <DumbbellChart
+        values={[
+          { label: "Standard", start: 2, end: 8 },
+          { label: "Express", start: 4, end: 10 },
+        ]}
+        categoryLabel="Service"
+        valueLabel="Hours"
+        formatValue={(value) => `${value}h`}
+      >
+        <DumbbellChartPlot aria-label="Delivery ranges">
+          {(dumbbell) => (
+            <DumbbellChartDumbbell dumbbell={dumbbell}>
+              <line x1={dumbbell.startX} x2={dumbbell.endX} y1={dumbbell.y} y2={dumbbell.y} />
+            </DumbbellChartDumbbell>
+          )}
+        </DumbbellChartPlot>
+      </DumbbellChart>,
+    );
+    const dumbbells = [
+      ...dumbbellContainer.querySelectorAll<SVGGElement>("[data-slot='dumbbell-chart-dumbbell']"),
+    ];
+    expect(dumbbells).toHaveLength(2);
+    expect(dumbbells[0]?.getAttribute("aria-label")).toBe(
+      "Service: Standard, Hours Start: 2h, Hours End: 8h",
+    );
+    act(() => dumbbells[0]!.focus());
+    fireKeyDown(dumbbells[0]!, "ArrowDown");
+    expect(document.activeElement).toBe(dumbbells[1]);
+
+    const { container: boxContainer } = render(
+      <BoxPlotChart
+        values={[{ label: "Read", min: 1, q1: 2, median: 3, q3: 4, max: 6 }]}
+        categoryLabel="Operation"
+        valueLabel="Latency"
+      >
+        <BoxPlotChartPlot aria-label="Latency spread">
+          {(box) => (
+            <BoxPlotChartBox box={box}>
+              <rect x={box.x} y={box.q3Y} width={box.width} height={box.q1Y - box.q3Y} />
+            </BoxPlotChartBox>
+          )}
+        </BoxPlotChartPlot>
+      </BoxPlotChart>,
+    );
+    expect(
+      boxContainer.querySelector("[data-slot='boxplot-chart-box']")?.getAttribute("aria-label"),
+    ).toBe(
+      "Operation: Read, Latency min: 1, Latency first quartile: 2, Latency median: 3, Latency third quartile: 4, Latency max: 6",
+    );
+
+    const { container: openToCloseContainer } = render(
+      <OpenToCloseChart
+        values={[
+          { x: 1, open: 10, close: 12 },
+          { x: 2, open: 12, close: 9 },
+        ]}
+        xLabel="Day"
+        yLabel="Price"
+      >
+        <OpenToCloseChartPlot aria-label="Opening and closing prices">
+          {(range) => (
+            <OpenToCloseChartRange range={range}>
+              <line x1={range.x} x2={range.x} y1={range.openY} y2={range.closeY} />
+            </OpenToCloseChartRange>
+          )}
+        </OpenToCloseChartPlot>
+      </OpenToCloseChart>,
+    );
+    expect(
+      [
+        ...openToCloseContainer.querySelectorAll<SVGGElement>(
+          "[data-slot='open-to-close-chart-range']",
+        ),
+      ].map((range) => range.getAttribute("data-direction")),
+    ).toEqual(["up", "down"]);
+
+    const { container: lollipopContainer } = render(
+      <LollipopChart
+        values={[{ label: "Email", value: 82 }]}
+        categoryLabel="Feature"
+        valueLabel="Adoption"
+      >
+        <LollipopChartPlot aria-label="Feature adoption">
+          {(lollipop) => (
+            <LollipopChartLollipop lollipop={lollipop}>
+              <circle cx={lollipop.x} cy={lollipop.y} r="2" />
+            </LollipopChartLollipop>
+          )}
+        </LollipopChartPlot>
+      </LollipopChart>,
+    );
+    expect(
+      lollipopContainer
+        .querySelector("[data-slot='lollipop-chart-lollipop']")
+        ?.getAttribute("data-value"),
+    ).toBe("82");
+  });
+
+  it("keeps cumulative histogram counts monotonic and validates boxplot order", () => {
+    const { container } = render(
+      <CumulativeHistogram
+        values={[1, 2, 2, 4]}
+        valueLabel="Value"
+        frequencyLabel="Cumulative count"
+      >
+        <CumulativeHistogramPlot aria-label="Cumulative values" binCount={3}>
+          {(bin) => (
+            <CumulativeHistogramBin bin={bin}>
+              <rect x={bin.x} y={bin.y} width={bin.width} height={bin.height} />
+            </CumulativeHistogramBin>
+          )}
+        </CumulativeHistogramPlot>
+      </CumulativeHistogram>,
+    );
+    expect(
+      [...container.querySelectorAll<SVGGElement>("[data-slot='cumulative-histogram-bin']")].map(
+        (bin) => Number(bin.getAttribute("data-cumulative-count")),
+      ),
+    ).toEqual([1, 3, 4]);
+    expect(
+      container.querySelector("[data-slot='cumulative-histogram-bin']")?.getAttribute("aria-label"),
+    ).toBe("Value: 1 to 2, count: 1, cumulative Cumulative count: 1");
+    expect(() =>
+      render(
+        <BoxPlotChart
+          values={[{ label: "Invalid", min: 3, q1: 2, median: 4, q3: 5, max: 6 }]}
+          categoryLabel="Group"
+          valueLabel="Value"
+        />,
+      ),
+    ).toThrow('BoxPlotChart value "Invalid" must satisfy min ≤ q1 ≤ median ≤ q3 ≤ max');
   });
 
   it("composes stacked bar and column segments with two-dimensional arrow navigation", () => {

@@ -36,6 +36,10 @@ export type HistogramBinValue = {
   count: number;
 };
 
+export type CumulativeHistogramBinValue = HistogramBinValue & {
+  cumulativeCount: number;
+};
+
 export type SankeyChartNodeValue = {
   id: string;
   label: string;
@@ -52,6 +56,27 @@ export type CandlestickChartValue = {
   open: number;
   high: number;
   low: number;
+  close: number;
+};
+
+export type DumbbellChartValue = {
+  label: string;
+  start: number;
+  end: number;
+};
+
+export type BoxPlotChartValue = {
+  label: string;
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+};
+
+export type OpenToCloseChartValue = {
+  x: number | Date;
+  open: number;
   close: number;
 };
 
@@ -126,6 +151,46 @@ export type ChartContextValue =
       lowLabel: string;
       closeLabel: string;
       formatX: (value: number | Date) => string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "dumbbell";
+      values: readonly DumbbellChartValue[];
+      categoryLabel: string;
+      valueLabel: string;
+      startLabel: string;
+      endLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "boxplot";
+      values: readonly BoxPlotChartValue[];
+      categoryLabel: string;
+      valueLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "open-to-close";
+      values: readonly OpenToCloseChartValue[];
+      xLabel: string;
+      yLabel: string;
+      openLabel: string;
+      closeLabel: string;
+      formatX: (value: number | Date) => string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "lollipop";
+      values: readonly CategoricalChartValue[];
+      categoryLabel: string;
+      valueLabel: string;
+      formatY: (value: number) => string;
+    }
+  | {
+      kind: "cumulative-histogram";
+      values: readonly number[];
+      valueLabel: string;
+      frequencyLabel: string;
       formatY: (value: number) => string;
     };
 

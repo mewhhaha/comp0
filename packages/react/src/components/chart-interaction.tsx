@@ -21,11 +21,15 @@ import {
 } from "./overlay-shared.js";
 import { writingDirection } from "./writing-direction.js";
 import type {
+  BoxPlotChartValue,
   CandlestickChartValue,
   CartesianChartValue,
   CategoricalChartValue,
+  CumulativeHistogramBinValue,
+  DumbbellChartValue,
   HeatmapChartValue,
   HistogramBinValue,
+  OpenToCloseChartValue,
   SankeyChartLinkValue,
   SankeyChartNodeValue,
   ScatterChartValue,
@@ -79,6 +83,41 @@ export type ChartValueDetails =
       formattedY: string;
     }
   | {
+      kind: "dumbbell";
+      index: number;
+      label: string;
+      value: DumbbellChartValue;
+      formattedStart: string;
+      formattedEnd: string;
+    }
+  | {
+      kind: "boxplot";
+      index: number;
+      label: string;
+      value: BoxPlotChartValue;
+      formattedMin: string;
+      formattedQ1: string;
+      formattedMedian: string;
+      formattedQ3: string;
+      formattedMax: string;
+    }
+  | {
+      kind: "open-to-close";
+      index: number;
+      label: string;
+      value: OpenToCloseChartValue;
+      formattedX: string;
+      formattedOpen: string;
+      formattedClose: string;
+    }
+  | {
+      kind: "lollipop";
+      index: number;
+      label: string;
+      value: CategoricalChartValue;
+      formattedValue: string;
+    }
+  | {
       kind: "stacked-bar" | "stacked-column";
       index: number;
       label: string;
@@ -91,6 +130,14 @@ export type ChartValueDetails =
       index: number;
       label: string;
       value: HistogramBinValue;
+      formattedMin: string;
+      formattedMax: string;
+    }
+  | {
+      kind: "cumulative-histogram";
+      index: number;
+      label: string;
+      value: CumulativeHistogramBinValue;
       formattedMin: string;
       formattedMax: string;
     }

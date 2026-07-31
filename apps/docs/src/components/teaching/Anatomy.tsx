@@ -40,11 +40,16 @@ type ItemShape = "row" | "tab" | "crumb" | "radio" | "slide" | "cell";
 type GraphicShape =
   | "area"
   | "bar"
+  | "boxplot"
   | "candlestick"
   | "column"
+  | "cumulative-histogram"
+  | "dumbbell"
   | "heatmap"
   | "histogram"
   | "line"
+  | "lollipop"
+  | "open-to-close"
   | "pie"
   | "sankey"
   | "scatter"
@@ -102,6 +107,11 @@ function itemShape(name: string): ItemShape {
 }
 
 function graphicShape(name: string): GraphicShape {
+  if (/boxplot/i.test(name)) return "boxplot";
+  if (/dumbbell/i.test(name)) return "dumbbell";
+  if (/open.?to.?close/i.test(name)) return "open-to-close";
+  if (/lollipop/i.test(name)) return "lollipop";
+  if (/cumulative.?histogram/i.test(name)) return "cumulative-histogram";
   if (/candlestick/i.test(name)) return "candlestick";
   if (/stackedbar/i.test(name)) return "stacked-bar";
   if (/stackedcolumn/i.test(name)) return "stacked-column";
@@ -761,10 +771,122 @@ function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }>
       </svg>
     );
   }
+  if (node.shape === "dumbbell") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[16, 30, 44].map((y, index) => (
+          <g key={y}>
+            <line
+              x1={18 + index * 6}
+              x2={78 - index * 4}
+              y1={y}
+              y2={y}
+              className="stroke-teal-600 dark:stroke-teal-400"
+              strokeWidth="3"
+            />
+            <circle
+              cx={18 + index * 6}
+              cy={y}
+              r="4"
+              className="fill-white stroke-teal-700 dark:fill-zinc-900 dark:stroke-teal-300"
+              strokeWidth="2"
+            />
+            <circle cx={78 - index * 4} cy={y} r="4" className="fill-teal-700 dark:fill-teal-300" />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "boxplot") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[22, 50, 78].map((x, index) => (
+          <g key={x}>
+            <line
+              x1={x}
+              x2={x}
+              y1={8 + index * 3}
+              y2={52 - index * 2}
+              className="stroke-teal-700 dark:stroke-teal-300"
+              strokeWidth="2"
+            />
+            <rect
+              x={x - 7}
+              y={20 + index * 2}
+              width="14"
+              height={16 - index}
+              className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
+              strokeWidth="2"
+            />
+            <line
+              x1={x - 7}
+              x2={x + 7}
+              y1={28 + index}
+              y2={28 + index}
+              className="stroke-zinc-950 dark:stroke-white"
+              strokeWidth="2"
+            />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "open-to-close") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        {[18, 40, 62, 84].map((x, index) => (
+          <g key={x}>
+            <line
+              x1={x}
+              x2={x}
+              y1={39 - index * 3}
+              y2={18 + index * 2}
+              className="stroke-teal-600 dark:stroke-teal-400"
+              strokeWidth="3"
+            />
+            <line
+              x1={x - 5}
+              x2={x + 5}
+              y1={39 - index * 3}
+              y2={39 - index * 3}
+              className="stroke-zinc-700 dark:stroke-zinc-300"
+              strokeWidth="2"
+            />
+            <circle cx={x} cy={18 + index * 2} r="3" className="fill-zinc-950 dark:fill-white" />
+          </g>
+        ))}
+      </svg>
+    );
+  }
+  if (node.shape === "lollipop") {
+    graphic = (
+      <span className="flex h-14 flex-col justify-center gap-2" aria-hidden="true">
+        {[88, 66, 48, 30].map((width) => (
+          <span key={width} className="flex items-center">
+            <span className="h-1 bg-teal-600 dark:bg-teal-400" style={{ width: `${width}%` }} />
+            <span className="-ml-1 h-3 w-3 rounded-full bg-teal-700 dark:bg-teal-300" />
+          </span>
+        ))}
+      </span>
+    );
+  }
   if (node.shape === "histogram") {
     graphic = (
       <span className="flex h-14 items-end justify-center gap-px" aria-hidden="true">
         {[32, 68, 92, 54, 20].map((height) => (
+          <span
+            key={height}
+            className="w-4 bg-teal-600/75 dark:bg-teal-400/75"
+            style={{ height: `${height}%` }}
+          />
+        ))}
+      </span>
+    );
+  }
+  if (node.shape === "cumulative-histogram") {
+    graphic = (
+      <span className="flex h-14 items-end justify-center gap-px" aria-hidden="true">
+        {[18, 34, 54, 76, 94].map((height) => (
           <span
             key={height}
             className="w-4 bg-teal-600/75 dark:bg-teal-400/75"

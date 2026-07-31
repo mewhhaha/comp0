@@ -19,6 +19,14 @@ export * from "./components/AreaChart.js";
 export * from "./components/AreaChartPlot.js";
 export * from "./components/CandlestickChart.js";
 export * from "./components/CandlestickChartPlot.js";
+export * from "./components/DumbbellChart.js";
+export * from "./components/DumbbellChartPlot.js";
+export * from "./components/BoxPlotChart.js";
+export * from "./components/BoxPlotChartPlot.js";
+export * from "./components/OpenToCloseChart.js";
+export * from "./components/OpenToCloseChartPlot.js";
+export * from "./components/LollipopChart.js";
+export * from "./components/LollipopChartPlot.js";
 export * from "./components/ScatterChart.js";
 export * from "./components/ScatterChartPlot.js";
 export * from "./components/StackedBarChart.js";
@@ -27,12 +35,18 @@ export * from "./components/StackedColumnChart.js";
 export * from "./components/StackedColumnChartPlot.js";
 export * from "./components/Histogram.js";
 export * from "./components/HistogramPlot.js";
+export * from "./components/CumulativeHistogram.js";
+export * from "./components/CumulativeHistogramPlot.js";
 export * from "./components/Heatmap.js";
 export * from "./components/HeatmapPlot.js";
 export * from "./components/SankeyChart.js";
 export * from "./components/SankeyChartPlot.js";
 export {
   type CandlestickChartValue,
+  type DumbbellChartValue,
+  type BoxPlotChartValue,
+  type CumulativeHistogramBinValue,
+  type OpenToCloseChartValue,
   type CartesianChartValue,
   type CategoricalChartValue,
   type ChartPoint,
