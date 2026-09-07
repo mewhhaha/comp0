@@ -4,7 +4,7 @@ import { Alert, Button } from "@comp0/react";
 export function Example() {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="flex w-80 flex-col items-start gap-3 text-base sm:text-sm">
+    <div className="flex w-full max-w-80 flex-col items-start gap-3 text-base sm:text-sm">
       <Button
         className="min-h-10 rounded-lg bg-teal-700 px-3 py-2 font-medium text-white outline-offset-2 focus-visible:outline-2 focus-visible:outline-teal-600 dark:bg-teal-400 dark:text-zinc-950 dark:focus-visible:outline-teal-300"
         onClick={() => setFailed(true)}

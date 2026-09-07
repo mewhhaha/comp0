@@ -47,7 +47,7 @@ export function DocsHeader({ className, navigation, onOpenSearch }: DocsHeaderPr
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
           <Button
-            className="flex items-center gap-2 rounded-lg border border-zinc-950/10 px-3 py-2 text-sm/6 text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-zinc-950/10 px-3 py-2 text-sm/6 text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400"
             onClick={onOpenSearch}
           >
             <MagnifyingGlassIcon aria-hidden="true" className="size-4 shrink-0" />

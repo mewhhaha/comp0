@@ -14,7 +14,7 @@ export function Example() {
   return (
     <Pagination defaultPage={6} totalPages={20}>
       {({ pages }) => (
-        <PaginationList className="flex items-center gap-1">
+        <PaginationList className="flex flex-wrap items-center gap-1">
           <PaginationItem>
             <PaginationFirst className="rounded px-2.5 py-2 text-sm hover:bg-zinc-100 disabled:opacity-40 dark:hover:bg-zinc-800">
               First

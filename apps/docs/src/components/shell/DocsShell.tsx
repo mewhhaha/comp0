@@ -60,7 +60,7 @@ export function DocsShell({ children, className, navigation, paletteEntries }: D
         </div>
       </div>
       <CommandPalette entries={paletteEntries} open={paletteOpen} onToggle={setPaletteOpen} />
-      <ToastRegion className="inset-auto right-4 bottom-4 m-0 flex w-80 flex-col gap-2 border-0 bg-transparent p-0">
+      <ToastRegion className="inset-auto right-4 bottom-4 m-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 border-0 bg-transparent p-0">
         {(toast) => (
           <Toast
             className="flex items-start justify-between gap-3 rounded-xl border border-zinc-950/10 bg-white p-3 text-base/7 text-zinc-900 shadow-lg sm:text-sm/6 data-[kind=alert]:border-red-600/30 data-[kind=alert]:text-red-700 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-50 dark:data-[kind=alert]:border-red-400/30 dark:data-[kind=alert]:text-red-300"

@@ -39,7 +39,7 @@ export function ApiReference({ imports, parts, className }: ApiReferenceProps) {
         {parts.map((part) => (
           <section
             key={part.name}
-            className="border-t border-zinc-950/10 pt-6 first:border-t-0 first:pt-0 dark:border-white/10"
+            className="min-w-0 border-t border-zinc-950/10 pt-6 first:border-t-0 first:pt-0 dark:border-white/10"
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
