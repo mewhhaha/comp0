@@ -14,7 +14,7 @@ export function Example() {
       aria-label="Main"
       className="relative w-full max-w-md rounded border border-zinc-950/10 p-1 dark:border-white/10"
     >
-      <NavigationMenuList className="flex items-center gap-1">
+      <NavigationMenuList className="flex flex-wrap items-center gap-1">
         <NavigationMenuItem value="products">
           <NavigationMenuTrigger className="group flex items-center gap-1 rounded px-3 py-2.5 text-base text-zinc-800 select-none hover:bg-zinc-100 data-open:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800 dark:data-open:bg-zinc-800">
             Products

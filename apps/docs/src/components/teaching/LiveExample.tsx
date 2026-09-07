@@ -17,7 +17,7 @@ export function LiveExample({ slug, title = "Live example", className }: LiveExa
     <section
       className={cn(
         `
-          max-w-full min-w-0 rounded-xl border border-zinc-950/10 bg-white p-6
+          max-w-full min-w-0 rounded-xl border border-zinc-950/10 bg-white p-3
           sm:p-8
           dark:border-white/10 dark:bg-zinc-900
         `,

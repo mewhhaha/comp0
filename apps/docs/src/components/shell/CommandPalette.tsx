@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
+  Button,
   Combobox,
   ComboboxInput,
   ComboboxOption,
@@ -75,25 +76,34 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
           open={open}
           onToggle={keepResultsOpen}
         >
-          <ComboboxInput
-            aria-label="Search docs"
-            className="w-full rounded-2xl bg-transparent px-5 py-4 text-base text-zinc-950 outline-none placeholder:text-zinc-400 sm:text-sm dark:text-white dark:placeholder:text-zinc-500"
-            placeholder="Search components and guides…"
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                // The Combobox's own Escape handling only asks the popover
-                // to close, which an always-open panel ignores; close the
-                // whole dialog in one press instead.
-                event.preventDefault();
-                onToggle(false);
-              }
-            }}
-          />
+          <div className="flex items-center gap-2 pr-2">
+            <ComboboxInput
+              aria-label="Search docs"
+              className="min-w-0 flex-1 rounded-2xl bg-transparent px-5 py-4 text-base text-zinc-950 outline-none placeholder:text-zinc-400 sm:text-sm dark:text-white dark:placeholder:text-zinc-500"
+              placeholder="Search components and guides…"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  // The Combobox's own Escape handling only asks the popover
+                  // to close, which an always-open panel ignores; close the
+                  // whole dialog in one press instead.
+                  event.preventDefault();
+                  onToggle(false);
+                }
+              }}
+            />
+            <Button
+              aria-label="Close search"
+              onClick={() => onToggle(false)}
+              className="min-h-11 min-w-11 shrink-0 rounded-lg px-2 text-sm text-zinc-600 outline-teal-600 focus-visible:outline-2 dark:text-zinc-400 dark:outline-teal-400"
+            >
+              Close
+            </Button>
+          </div>
           <ComboboxPopover
             aria-label="Search results"
-            className="max-h-80 w-[anchor-size(width)] overflow-y-auto rounded-xl border border-zinc-950/10 bg-white p-2 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
+            className="max-h-[min(20rem,45dvh)] w-[min(38rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-zinc-950/10 bg-white p-2 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
             offset={8}
-            placement="bottom"
+            placement="bottom start"
           >
             {entries.map((entry) => (
               <ComboboxOption
@@ -104,7 +114,7 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
               >
                 <span className="truncate">{entry.title}</span>
                 <span className="flex shrink-0 items-center gap-2 text-sm/6 text-zinc-400 sm:text-xs/6 dark:text-zinc-500">
-                  <span>{entry.group}</span>
+                  <span className="max-sm:hidden">{entry.group}</span>
                   <span
                     aria-hidden="true"
                     className="hidden font-mono text-teal-700 group-data-active:inline dark:text-teal-300"

@@ -40,3 +40,5 @@ jobs:
           done
           DOCS_URL=http://127.0.0.1:4173 pnpm test:docs
           DOCS_URL=http://127.0.0.1:4173 pnpm test:connect
+          DOCS_URL=http://127.0.0.1:4173 pnpm test:docs:mobile
+          DOCS_URL=http://127.0.0.1:4173 pnpm test:connect:touch

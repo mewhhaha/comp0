@@ -68,6 +68,7 @@ try {
     "Disconnect must retain focus on an enabled control",
   );
 
+  await shader.getByRole("button", { name: "Canvas", exact: true }).click();
   const vectorSource = shader.getByRole("combobox", {
     name: "Noise Texture: Vector source (vector)",
   });
@@ -154,7 +155,7 @@ try {
   await input.click();
   assert.equal(await select.inputValue(), "jade", "Narrow layouts must retain connection controls");
   assert(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    await page.evaluate(() => document.documentElement.scrollWidth <= 390),
     "The board must scroll locally instead of widening the page",
   );
   assert.deepEqual(errors, [], "Connect runtime logged browser errors");

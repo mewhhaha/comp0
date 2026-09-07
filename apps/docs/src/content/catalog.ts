@@ -1043,7 +1043,7 @@ const accessibility: Record<string, string[]> = {
     "ConnectLines is decorative and aria-hidden. Port descriptions persistently name connected endpoints, while a polite live region announces edits. Do not rely on wire color to explain types or relationships.",
     "Tab follows the DOM and retains native control behavior. Up, Down, Home, and End navigate cards only when the card itself has focus. When composing with Inventory, give ConnectCard tabIndex={-1} and let Inventory own spatial navigation.",
     "Inputs accept one output of the same kind from a different card; outputs may feed several inputs. Cycles are allowed. Applications that require an acyclic workflow must veto invalid proposals through controlled value/onChange.",
-    "Keep cards mounted regardless of viewport visibility. If layout permits dragging or resizing, provide equivalent visible position and size controls, as the shader example does.",
+    "Keep cards mounted regardless of viewport visibility. Offer a stacked Cards view for small screens and a scrollable Canvas for spatial editing. Give touch controls at least 44 pixels of space and apply touch-action: none to move and resize grips so browser scrolling does not cancel gestures. Provide visible position and size controls as an alternative to dragging.",
   ],
   "floating-panel": [
     "Give every FloatingPanelSurface a visible FloatingPanelTitle or an explicit aria-label. The surface is a non-modal dialog and must not use aria-modal.",
@@ -5919,7 +5919,7 @@ const navigation = [
         id: "shader",
         title: "Shader connections",
         description:
-          "Compose Connect with Inventory for movable material cards, typed sources, and native controls for connections, position, and size.",
+          "Edit typed sources in a phone-friendly Cards view, or switch to Canvas for touch and keyboard movement, resizing, and connection dragging. Native controls also edit connections, position, and size.",
       },
     ],
   ),

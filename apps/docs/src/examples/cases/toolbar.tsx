@@ -6,7 +6,7 @@ export function Example() {
   return (
     <Toolbar
       aria-label="Text formatting"
-      className="flex items-center gap-2 rounded border border-zinc-950/10 p-1.5 dark:border-white/10"
+      className="flex flex-wrap items-center gap-2 rounded border border-zinc-950/10 p-1.5 dark:border-white/10"
     >
       <ToggleButtonGroup
         type="multiple"

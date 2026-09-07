@@ -342,7 +342,7 @@ function PartName({ children, className }: { children: ReactNode; className?: st
     <span
       className={cn(
         `
-          font-mono text-xs/5 whitespace-nowrap text-zinc-500
+          min-w-0 font-mono text-xs/5 wrap-anywhere text-zinc-500
           dark:text-zinc-400
         `,
         className,
@@ -464,7 +464,10 @@ function ControlNode({ node }: { node: Extract<DiagramNode, { type: "control" }>
   return (
     <div
       className={cn(
-        "relative flex min-h-10 items-center gap-2.5 rounded-lg px-4",
+        `
+          relative flex min-h-10 max-w-full flex-wrap items-center gap-2.5
+          rounded-lg px-4
+        `,
         wide ? "w-full max-w-64" : "self-start justify-self-start",
         shape === "button" && "bg-zinc-800",
         shape === "button" && "dark:bg-zinc-200",

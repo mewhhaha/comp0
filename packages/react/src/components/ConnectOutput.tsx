@@ -99,7 +99,9 @@ export function ConnectOutput({
             current.dragging
           )
             return;
-          if (Math.hypot(event.clientX - current.x, event.clientY - current.y) < 4) return;
+          const dragThreshold = event.pointerType === "touch" ? 10 : 4;
+          if (Math.hypot(event.clientX - current.x, event.clientY - current.y) < dragThreshold)
+            return;
           current.dragging = true;
           if (context.selectedOutput !== value) context.selectOutput(value);
         }}
