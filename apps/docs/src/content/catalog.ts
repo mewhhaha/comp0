@@ -5918,8 +5918,7 @@ const navigation = [
       {
         id: "shader",
         title: "Shader connections",
-        description:
-          "A compact shader graph. Tap or drag to connect.",
+        description: "A compact shader graph. Tap or drag to connect.",
       },
     ],
   ),
