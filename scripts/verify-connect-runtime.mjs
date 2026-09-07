@@ -70,10 +70,12 @@ try {
   );
 
   await shader.getByRole("button", { name: "Canvas", exact: true }).click();
-  const vectorSource = shader.getByRole("combobox", {
-    name: "Noise Texture: Vector source (vector)",
-  });
+  const vectorSource = shader.locator('select[aria-label="Noise Texture: Vector source (vector)"]');
+  await shader
+    .getByRole("button", { name: "Edit Noise Texture: Vector source", exact: true })
+    .click();
   await vectorSource.selectOption("normal");
+  await page.keyboard.press("Escape");
   assert.equal(await vectorSource.inputValue(), "normal");
   const wire = shader.locator('path[data-to="vector"]');
   await page.waitForFunction(
@@ -81,7 +83,7 @@ try {
   );
   const originalPath = await wire.getAttribute("d");
 
-  await shader.getByText("Position and size without dragging", { exact: true }).click();
+  await shader.getByText("Layout", { exact: true }).click();
   await shader.getByRole("spinbutton", { name: "Texture Coordinate row", exact: true }).fill("3");
   const apply = shader.getByRole("button", { name: "Apply Texture Coordinate", exact: true });
   await apply.click();
@@ -187,6 +189,48 @@ try {
       await page.evaluate((width) => document.documentElement.scrollWidth <= width, width),
       `The emoji example must fit a ${width}px phone`,
     );
+  }
+  await shader.getByRole("button", { name: "Reset", exact: true }).click();
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const view of ["Cards", "Canvas"]) {
+      await shader.getByRole("button", { name: view, exact: true }).click();
+      await page.waitForFunction(() => {
+        const root = document.querySelector('[aria-label="Procedural bronze connections"]');
+        const paths = [...root.querySelectorAll("path[data-from]")];
+        return (
+          paths.length === 3 &&
+          paths.every((path) => {
+            const output = root
+              .querySelector(`button[value="${path.dataset.from}"]`)
+              .getBoundingClientRect();
+            const input = root
+              .querySelector(`button[data-connect-input-trigger][value="${path.dataset.to}"]`)
+              .getBoundingClientRect();
+            const matrix = path.getScreenCTM();
+            const start = path.getPointAtLength(0).matrixTransform(matrix);
+            const end = path.getPointAtLength(path.getTotalLength()).matrixTransform(matrix);
+            return (
+              Math.abs(start.x - output.right) < 1 &&
+              Math.abs(start.y - output.top - output.height / 2) < 1 &&
+              Math.abs(end.x - input.left) < 1 &&
+              Math.abs(end.y - input.top - input.height / 2) < 1
+            );
+          })
+        );
+      });
+      assert(
+        await page.evaluate((width) => document.documentElement.scrollWidth <= width, width),
+        `${view} must not widen a ${width}px phone`,
+      );
+      if (view === "Cards") {
+        const bounds = await shader.boundingBox();
+        assert(
+          bounds && bounds.height < 430,
+          `Shader must fit a short phone viewport at ${width}px`,
+        );
+      }
+    }
   }
   assert.deepEqual(errors, [], "Connect runtime logged browser errors");
   console.log(

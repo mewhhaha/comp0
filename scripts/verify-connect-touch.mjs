@@ -88,9 +88,7 @@ try {
     await shader.getByRole("button", { name: "Cards", exact: true }).getAttribute("aria-pressed"),
     "true",
   );
-  const vectorSource = shader.getByRole("combobox", {
-    name: "Noise Texture: Vector source (vector)",
-  });
+  const vectorSource = shader.locator('select[aria-label="Noise Texture: Vector source (vector)"]');
   await shader.getByRole("button", { name: "Texture Coordinate: Normal output (vector)" }).tap();
   await shader.getByRole("button", { name: "Noise Texture: Vector input (vector)" }).tap();
   assert.equal(
@@ -98,13 +96,20 @@ try {
     "normal",
     "Cards must connect across vertical scrolling",
   );
+  await shader
+    .getByRole("button", { name: "Edit Noise Texture: Vector source", exact: true })
+    .tap();
   await vectorSource.selectOption("uv");
   await shader.getByRole("button", { name: "Disconnect Noise Texture: Vector" }).tap();
   assert.equal(await vectorSource.inputValue(), "", "Touch must disconnect an input");
   await vectorSource.selectOption("generated");
+  await shader
+    .getByRole("button", { name: "Edit Noise Texture: Vector source", exact: true })
+    .tap();
 
   const undersized = await shader.locator("button, select").evaluateAll((controls) =>
     controls
+      .filter((control) => control.checkVisibility())
       .filter((control) => {
         const bounds = control.getBoundingClientRect();
         return bounds.width < 44 || bounds.height < 44;
@@ -135,7 +140,7 @@ try {
   const coordinates = shader.locator('[data-slot="inventory-item"][data-value="coordinates"]');
   const move = shader.getByRole("button", { name: "Move Texture Coordinate", exact: true });
   start = await center(move);
-  await gesture(start, { x: start.x, y: start.y + 74 });
+  await gesture(start, { x: start.x, y: start.y + 30 });
   assert.equal(
     await coordinates.getAttribute("data-row"),
     "3",
@@ -143,10 +148,10 @@ try {
   );
   const resize = shader.getByRole("button", { name: "Resize Texture Coordinate", exact: true });
   start = await center(resize);
-  await gesture(start, { x: start.x, y: start.y + 74 });
+  await gesture(start, { x: start.x, y: start.y + 30 });
   assert.equal(
     await coordinates.getAttribute("data-row-span"),
-    "7",
+    "10",
     "Touch dragging the resize grip must commit the new height",
   );
 

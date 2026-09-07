@@ -5919,7 +5919,7 @@ const navigation = [
         id: "shader",
         title: "Shader connections",
         description:
-          "Edit typed sources in a phone-friendly Cards view, or switch to Canvas for touch and keyboard movement, resizing, and connection dragging. Native controls also edit connections, position, and size.",
+          "A compact shader graph. Tap or drag to connect.",
       },
     ],
   ),
