@@ -14,6 +14,8 @@ const packageSources = {
   core: JSON.parse(readFileSync(join(root, "packages/core/package.json"), "utf8")),
   react: JSON.parse(readFileSync(join(root, "packages/react/package.json"), "utf8")),
 };
+const workspaceManifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const docsManifest = JSON.parse(readFileSync(join(root, "apps/docs/package.json"), "utf8"));
 
 function run(command, args, cwd = root) {
   return execFileSync(command, args, { cwd, encoding: "utf8", stdio: "pipe" });
@@ -126,13 +128,13 @@ writeFileSync(
       dependencies: {
         "@comp0/core": `file:${join(packageDirectory, coreArchive)}`,
         "@comp0/react": `file:${join(packageDirectory, reactArchive)}`,
-        react: "19.2.7",
-        "react-dom": "19.2.7",
-        "react-router": "8.2.0",
+        react: workspaceManifest.devDependencies.react,
+        "react-dom": workspaceManifest.devDependencies["react-dom"],
+        "react-router": docsManifest.dependencies["react-router"],
       },
       devDependencies: {
-        "@types/react": "19.2.17",
-        "@types/react-dom": "19.2.3",
+        "@types/react": workspaceManifest.devDependencies["@types/react"],
+        "@types/react-dom": workspaceManifest.devDependencies["@types/react-dom"],
       },
     },
     null,
@@ -140,7 +142,7 @@ writeFileSync(
   ),
 );
 
-// pnpm 11 reads overrides from pnpm-workspace.yaml, not the package.json
+// pnpm reads overrides from pnpm-workspace.yaml, not the package.json
 // pnpm field; without this the react archive resolves @comp0/core from the
 // registry before this release exists there. The packed manifest is inspected
 // above before this local installation override is applied.

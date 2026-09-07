@@ -99,7 +99,8 @@ export function Example() {
   }
 
   let lineStart = 0;
-  const lines = source.split("\n").map((line) => {
+  const lines: { text: string; start: number }[][] = [];
+  for (const line of source.split("\n")) {
     let tokenStart = lineStart;
     const tokens = line
       .split(tokenPattern)
@@ -110,8 +111,8 @@ export function Example() {
         return { text, start };
       });
     lineStart += line.length + 1;
-    return tokens;
-  });
+    lines.push(tokens);
+  }
 
   function closeSymbolHover() {
     window.clearTimeout(hoverTimerRef.current);

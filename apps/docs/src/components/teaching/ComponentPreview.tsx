@@ -1,6 +1,7 @@
 "use client";
 
-import { getExample } from "../../examples/registry.js";
+import { Suspense } from "react";
+import { exampleRegistry } from "../../examples/registry.js";
 import { cn } from "./cn.js";
 
 type ComponentPreviewProps = {
@@ -12,7 +13,7 @@ type ComponentPreviewProps = {
 // fixed-width stage inside a fixed-aspect frame, so every preview has the same
 // size and center crop no matter how small the card is.
 export function ComponentPreview({ slug, className }: ComponentPreviewProps) {
-  const Example = getExample(slug);
+  const Example = exampleRegistry[slug];
   if (!Example) return null;
   return (
     <div
@@ -29,7 +30,9 @@ export function ComponentPreview({ slug, className }: ComponentPreviewProps) {
       )}
     >
       <div className="grid w-64 shrink-0 scale-90 justify-items-center">
-        <Example />
+        <Suspense fallback={<span className="text-zinc-500">Loading preview…</span>}>
+          <Example />
+        </Suspense>
       </div>
     </div>
   );

@@ -292,6 +292,15 @@ describe("focus navigation primitives", () => {
     expect(findTypeaheadMatch(items, "ban", "alpha")).toBe("banana");
   });
 
+  it("enters roving focus at the directional edge when the current item is absent or disabled", () => {
+    const items = [{ key: "one" }, { key: "two", disabled: true }, { key: "three" }];
+
+    expect(getRovingFocusTarget(items, undefined, "ArrowDown")).toBe("one");
+    expect(getRovingFocusTarget(items, "removed", "ArrowUp")).toBe("three");
+    expect(getRovingFocusTarget(items, "two", "ArrowDown")).toBe("one");
+    expect(getRovingFocusTarget(items, undefined, "ArrowRight", { dir: "rtl" })).toBe("three");
+  });
+
   it("cancels pending typeahead resets when their consumer unmounts", () => {
     vi.useFakeTimers();
     function Typeahead() {

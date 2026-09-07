@@ -2,7 +2,8 @@ import { act, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { page, userEvent } from "vitest/browser";
 import { describe, expect, it } from "vitest";
-import { getExample } from "./registry.js";
+import { Example as SelectExample } from "./cases/select.js";
+import { Example as ComboboxExample } from "./cases/combobox.js";
 
 type MountedExample = {
   container: HTMLDivElement;
@@ -24,13 +25,11 @@ function unmount({ container, root }: MountedExample) {
 
 describe("picker docs examples", () => {
   it("uses one labelled native listbox popover for Select", async () => {
-    const Example = getExample("select");
-    if (!Example) throw new Error("Missing Select docs example");
-    const mounted = mount(Example);
+    const mounted = mount(SelectExample);
 
     try {
       const label = mounted.container.querySelector("label")!;
-      const trigger = page.getByRole("button", { name: "Size" }).element();
+      const trigger = page.getByRole("button", { name: "Size Medium" }).element();
       const listbox = mounted.container.querySelector<HTMLElement>('[role="listbox"]')!;
       const medium = listbox.querySelector<HTMLElement>('[data-value="medium"]')!;
 
@@ -64,9 +63,7 @@ describe("picker docs examples", () => {
   });
 
   it("keeps Combobox focus and visible active state on its labelled input", async () => {
-    const Example = getExample("combobox");
-    if (!Example) throw new Error("Missing Combobox docs example");
-    const mounted = mount(Example);
+    const mounted = mount(ComboboxExample);
 
     try {
       const label = mounted.container.querySelector("label")!;

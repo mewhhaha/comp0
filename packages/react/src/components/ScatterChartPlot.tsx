@@ -95,14 +95,12 @@ export function ScatterChartPlot({
   const { bottom, left, right, top } = chartPlotBounds;
   const width = right - left;
   const height = bottom - top;
-  const points = context.values.map(
-    (value, index): ScatterChartPointState => ({
-      value,
-      index,
-      x: left + xScale.position(numberOf(value.x)) * width,
-      y: bottom - yScale.position(value.y) * height,
-    }),
-  );
+  const points = context.values.map((value, index): ScatterChartPointState => ({
+    value,
+    index,
+    x: left + xScale.position(numberOf(value.x)) * width,
+    y: bottom - yScale.position(value.y) * height,
+  }));
   const getTargetIndex = (currentIndex: number, key: string) => {
     const current = points[currentIndex];
     if (!current || !key.startsWith("Arrow")) return undefined;

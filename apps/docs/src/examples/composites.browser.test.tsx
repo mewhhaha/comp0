@@ -2,7 +2,8 @@ import { act, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { page } from "vitest/browser";
 import { describe, expect, it } from "vitest";
-import { getExample } from "./registry.js";
+import { Example as GridListTransferListExample } from "./cases/grid-list.transfer-list.js";
+import { Example as TourExample } from "./cases/tour.js";
 
 type MountedExample = {
   container: HTMLDivElement;
@@ -24,9 +25,7 @@ function unmount({ container, root }: MountedExample) {
 
 describe("composite docs examples", () => {
   it("moves every checked transfer-list row with the bulk action", async () => {
-    const Example = getExample("grid-list.transfer-list");
-    if (!Example) throw new Error("Missing Transfer List docs example");
-    const mounted = mount(Example);
+    const mounted = mount(GridListTransferListExample);
 
     try {
       const available = mounted.container.querySelector<HTMLElement>(
@@ -49,9 +48,7 @@ describe("composite docs examples", () => {
   });
 
   it("moves tour focus with the active dialog and restores the start control", async () => {
-    const Example = getExample("tour");
-    if (!Example) throw new Error("Missing Tour docs example");
-    const mounted = mount(Example);
+    const mounted = mount(TourExample);
 
     try {
       const start = page.getByRole("button", { name: "Start tour" });
@@ -75,9 +72,7 @@ describe("composite docs examples", () => {
   });
 
   it("closes a tour step with Escape and restores its trigger", async () => {
-    const Example = getExample("tour");
-    if (!Example) throw new Error("Missing Tour docs example");
-    const mounted = mount(Example);
+    const mounted = mount(TourExample);
 
     try {
       const start = page.getByRole("button", { name: "Start tour" });

@@ -1,15 +1,18 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { lazy, type ComponentType } from "react";
 
-const modules = import.meta.glob<{ Example: ComponentType }>("./cases/*.tsx", { eager: true });
+const modules = import.meta.glob<{ Example: ComponentType }>("./cases/*.tsx");
 
 const slugOf = (path: string) => path.replace("./cases/", "").replace(".tsx", "");
 
 export const exampleRegistry: Record<string, ComponentType> = Object.fromEntries(
-  Object.entries(modules).map(([path, module]) => [slugOf(path), module.Example]),
+  Object.entries(modules).map(([path, load]) => [
+    slugOf(path),
+    lazy(async () => ({ default: (await load()).Example })),
+  ]),
 );
 
-export function getExample(slug: string): ComponentType | undefined {
-  return exampleRegistry[slug];
+export async function getExample(slug: string): Promise<ComponentType | undefined> {
+  return (await modules[`./cases/${slug}.tsx`]?.())?.Example;
 }

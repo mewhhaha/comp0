@@ -1,6 +1,7 @@
 "use client";
 
-import { getExample } from "../../examples/registry.js";
+import { Suspense } from "react";
+import { exampleRegistry } from "../../examples/registry.js";
 import { cn } from "./cn.js";
 
 type LiveExampleProps = {
@@ -10,7 +11,7 @@ type LiveExampleProps = {
 };
 
 export function LiveExample({ slug, title = "Live example", className }: LiveExampleProps) {
-  const Example = getExample(slug);
+  const Example = exampleRegistry[slug];
 
   return (
     <section
@@ -24,7 +25,9 @@ export function LiveExample({ slug, title = "Live example", className }: LiveExa
       )}
       aria-label={title}
     >
-      {Example ? <Example /> : <p>Example unavailable.</p>}
+      <Suspense fallback={<output>Loading example…</output>}>
+        {Example ? <Example /> : <p>Example unavailable.</p>}
+      </Suspense>
     </section>
   );
 }

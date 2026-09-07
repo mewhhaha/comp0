@@ -19,6 +19,7 @@ pnpm test:browser
 pnpm build
 pnpm test:package
 pnpm test:compiler-smoke
+pnpm audit
 ```
 
 `test:package` runs each library's prepack build, inspects both tarballs, installs them in a temporary consumer, typechecks current composition and polymorphic-link examples, executes both library root exports, and verifies that undeclared subpaths are rejected.
@@ -31,9 +32,9 @@ Publishing uses npm trusted publishing: both packages authorize the GitHub Actio
 
 ## React Compiler
 
-The package build, docs app, and both Vitest projects transform source with the exactly pinned `oxc-transform@0.135.0` configuration in [`react-compiler-vite.ts`](./react-compiler-vite.ts). Source consumers must apply an equivalent React Compiler transform targeting React 19.
+The package build uses `oxc-transform-react@0.148.0`, targeting React 19. The docs app and both Vitest projects use the native `compiler: true` option in `@vitejs/plugin-react`. The plugin compiles client environments, preserves Fast Refresh, and leaves RSC/SSR environments uncompiled. Vitest compiles package source; server-only docs helpers stay outside its client transform.
 
-Version 0.136.0 stopped emitting fallback output for this repository's expected compiler bailouts, and later versions removed the Node API used here. Do not change the pin without rerunning the Babel-versus-oxc conformance comparison and updating the compiled-file smoke baseline.
+Before changing the compiler pin, run `pnpm test:compiler-conformance`. It compares every package source file against Babel, checks that native compilation covers every file Babel compiles, and verifies recoverable bailout output and fatal diagnostics. `pnpm test:compiler-smoke` also verifies the exact compiled-file baseline in `packages/react/react-compiler-files.json` and imports the production package. Review any baseline changes before updating that file. Babel is a development-only conformance dependency; package and Vite builds use the native compiler.
 
 Ordinary values and callbacks should be left to the compiler. Explicit memoization is reserved for semantic identity, effect-dependency safety across compiler bailouts, context fanout, or measured hot paths. The package-specific constraints and known hot paths are documented in [`packages/react/PERFORMANCE.md`](./packages/react/PERFORMANCE.md).
 

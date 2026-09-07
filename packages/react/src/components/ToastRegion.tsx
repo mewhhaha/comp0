@@ -33,7 +33,9 @@ export function ToastRegion({
   const contextRef = useRef(context);
   const pointerPauseRef = useRef(false);
   const focusPauseRef = useRef(false);
-  contextRef.current = context;
+  useLayoutEffect(() => {
+    contextRef.current = context;
+  }, [context]);
   const toasts = context?.toasts ?? [];
   const mounted = Boolean(forceMount || toasts.length > 0);
 

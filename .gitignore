@@ -8,6 +8,7 @@ packages/*/dist
 .claude
 .vite
 .todo
+.vitest
 .vitest-attachments
 *.tsbuildinfo
 pnpm-lock.yaml.tmp

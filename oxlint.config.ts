@@ -28,6 +28,62 @@ export default defineConfig({
   overrides: [
     {
       files: [
+        "apps/docs/src/examples/cases/floating-panel.nodes.tsx",
+        "packages/react/src/components/Button.tsx",
+        "packages/react/src/components/ComboboxTrigger.tsx",
+        "packages/react/src/components/ContextMenu.tsx",
+        "packages/react/src/components/Dialog.tsx",
+        "packages/react/src/components/Drawer.tsx",
+        "packages/react/src/components/GridList.tsx",
+        "packages/react/src/components/GridListReorderGroup.tsx",
+        "packages/react/src/components/Link.tsx",
+        "packages/react/src/components/Menu.tsx",
+        "packages/react/src/components/MenuList.tsx",
+        "packages/react/src/components/MenuTrigger.tsx",
+        "packages/react/src/components/PasswordFieldToggle.tsx",
+        "packages/react/src/components/Popover.tsx",
+        "packages/react/src/components/Preview.tsx",
+        "packages/react/src/components/SelectPopover.tsx",
+        "packages/react/src/components/Table.tsx",
+        "packages/react/src/components/TagList.tsx",
+        "packages/react/src/components/TagPicker.tsx",
+        "packages/react/src/components/Tooltip.tsx",
+        "packages/react/src/components/overlay-shared.tsx",
+      ],
+      rules: {
+        // Refs are passed to ref composition and context providers, not dereferenced during render; the compiler cannot follow those boundaries.
+        "react/refs": "off",
+      },
+    },
+    {
+      files: [
+        "apps/docs/src/components/shell/CommandPalette.tsx",
+        "apps/docs/src/examples/cases/messages.streaming.tsx",
+        "apps/docs/src/examples/cases/steps.generated-surface.tsx",
+        "apps/docs/src/examples/cases/tree.activity.tsx",
+        "packages/core/src/utils.test.tsx",
+        "packages/react/src/components/Autocomplete.tsx",
+        "packages/react/src/components/Calendar.tsx",
+        "packages/react/src/components/GridList.tsx",
+        "packages/react/src/components/Inventory.tsx",
+        "packages/react/src/components/ListBox.tsx",
+        "packages/react/src/components/PasswordField.tsx",
+        "packages/react/src/components/RangeCalendar.tsx",
+        "packages/react/src/components/TagPicker.tsx",
+        "packages/react/src/components/Tour.tsx",
+        "packages/react/src/components/Tree.tsx",
+        "packages/react/src/components/TreeGrid.tsx",
+        "packages/react/src/components/chart-interaction.tsx",
+        "packages/react/src/gridlist.composition.test.tsx",
+      ],
+      rules: {
+        // These effects reconcile committed DOM registrations, focus, hydration, or externally controlled state; they bail out when synchronized.
+        "react/set-state-in-effect": "off",
+      },
+    },
+
+    {
+      files: [
         "packages/react/src/components/ListBox.tsx",
         "packages/react/src/components/ListBoxItem.tsx",
         "packages/react/src/components/SelectOption.tsx",

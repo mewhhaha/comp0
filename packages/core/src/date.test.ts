@@ -13,6 +13,13 @@ import {
 } from "./date.js";
 
 describe("ISO parse and format", () => {
+  it("preserves years below 100 and their leap days", () => {
+    expect(formatISODate(parseISODate("0099-01-31")!)).toBe("0099-01-31");
+    expect(formatISODate(parseISODate("0000-02-29")!)).toBe("0000-02-29");
+    expect(daysInMonth(0, 2)).toBe(29);
+    expect(parseISODate("0001-02-29")).toBeNull();
+  });
+
   it("round-trips a valid date through a UTC-noon Date", () => {
     const parsed = parseISODate("2024-02-29");
     expect(parsed).not.toBeNull();
@@ -39,6 +46,13 @@ describe("ISO parse and format", () => {
 });
 
 describe("date arithmetic", () => {
+  it("preserves early years across day and month arithmetic", () => {
+    expect(addDays("0099-12-31", 1)).toBe("0100-01-01");
+    expect(addMonths("0099-12-31", 1)).toBe("0100-01-31");
+    expect(addMonths("0100-01-31", -1)).toBe("0099-12-31");
+    expect(addMonths("0000-01-31", 1)).toBe("0000-02-29");
+  });
+
   it("adds days across month and year boundaries", () => {
     expect(addDays("2024-02-28", 1)).toBe("2024-02-29");
     expect(addDays("2024-02-29", 1)).toBe("2024-03-01");
@@ -74,6 +88,13 @@ describe("date arithmetic", () => {
 });
 
 describe("monthMatrix", () => {
+  it("lays out early years without shifting their century or weekdays", () => {
+    const weeks = monthMatrix("0099-01", 1);
+    expect(weeks[0]![0]).toEqual({ iso: "0098-12-29", outsideMonth: true });
+    expect(weeks[0]![3]).toEqual({ iso: "0099-01-01", outsideMonth: false });
+    expect(weeks.flat().filter((cell) => !cell.outsideMonth)).toHaveLength(31);
+  });
+
   it("lays out leap-year February 2024 with a Monday start", () => {
     const weeks = monthMatrix("2024-02", 1);
     expect(weeks).toHaveLength(5);
