@@ -90,6 +90,47 @@ describe("Connect browser interactions", () => {
     expect(document.activeElement).toBe(page.getByRole("button", { name: "After" }).element());
   });
 
+  it("draws narrow connections toward the input without doubling back", async () => {
+    const { container } = render(
+      <Connect
+        defaultValue={[{ from: "source", to: "target" }]}
+        style={{ position: "relative", display: "flex", gap: 20 }}
+      >
+        <ConnectLines />
+        <ConnectCard
+          value="source"
+          label="Source"
+          style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}
+        >
+          <ConnectOutput
+            value="source"
+            label="Source"
+            kind="color"
+            style={{ width: 44, height: 44 }}
+          >
+            ○
+          </ConnectOutput>
+        </ConnectCard>
+        <ConnectCard
+          value="target"
+          label="Target"
+          style={{ border: 0, margin: 0, padding: 0, minWidth: 0, marginTop: 80 }}
+        >
+          <ConnectInput value="target" label="Target" kind="color">
+            <ConnectInputTrigger style={{ width: 44, height: 44 }}>□</ConnectInputTrigger>
+          </ConnectInput>
+        </ConnectCard>
+      </Connect>,
+    );
+    await expect.poll(() => container.querySelector("path")?.getAttribute("d")).toBeTruthy();
+    const path = container.querySelector("path")!;
+    const points = Array.from({ length: 21 }, (_, index) =>
+      path.getPointAtLength((path.getTotalLength() * index) / 20),
+    );
+    const horizontalSteps = points.slice(1).map((point, index) => point.x - points[index]!.x);
+    expect(Math.min(...horizontalSteps)).toBeGreaterThanOrEqual(0);
+  });
+
   it("connects through a real pointer drag", async () => {
     render(<Connections />);
     await userEvent.dragAndDrop(

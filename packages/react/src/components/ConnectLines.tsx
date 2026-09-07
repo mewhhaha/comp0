@@ -34,7 +34,7 @@ export function ConnectLines({ ref, ...props }: ConnectLinesProps & RefProp<SVGS
           inputBounds.left,
           inputBounds.top + inputBounds.height / 2,
         ).matrixTransform(matrix);
-        const bend = Math.max(40, Math.abs(end.x - start.x) / 2);
+        const bend = Math.abs(end.x - start.x) / 2;
         return [
           {
             from,
