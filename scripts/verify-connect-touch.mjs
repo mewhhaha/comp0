@@ -42,13 +42,14 @@ try {
   await page.goto(`${base}/components/connect`);
   await page.waitForLoadState("networkidle");
   const example = page.getByRole("region", { name: "Live example", exact: true });
-  const source = example.getByRole("button", { name: "Palette: Jade output (color)" });
-  const input = example.getByRole("button", { name: "Material: Surface input (color)" });
+  const source = example.getByRole("button", { name: "Weather: Rain output (weather)" });
+  const input = example.getByRole("button", { name: "Garden: Flower input (weather)" });
+  await example.getByText("Source", { exact: true }).tap();
   const select = example.getByRole("combobox");
   await source.tap();
   await input.tap();
-  assert.equal(await select.inputValue(), "jade", "Separate taps must connect ports");
-  await select.selectOption("bronze");
+  assert.equal(await select.inputValue(), "rain", "Separate taps must connect ports");
+  await select.selectOption("sun");
   let start = await center(source);
   await gesture(start, { x: start.x + 5, y: start.y });
   assert.equal(
@@ -57,20 +58,20 @@ try {
     "Small finger movement must remain a tap",
   );
   await input.tap();
-  assert.equal(await select.inputValue(), "jade", "A tap with finger movement must still connect");
+  assert.equal(await select.inputValue(), "rain", "A tap with finger movement must still connect");
 
-  await select.selectOption("bronze");
+  await select.selectOption("sun");
   await example.scrollIntoViewIfNeeded();
   start = await center(source);
   const end = await center(input);
   await gesture(start, end);
-  assert.equal(await select.inputValue(), "jade", "A touch drag must connect compatible ports");
-  await select.selectOption("bronze");
+  assert.equal(await select.inputValue(), "rain", "A touch drag must connect compatible ports");
+  await select.selectOption("sun");
   start = await center(source);
   await gesture(start, { x: start.x + 30, y: start.y }, "touchCancel");
   assert.equal(
     await select.inputValue(),
-    "bronze",
+    "sun",
     "Interrupted touch gestures must not edit connections",
   );
   assert.equal(
@@ -80,7 +81,7 @@ try {
   );
   await source.tap();
   await input.tap();
-  assert.equal(await select.inputValue(), "jade", "Taps must work after a canceled gesture");
+  assert.equal(await select.inputValue(), "rain", "Taps must work after a canceled gesture");
 
   const shader = page.getByRole("region", { name: "Shader connections", exact: true });
   assert.equal(
