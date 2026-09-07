@@ -91,15 +91,13 @@ export function DumbbellChartPlot({
   const plotWidth = right - left;
   const plotHeight = bottom - top;
   const slot = context.values.length === 0 ? plotHeight : plotHeight / context.values.length;
-  const dumbbells = context.values.map(
-    (value, index): DumbbellChartDumbbellState => ({
-      value,
-      index,
-      startX: left + scale.position(value.start) * plotWidth,
-      endX: left + scale.position(value.end) * plotWidth,
-      y: top + (index + 0.5) * slot,
-    }),
-  );
+  const dumbbells = context.values.map((value, index): DumbbellChartDumbbellState => ({
+    value,
+    index,
+    startX: left + scale.position(value.start) * plotWidth,
+    endX: left + scale.position(value.end) * plotWidth,
+    y: top + (index + 0.5) * slot,
+  }));
   const xTicks = scale.ticks(tickCount).map((value) => ({
     label: context.formatY(value),
     position: scale.position(value),

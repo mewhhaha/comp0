@@ -5,3 +5,8 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+
+# Verified against Babel and both Vite environments by the compiler checks.
+peerDependencyRules:
+  allowedVersions:
+    "@vitejs/plugin-react>oxc-transform-react": "0.148.0"

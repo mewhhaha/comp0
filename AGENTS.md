@@ -8,7 +8,7 @@ Do not preserve old prop names as compatibility aliases unless the user explicit
 
 ## React Compiler
 
-Assume the React Compiler everywhere: the package build, the docs app, and both vitest projects run the Rust port through the exactly pinned `oxc-transform@0.135.0`. Version 0.136.0 stopped emitting fallback code for this repo's expected compiler bailouts, and the Node API was removed after that release. Do not bump it without rerunning the Babel-versus-oxc conformance comparison and updating the compiled-file smoke baseline. Let the compiler memoize ordinary local values and callbacks. Keep explicit `useMemo`/`useCallback` only when semantic identity is part of the behavior, an effect dependency would loop after a compiler bailout, context fanout requires it, or measurements justify it; explain the constraint in a comment.
+The package build and client Vite environments use the exactly pinned `oxc-transform-react@0.148.0`. The docs app and both Vitest projects enable it through `@vitejs/plugin-react` with `compiler: true`; the plugin leaves server environments uncompiled. Before updating the compiler, run `pnpm test:compiler-conformance` and review the per-file baseline in `packages/react/react-compiler-files.json`. Let the compiler memoize ordinary local values and callbacks. Keep explicit `useMemo`/`useCallback` only when semantic identity is part of the behavior, an effect dependency would loop after a compiler bailout, context fanout requires it, or measurements justify it; explain the constraint in a comment.
 
 ## Component API and Styling
 

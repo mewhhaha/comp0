@@ -5,7 +5,6 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { defineConfig } from "vite";
-import { reactCompiler } from "../../react-compiler-vite.js";
 
 export default defineConfig({
   plugins: [
@@ -16,21 +15,14 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
-    // The docs app compiles only its client graph; server components stay
-    // outside this transform while workspace package aliases remain compiled.
-    reactCompiler(
-      /\/(?:packages\/(?:core|react)\/src\/.*|apps\/docs\/src\/(?:components\/shell\/.*|components\/teaching\/(?:CodeBlockCopyButton|ComponentPreview|LessonPager|LiveExample)|examples\/(?:registry|cases\/.*)))\.[tj]sx?$/,
-    ),
     unstable_reactRouterRSC(),
-    react(),
+    react({ compiler: true }),
     rsc({ serverHandler: false }),
   ],
-  // Compiled modules import react/compiler-runtime; declare it so a cold cache
-  // does not discover it mid-run and reload with a second React copy.
-  optimizeDeps: {
-    include: ["react/compiler-runtime"],
-  },
   environments: {
+    client: {
+      build: { manifest: "client-manifest.json" },
+    },
     rsc: {
       optimizeDeps: {
         exclude: ["react-router"],

@@ -86,15 +86,13 @@ export function LollipopChartPlot({
   const plotHeight = bottom - top;
   const baseline = left + scale.position(0) * plotWidth;
   const slot = context.values.length === 0 ? plotHeight : plotHeight / context.values.length;
-  const lollipops = context.values.map(
-    (value, index): LollipopChartLollipopState => ({
-      value,
-      index,
-      baseline,
-      x: left + scale.position(value.value) * plotWidth,
-      y: top + (index + 0.5) * slot,
-    }),
-  );
+  const lollipops = context.values.map((value, index): LollipopChartLollipopState => ({
+    value,
+    index,
+    baseline,
+    x: left + scale.position(value.value) * plotWidth,
+    y: top + (index + 0.5) * slot,
+  }));
   const xTicks = scale.ticks(tickCount).map((value) => ({
     label: context.formatY(value),
     position: scale.position(value),

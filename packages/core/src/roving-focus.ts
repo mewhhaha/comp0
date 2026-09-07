@@ -43,10 +43,10 @@ export function getRovingFocusTarget(
       : 0;
   if (direction === 0) return undefined;
 
-  const currentIndex = Math.max(
-    0,
-    enabledItems.findIndex((item) => item.key === currentKey),
-  );
+  const currentIndex = enabledItems.findIndex((item) => item.key === currentKey);
+  if (currentIndex === -1) {
+    return direction > 0 ? enabledItems[0]?.key : enabledItems.at(-1)?.key;
+  }
   const nextIndex = currentIndex + direction;
 
   if (nextIndex >= 0 && nextIndex < enabledItems.length) return enabledItems[nextIndex]?.key;

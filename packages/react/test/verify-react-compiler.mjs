@@ -1,24 +1,6 @@
+import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-
-const files = [
-  "packages/core/dist/collection.js",
-  "packages/core/dist/interactions.js",
-  "packages/react/dist/components/Select.js",
-  "packages/react/dist/components/ListBox.js",
-  "packages/react/dist/components/DialogContent.js",
-];
-
-const missing = [];
-
-for (const file of files) {
-  const source = await readFile(file, "utf8");
-  if (!source.includes("react/compiler-runtime")) missing.push(file);
-}
-
-if (missing.length) {
-  throw new Error(`Expected React Compiler runtime imports in:\n${missing.join("\n")}`);
-}
 
 async function javascriptFiles(directory) {
   const files = [];
@@ -36,23 +18,26 @@ const distFiles = [
   ...(await javascriptFiles("packages/core/dist")),
   ...(await javascriptFiles("packages/react/dist")),
 ];
-let compiledFileCount = 0;
+const compiledFiles = [];
 
 for (const file of distFiles) {
   const source = await readFile(file, "utf8");
-  if (source.includes("react/compiler-runtime")) compiledFileCount += 1;
-  if (source.includes("jsxDEV")) throw new Error(`Production package output contains jsxDEV: ${file}`);
+  if (source.includes("react/compiler-runtime")) compiledFiles.push(file);
+  if (source.includes("jsxDEV"))
+    throw new Error(`Production package output contains jsxDEV: ${file}`);
 }
 
-const babelBaseline = 105;
-if (compiledFileCount < babelBaseline) {
-  throw new Error(
-    `React Compiler output dropped below the Babel baseline: ${compiledFileCount} < ${babelBaseline}`,
-  );
-}
+const expectedFiles = JSON.parse(
+  await readFile("packages/react/react-compiler-files.json", "utf8"),
+);
+assert.deepEqual(
+  compiledFiles.sort(),
+  expectedFiles,
+  "React Compiler file coverage changed; run the Babel comparison and review the baseline",
+);
 
 await import("../dist/index.js");
 
 console.log(
-  `React Compiler smoke test passed: ${compiledFileCount} files (Babel baseline ${babelBaseline}).`,
+  `React Compiler smoke test passed: ${compiledFiles.length} files match the reviewed baseline.`,
 );

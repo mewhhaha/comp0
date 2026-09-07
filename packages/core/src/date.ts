@@ -13,9 +13,17 @@ export type MonthMatrixCell = {
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ISO_MONTH_PATTERN = /^(\d{4})-(\d{2})$/;
 
+function utcNoon(year: number, monthIndex: number, day: number): Date {
+  // Date.UTC treats years 0–99 as 1900–1999; setUTCFullYear preserves the ISO year.
+  const date = new Date(0);
+  date.setUTCHours(12);
+  date.setUTCFullYear(year, monthIndex, day);
+  return date;
+}
+
 /** The number of days in a one-based month of a given year. */
 export function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0, 12)).getUTCDate();
+  return utcNoon(year, month, 0).getUTCDate();
 }
 
 /** Parses "YYYY-MM-DD" into a UTC-noon Date, or null for malformed or impossible dates. */
@@ -27,7 +35,7 @@ export function parseISODate(value: string): Date | null {
   const day = Number(match[3]);
   if (month < 1 || month > 12) return null;
   if (day < 1 || day > daysInMonth(year, month)) return null;
-  return new Date(Date.UTC(year, month - 1, day, 12));
+  return utcNoon(year, month - 1, day);
 }
 
 /** Formats a Date's UTC calendar day as "YYYY-MM-DD". */
@@ -46,7 +54,7 @@ export function isValidISODate(value: string): boolean {
 /** Today's date in the runtime's local timezone as "YYYY-MM-DD". */
 export function todayISODate(): string {
   const now = new Date();
-  return formatISODate(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12)));
+  return formatISODate(utcNoon(now.getFullYear(), now.getMonth(), now.getDate()));
 }
 
 /** Adds days to an ISO date; UTC-noon arithmetic keeps DST from shifting the day. */
@@ -65,7 +73,7 @@ export function addMonths(iso: string, amount: number): string {
   const year = date.getUTCFullYear() + Math.floor(monthIndex / 12);
   const month = (((monthIndex % 12) + 12) % 12) + 1;
   const day = Math.min(date.getUTCDate(), daysInMonth(year, month));
-  return formatISODate(new Date(Date.UTC(year, month - 1, day, 12)));
+  return formatISODate(utcNoon(year, month - 1, day));
 }
 
 /** Whether ISO date a falls strictly before b. */
@@ -101,7 +109,7 @@ export function monthMatrix(isoMonth: string, weekStart: number): MonthMatrixCel
   const year = Number(match[1]);
   const month = Number(match[2]);
   if (month < 1 || month > 12) return [];
-  const first = new Date(Date.UTC(year, month - 1, 1, 12));
+  const first = utcNoon(year, month - 1, 1);
   // getUTCDay counts 0 = Sunday through 6; weekInfo counts 1 = Monday through 7 = Sunday.
   const firstWeekday = first.getUTCDay() === 0 ? 7 : first.getUTCDay();
   const lead = (firstWeekday - weekStart + 7) % 7;
@@ -112,7 +120,7 @@ export function monthMatrix(isoMonth: string, weekStart: number): MonthMatrixCel
     const week: MonthMatrixCell[] = [];
     for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
       const offset = weekIndex * 7 + dayIndex - lead;
-      const date = new Date(Date.UTC(year, month - 1, 1 + offset, 12));
+      const date = utcNoon(year, month - 1, 1 + offset);
       week.push({ iso: formatISODate(date), outsideMonth: date.getUTCMonth() !== month - 1 });
     }
     weeks.push(week);

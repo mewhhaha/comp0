@@ -1,6 +1,6 @@
 {
   "name": "@comp0/react",
-  "version": "0.1.0-next.23",
+  "version": "0.1.0-next.24",
   "description": "Headless React 19 components with native-first DOM semantics.",
   "keywords": [
     "accessibility",
@@ -44,8 +44,8 @@
     "@comp0/core": "workspace:*"
   },
   "devDependencies": {
-    "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "peerDependencies": {
     "react": "^19.0.0",

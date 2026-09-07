@@ -1,6 +1,6 @@
 # React Compiler Performance Review
 
-`@comp0/react` ships JavaScript compiled with the Rust React Compiler port through the exactly pinned `oxc-transform@0.135.0` before `tsgo` emits declarations. `@comp0/core` is compiled the same way because it provides hook-bearing runtime helpers used by the React package. Version 0.136.0 stopped emitting fallback code for expected bailouts and later releases removed the Node option; rerun the Babel-versus-oxc conformance comparison and update the compiled-file smoke baseline before changing the pin.
+`@comp0/react` and `@comp0/core` ship JavaScript compiled by the Rust React Compiler through `oxc-transform-react@0.148.0` before `tsgo` emits declarations. The reviewed baseline contains 256 compiled files, including all 210 files compiled by Babel. Run `pnpm test:compiler-conformance` and review `react-compiler-files.json` before changing the compiler pin. The native binding emits fallback code for recoverable bailouts and exposes fatal failures through `result.fatal`; it does not emit recoverable bailout messages.
 
 Compiler configuration targets React 19 and does not depend on `react-compiler-runtime`. The initial rollout uses `panicThreshold: "none"` so functions the compiler cannot safely optimize are skipped instead of failing a package build.
 

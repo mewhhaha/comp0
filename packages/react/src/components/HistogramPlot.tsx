@@ -92,14 +92,11 @@ export function HistogramPlot({
     max: xMax,
   });
   const binWidth = (xScale.max - xScale.min) / resolvedBinCount;
-  const binValues = Array.from(
-    { length: resolvedBinCount },
-    (_, index): HistogramBinValue => ({
-      min: xScale.min + index * binWidth,
-      max: xScale.min + (index + 1) * binWidth,
-      count: 0,
-    }),
-  );
+  const binValues = Array.from({ length: resolvedBinCount }, (_, index): HistogramBinValue => ({
+    min: xScale.min + index * binWidth,
+    max: xScale.min + (index + 1) * binWidth,
+    count: 0,
+  }));
   for (const value of context.values) {
     const index = Math.min(
       resolvedBinCount - 1,
