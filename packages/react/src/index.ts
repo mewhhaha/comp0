@@ -5,6 +5,7 @@ export * from "./carousel.js";
 export * from "./chart.js";
 export * from "./choices.js";
 export * from "./color.js";
+export * from "./connect.js";
 export * from "./date.js";
 export * from "./disclosure.js";
 export * from "./drawer.js";

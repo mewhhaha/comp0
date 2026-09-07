@@ -259,6 +259,15 @@ const lessons: Record<string, LessonCopy> = {
     "Set min and max so dragging and End or Home stay inside sane bounds.",
     "<Resizer size={width} min={120} max={320} onResize={setWidth} />;",
   ),
+  connect: lesson(
+    "Cards with typed inputs and outputs that people can connect, inspect, and disconnect.",
+    "Like plugging labelled cables between instruments: the socket tells you which cable fits.",
+    "Use it for visual workflows, material editors, and other relationships that people need to edit directly.",
+    "Wrap labelled ConnectCard elements in Connect and assign a unique value to every input and every output.",
+    "Add ConnectOutput buttons and ConnectInput groups with matching kind strings. Each input contains a ConnectInputTrigger, ConnectInputSelect, and ConnectDisconnect.",
+    "Add ConnectLines for decorative wires. Keep selectors visible and let your own layout or Inventory position the cards; Connect never opens a dialog or moves focus on mount.",
+    '<Connect aria-label="Connections">\n  <ConnectCard value="source" label="Palette">\n    <ConnectOutput value="color" label="Color" kind="color">\n      Color\n    </ConnectOutput>\n  </ConnectCard>\n  <ConnectCard value="target" label="Material">\n    <ConnectInput value="surface" label="Surface" kind="color">\n      <ConnectInputTrigger>Surface</ConnectInputTrigger>\n      <ConnectInputSelect />\n      <ConnectDisconnect>Disconnect</ConnectDisconnect>\n    </ConnectInput>\n  </ConnectCard>\n</Connect>;',
+  ),
   "floating-panel": lesson(
     "A persistent non-modal inspector that can move, resize, overlap, and coexist with peer panels.",
     "Like a movable tool palette beside a canvas: it stays available without taking over the workspace.",
@@ -1026,6 +1035,15 @@ const accessibility: Record<string, string[]> = {
     "Keep the handle large enough to grab; style the drag state via data-dragging.",
     "Pass size so assistive technology hears the separator position.",
     "Inside a resizable TableColumn the handle hides itself; keyboard resizing stays on the header.",
+  ],
+  connect: [
+    "Use visible card and port labels. ConnectCard renders a fieldset, not a dialog, and never takes focus on mount. Labels and kind strings supply contextual accessible names.",
+    "Always include ConnectInputSelect and ConnectDisconnect for each input. Their native controls expose current sources and support editing without dragging or interpreting the wires.",
+    "Click or tap an output, then a matching input. Enter and Space activate the same buttons; Escape cancels and returns focus to the selected output. Dragging is an additional path.",
+    "ConnectLines is decorative and aria-hidden. Port descriptions persistently name connected endpoints, while a polite live region announces edits. Do not rely on wire color to explain types or relationships.",
+    "Tab follows the DOM and retains native control behavior. Up, Down, Home, and End navigate cards only when the card itself has focus. When composing with Inventory, give ConnectCard tabIndex={-1} and let Inventory own spatial navigation.",
+    "Inputs accept one output of the same kind from a different card; outputs may feed several inputs. Cycles are allowed. Applications that require an acyclic workflow must veto invalid proposals through controlled value/onChange.",
+    "Keep cards mounted regardless of viewport visibility. If layout permits dragging or resizing, provide equivalent visible position and size controls, as the shader example does.",
   ],
   "floating-panel": [
     "Give every FloatingPanelSurface a visible FloatingPanelTitle or an explicit aria-label. The surface is a non-modal dialog and must not use aria-modal.",
@@ -5768,6 +5786,144 @@ const navigation = [
     ["table"],
   ),
   common(
+    "connect",
+    "Connect",
+    "navigation",
+    [
+      "Connect",
+      "ConnectCard",
+      "ConnectOutput",
+      "ConnectInput",
+      "ConnectInputTrigger",
+      "ConnectInputSelect",
+      "ConnectDisconnect",
+      "ConnectLines",
+    ],
+    '<Connect aria-label="Connections"><ConnectCard value="source" label="Palette"><ConnectOutput value="color" label="Color" kind="color">Color</ConnectOutput></ConnectCard><ConnectCard value="target" label="Material"><ConnectInput value="surface" label="Surface" kind="color"><ConnectInputTrigger>Surface</ConnectInputTrigger><ConnectInputSelect /><ConnectDisconnect>Disconnect</ConnectDisconnect></ConnectInput></ConnectCard></Connect>',
+    [
+      p(
+        "Connect",
+        "root",
+        "Native group owning connection state and polite announcements.",
+        true,
+        false,
+        [
+          prop(
+            "value",
+            "readonly ConnectConnection[]",
+            "Controlled connections, each { from, to }. One source per input; outputs may feed multiple inputs.",
+          ),
+          prop("defaultValue", "readonly ConnectConnection[]", "Initial uncontrolled connections."),
+          prop(
+            "onChange",
+            "(connections: readonly ConnectConnection[]) => void",
+            "Receives the complete proposed connections. Layout and application rules remain with the caller.",
+          ),
+          prop("aria-label", "string", "Names this set of connections."),
+        ],
+      ),
+      p(
+        "ConnectLines",
+        "graphic",
+        "Optional, aria-hidden SVG wires that follow layout, size, and scrolling changes.",
+        true,
+        true,
+      ),
+      p(
+        "ConnectCard",
+        "item",
+        "Labelled native fieldset containing a card's ports and other controls.",
+        true,
+        false,
+        [
+          prop("value", "string", "Unique card identity; ports on the same card cannot connect."),
+          prop("label", "string", "Card name included in port and source labels."),
+          prop(
+            "tabIndex",
+            "number",
+            "Defaults to 0 for card navigation. Use -1 when a surrounding composite owns navigation.",
+          ),
+        ],
+      ),
+      p("ConnectOutput", "trigger", "Button that selects a source or starts a drag.", true, false, [
+        prop("value", "string", "Nonempty identity unique among outputs."),
+        prop("label", "string", "Human-readable output name."),
+        prop("kind", "string", "Human-readable type, matched exactly against an input's kind."),
+        prop(
+          "disabled",
+          "boolean",
+          "Prevents choosing this output and removes it from available sources.",
+        ),
+      ]),
+      p(
+        "ConnectInput",
+        "item",
+        "Input context and wire endpoint around its controls.",
+        true,
+        false,
+        [
+          prop("value", "string", "Nonempty identity unique among inputs."),
+          prop("label", "string", "Human-readable input name."),
+          prop("kind", "string", "Accepted output type."),
+          prop("disabled", "boolean", "Disables the input's controls and rejects connections."),
+        ],
+      ),
+      p("ConnectInputTrigger", "trigger", "Button that accepts a selected compatible output."),
+      p(
+        "ConnectInputSelect",
+        "input",
+        "Native source selector with compatible outputs and a Not connected option.",
+      ),
+      p("ConnectDisconnect", "trigger", "Button that removes this input's current source."),
+    ],
+    [
+      { keys: ["Tab"], action: "Visits cards and their native controls in DOM order." },
+      {
+        keys: ["Enter", "Space"],
+        action: "Selects an output or connects the selected output to a compatible input.",
+        scope: "on port buttons",
+      },
+      { keys: ["Escape"], action: "Cancels connection selection and returns focus to its output." },
+      {
+        keys: ["ArrowUp", "ArrowDown"],
+        action: "Focuses the previous or next card.",
+        scope: "on ConnectCard itself",
+      },
+      {
+        keys: ["Home", "End"],
+        action: "Focuses the first or last card.",
+        scope: "on ConnectCard itself",
+      },
+    ],
+    [
+      {
+        attribute: "[data-selected]",
+        on: "ConnectOutput",
+        meaning: "This output is waiting for an input.",
+      },
+      {
+        attribute: "[data-available]",
+        on: "ConnectInputTrigger",
+        meaning: "This input accepts the selected output.",
+      },
+      {
+        attribute: "[data-connected]",
+        on: "ConnectOutput / ConnectInput / ConnectInputTrigger",
+        meaning: "This port has a connection.",
+      },
+    ],
+    "No implicit form serialization. Persist connections through value/onChange; ordinary controls inside cards retain their native behavior.",
+    ["inventory", "floating-panel", "select"],
+    [
+      {
+        id: "shader",
+        title: "Shader connections",
+        description:
+          "Compose Connect with Inventory for movable material cards, typed sources, and native controls for connections, position, and size.",
+      },
+    ],
+  ),
+  common(
     "floating-panel",
     "Floating Panel",
     "navigation",
@@ -5961,14 +6117,8 @@ const navigation = [
       },
     ],
     "No native form behavior; form controls inside a panel keep their own behavior.",
-    ["popover", "resizer", "inventory"],
+    ["popover", "resizer", "inventory", "connect"],
     [
-      {
-        id: "nodes",
-        title: "Shader node graph",
-        description:
-          "Compose bounded panels into a material graph with typed vector, value, color, and shader ports. Labelled port controls support pointer and keyboard reattachment while the aria-hidden SVG layer follows every node.",
-      },
       {
         id: "annotations",
         title: "Anchored comment thread",

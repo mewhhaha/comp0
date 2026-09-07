@@ -1,5 +1,5 @@
 import axe from "axe-core";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { render } from "../../../../packages/react/test/render.js";
 import { components } from "../content/catalog.js";
 import { getExample } from "./registry.js";
@@ -9,6 +9,25 @@ const examples = await Promise.all(
 );
 
 describe("component examples", () => {
+  // jsdom has no layout engine; wire geometry is exercised in Connect's browser tests.
+  beforeAll(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    Object.defineProperty(SVGElement.prototype, "getScreenCTM", {
+      configurable: true,
+      value: () => null,
+    });
+  });
+  afterAll(() => {
+    vi.unstubAllGlobals();
+    Reflect.deleteProperty(SVGElement.prototype, "getScreenCTM");
+  });
   it.each(examples)(
     "$slug has no automated accessibility violations",
     async ({ slug, Example }) => {

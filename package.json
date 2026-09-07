@@ -19,7 +19,8 @@
     "test:package": "node scripts/verify-packages.mjs",
     "typecheck": "tsgo -p tsconfig.typecheck.json",
     "test:compiler-conformance": "node scripts/compare-react-compilers.mjs",
-    "test:docs": "node scripts/verify-docs-runtime.mjs"
+    "test:docs": "node scripts/verify-docs-runtime.mjs",
+    "test:connect": "node scripts/verify-connect-runtime.mjs"
   },
   "devDependencies": {
     "@babel/core": "8.0.1",

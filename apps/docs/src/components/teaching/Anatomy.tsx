@@ -38,6 +38,7 @@ type ControlShape =
 
 type ItemShape = "row" | "tab" | "crumb" | "radio" | "slide" | "cell";
 type GraphicShape =
+  | "connections"
   | "area"
   | "bar"
   | "boxplot"
@@ -107,6 +108,7 @@ function itemShape(name: string): ItemShape {
 }
 
 function graphicShape(name: string): GraphicShape {
+  if (name === "ConnectLines") return "connections";
   if (/boxplot/i.test(name)) return "boxplot";
   if (/dumbbell/i.test(name)) return "dumbbell";
   if (/open.?to.?close/i.test(name)) return "open-to-close";
@@ -127,6 +129,8 @@ function graphicShape(name: string): GraphicShape {
 }
 
 const triggerGlyphs: [RegExp, typeof XMarkIcon][] = [
+  [/^Connect(Output|InputTrigger)$/, ArrowsRightLeftIcon],
+  [/disconnect/i, XMarkIcon],
   [/clear|close|dismiss/i, XMarkIcon],
   [/previous|back/i, ChevronLeftIcon],
   [/next|forward/i, ChevronRightIcon],
@@ -799,6 +803,36 @@ function GraphicNode({ node }: { node: Extract<DiagramNode, { type: "graphic" }>
           className="fill-teal-100 stroke-teal-700 dark:fill-teal-950 dark:stroke-teal-300"
           strokeWidth="2"
         />
+      </svg>
+    );
+  }
+  if (node.shape === "connections") {
+    graphic = (
+      <svg viewBox="0 0 100 60" className="h-14 w-full" aria-hidden="true">
+        <path
+          d="M 30 20 C 50 20, 50 40, 70 40"
+          fill="none"
+          className="stroke-teal-600 dark:stroke-teal-400"
+          strokeWidth="2"
+        />
+        <rect
+          x="5"
+          y="8"
+          width="25"
+          height="24"
+          rx="3"
+          className="fill-white stroke-zinc-400 dark:fill-zinc-900"
+        />
+        <rect
+          x="70"
+          y="28"
+          width="25"
+          height="24"
+          rx="3"
+          className="fill-white stroke-zinc-400 dark:fill-zinc-900"
+        />
+        <circle cx="30" cy="20" r="3" className="fill-teal-600 dark:fill-teal-400" />
+        <circle cx="70" cy="40" r="3" className="fill-teal-600 dark:fill-teal-400" />
       </svg>
     );
   }
