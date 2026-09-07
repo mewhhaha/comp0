@@ -32,13 +32,14 @@ try {
     "Mounting cards must not move focus",
   );
 
-  const source = example.getByRole("button", { name: "Palette: Jade output (color)" });
-  const input = example.getByRole("button", { name: "Material: Surface input (color)" });
+  const source = example.getByRole("button", { name: "Weather: Rain output (weather)" });
+  const input = example.getByRole("button", { name: "Garden: Flower input (weather)" });
+  await example.getByText("Source", { exact: true }).click();
   const select = example.getByRole("combobox");
   await source.click();
   await input.click();
-  assert.equal(await select.inputValue(), "jade", "Two clicks must connect without dragging");
-  await select.selectOption("bronze");
+  assert.equal(await select.inputValue(), "rain", "Two clicks must connect without dragging");
+  await select.selectOption("sun");
 
   await example.scrollIntoViewIfNeeded();
   const start = await source.boundingBox();
@@ -51,17 +52,17 @@ try {
   await page.mouse.up();
   assert.equal(
     await select.inputValue(),
-    "bronze",
+    "sun",
     "Escape must cancel a drag even if released over a compatible input",
   );
   assert.equal(await source.getAttribute("aria-pressed"), "false");
   await source.dragTo(input);
   assert.equal(
     await select.inputValue(),
-    "jade",
+    "rain",
     "Dragging must connect the same endpoints as clicking",
   );
-  await example.getByRole("button", { name: "Disconnect Material: Surface" }).click();
+  await example.getByRole("button", { name: "Disconnect Garden: Flower" }).click();
   assert.equal(await select.inputValue(), "");
   assert(
     await select.evaluate((control) => control === document.activeElement),
@@ -153,11 +154,40 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await source.click();
   await input.click();
-  assert.equal(await select.inputValue(), "jade", "Narrow layouts must retain connection controls");
+  assert.equal(await select.inputValue(), "rain", "Narrow layouts must retain connection controls");
   assert(
     await page.evaluate(() => document.documentElement.scrollWidth <= 390),
     "The board must scroll locally instead of widening the page",
   );
+  await example.getByText("Source", { exact: true }).click();
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.waitForFunction(() => {
+      const root = document.querySelector('[aria-label="Flower connections"]');
+      const path = root.querySelector('path[data-from="rain"][data-to="flower"]');
+      if (!path) return false;
+      const matrix = path.getScreenCTM();
+      const start = path.getPointAtLength(0).matrixTransform(matrix);
+      const end = path.getPointAtLength(path.getTotalLength()).matrixTransform(matrix);
+      const output = root
+        .querySelector('[data-slot="connect-output"][value="rain"]')
+        .getBoundingClientRect();
+      const input = root.querySelector("[data-connect-input-trigger]").getBoundingClientRect();
+      return (
+        Math.abs(start.x - output.right) < 1 &&
+        Math.abs(start.y - output.top - output.height / 2) < 1 &&
+        Math.abs(end.x - input.left) < 1 &&
+        Math.abs(end.y - input.top - input.height / 2) < 1 &&
+        start.x < end.x
+      );
+    });
+    const bounds = await example.boundingBox();
+    assert(bounds && bounds.height <= 300, `The emoji example must stay compact at ${width}px`);
+    assert(
+      await page.evaluate((width) => document.documentElement.scrollWidth <= width, width),
+      `The emoji example must fit a ${width}px phone`,
+    );
+  }
   assert.deepEqual(errors, [], "Connect runtime logged browser errors");
   console.log(
     `Connect verified at ${base}: clicks, drag/cancel, native selectors, focus, layout controls, wire geometry, narrow layout, and shader accessibility.`,

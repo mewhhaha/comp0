@@ -265,7 +265,7 @@ const lessons: Record<string, LessonCopy> = {
     "Use it for visual workflows, material editors, and other relationships that people need to edit directly.",
     "Wrap labelled ConnectCard elements in Connect and assign a unique value to every input and every output.",
     "Add ConnectOutput buttons and ConnectInput groups with matching kind strings. Each input contains a ConnectInputTrigger, ConnectInputSelect, and ConnectDisconnect.",
-    "Add ConnectLines for decorative wires. Keep selectors visible and let your own layout or Inventory position the cards; Connect never opens a dialog or moves focus on mount.",
+    "Add ConnectLines for decorative wires and make native source selectors easy to find. Let your own layout or Inventory position the cards; Connect never opens a dialog or moves focus on mount.",
     '<Connect aria-label="Connections">\n  <ConnectCard value="source" label="Palette">\n    <ConnectOutput value="color" label="Color" kind="color">\n      Color\n    </ConnectOutput>\n  </ConnectCard>\n  <ConnectCard value="target" label="Material">\n    <ConnectInput value="surface" label="Surface" kind="color">\n      <ConnectInputTrigger>Surface</ConnectInputTrigger>\n      <ConnectInputSelect />\n      <ConnectDisconnect>Disconnect</ConnectDisconnect>\n    </ConnectInput>\n  </ConnectCard>\n</Connect>;',
   ),
   "floating-panel": lesson(

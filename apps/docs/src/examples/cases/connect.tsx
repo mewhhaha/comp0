@@ -11,64 +11,61 @@ import {
 
 export function Example() {
   return (
-    <div>
-      <p className="mb-5 text-sm/6 text-zinc-600 dark:text-zinc-400">
-        Tap an output, then a matching input, or choose a source from its menu. You can also drag
-        between ports.
+    <div className="mx-auto w-full max-w-xs">
+      <p className="mb-6 text-sm/6 text-zinc-600 dark:text-zinc-400">
+        Tap a circle, then the square. Or drag between them.
       </p>
       <Connect
-        aria-label="Color connections"
-        defaultValue={[{ from: "bronze", to: "surface" }]}
-        className="relative grid gap-10 sm:grid-cols-2 sm:gap-20"
+        aria-label="Flower connections"
+        defaultValue={[{ from: "sun", to: "flower" }]}
+        className="relative grid grid-cols-2 gap-12"
       >
-        <ConnectLines className="text-teal-600 dark:text-teal-400" />
+        <ConnectLines className="text-teal-600 dark:text-teal-400" strokeWidth={3} />
         <ConnectCard
-          value="palette"
-          label="Palette"
-          className="relative min-w-0 rounded-xl border border-zinc-200 bg-white p-4 outline-teal-600 focus-visible:outline-2 dark:border-zinc-700 dark:bg-zinc-900 dark:outline-teal-400"
+          value="weather"
+          label="Weather"
+          className="relative grid min-w-0 content-start justify-items-center gap-6 border-0 p-0 outline-teal-600 focus-visible:outline-2 dark:outline-teal-400"
         >
-          <legend className="px-2 text-sm font-semibold">Palette</legend>
-          <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">Color outputs</p>
-          <div className="grid gap-3">
-            {[
-              { value: "bronze", label: "Bronze", color: "#a87946" },
-              { value: "jade", label: "Jade", color: "#158568" },
-            ].map((color) => (
-              <ConnectOutput
-                key={color.value}
-                value={color.value}
-                label={color.label}
-                kind="color"
-                className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-teal-600 hover:bg-zinc-50 focus-visible:outline-2 data-selected:border-teal-600 data-selected:ring-2 data-selected:ring-teal-600 dark:border-zinc-700 dark:outline-teal-400 dark:hover:bg-zinc-800"
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="size-4 rounded"
-                    style={{ background: color.color }}
-                  />
-                  {color.label}
-                </span>
-                <span aria-hidden="true">○</span>
-              </ConnectOutput>
-            ))}
-          </div>
+          <legend className="sr-only">Weather</legend>
+          {[
+            { value: "sun", label: "Sun", emoji: "☀️" },
+            { value: "rain", label: "Rain", emoji: "🌧️" },
+          ].map((weather) => (
+            <ConnectOutput
+              key={weather.value}
+              value={weather.value}
+              label={weather.label}
+              kind="weather"
+              className="grid size-14 place-items-center rounded-full border-2 border-amber-300 bg-amber-50 text-3xl outline-teal-600 focus-visible:outline-2 focus-visible:outline-offset-4 data-selected:border-teal-600 data-selected:ring-4 data-selected:ring-teal-600/20 dark:border-amber-700 dark:bg-amber-950 dark:outline-teal-400"
+            >
+              <span aria-hidden="true">{weather.emoji}</span>
+            </ConnectOutput>
+          ))}
         </ConnectCard>
         <ConnectCard
-          value="material"
-          label="Material"
-          className="relative min-w-0 rounded-xl border border-zinc-200 bg-white p-4 outline-teal-600 focus-visible:outline-2 dark:border-zinc-700 dark:bg-zinc-900 dark:outline-teal-400"
+          value="garden"
+          label="Garden"
+          className="relative min-w-0 border-0 pt-10 outline-teal-600 focus-visible:outline-2 dark:outline-teal-400"
         >
-          <legend className="px-2 text-sm font-semibold">Material</legend>
-          <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">Color input</p>
-          <ConnectInput value="surface" label="Surface" kind="color" className="grid gap-3">
-            <ConnectInputTrigger className="flex min-h-11 items-center gap-3 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-teal-600 focus-visible:outline-2 data-available:border-teal-600 data-available:ring-2 data-available:ring-teal-600 dark:border-zinc-700 dark:outline-teal-400">
-              <span aria-hidden="true">○</span>Surface
+          <legend className="sr-only">Garden</legend>
+          <ConnectInput
+            value="flower"
+            label="Flower"
+            kind="weather"
+            className="grid justify-items-center gap-4"
+          >
+            <ConnectInputTrigger className="grid size-14 place-items-center rounded-2xl border-2 border-teal-300 bg-teal-50 text-3xl outline-teal-600 focus-visible:outline-2 focus-visible:outline-offset-4 data-available:border-teal-600 data-available:ring-4 data-available:ring-teal-600/20 dark:border-teal-700 dark:bg-teal-950 dark:outline-teal-400">
+              <span aria-hidden="true">🌻</span>
             </ConnectInputTrigger>
-            <ConnectInputSelect className="min-h-11 w-full min-w-0 rounded-lg border border-zinc-200 bg-white px-2 text-base outline-teal-600 focus-visible:outline-2 dark:border-zinc-700 dark:bg-zinc-900 dark:outline-teal-400" />
-            <ConnectDisconnect className="min-h-11 justify-self-start rounded px-2 text-xs font-medium text-zinc-600 outline-teal-600 hover:bg-zinc-100 focus-visible:outline-2 disabled:opacity-40 dark:text-zinc-400 dark:outline-teal-400 dark:hover:bg-zinc-800">
-              Disconnect
-            </ConnectDisconnect>
+            <details className="w-full min-w-0 text-sm text-zinc-600 dark:text-zinc-400">
+              <summary className="min-h-11 cursor-pointer rounded py-3 text-center outline-teal-600 focus-visible:outline-2 dark:outline-teal-400">
+                Source
+              </summary>
+              <ConnectInputSelect className="min-h-11 w-full min-w-0 rounded-lg border border-zinc-200 bg-white px-1 text-base outline-teal-600 focus-visible:outline-2 dark:border-zinc-700 dark:bg-zinc-900 dark:outline-teal-400" />
+              <ConnectDisconnect className="mt-2 min-h-11 w-full rounded px-1 text-sm outline-teal-600 focus-visible:outline-2 disabled:opacity-40 dark:outline-teal-400">
+                Disconnect
+              </ConnectDisconnect>
+            </details>
           </ConnectInput>
         </ConnectCard>
       </Connect>
