@@ -76,16 +76,14 @@ describe("docs content catalog", () => {
     expect(componentBySlug.has("checkbox-group")).toBe(false);
   });
 
-  it("gives every component three lesson steps and an example", async () => {
-    for (const component of components) {
-      expect(component.steps, component.slug).toHaveLength(3);
-      const example = await getExample(component.slug);
-      expect(example, component.slug).toBeDefined();
-      expect(exampleRegistry[component.slug], component.slug).toBeDefined();
-      for (const variant of component.moreExamples ?? []) {
-        const key = `${component.slug}.${variant.id}`;
-        expect(await getExample(key), key).toBeDefined();
-      }
+  it.each(components)("gives $slug three lesson steps and an example", async (component) => {
+    expect(component.steps, component.slug).toHaveLength(3);
+    const example = await getExample(component.slug);
+    expect(example, component.slug).toBeDefined();
+    expect(exampleRegistry[component.slug], component.slug).toBeDefined();
+    for (const variant of component.moreExamples ?? []) {
+      const key = `${component.slug}.${variant.id}`;
+      expect(await getExample(key), key).toBeDefined();
     }
   });
 
