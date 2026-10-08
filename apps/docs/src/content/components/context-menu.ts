@@ -26,8 +26,9 @@ export default component({
       false,
       false,
       [
+        prop("id", "string", "Base for the generated trigger and list ids."),
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
         prop(
           "as",
           "ElementType",
@@ -61,6 +62,11 @@ export default component({
           "string / CSSProperties",
           "Position the popover from the exposed CSS variables; no placement is applied for you.",
         ),
+        prop(
+          "placement / offset",
+          "PopoverPlacement / number",
+          "Anchor-positioning options; not needed here because you position the popover from the exposed CSS variables.",
+        ),
       ],
     ),
     p("MenuList", "root", "Menu collection inside the positioned surface.", true, true, [
@@ -70,6 +76,11 @@ export default component({
       prop("onClick", "(event) => void", "Runs the action; preventDefault keeps the menu open."),
       prop("value", "string", "Optional identity for typeahead and data-value."),
       prop("disabled", "boolean", "Disables the action."),
+      prop(
+        "textValue",
+        "string",
+        "Overrides the text crawled from children when markup makes it ambiguous.",
+      ),
     ]),
   ],
   keyboard: [

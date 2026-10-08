@@ -12,7 +12,7 @@ export default component({
     supporting:
       "Put SelectValue inside SelectTrigger, then add SelectPopover beside it; wrap related options in a labelled SelectOptGroup.",
     behavior:
-      "Select owns its value, field, form serialization, and open state; control the list with open, defaultOpen, and onToggle.",
+      "Select owns its value, field, form serialization, and open state; control the list with open, defaultOpen, and onOpenChange.",
     code: '<Select name="size" defaultValue="small">\n  <Label>Size</Label>\n  <SelectTrigger>\n    <SelectValue />\n  </SelectTrigger>\n  <SelectPopover>\n    <SelectOption value="small">Small</SelectOption>\n  </SelectPopover>\n</Select>;',
   },
   imports: [
@@ -35,10 +35,15 @@ export default component({
       false,
       [
         prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
+        prop(
+          "id",
+          "string",
+          "Base for the generated trigger, listbox, and field ids; also the wrapper id when `as` is set.",
+        ),
         prop("value / defaultValue", "string", "Controlled or initial choice."),
         prop("onChange", "(value: string) => void", "Receives the next choice."),
         prop("open / defaultOpen", "boolean", "Controlled or initial open state of the listbox."),
-        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
         prop("name", "string", "Submission name for the hidden native select."),
         prop("form", "string", "Associates the native select with a form by id."),
         prop("disabled / invalid / required", "boolean", "Field-wide states."),

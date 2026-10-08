@@ -1,4 +1,4 @@
-import { type CollectionItem } from "@comp0/core";
+import { type Collection, type CollectionItem } from "@comp0/core";
 import { createRequiredContext } from "../internal/context.js";
 
 export type TagGroupContextValue = {
@@ -6,6 +6,8 @@ export type TagGroupContextValue = {
   selected: string[];
   toggle: (value: string) => void;
   remove: ((value: string) => void) | undefined;
+  /** Every mounted tag in document order; shared so controls outside the list (TagPickerInput) can reach the tags. */
+  collection: Collection;
 };
 
 export type TagListContextValue = {

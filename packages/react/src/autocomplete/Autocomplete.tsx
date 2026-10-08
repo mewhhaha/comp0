@@ -1,5 +1,5 @@
-import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { useCollectionNavigation, useControllableState } from "@comp0/core";
+import { useCallback, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCollectionNavigation, useControllableState, type Collection } from "@comp0/core";
 import { AutocompleteContext, type AutocompleteContextValue } from "./autocomplete-shared.js";
 
 export type AutocompleteProps = {
@@ -26,7 +26,6 @@ export function Autocomplete({
 }: AutocompleteProps) {
   const generatedId = useId().replace(/:/g, "");
   const defaultCollectionId = `autocomplete-${generatedId}-collection`;
-  const collectionRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const pendingAutoFocusValue = useRef<string | null>(null);
   const [inputValue, setInputValueState] = useControllableState({
@@ -40,15 +39,27 @@ export function Autocomplete({
   const [collectionId, setCollectionId] = useState<string>();
   const [collectionVersion, setCollectionVersion] = useState(0);
 
+  const attachedCollection = useRef<Collection | null>(null);
+  // Identity matters: collections attach from an effect that depends on this
+  // function, so a new function per render (after a compiler bailout) would
+  // re-attach and bump the version forever.
+  const attachCollection = useCallback((collection: Collection) => {
+    attachedCollection.current = collection;
+    const unsubscribe = collection.subscribe(() => setCollectionVersion((version) => version + 1));
+    setCollectionVersion((version) => version + 1);
+    return () => {
+      unsubscribe();
+      if (attachedCollection.current === collection) attachedCollection.current = null;
+      setCollectionVersion((version) => version + 1);
+    };
+  }, []);
   const availableItems = () =>
-    [
-      ...(collectionRef.current?.querySelectorAll<HTMLElement>("[data-autocomplete-item]") ?? []),
-    ].filter(
+    (attachedCollection.current?.items() ?? []).filter(
       (item) =>
-        item.getAttribute("aria-disabled") !== "true" &&
-        item.closest("[hidden], [aria-hidden='true']") === null,
+        !item.disabled &&
+        item.element !== null &&
+        item.element.closest("[hidden], [aria-hidden='true']") === null,
     );
-
   const clearActive = () => setActiveId("");
 
   const setInputValue = (nextInputValue: string, inputType?: string) => {
@@ -82,14 +93,14 @@ export function Autocomplete({
       return;
     }
     if (event.key === "Enter" && activeId) {
-      const activeItem = event.currentTarget.ownerDocument.getElementById(activeId);
-      if (!activeItem || !collectionRef.current?.contains(activeItem)) {
+      const activeItem = attachedCollection.current?.items().find((item) => item.id === activeId);
+      if (!activeItem?.element) {
         pendingAutoFocusValue.current = null;
         clearActive();
         return;
       }
       event.preventDefault();
-      activeItem.click();
+      activeItem.element.click();
       return;
     }
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
@@ -103,14 +114,14 @@ export function Autocomplete({
     event.preventDefault();
     const nextId = navigate(
       event.key,
-      items.map((item) => ({ key: item.id, textValue: item.textContent ?? "" })),
+      items.map((item) => ({ key: item.id ?? item.key, textValue: item.textValue })),
       activeId || undefined,
       { orientation: "vertical", typeahead: false },
     );
-    const nextItem = items.find((item) => item.id === nextId);
-    if (!nextItem) return;
-    setActiveId(nextItem.id);
-    nextItem.scrollIntoView?.({ block: "nearest" });
+    const nextItem = items.find((item) => (item.id ?? item.key) === nextId);
+    if (!nextItem?.element) return;
+    setActiveId(nextItem.id ?? nextItem.key);
+    nextItem.element.scrollIntoView?.({ block: "nearest" });
   };
 
   useLayoutEffect(() => {
@@ -132,7 +143,7 @@ export function Autocomplete({
       return;
     }
     pendingAutoFocusValue.current = null;
-    setActiveId(firstItem.id);
+    setActiveId(firstItem.id ?? firstItem.key);
   }, [collectionVersion, disableAutoFocusFirst, disableVirtualFocus, inputValue]);
 
   useLayoutEffect(() => {
@@ -142,9 +153,9 @@ export function Autocomplete({
 
   const context = {
     activeId,
+    attachCollection,
     collectionId,
     defaultCollectionId,
-    collectionRef,
     disableVirtualFocus,
     hasFilter: filter !== undefined,
     inputRef,
@@ -155,7 +166,6 @@ export function Autocomplete({
       return filter ? filter(textValue, inputValue) : true;
     },
     setCollectionId,
-    setCollectionVersion,
     setActiveId,
     setInputValue,
   };

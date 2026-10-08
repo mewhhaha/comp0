@@ -4,7 +4,5 @@ import { Checkbox, type CheckboxProps } from "../checkbox/Checkbox.js";
 export type SwitchProps = Omit<CheckboxProps, "indeterminate">;
 
 export function Switch(props: SwitchProps) {
-  return (
-    <Checkbox {...props} inputProps={{ ...props.inputProps, role: "switch" }} data-switch="" />
-  );
+  return <Checkbox {...props} inputProps={{ ...props.inputProps, role: "switch" }} />;
 }

@@ -14,8 +14,7 @@ export type ContextMenuProps = RootProps<{
   id?: string | undefined;
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  /** Receives the next open state rather than a native ToggleEvent. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   children?: ReactNode | undefined;
 }>;
 
@@ -34,7 +33,7 @@ export function ContextMenu({
   children,
   defaultOpen = false,
   id,
-  onToggle,
+  onOpenChange,
   open: openProp,
   ...props
 }: ContextMenuProps) {
@@ -46,7 +45,7 @@ export function ContextMenu({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const menuId = id ?? `context-menu-${generatedId}`;

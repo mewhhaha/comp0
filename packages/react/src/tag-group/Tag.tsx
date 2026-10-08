@@ -2,7 +2,8 @@ import { useId, useLayoutEffect, useRef, type ComponentProps, type MouseEvent } 
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { resolveItemLabel } from "../internal/item-label.js";
-import { rowCell, rowFocusables } from "../grid-list/grid-list-shared.js";
+import { focusableWithin } from "../internal/focusable.js";
+import { rowCell } from "../grid-list/grid-list-shared.js";
 import { useOptionalTagGroupContext, useTagListContext } from "./tag-shared.js";
 
 export type TagProps = Omit<ComponentProps<"div">, "id"> &
@@ -57,7 +58,7 @@ export function Tag({
   useLayoutEffect(() => {
     const row = rowRef.current;
     if (!row) return;
-    for (const element of rowFocusables(row)) element.tabIndex = -1;
+    for (const element of focusableWithin(row)) element.tabIndex = -1;
     list.register({
       key: value,
       id,
@@ -94,7 +95,8 @@ export function Tag({
         onClick?.(event);
         if (event.defaultPrevented) return;
         const target = event.target instanceof HTMLElement ? event.target : null;
-        if (target && rowFocusables(event.currentTarget).some((el) => el.contains(target))) return;
+        if (target && focusableWithin(event.currentTarget).some((el) => el.contains(target)))
+          return;
         list.setActiveKey(value);
         if (group?.selectionEnabled) group.toggle(value);
       }}

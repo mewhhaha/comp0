@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  assertInventoryLayout,
+  sanitizeInventoryLayout,
   constrainInventoryEntry,
   inventoryAnnouncement,
   inventoryKeyDelta,
@@ -118,13 +118,29 @@ describe("inventory layout", () => {
     expect(inventoryAnnouncement("start", "resize", "Card")).toContain("Resizing Card.");
   });
 
-  it("asserts duplicate, overlapping, and out-of-bounds entries", () => {
-    expect(() => assertInventoryLayout(layout, 4, 2)).not.toThrow();
-    expect(() => assertInventoryLayout([layout[0]!, layout[0]!], 4, 2)).toThrow(/more than once/);
-    expect(() => assertInventoryLayout([layout[0]!, { ...layout[1]!, column: 2 }], 4, 2)).toThrow(
-      /overlap/,
-    );
-    expect(() => assertInventoryLayout(layout, 3, 2)).toThrow(/exceeds/);
-    expect(() => assertInventoryLayout(layout, 0, 2)).toThrow(/positive integer/);
+  it("sanitizes duplicate, overlapping, and out-of-bounds entries without throwing", () => {
+    const clean = sanitizeInventoryLayout(layout, 4, 2);
+    expect(clean.layout).toEqual(layout);
+    expect(clean.problems).toEqual([]);
+
+    const duplicate = sanitizeInventoryLayout([layout[0]!, layout[0]!], 4, 2);
+    expect(duplicate.layout).toEqual([layout[0]]);
+    expect(duplicate.problems[0]?.message).toMatch(/more than once/);
+
+    const overlapping = sanitizeInventoryLayout([layout[0]!, { ...layout[1]!, column: 2 }], 4, 2);
+    expect(overlapping.layout).toEqual([layout[0]]);
+    expect(overlapping.problems[0]?.message).toMatch(/overlap/);
+
+    const small = sanitizeInventoryLayout(layout, 3, 2);
+    expect(small.layout.length).toBeLessThan(layout.length);
+    expect(small.problems[0]?.message).toMatch(/exceeds/);
+
+    const invalidSize = sanitizeInventoryLayout([], 0, 2);
+    expect(invalidSize.columns).toBe(1);
+    expect(invalidSize.problems[0]?.message).toMatch(/positive integer/);
+
+    const fractional = sanitizeInventoryLayout([{ ...layout[0]!, columnSpan: 1.5 }], 4, 2);
+    expect(fractional.layout).toEqual([]);
+    expect(fractional.problems[0]?.message).toMatch(/columnSpan/);
   });
 });

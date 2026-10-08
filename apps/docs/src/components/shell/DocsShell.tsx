@@ -59,7 +59,7 @@ export function DocsShell({ children, className, navigation, paletteEntries }: D
           </div>
         </div>
       </div>
-      <CommandPalette entries={paletteEntries} open={paletteOpen} onToggle={setPaletteOpen} />
+      <CommandPalette entries={paletteEntries} open={paletteOpen} onOpenChange={setPaletteOpen} />
       <ToastRegion className="inset-auto right-4 bottom-4 m-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 border-0 bg-transparent p-0">
         {(toast) => (
           <Toast

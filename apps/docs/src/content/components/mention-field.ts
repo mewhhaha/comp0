@@ -36,6 +36,11 @@ export default component({
       false,
       false,
       [
+        prop(
+          "id",
+          "string",
+          "Base id for the message input; the label, description, and error ids derive from it.",
+        ),
         prop("value", "string", "Controlled message text."),
         prop("defaultValue", "string", "Initial uncontrolled message text."),
         prop("onChange", "(value: string) => void", "Receives the next complete message."),
@@ -48,6 +53,11 @@ export default component({
           "filter",
           "(textValue: string, query: string) => boolean",
           "Optional client-side match rule for suggestion text.",
+        ),
+        prop(
+          "disabled / invalid / required",
+          "boolean",
+          "Field-wide states shared with every part.",
         ),
         prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
       ],
@@ -74,9 +84,16 @@ export default component({
     ),
     p("ListBox", "root", "Explicit labelled collection of matching completions.", true, false, [
       prop("aria-label", "string", "Accessible name for the suggestion collection."),
+      prop(
+        "value",
+        "string",
+        "Unused here: choosing a suggestion inserts it instead of keeping it selected.",
+      ),
+      prop("orientation", '"vertical" | "horizontal"', "Arrow-key axis."),
     ]),
     p("ListBoxOption", "item", "One token completion.", true, false, [
       prop("value", "string", "Text inserted after the active trigger."),
+      prop("disabled", "boolean", "Excludes this suggestion from selection."),
       prop("textValue", "string", "Matching text when children contain rich content."),
     ]),
   ],

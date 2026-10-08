@@ -8,7 +8,6 @@ import {
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { isRtl, valueAtPointer } from "../internal/range-shared.js";
-import { dataSlot } from "../internal/shared.js";
 import { useRangeSliderContext, type RangeSliderThumbKind } from "./range-slider-shared.js";
 
 export type RangeSliderThumbProps = ComponentProps<"div"> &
@@ -58,6 +57,7 @@ export function RangeSliderThumb({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="range-slider-thumb"
       {...props}
       ref={composedRef}
       role="slider"
@@ -70,7 +70,6 @@ export function RangeSliderThumb({
       data-thumb={thumb}
       data-dragging={dataAttr(dragging)}
       data-disabled={dataAttr(disabled)}
-      data-slot={dataSlot(props, "range-slider-thumb")}
       style={{ touchAction: "none", ...props.style }}
       onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
         onKeyDown?.(event);

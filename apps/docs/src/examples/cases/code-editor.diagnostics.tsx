@@ -300,7 +300,7 @@ export function Example() {
         <Tooltip
           id="code-editor-symbol"
           open={symbolHover !== null}
-          onToggle={(open) => {
+          onOpenChange={(open) => {
             if (!open) closeSymbolHover();
           }}
         >

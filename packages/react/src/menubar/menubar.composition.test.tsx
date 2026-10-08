@@ -1,8 +1,6 @@
 import { act } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
-import { ContextMenu } from "../context-menu/ContextMenu.js";
-import { ContextMenuTrigger } from "../context-menu/ContextMenuTrigger.js";
+import { describe, expect, it } from "vitest";
+import { setup } from "../../test/render.js";
 import { Menu } from "../menu/Menu.js";
 import { Menubar } from "./Menubar.js";
 import { MenuItem } from "../menu/MenuItem.js";
@@ -11,7 +9,7 @@ import { MenuPopover } from "../menu/MenuPopover.js";
 import { MenuTrigger } from "../menu/MenuTrigger.js";
 
 function renderMenubar(ownerDocument?: Document) {
-  const result = render(
+  const result = setup(
     <Menubar aria-label="Notes">
       <Menu id="file">
         <MenuTrigger>File</MenuTrigger>
@@ -49,14 +47,6 @@ function renderMenubar(ownerDocument?: Document) {
   return { ...result, bar, file, edit, view, surfaces };
 }
 
-function fireContextMenu(element: Element, init?: MouseEventInit) {
-  const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, ...init });
-  act(() => {
-    element.dispatchEvent(event);
-  });
-  return event;
-}
-
 describe("menubar composition", () => {
   it("renders menubar semantics with menuitem triggers and a single tab stop", () => {
     const { bar, file, edit, view, surfaces } = renderMenubar();
@@ -71,54 +61,45 @@ describe("menubar composition", () => {
     expect(surfaces.every((surface) => surface.hidden)).toBe(true);
   });
 
-  it("roves with ArrowRight and ArrowLeft, wrapping at both ends", () => {
-    const { file, edit, view } = renderMenubar();
-    act(() => file.focus());
+  it("roves with ArrowRight and ArrowLeft, wrapping at both ends", async () => {
+    const { file, edit, view, user } = renderMenubar();
+    file.focus();
 
-    fireKeyDown(file, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(edit);
     expect([file.tabIndex, edit.tabIndex]).toEqual([-1, 0]);
 
-    fireKeyDown(edit, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(file);
 
-    fireKeyDown(file, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(view);
-    fireKeyDown(view, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(file);
 
-    fireKeyDown(file, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(view);
-    fireKeyDown(view, "Home");
+    await user.keyboard("{Home}");
     expect(document.activeElement).toBe(file);
   });
 
-  it("mirrors horizontal roving in right-to-left layouts", () => {
-    const { bar, file, edit } = renderMenubar();
+  it("mirrors horizontal roving in right-to-left layouts", async () => {
+    const { bar, file, edit, user } = renderMenubar();
     bar.style.direction = "rtl";
-    act(() => file.focus());
+    file.focus();
 
-    fireKeyDown(file, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(edit);
   });
 
-  it("roves within the menubar's owning document", () => {
+  it("roves within the menubar's owning document", async () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
-    const { file, edit, unmount } = renderMenubar(frameDocument);
+    const { file, edit, unmount, user } = renderMenubar(frameDocument);
 
-    act(() => {
-      file.focus();
-      file.dispatchEvent(
-        new frameWindow.KeyboardEvent("keydown", {
-          key: "ArrowRight",
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    });
+    file.focus();
+    await user.keyboard("{ArrowRight}");
 
     expect(frameDocument.activeElement).toBe(edit);
     expect([file.tabIndex, edit.tabIndex]).toEqual([-1, 0]);
@@ -126,45 +107,63 @@ describe("menubar composition", () => {
     frame.remove();
   });
 
-  it("keeps the bar's arrows away from menus while closed", () => {
-    const { file, surfaces } = renderMenubar();
-    act(() => file.focus());
-    fireKeyDown(file, "ArrowRight");
+  it("keeps the bar's arrows away from menus while closed", async () => {
+    const { file, surfaces, user } = renderMenubar();
+    file.focus();
+    await user.keyboard("{ArrowRight}");
     expect(surfaces.every((surface) => surface.hidden)).toBe(true);
   });
 
-  it("opens with ArrowDown and focuses the first item", () => {
-    const { container, file, surfaces } = renderMenubar();
-    act(() => file.focus());
-    fireKeyDown(file, "ArrowDown");
+  it("opens with ArrowDown and focuses the first item", async () => {
+    const { container, file, surfaces, user } = renderMenubar();
+    file.focus();
+    await user.keyboard("{ArrowDown}");
     expect(surfaces[0]!.hidden).toBe(false);
     expect(file.getAttribute("aria-expanded")).toBe("true");
     const first = container.querySelector<HTMLElement>("[data-value='new']")!;
     expect(document.activeElement).toBe(first);
   });
 
-  it("moves openness to the neighbor menu with horizontal arrows while open", () => {
-    const { container, file, surfaces } = renderMenubar();
-    act(() => file.focus());
-    fireKeyDown(file, "ArrowDown");
-    const newItem = container.querySelector<HTMLElement>("[data-value='new']")!;
+  it("opens with Enter and Space, and ArrowUp focuses the last item", async () => {
+    const { container, file, edit, view, surfaces, user } = renderMenubar();
+    file.focus();
+    await user.keyboard("{Enter}");
+    expect(surfaces[0]!.hidden).toBe(false);
+    await user.keyboard("{Escape}");
+    expect(surfaces[0]!.hidden).toBe(true);
 
-    fireKeyDown(newItem, "ArrowRight");
+    edit.focus();
+    await user.keyboard(" ");
+    expect(surfaces[1]!.hidden).toBe(false);
+    await user.keyboard("{Escape}");
+
+    view.focus();
+    await user.keyboard("{ArrowUp}");
+    expect(surfaces[2]!.hidden).toBe(false);
+    expect(document.activeElement).toBe(container.querySelector("[data-value='zoom']"));
+  });
+
+  it("moves openness to the neighbor menu with horizontal arrows while open", async () => {
+    const { container, file, surfaces, user } = renderMenubar();
+    file.focus();
+    await user.keyboard("{ArrowDown}");
+
+    await user.keyboard("{ArrowRight}");
     expect(surfaces[0]!.hidden).toBe(true);
     expect(surfaces[1]!.hidden).toBe(false);
     const undo = container.querySelector<HTMLElement>("[data-value='undo']")!;
     expect(document.activeElement).toBe(undo);
 
-    fireKeyDown(undo, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(surfaces[1]!.hidden).toBe(true);
     expect(surfaces[0]!.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("New");
   });
 
-  it("carries openness when focus lands on another item while a menu is open", () => {
-    const { file, view, surfaces } = renderMenubar();
-    act(() => file.focus());
-    fireKeyDown(file, "ArrowDown");
+  it("carries openness when focus lands on another item while a menu is open", async () => {
+    const { file, view, surfaces, user } = renderMenubar();
+    file.focus();
+    await user.keyboard("{ArrowDown}");
     expect(surfaces[0]!.hidden).toBe(false);
 
     act(() => view.focus());
@@ -172,137 +171,68 @@ describe("menubar composition", () => {
     expect(surfaces[2]!.hidden).toBe(false);
   });
 
-  it("closes with Escape, restores focus to the item, and stays closed", () => {
-    const { edit, surfaces } = renderMenubar();
-    act(() => edit.focus());
-    fireKeyDown(edit, "ArrowDown");
+  it("closes with Escape, restores focus to the item, and stays closed", async () => {
+    const { edit, surfaces, user } = renderMenubar();
+    edit.focus();
+    await user.keyboard("{ArrowDown}");
     expect(surfaces[1]!.hidden).toBe(false);
 
-    fireKeyDown(document.activeElement!, "Escape");
+    await user.keyboard("{Escape}");
     expect(surfaces[1]!.hidden).toBe(true);
     expect(document.activeElement).toBe(edit);
     expect(edit.tabIndex).toBe(0);
   });
 
-  it("closes an open sibling when another item's menu opens by click", () => {
-    const { file, edit, surfaces } = renderMenubar();
-    fireClick(file);
+  it("opens by click, closes by clicking the open item, and carries openness on hover", async () => {
+    const { file, edit, surfaces, user } = renderMenubar();
+    await user.click(file);
     expect(surfaces[0]!.hidden).toBe(false);
-    fireClick(edit);
+
+    await user.hover(edit);
     expect(surfaces[0]!.hidden).toBe(true);
     expect(surfaces[1]!.hidden).toBe(false);
-  });
-});
 
-function renderContextMenu(onToggle?: (open: boolean) => void) {
-  const result = render(
-    <>
-      <button type="button">Before</button>
-      <ContextMenu id="attachment" onToggle={onToggle}>
-        <ContextMenuTrigger tabIndex={0}>Attachment</ContextMenuTrigger>
-        <MenuPopover>
-          <MenuList aria-label="Attachment actions">
-            <MenuItem value="download" onContextMenu={(event) => event.stopPropagation()}>
-              Download
-            </MenuItem>
-            <MenuItem value="remove">Remove</MenuItem>
-          </MenuList>
-        </MenuPopover>
-      </ContextMenu>
-    </>,
-  );
-  const before = result.container.querySelector<HTMLButtonElement>("button")!;
-  const area = document.getElementById("attachment-trigger")!;
-  const popover = result.container.querySelector<HTMLElement>("[popover]")!;
-  const menuList = result.container.querySelector<HTMLElement>("[role='menu']")!;
-  return { ...result, before, area, popover, menuList };
-}
-
-describe("context menu composition", () => {
-  it("opens on contextmenu with the pointer position exposed as CSS variables", () => {
-    const changed = vi.fn();
-    const { container, area, popover } = renderContextMenu(changed);
-    expect(popover.hidden).toBe(true);
-
-    const event = fireContextMenu(area, { clientX: 42, clientY: 24 });
-    expect(event.defaultPrevented).toBe(true);
-    expect(changed).toHaveBeenLastCalledWith(true);
-    expect(popover.hidden).toBe(false);
-    expect(area.getAttribute("data-open")).toBe("");
-    expect(popover.style.getPropertyValue("--comp0-context-menu-x")).toBe("42px");
-    expect(popover.style.getPropertyValue("--comp0-context-menu-y")).toBe("24px");
-    const first = container.querySelector<HTMLElement>("[data-value='download']")!;
-    expect(document.activeElement).toBe(first);
+    await user.click(edit);
+    expect(surfaces[1]!.hidden).toBe(true);
   });
 
-  it("labels the menu list instead of borrowing a trigger label", () => {
-    const { popover, menuList } = renderContextMenu();
-    expect(menuList.getAttribute("aria-label")).toBe("Attachment actions");
-    expect(popover.hasAttribute("aria-label")).toBe(false);
-    expect(popover.hasAttribute("aria-labelledby")).toBe(false);
-  });
+  it("skips disabled items when roving and ignores their activation", async () => {
+    const { container, user } = setup(
+      <Menubar aria-label="Notes">
+        <Menu id="file">
+          <MenuTrigger>File</MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem>New</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        <Menu id="edit">
+          <MenuTrigger disabled>Edit</MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem>Undo</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        <Menu id="view">
+          <MenuTrigger>View</MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem>Zoom</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      </Menubar>,
+    );
+    const edit = container.querySelector<HTMLElement>("#edit-trigger")!;
+    const surfaces = [...container.querySelectorAll<HTMLElement>("[popover]")];
 
-  it("re-records the position when reopened elsewhere", () => {
-    const { area, popover } = renderContextMenu();
-    fireContextMenu(area, { clientX: 10, clientY: 20 });
-    fireContextMenu(area, { clientX: 300, clientY: 150 });
-    expect(popover.hidden).toBe(false);
-    expect(popover.style.getPropertyValue("--comp0-context-menu-x")).toBe("300px");
-    expect(popover.style.getPropertyValue("--comp0-context-menu-y")).toBe("150px");
-  });
-
-  it("closes with Escape and restores focus to where it was", () => {
-    const { before, area, popover } = renderContextMenu();
-    act(() => before.focus());
-    fireContextMenu(area, { clientX: 5, clientY: 5 });
-    expect(popover.hidden).toBe(false);
-
-    fireKeyDown(document.activeElement!, "Escape");
-    expect(popover.hidden).toBe(true);
-    expect(document.activeElement).toBe(before);
-  });
-
-  it("opens from the keyboard with Shift+F10 and the ContextMenu key", () => {
-    const { area, popover } = renderContextMenu();
-    act(() => area.focus());
-    fireKeyDown(area, "F10", { shiftKey: true });
-    expect(popover.hidden).toBe(false);
-
-    fireKeyDown(document.activeElement!, "Escape");
-    expect(popover.hidden).toBe(true);
-    expect(document.activeElement).toBe(area);
-
-    fireKeyDown(area, "ContextMenu");
-    expect(popover.hidden).toBe(false);
-  });
-
-  it("suppresses a native context menu after keyboard opening moves focus", () => {
-    const { area, popover } = renderContextMenu();
-    act(() => area.focus());
-    const keydown = new KeyboardEvent("keydown", {
-      key: "F10",
-      shiftKey: true,
-      bubbles: true,
-      cancelable: true,
-    });
-    act(() => area.dispatchEvent(keydown));
-
-    expect(keydown.defaultPrevented).toBe(true);
-    expect(popover.hidden).toBe(false);
-    expect(document.activeElement?.getAttribute("data-value")).toBe("download");
-
-    const nativeEvent = fireContextMenu(document.activeElement!);
-    expect(nativeEvent.defaultPrevented).toBe(true);
-    expect(popover.hidden).toBe(false);
-  });
-
-  it("closes after activating an item and restores focus", () => {
-    const { container, area, popover } = renderContextMenu();
-    act(() => area.focus());
-    fireContextMenu(area, { clientX: 8, clientY: 9 });
-    const remove = container.querySelector<HTMLElement>("[data-value='remove']")!;
-    fireClick(remove);
-    expect(popover.hidden).toBe(true);
-    expect(document.activeElement).toBe(area);
+    expect(edit.getAttribute("aria-disabled")).toBe("true");
+    container.querySelector<HTMLElement>("#file-trigger")!.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(container.querySelector("#view-trigger"));
+    await user.click(edit);
+    expect(surfaces[1]!.hidden).toBe(true);
   });
 });

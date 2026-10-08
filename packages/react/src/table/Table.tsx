@@ -26,35 +26,37 @@ export function Table({
   const tableRef = useRef<HTMLTableElement | null>(null);
   const composedRef = useComposedRefs(tableRef, ref);
   const [activeKey, setActiveKey] = useState("");
-  const activeKeyRef = useRef(activeKey);
-  activeKeyRef.current = activeKey;
   const cells = useCollection();
+  const valuedRows = useCollection();
   const anchorRef = useRef<string | null>(null);
 
-  const valuedRows = () => {
-    const table = tableRef.current;
-    if (!table) return [] as HTMLTableRowElement[];
-    return [...table.querySelectorAll<HTMLTableRowElement>("tr[data-value]")];
-  };
-  const rangeBetween = (anchorValue: string, target: HTMLTableRowElement) => {
-    const rows = valuedRows();
-    const from = rows.findIndex((row) => row.dataset["value"] === anchorValue);
-    const to = rows.indexOf(target);
+  // Rows with a value register into their own collection, which keeps them in
+  // document order for range selection.
+  const rangeBetween = (anchorValue: string, target: Element | null) => {
+    const keys = valuedRows.items().map((row) => row.key);
+    const from = keys.indexOf(anchorValue);
+    const to = keys.indexOf(valuedRows.items().find((row) => row.element === target)?.key ?? "");
     if (from === -1 || to === -1) return [];
     const [low, high] = from < to ? [from, to] : [to, from];
-    return rows.slice(low, high + 1).flatMap((row) => row.dataset["value"] ?? []);
+    return keys.slice(low, high + 1);
   };
 
+  // The first registered cell becomes the roving tab stop.
   const register = (item: CollectionItem) => {
     cells.register(item);
-    if (!item.element || activeKeyRef.current) return;
-    activeKeyRef.current = item.key;
-    setActiveKey(item.key);
+    if (!item.element) return;
+    setActiveKey((current) => current || item.key);
   };
 
   const keyFor = (element: Element) => cells.items().find((item) => item.element === element)?.key;
 
-  const context: TableContextValue = { activeKey, setActiveKey, register, keyFor };
+  const context: TableContextValue = {
+    activeKey,
+    setActiveKey,
+    register,
+    keyFor,
+    rows: valuedRows,
+  };
 
   const Part = partElement(as, "table");
   return (
@@ -72,8 +74,8 @@ export function Table({
           onClick?.(event);
           if (event.defaultPrevented) return;
           const target = event.target instanceof Element ? event.target : null;
-          const row = target?.closest<HTMLTableRowElement>("tr[data-value]");
-          const value = row?.dataset["value"];
+          const row = target?.closest("tr") ?? null;
+          const value = valuedRows.items().find((item) => item.element === row)?.key;
           if (!row || !value) return;
           if (event.shiftKey && onRangeSelect && anchorRef.current) {
             onRangeSelect(rangeBetween(anchorRef.current, row));
@@ -133,11 +135,12 @@ export function Table({
           const key = nextCell ? keyFor(nextCell) : undefined;
           if (key) setActiveKey(key);
           next.focus();
-          const landedValue = nextCell?.parentElement?.dataset["value"];
+          const landedRow = nextCell?.parentElement ?? null;
+          const landedValue = valuedRows.items().find((item) => item.element === landedRow)?.key;
           if (extending) {
-            anchorRef.current = anchorRef.current ?? row.dataset["value"] ?? landedValue ?? null;
-            const landedRow = nextCell?.parentElement;
-            if (anchorRef.current && landedRow instanceof HTMLTableRowElement && landedValue) {
+            const rowValue = valuedRows.items().find((item) => item.element === row)?.key;
+            anchorRef.current = anchorRef.current ?? rowValue ?? landedValue ?? null;
+            if (anchorRef.current && landedValue) {
               onRangeSelect?.(rangeBetween(anchorRef.current, landedRow));
             }
             return;

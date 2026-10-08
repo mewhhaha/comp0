@@ -81,6 +81,15 @@ export default component({
       "Optional floating open/close pair label shown on hover or focus.",
       true,
       true,
+      [
+        prop("placement", "PopoverPlacement", 'Side of the active mark; defaults to "top".'),
+        prop("offset", "number", "Distance from the active mark; defaults to eight pixels."),
+        prop(
+          "children",
+          "ReactNode | (details: ChartValueDetails) => ReactNode",
+          "Custom content receiving the active range's formatted details.",
+        ),
+      ],
     ),
   ],
   keyboard: [
@@ -95,6 +104,16 @@ export default component({
     { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-open-value]",
+      on: "OpenToCloseChartRange",
+      meaning: "The opening value of this range.",
+    },
+    {
+      attribute: "[data-close-value]",
+      on: "OpenToCloseChartRange",
+      meaning: "The closing value of this range.",
+    },
     {
       attribute: "[data-direction]",
       on: "OpenToCloseChartRange",

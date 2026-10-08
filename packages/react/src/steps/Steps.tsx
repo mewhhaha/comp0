@@ -1,7 +1,6 @@
 import { useId, useLayoutEffect, useState, type ReactNode } from "react";
 import { useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { StepsContext } from "./steps-shared.js";
 
 export type StepsProps = RootProps<{
@@ -44,7 +43,7 @@ export function Steps({ as, children, value, defaultValue, onChange, ...props }:
   const Root = rootElement(as);
   return (
     <StepsContext value={{ baseId, currentValue, order, setCurrentValue, collection }}>
-      <Root {...props} data-slot={dataSlot(props, "steps")}>
+      <Root data-slot="steps" {...props}>
         {children}
       </Root>
     </StepsContext>

@@ -1,4 +1,4 @@
-import { FOCUSABLE_SELECTOR } from "../grid-list/grid-list-shared.js";
+import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
 import { createRequiredContext } from "../internal/context.js";
 import {
   type InventoryInteraction,

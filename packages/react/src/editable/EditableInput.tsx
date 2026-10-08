@@ -1,7 +1,6 @@
 import { type ChangeEvent, type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { useComposedRefs, dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useEditableContext } from "./editable-shared.js";
 
 export type EditableInputProps = Omit<ComponentProps<"input">, "value" | "defaultValue"> & AsProp;
@@ -21,6 +20,7 @@ export function EditableInput({
   const Part = partElement(as, "input");
   return (
     <Part
+      data-slot="editable-input"
       {...props}
       ref={composedRef}
       // Stays in the DOM while hidden so its native name always submits the
@@ -28,7 +28,6 @@ export function EditableInput({
       hidden={!editable.open}
       disabled={disabled}
       value={editable.open ? editable.draft : editable.value}
-      data-slot={dataSlot(props, "editable-input")}
       data-open={dataAttr(editable.open)}
       data-disabled={dataAttr(disabled)}
       onChange={(event: ChangeEvent<HTMLInputElement>) => {

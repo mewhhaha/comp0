@@ -1,5 +1,6 @@
-import { type ComponentProps, type MouseEvent } from "react";
+import { type ComponentProps } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import { disabledProps } from "../internal/disabled.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { tabPairIds, useTabsContext } from "./tabs-shared.js";
 
@@ -25,6 +26,15 @@ export function Tab({ as, value, disabled, onClick, ref, ...props }: TabProps) {
     });
   });
 
+  const disabledAttributes = disabledProps<HTMLButtonElement>(resolvedDisabled, {
+    native: isNativeButton,
+    onClick(event) {
+      onClick?.(event);
+      if (!event.defaultPrevented) tabs.setSelectedKey(value);
+    },
+    onKeyDown: props.onKeyDown,
+  });
+
   const Part = partElement(as, "button");
   return (
     <Part
@@ -36,14 +46,8 @@ export function Tab({ as, value, disabled, onClick, ref, ...props }: TabProps) {
       tabIndex={selected && !resolvedDisabled ? 0 : -1}
       aria-selected={selected}
       aria-controls={panelId}
-      aria-disabled={isNativeButton ? undefined : resolvedDisabled || undefined}
-      disabled={isNativeButton ? resolvedDisabled : undefined}
       data-selected={dataAttr(selected)}
-      data-disabled={dataAttr(resolvedDisabled)}
-      onClick={(event: MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) tabs.setSelectedKey(value);
-      }}
+      {...disabledAttributes}
     />
   );
 }

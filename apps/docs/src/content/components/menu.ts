@@ -32,8 +32,9 @@ export default component({
       false,
       false,
       [
+        prop("id", "string", "Base for the generated trigger and list ids."),
         prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
         prop(
           "as",
           "ElementType",

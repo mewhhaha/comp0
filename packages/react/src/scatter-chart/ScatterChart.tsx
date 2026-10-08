@@ -1,7 +1,8 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
+import { scatterChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
-import { type ChartContextValue, numberOf, type ScatterChartValue } from "../chart/chart-shared.js";
+import { type ScatterChartValue } from "../chart/chart-shared.js";
 
 export type ScatterChartProps = ComponentProps<"figure"> &
   AsProp & {
@@ -26,25 +27,6 @@ export function ScatterChart({
   ref,
   ...props
 }: ScatterChartProps) {
-  if (!xLabel.trim()) throw new Error("ScatterChart x-axis label must not be empty.");
-  if (!yLabel.trim()) throw new Error("ScatterChart y-axis label must not be empty.");
-  for (const [index, value] of values.entries()) {
-    if (!value.label.trim()) {
-      throw new Error(`ScatterChart value at index ${index} has an empty label.`);
-    }
-    if (!Number.isFinite(numberOf(value.x)) || !Number.isFinite(value.y)) {
-      throw new Error(
-        `ScatterChart value "${value.label}" must have finite coordinates; received x=${value.x}, y=${value.y}.`,
-      );
-    }
-  }
-  const context: ChartContextValue = {
-    kind: "scatter",
-    values,
-    xLabel,
-    yLabel,
-    formatX: formatX ?? String,
-    formatY: formatY ?? String,
-  };
+  const context = scatterChartContext(values, xLabel, yLabel, formatX, formatY);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

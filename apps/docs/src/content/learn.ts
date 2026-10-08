@@ -130,8 +130,8 @@ export const learnDocs = [
         id: "controlled",
         title: "Control state when your app needs to know now",
         explanation:
-          "Use value with onChange when your app owns a selected value. Use open with onToggle when your app owns whether an overlay is open. The component asks for a change, and your state gives it the new value back.",
-        code: "const [open, setOpen] = useState(false);\n\n<Dialog open={open} onToggle={setOpen}>\n  ...\n</Dialog>;",
+          "Use value with onChange when your app owns a selected value. Use open with onOpenChange when your app owns whether an overlay is open. The component asks for a change, and your state gives it the new value back.",
+        code: "const [open, setOpen] = useState(false);\n\n<Dialog open={open} onOpenChange={setOpen}>\n  ...\n</Dialog>;",
         language: "tsx",
       },
       {
@@ -239,7 +239,7 @@ export const learnDocs = [
         title: "Read browser-only information after mount",
         explanation:
           "If a saved browser preference should open a panel, read it in an effect after hydration. Start with a stable default first. Then update controlled state once the browser is available.",
-        code: 'const [open, setOpen] = useState(false);\nuseEffect(() => setOpen(localStorage.getItem("help") === "open"), []);\n\n<Popover open={open} onToggle={setOpen}>\n  ...\n</Popover>;',
+        code: 'const [open, setOpen] = useState(false);\nuseEffect(() => setOpen(localStorage.getItem("help") === "open"), []);\n\n<Popover open={open} onOpenChange={setOpen}>\n  ...\n</Popover>;',
         language: "tsx",
       },
       {

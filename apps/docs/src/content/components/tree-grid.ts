@@ -14,7 +14,7 @@ export default component({
     supporting:
       "Render data rows flat in a second TreeGridRowGroup; give each TreeGridRow a unique value and use parentValue to describe its parent.",
     behavior:
-      "Use value/onChange for selection and defaultOpen, or open with onToggle, for branches. Arrow keys move through visible rows, then into their cells.",
+      "Use value/onChange for selection and defaultOpen, or open with onOpenChange, for branches. Arrow keys move through visible rows, then into their cells.",
     code: '<TreeGrid aria-label="Project files" defaultOpen={["src"]}>\n  <TreeGridRowGroup as="thead">\n    <TreeGridRow>\n      <TreeGridColumn>Name</TreeGridColumn>\n    </TreeGridRow>\n  </TreeGridRowGroup>\n  <TreeGridRowGroup>\n    <TreeGridRow value="src">\n      <TreeGridCell>src</TreeGridCell>\n    </TreeGridRow>\n    <TreeGridRow value="index" parentValue="src">\n      <TreeGridCell>index.ts</TreeGridCell>\n    </TreeGridRow>\n  </TreeGridRowGroup>\n</TreeGrid>;',
   },
   imports: ["TreeGrid", "TreeGridRow", "TreeGridCell", "TreeGridColumn", "TreeGridRowGroup"],
@@ -36,7 +36,11 @@ export default component({
           "string[]",
           "Controlled or initial open (expanded) parent-row values.",
         ),
-        prop("onToggle", "(open: string[]) => void", "Receives the next open parent-row values."),
+        prop(
+          "onOpenChange",
+          "(open: string[]) => void",
+          "Receives the next open parent-row values.",
+        ),
       ],
     ),
     p(

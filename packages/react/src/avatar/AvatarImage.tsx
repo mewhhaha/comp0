@@ -1,7 +1,6 @@
 import { useEffect, useRef, type ComponentProps, type SyntheticEvent } from "react";
 import { composeRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useAvatarContext } from "./avatar-shared.js";
 
 export type AvatarImageProps = ComponentProps<"img"> & AsProp;
@@ -23,11 +22,11 @@ export function AvatarImage({ as, alt, hidden, onError, onLoad, ref, ...props }:
   const Part = partElement(as, "img");
   return (
     <Part
+      data-slot="avatar-image"
       {...props}
       ref={composeRefs(ref, imageRef)}
       alt={alt}
       hidden={hidden || avatar.status !== "loaded"}
-      data-slot={dataSlot(props, "avatar-image")}
       onLoad={(event: SyntheticEvent<HTMLImageElement>) => {
         onLoad?.(event);
         if (!event.defaultPrevented) setStatus("loaded");

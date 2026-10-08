@@ -1,7 +1,6 @@
 import { type ComponentProps } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useInventoryHandle } from "./use-inventory-handle.js";
 
 export type InventoryResizeHandleProps = ComponentProps<"button"> & AsProp;
@@ -32,6 +31,7 @@ export function InventoryResizeHandle({
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="inventory-resize-handle"
       {...props}
       {...handle.eventProps}
       type="button"
@@ -40,7 +40,6 @@ export function InventoryResizeHandle({
         props["aria-keyshortcuts"] ?? "Enter Space ArrowLeft ArrowRight ArrowUp ArrowDown Escape"
       }
       data-resizing={dataAttr(handle.active)}
-      data-slot={dataSlot(props, "inventory-resize-handle")}
     />
   );
 }

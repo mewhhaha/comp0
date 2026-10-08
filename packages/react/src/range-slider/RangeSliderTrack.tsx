@@ -2,7 +2,6 @@ import { type ComponentProps, type PointerEvent } from "react";
 import { useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { isRtl, valueAtPointer } from "../internal/range-shared.js";
-import { dataSlot } from "../internal/shared.js";
 import { useRangeSliderContext } from "./range-slider-shared.js";
 
 export type RangeSliderTrackProps = ComponentProps<"div"> & AsProp;
@@ -18,9 +17,9 @@ export function RangeSliderTrack({ as, onPointerDown, ref, ...props }: RangeSlid
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="range-slider-track"
       {...props}
       ref={composedRef}
-      data-slot={dataSlot(props, "range-slider-track")}
       data-orientation={context.orientation}
       onPointerDown={(event: PointerEvent<HTMLDivElement>) => {
         onPointerDown?.(event);

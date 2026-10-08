@@ -1,5 +1,5 @@
 import { useLayoutEffect, type ComponentProps, type KeyboardEvent } from "react";
-import { composeRefs, useCollection, useCollectionNavigation } from "@comp0/core";
+import { useCollection, useCollectionNavigation } from "@comp0/core";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
@@ -19,7 +19,6 @@ export function MenuList({ as, children, onKeyDown, ref, ...props }: MenuListPro
   const virtualFocusEnabled = autocomplete !== null && !autocomplete.disableVirtualFocus;
   const collectionId = props.id ?? autocomplete?.defaultCollectionId ?? menu.contentId;
   const setAutocompleteCollectionId = autocomplete?.setCollectionId;
-  const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
   const setMenuListId = menu.setListId;
   const menubar = useOptionalMenubarContext();
   const inMenubar = menubar !== null && !menu.isSubmenu;
@@ -28,6 +27,12 @@ export function MenuList({ as, children, onKeyDown, ref, ...props }: MenuListPro
   const navigate = useCollectionNavigation();
   const collection = useCollection();
   const context = { collection, close: menu.closeAll };
+  const attachAutocompleteCollection = autocomplete?.attachCollection;
+
+  useLayoutEffect(() => {
+    if (!attachAutocompleteCollection) return;
+    return attachAutocompleteCollection(collection);
+  }, [attachAutocompleteCollection, collection]);
 
   useLayoutEffect(() => {
     menu.setInitialFocus((position) => {
@@ -49,21 +54,14 @@ export function MenuList({ as, children, onKeyDown, ref, ...props }: MenuListPro
   }, [collectionId, setMenuListId]);
 
   useLayoutEffect(() => {
-    if (!collectionId || !setAutocompleteCollectionId || !setAutocompleteCollectionVersion) return;
+    if (!collectionId || !setAutocompleteCollectionId) return;
     setAutocompleteCollectionId(collectionId);
-    setAutocompleteCollectionVersion((version) => version + 1);
     return () => {
       setAutocompleteCollectionId((currentId) =>
         currentId === collectionId ? undefined : currentId,
       );
-      setAutocompleteCollectionVersion((version) => version + 1);
     };
-  }, [collectionId, setAutocompleteCollectionId, setAutocompleteCollectionVersion]);
-
-  useLayoutEffect(() => {
-    if (!setAutocompleteCollectionVersion) return;
-    setAutocompleteCollectionVersion((version) => version + 1);
-  }, [menu.open, setAutocompleteCollectionVersion]);
+  }, [collectionId, setAutocompleteCollectionId]);
 
   let labelledBy = props["aria-labelledby"];
   if (!ownContextMenu && !props["aria-label"] && labelledBy === undefined) {
@@ -75,7 +73,7 @@ export function MenuList({ as, children, onKeyDown, ref, ...props }: MenuListPro
     <MenuListContext value={context}>
       <Part
         {...props}
-        ref={composeRefs(ref, autocomplete?.collectionRef)}
+        ref={ref}
         id={collectionId}
         role="menu"
         aria-labelledby={labelledBy}

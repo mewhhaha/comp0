@@ -1,7 +1,6 @@
 import { type ComponentProps } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useInventoryContext } from "./inventory-shared.js";
 
 export type InventoryPreviewProps = ComponentProps<"li"> & AsProp;
@@ -14,6 +13,7 @@ export function InventoryPreview({ as, style, ...props }: InventoryPreviewProps)
   const Part = partElement(as, "li");
   return (
     <Part
+      data-slot="inventory-preview"
       {...props}
       aria-hidden="true"
       data-column={entry.column}
@@ -21,7 +21,6 @@ export function InventoryPreview({ as, style, ...props }: InventoryPreviewProps)
       data-invalid-placement={dataAttr(inventory.previewInvalid)}
       data-row={entry.row}
       data-row-span={entry.rowSpan}
-      data-slot={dataSlot(props, "inventory-preview")}
       style={{
         ...style,
         gridColumn: `${entry.column} / span ${entry.columnSpan}`,

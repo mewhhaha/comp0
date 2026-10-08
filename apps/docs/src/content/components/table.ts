@@ -52,7 +52,21 @@ export default component({
         "Receives the next width from Shift+Arrow or a resizer drag.",
       ),
     ]),
-    p("Resizer", "trigger", "Optional drag handle inside a resizable column.", true, true),
+    p("Resizer", "trigger", "Optional drag handle inside a resizable column.", true, true, [
+      prop(
+        "orientation",
+        '"vertical" | "horizontal"',
+        "A vertical separator resizes width; a horizontal one resizes height.",
+      ),
+      prop(
+        "onResize",
+        "(size: number) => void",
+        "Receives the next size; optional inside a resizable TableColumn.",
+      ),
+      prop("target", "RefObject<HTMLElement | null>", "The element to measure."),
+      prop("min / max", "number", "Bounds for the next size."),
+      prop("size", "number", "The current size, exposed as aria-valuenow."),
+    ]),
     p("TableBody", "root", "Native tbody holding the data rows."),
     p("TableRow", "item", "Native tr in either section.", true, false, [
       prop(
@@ -77,6 +91,11 @@ export default component({
     { keys: ["Ctrl", "End"], action: "Moves to the last cell of the table." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-sortable]",
+      on: "TableColumn",
+      meaning: "The column has an onSort handler; pair with [aria-sort] for the current direction.",
+    },
     {
       attribute: ":focus-visible",
       on: "TableColumn, TableCell",

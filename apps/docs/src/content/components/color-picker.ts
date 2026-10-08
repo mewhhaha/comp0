@@ -50,7 +50,8 @@ export default component({
           "boolean",
           "Controlled or initial open state of the color popover.",
         ),
-        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
+        prop("id", "string", "Base id; the trigger and popover ids derive from it."),
         prop("name", "string", "Submission name for the hidden hex input."),
         prop("form", "string", "Associates the hidden value with a form by id."),
         prop("disabled / invalid / required", "boolean", "Field-wide states."),
@@ -93,7 +94,14 @@ export default component({
       "Two-dimensional saturation and brightness control backed by hidden native range inputs.",
       true,
       false,
-      [prop("aria-label", "string", "Names the saturation and brightness control.")],
+      [
+        prop("aria-label", "string", "Names the saturation and brightness control."),
+        prop(
+          "disabled",
+          "boolean",
+          "Disables both inputs; the picker's disabled state also applies.",
+        ),
+      ],
     ),
     p(
       "ColorAreaThumb",
@@ -147,6 +155,16 @@ export default component({
       meaning: "Native pseudo-class equivalent.",
     },
     { attribute: "[data-value]", on: "ColorPicker", meaning: "A color is selected." },
+    {
+      attribute: "[data-color-area-input]",
+      on: "ColorArea inputs",
+      meaning: 'Names the axis of each hidden range input: "saturation" or "brightness".',
+    },
+    {
+      attribute: "[data-channel]",
+      on: "ColorSlider",
+      meaning: 'The channel the slider edits, "hue".',
+    },
     {
       attribute: "[data-disabled]",
       on: "ColorPickerTrigger",

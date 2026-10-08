@@ -8,7 +8,6 @@ import {
 } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   portLabel,
   useConnectCardContext,
@@ -51,6 +50,7 @@ export function ConnectOutput({
   useConnectPort(
     { value, label, kind, card: card.value, cardLabel: card.label, direction: "output", disabled },
     element,
+    element,
   );
   const destinations = context.connections
     .filter((connection) => connection.from === value)
@@ -67,6 +67,7 @@ export function ConnectOutput({
   return (
     <>
       <Part
+        data-slot="connect-output"
         {...props}
         ref={composeRefs(ref, setElement)}
         type={as === undefined || as === "button" ? (props.type ?? "button") : undefined}
@@ -77,7 +78,6 @@ export function ConnectOutput({
           .filter(Boolean)
           .join(" ")}
         aria-pressed={context.selectedOutput === value}
-        data-slot={dataSlot(props, "connect-output")}
         data-connected={dataAttr(destinations.length > 0)}
         data-selected={dataAttr(context.selectedOutput === value)}
         style={{ touchAction: "none", ...props.style }}

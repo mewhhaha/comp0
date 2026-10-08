@@ -1,7 +1,8 @@
-import { useLayoutEffect, useRef, type ComponentProps, type KeyboardEvent } from "react";
+import { type ComponentProps, type KeyboardEvent } from "react";
 import { useCollectionNavigation } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useOverlaySurface, type PopoverPlacementProps } from "../internal/overlay/index.js";
+import { useRenderedId } from "../internal/rendered-id.js";
 import { useSelectContext } from "./select-shared.js";
 
 export type SelectPopoverProps = ComponentProps<"div"> & AsProp & PopoverPlacementProps;
@@ -27,20 +28,16 @@ export function SelectPopover({
     popover: "auto",
     ref,
     style,
-  });
-  const wasOpen = useRef(false);
-  useLayoutEffect(() => {
-    if (popover.open && !wasOpen.current) {
+    initialFocus() {
       const selected = collection.get(select.selectedKey);
       const target = selected && !selected.disabled ? selected : collection.enabledItems()[0];
-      target?.element?.focus();
-    }
-    wasOpen.current = popover.open;
-  }, [collection, popover.open, select.selectedKey]);
-  // A consumer aria-label wins; falling back to the label id would point at
-  // nothing when no Label is rendered.
+      return target?.element;
+    },
+  });
+  // Reference the label only when one is rendered; otherwise the trigger names the list.
+  const label = useRenderedId(surface.surfaceRef, select.labelId, select);
   let labelledBy = props["aria-labelledby"];
-  if (!props["aria-label"]) labelledBy = labelledBy ?? select.labelId;
+  if (!props["aria-label"]) labelledBy = labelledBy ?? label ?? select.triggerId;
 
   const Part = partElement(as, "div");
   return (

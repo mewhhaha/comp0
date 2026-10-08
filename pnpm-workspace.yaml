@@ -1,6 +1,18 @@
 packages:
   - "packages/*"
   - "apps/*"
+# Versions shared by several package.json files. Playwright Test and playwright move together.
+catalog:
+  "@playwright/test": 1.63.0
+  "@types/react": 19.2.18
+  "@types/react-dom": 19.2.7
+  "@vitejs/plugin-react": 6.1.1
+  oxc-transform-react: 0.148.0
+  playwright: 1.63.0
+  react: 19.2.8
+  react-dom: 19.2.8
+  vite: 8.2.2
+
 allowBuilds:
   esbuild: true
   sharp: true

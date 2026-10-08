@@ -17,6 +17,11 @@ export default component({
   snippet: '<TextField>\n  <Label>Notes</Label>\n  <TextArea name="notes" />\n</TextField>;',
   parts: [
     p("TextField", "root", "Optional field provider; it owns no DOM by default.", false, false, [
+      prop(
+        "id",
+        "string",
+        "Base id for the control; the label, description, and error ids derive from it.",
+      ),
       prop("value / defaultValue", "string", "Controlled or initial field value."),
       prop("onChange", "(value: string) => void", "Receives the next value."),
       prop("disabled / invalid / required", "boolean", "Field-wide states shared with every part."),

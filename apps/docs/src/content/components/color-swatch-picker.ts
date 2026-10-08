@@ -33,6 +33,7 @@ export default component({
         prop("onChange", "(value: string) => void", "Receives the selected normalized hex color."),
         prop("name", "string", "Submission name for the selected color."),
         prop("disabled / required", "boolean", "Native radio-group constraints."),
+        prop("invalid", "boolean", "Marks the group invalid."),
       ],
     ),
     p("Legend", "label", "Native fieldset legend naming the color choice."),

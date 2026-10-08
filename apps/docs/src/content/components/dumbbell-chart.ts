@@ -84,6 +84,15 @@ export default component({
       "Optional floating range label shown on hover or focus.",
       true,
       true,
+      [
+        prop("placement", "PopoverPlacement", 'Side of the active mark; defaults to "top".'),
+        prop("offset", "number", "Distance from the active mark; defaults to eight pixels."),
+        prop(
+          "children",
+          "ReactNode | (details: ChartValueDetails) => ReactNode",
+          "Custom content receiving the active dumbbell's formatted details.",
+        ),
+      ],
     ),
   ],
   keyboard: [

@@ -15,8 +15,8 @@
     "@comp0/react": "workspace:*",
     "@heroicons/react": "^2.2.0",
     "@shikijs/langs": "4.4.3",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-router": "8.3.1",
     "shiki": "4.4.3"
   },
@@ -24,11 +24,11 @@
     "@cloudflare/vite-plugin": "1.54.4",
     "@react-router/dev": "8.3.1",
     "@tailwindcss/vite": "4.3.3",
-    "@vitejs/plugin-react": "6.1.1",
+    "@vitejs/plugin-react": "catalog:",
     "@vitejs/plugin-rsc": "0.5.34",
-    "oxc-transform-react": "0.148.0",
+    "oxc-transform-react": "catalog:",
     "tailwindcss": "4.3.3",
-    "vite": "8.2.2",
+    "vite": "catalog:",
     "wrangler": "4.129.0"
   }
 }

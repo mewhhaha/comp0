@@ -15,7 +15,7 @@ export function MobileNavigation({ className, navigation }: MobileNavigationProp
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onToggle={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         aria-label="Open documentation navigation"
         className={`relative grid size-10 place-items-center rounded-lg text-zinc-600 outline-none hover:bg-zinc-950/5 hover:text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:outline-teal-400 ${className ?? ""}`}

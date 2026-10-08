@@ -1,6 +1,7 @@
 import { act } from "react";
 import { page, userEvent } from "vitest/browser";
 import { describe, expect, it } from "vitest";
+import { expectNoAxeViolations } from "../../test/axe.js";
 import { render } from "../../test/render.js";
 import {
   ColorArea,
@@ -35,6 +36,7 @@ describe("color picker browser interactions", () => {
     await act(async () => area.click());
 
     expect(areaElement.getAttribute("data-value")).toBe("#804040");
+    await expectNoAxeViolations(document.body, "open color picker");
     expect(document.activeElement?.getAttribute("data-color-area-input")).toBe("saturation");
 
     await act(async () => userEvent.keyboard("{Escape}"));

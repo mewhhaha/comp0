@@ -1,12 +1,5 @@
-import { useId, useRef, type ComponentProps, type ReactNode } from "react";
-import {
-  dataAttr,
-  mergeProps,
-  useFocusRing,
-  useHover,
-  useIsoLayoutEffect,
-  useControllableState,
-} from "@comp0/core";
+import { useId, useLayoutEffect, useRef, type ComponentProps, type ReactNode } from "react";
+import { dataAttr, mergeProps, useFocusRing, useHover, useControllableState } from "@comp0/core";
 import { visuallyHiddenInputStyle } from "../internal/visually-hidden-input.js";
 import { useFormReset } from "../internal/form-control-state.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -60,9 +53,19 @@ export function Checkbox({
     readValue: (element) => element.checked,
   });
 
-  useIsoLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (inputRef.current) inputRef.current.indeterminate = resolvedIndeterminate;
   }, [resolvedIndeterminate]);
+
+  const collection = group?.collection;
+  useLayoutEffect(() => {
+    const element = inputRef.current;
+    if (!collection || !element) return;
+    collection.register({ key: value, textValue: value, disabled, element });
+    return () => {
+      collection.unregister(value, element);
+    };
+  }, [collection, value, disabled]);
 
   const Part = partElement(as, "label");
   return (
@@ -82,7 +85,6 @@ export function Checkbox({
           id={inputProps?.id ?? id}
           style={{ ...visuallyHiddenInputStyle, ...inputProps?.style }}
           type="checkbox"
-          data-checkbox-group-control={group ? "" : undefined}
           form={inputProps?.form ?? group?.form}
           name={name ?? group?.name}
           value={value}

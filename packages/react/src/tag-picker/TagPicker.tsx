@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
-import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
+import { dataAttr, useControllableState } from "@comp0/core";
 import { Autocomplete, type AutocompleteProps } from "../autocomplete/Autocomplete.js";
 import { useFormReset } from "../internal/form-control-state.js";
 import { FormValue } from "../internal/form-value.js";
@@ -50,10 +50,10 @@ export function TagPicker({
   as,
   children,
   value,
-  defaultValue = [],
+  defaultValue,
   onChange,
   inputValue,
-  defaultInputValue = "",
+  defaultInputValue,
   onInputChange,
   filter,
   disableAutoFocusFirst,
@@ -64,29 +64,36 @@ export function TagPicker({
   ref,
   ...props
 }: TagPickerProps) {
+  const initialValue = defaultValue ?? [];
   if (value !== undefined) assertUniqueValues(value, "value");
-  assertUniqueValues(defaultValue, "defaultValue");
-  const rootRef = useRef<HTMLDivElement>(null);
+  assertUniqueValues(initialValue, "defaultValue");
   const inputRef = useRef<HTMLInputElement>(null);
-  // Child options register labels without rerendering the picker as filtering
-  // mounts and unmounts them; event callbacks read the latest registry value.
-  const optionLabels = useRef(new Map<string, string>());
+  // Options register their labels so tags and announcements keep a readable
+  // name after the option unmounts (selected options render nothing).
+  const [optionLabels, setOptionLabels] = useState<Record<string, string>>({});
   const [announcement, setAnnouncement] = useState("");
+  // Add/remove actions reach function children, so they must not touch the input ref themselves; they ask for focus here instead.
+  const [focusRequest, setFocusRequest] = useState(0);
   const [finalRemovalRequest, setFinalRemovalRequest] = useState("");
   const [selectedValues, setSelected, selectedState] = useControllableState({
     value,
-    defaultValue,
+    defaultValue: initialValue,
     onChange,
   });
   const [queryValue, setQuery, queryState] = useControllableState({
     value: inputValue,
-    defaultValue: defaultInputValue,
+    defaultValue: defaultInputValue ?? "",
     onChange: onInputChange,
   });
   const resolvedDisabled = Boolean(disabled);
-  const composedRef = useComposedRefs(rootRef, ref);
 
-  const labelFor = (tagValue: string) => optionLabels.current.get(tagValue) ?? tagValue;
+  const registerOptionLabel = (tagValue: string, label: string) => {
+    setOptionLabels((current) =>
+      current[tagValue] === label ? current : { ...current, [tagValue]: label },
+    );
+  };
+
+  const labelFor = (tagValue: string) => optionLabels[tagValue] ?? tagValue;
 
   const addOption = (tagValue: string, label: string) => {
     if (resolvedDisabled) return;
@@ -94,11 +101,11 @@ export function TagPicker({
       setAnnouncement(`${label} is already selected.`);
       return;
     }
-    optionLabels.current.set(tagValue, label);
+    registerOptionLabel(tagValue, label);
     setSelected([...selectedValues, tagValue]);
     setQuery("");
     setAnnouncement(`Added ${label}.`);
-    inputRef.current?.focus();
+    setFocusRequest((count) => count + 1);
   };
 
   const add = (tagValue: string) => addOption(tagValue, labelFor(tagValue));
@@ -109,6 +116,10 @@ export function TagPicker({
     setSelected(selectedValues.filter((value) => value !== tagValue));
     setAnnouncement(`Removed ${labelFor(tagValue)}.`);
   };
+
+  useLayoutEffect(() => {
+    if (focusRequest > 0) inputRef.current?.focus();
+  }, [focusRequest]);
 
   useLayoutEffect(() => {
     if (!finalRemovalRequest) return;
@@ -157,14 +168,12 @@ export function TagPicker({
             disabled: resolvedDisabled,
             inputRef,
             addOption,
-            registerOptionLabel(tagValue, label) {
-              optionLabels.current.set(tagValue, label);
-            },
+            registerOptionLabel,
           }}
         >
           <Part
             {...props}
-            ref={composedRef}
+            ref={ref}
             aria-disabled={props["aria-disabled"] ?? (resolvedDisabled || undefined)}
             data-disabled={dataAttr(resolvedDisabled)}
             data-empty={dataAttr(selectedValues.length === 0)}

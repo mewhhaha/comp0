@@ -1,6 +1,7 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
-import { cartesianChartContext, ChartFigure } from "../chart/chart-root.js";
+import { cartesianChartContext } from "../chart/chart-context.js";
+import { ChartFigure } from "../chart/chart-root.js";
 import { type CartesianChartValue } from "../chart/chart-shared.js";
 
 export type LineChartProps = ComponentProps<"figure"> &

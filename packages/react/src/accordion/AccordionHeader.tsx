@@ -1,6 +1,5 @@
 import { type ComponentProps } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type AccordionHeaderProps = ComponentProps<"h3"> &
   AsProp & {
@@ -9,5 +8,5 @@ export type AccordionHeaderProps = ComponentProps<"h3"> &
 
 export function AccordionHeader({ as, level = 3, ...props }: AccordionHeaderProps) {
   const Part = partElement(as, `h${level}`);
-  return <Part {...props} data-slot={dataSlot(props, "accordion-header")} />;
+  return <Part data-slot="accordion-header" {...props} />;
 }

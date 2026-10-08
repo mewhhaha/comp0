@@ -1,6 +1,5 @@
 import { useLayoutEffect, useState, type ComponentProps } from "react";
 import { composeRefs } from "@comp0/core";
-import { dataSlot } from "../internal/shared.js";
 import { useConnectContext } from "./connect-shared.js";
 
 export type ConnectLinesProps = Omit<ComponentProps<"svg">, "children">;
@@ -23,9 +22,7 @@ export function ConnectLines({ ref, ...props }: ConnectLinesProps) {
         const input = ports.find((port) => port.direction === "input" && port.value === to);
         if (!output || !input) return [];
         const outputBounds = output.element.getBoundingClientRect();
-        const inputBounds = (
-          input.element.querySelector("[data-connect-input-trigger]") ?? input.element
-        ).getBoundingClientRect();
+        const inputBounds = input.anchor.getBoundingClientRect();
         const start = new DOMPoint(
           outputBounds.right,
           outputBounds.top + outputBounds.height / 2,
@@ -62,7 +59,10 @@ export function ConnectLines({ ref, ...props }: ConnectLinesProps) {
     }
     const resize = new ResizeObserver(schedule);
     resize.observe(element);
-    for (const port of ports) resize.observe(port.element);
+    for (const port of ports) {
+      resize.observe(port.element);
+      resize.observe(port.anchor);
+    }
     const mutation = new MutationObserver((records) => {
       if (records.some((record) => !svg.contains(record.target))) schedule();
     });
@@ -89,11 +89,11 @@ export function ConnectLines({ ref, ...props }: ConnectLinesProps) {
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
+      data-slot="connect-lines"
       {...props}
       ref={composeRefs(ref, setSvg)}
       aria-hidden="true"
       focusable="false"
-      data-slot={dataSlot(props, "connect-lines")}
       style={{
         position: "absolute",
         inset: 0,

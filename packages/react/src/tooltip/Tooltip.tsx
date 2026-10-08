@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { PopoverContext, TooltipContext, useEscapeDismiss } from "../internal/overlay/index.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type TooltipProps = RootProps<{
   /** Base for the generated trigger and content ids; also the wrapper id when `as` is set. */
@@ -10,7 +9,7 @@ export type TooltipProps = RootProps<{
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state; native cancel, close, and toggle events stay on content parts. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   children?: ReactNode | undefined;
 }>;
 
@@ -19,7 +18,7 @@ export function Tooltip({
   children,
   defaultOpen = false,
   id,
-  onToggle,
+  onOpenChange,
   open: openProp,
   ...props
 }: TooltipProps) {
@@ -30,7 +29,7 @@ export function Tooltip({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const context = {
     open,
@@ -71,7 +70,7 @@ export function Tooltip({
   return (
     <TooltipContext value={context}>
       <PopoverContext value={popoverContext}>
-        <Root {...props} id={id} data-open={dataAttr(open)} data-slot={dataSlot(props, "tooltip")}>
+        <Root data-slot="tooltip" {...props} id={id} data-open={dataAttr(open)}>
           {children}
         </Root>
       </PopoverContext>

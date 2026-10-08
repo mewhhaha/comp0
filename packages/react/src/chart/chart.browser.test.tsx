@@ -1,6 +1,7 @@
 import { act } from "react";
 import { page, userEvent } from "vitest/browser";
 import { describe, expect, it } from "vitest";
+import { expectNoAxeViolations } from "../../test/axe.js";
 import { render } from "../../test/render.js";
 import {
   ChartTooltip,
@@ -46,6 +47,7 @@ describe("chart browser interactions", () => {
     await expect
       .element(page.getByRole("tooltip"))
       .toHaveTextContent("Time: Evening, Day: Tuesday, Requests: 3");
+    await expectNoAxeViolations(document.body, "heatmap with an active cell and its tooltip");
     unmount();
   });
 
@@ -92,6 +94,7 @@ describe("chart browser interactions", () => {
     expect(
       container.querySelectorAll("[data-slot='sankey-chart-link'][data-connected]"),
     ).toHaveLength(2);
+    await expectNoAxeViolations(container, "sankey with an active node");
     unmount();
   });
 });

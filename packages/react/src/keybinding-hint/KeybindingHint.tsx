@@ -1,6 +1,5 @@
 import { useSyncExternalStore, type ComponentProps, type ReactNode } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 const keyLabels: Record<string, string> = {
   Alt: "Alt",
@@ -82,11 +81,7 @@ export function KeybindingHint({ as, keys, ...props }: KeybindingHintProps) {
 
   const Part = partElement(as, "span");
   return (
-    <Part
-      {...props}
-      aria-label={props["aria-label"] ?? spokenLabel}
-      data-slot={dataSlot(props, "keybinding-hint")}
-    >
+    <Part data-slot="keybinding-hint" {...props} aria-label={props["aria-label"] ?? spokenLabel}>
       {content}
     </Part>
   );

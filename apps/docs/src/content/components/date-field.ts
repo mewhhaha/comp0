@@ -28,6 +28,7 @@ export default component({
       [
         prop("value / defaultValue", "string", "Controlled or initial ISO value."),
         prop("onChange", "(value: string) => void", "Receives the next ISO value."),
+        prop("id", "string", "Id of the input; the label and help ids derive from it."),
         prop("disabled / invalid / required", "boolean", "Field-wide states."),
       ],
     ),

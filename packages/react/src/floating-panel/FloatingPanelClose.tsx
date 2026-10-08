@@ -1,6 +1,5 @@
 import { type ComponentProps, type MouseEvent } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useFloatingPanelContext } from "./floating-panel-shared.js";
 
 export type FloatingPanelCloseProps = ComponentProps<"button"> & AsProp;
@@ -11,10 +10,10 @@ export function FloatingPanelClose({ as, onClick, ...props }: FloatingPanelClose
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="floating-panel-close"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       aria-label={props["aria-label"] ?? "Close panel"}
-      data-slot={dataSlot(props, "floating-panel-close")}
       onClick={(event: MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented) panel.requestClose();

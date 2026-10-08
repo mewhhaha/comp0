@@ -35,7 +35,7 @@ export default component({
         prop(
           "steps",
           "readonly TourStep[]",
-          "Ordered target, title, description, and placement definitions; target names must be unique.",
+          "Ordered target, title, description, and placement definitions; target names must be unique. Empty steps, empty or duplicate targets, and targets that match no element warn in development and leave the step hidden.",
         ),
         prop("value", "number | null", "Controlled active step index; null closes the tour."),
         prop(
@@ -71,6 +71,7 @@ export default component({
         ),
         prop("aria-label", "string", "Accessible name for the guided sequence."),
         prop("offset", "number", "Pixel gap between the active target and the dialog."),
+        prop("portal", "boolean", "Renders into document.body; on by default."),
         prop(
           "children",
           "ReactNode | (state: TourState) => ReactNode",

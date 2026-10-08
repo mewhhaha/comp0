@@ -1,7 +1,7 @@
 import { useId, type ComponentProps } from "react";
 import { dataAttr } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { NavigationMenuItemContext, useNavigationMenuContext } from "./navigation-menu-shared.js";
 
 export type NavigationMenuItemProps = Omit<ComponentProps<"li">, "value"> &
@@ -13,13 +13,14 @@ export type NavigationMenuItemProps = Omit<ComponentProps<"li">, "value"> &
 export function NavigationMenuItem({ as, value, id, ...props }: NavigationMenuItemProps) {
   const menu = useNavigationMenuContext("NavigationMenuItem");
   const generatedId = useId();
+  const itemId = id ?? `${generatedId}-${value}`;
   if (!value) {
-    throw new Error(
-      `NavigationMenuItem requires a non-empty value; received ${JSON.stringify(value)}.`,
+    warnOnce(
+      `NavigationMenuItem:empty-value:${itemId}`,
+      `NavigationMenuItem requires a non-empty value; received ${JSON.stringify(value)}. It stays closed.`,
     );
   }
-  const itemId = id ?? `${generatedId}-${value}`;
-  const open = menu.value === value;
+  const open = value !== "" && menu.value === value;
 
   const Part = partElement(as, "li");
   return (
@@ -28,15 +29,10 @@ export function NavigationMenuItem({ as, value, id, ...props }: NavigationMenuIt
         value,
         open,
         triggerId: `${itemId}-trigger`,
-        contentId: `${itemId}-content`,
+        panelId: `${itemId}-panel`,
       }}
     >
-      <Part
-        {...props}
-        id={id}
-        data-slot={dataSlot(props, "navigation-menu-item")}
-        data-open={dataAttr(open)}
-      />
+      <Part data-slot="navigation-menu-item" {...props} id={id} data-open={dataAttr(open)} />
     </NavigationMenuItemContext>
   );
 }

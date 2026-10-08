@@ -1,6 +1,6 @@
 import { type Collection } from "@comp0/core";
 import { createRequiredContext } from "../internal/context.js";
-import { FOCUSABLE_SELECTOR } from "../grid-list/grid-list-shared.js";
+import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
 
 export type FeedContextValue = {
   /** Registered articles; the feed reads them back in document order. */

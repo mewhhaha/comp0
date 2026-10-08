@@ -14,7 +14,6 @@ import {
   triggerAnchorStyle,
   type PopoverPlacementProps,
 } from "../internal/overlay/index.js";
-import { dataSlot } from "../internal/shared.js";
 import { useChartInteraction } from "./chart-interaction-context.js";
 import { type ChartValueDetails } from "./chart-value-details.js";
 
@@ -91,6 +90,7 @@ export function ChartTooltip({
         })}
       />
       <Part
+        data-slot="chart-tooltip"
         {...props}
         ref={composedRef}
         id={props.id ?? interaction.contentId}
@@ -101,7 +101,6 @@ export function ChartTooltip({
           ...style,
         })}
         data-open={dataAttr(open)}
-        data-slot={dataSlot(props, "chart-tooltip")}
         onPointerEnter={(event: PointerEvent<HTMLDivElement>) => {
           onPointerEnter?.(event);
           if (!event.defaultPrevented) interaction.cancelHoverClear();

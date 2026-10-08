@@ -1,7 +1,7 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
+import { histogramChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
-import { type ChartContextValue } from "../chart/chart-shared.js";
 
 export type HistogramChartProps = ComponentProps<"figure"> &
   AsProp & {
@@ -23,19 +23,6 @@ export function HistogramChart({
   ref,
   ...props
 }: HistogramChartProps) {
-  if (!valueLabel.trim()) throw new Error("HistogramChart value label must not be empty.");
-  if (!frequencyLabel.trim()) throw new Error("HistogramChart frequency label must not be empty.");
-  for (const [index, value] of values.entries()) {
-    if (!Number.isFinite(value)) {
-      throw new Error(`HistogramChart value at index ${index} must be finite; received ${value}.`);
-    }
-  }
-  const context: ChartContextValue = {
-    kind: "histogram",
-    values,
-    valueLabel,
-    frequencyLabel,
-    formatY: formatValue ?? String,
-  };
+  const context = histogramChartContext(values, valueLabel, frequencyLabel, formatValue);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

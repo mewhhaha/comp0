@@ -1,6 +1,6 @@
 import { useState, type AnchorHTMLAttributes } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Pagination, type PaginationRangeEntry } from "./Pagination.js";
 import { PaginationEllipsis } from "./PaginationEllipsis.js";
 import { PaginationFirst } from "./PaginationFirst.js";
@@ -35,7 +35,7 @@ describe("pagination composition", () => {
     expect(container.querySelectorAll("[aria-hidden='true']")).toHaveLength(2);
   });
 
-  it("moves with page and edge controls and disables unavailable directions", () => {
+  it("moves with page and edge controls and disables unavailable directions", async () => {
     function Example() {
       const [page, setPage] = useState(2);
       return (
@@ -49,23 +49,23 @@ describe("pagination composition", () => {
       );
     }
 
-    const { container } = render(<Example />);
+    const { container, user } = setup(<Example />);
     const button = (text: string) =>
       [...container.querySelectorAll<HTMLButtonElement>("button")].find(
         (element) => element.textContent === text,
       )!;
-    fireClick(button("3"));
+    await user.click(button("3"));
     expect(container.querySelector("nav")?.dataset["page"]).toBe("3");
-    fireClick(button("Next"));
+    await user.click(button("Next"));
     expect(container.querySelector("nav")?.dataset["page"]).toBe("4");
     expect(button("Next").hasAttribute("disabled")).toBe(true);
     expect(button("Last").hasAttribute("disabled")).toBe(true);
-    fireClick(button("First"));
+    await user.click(button("First"));
     expect(container.querySelector("nav")?.dataset["page"]).toBe("1");
     expect(button("Previous").hasAttribute("disabled")).toBe(true);
   });
 
-  it("composes page controls with router-style links", () => {
+  it("composes page controls with router-style links", async () => {
     const onChange = vi.fn();
     function RouterLink({
       to,
@@ -79,7 +79,7 @@ describe("pagination composition", () => {
       );
     }
 
-    const { container } = render(
+    const { container, user } = setup(
       <Pagination totalPages={5} onChange={onChange}>
         <PaginationPage as={RouterLink} value={2} to="/results?page=2">
           2
@@ -89,13 +89,23 @@ describe("pagination composition", () => {
     const link = container.querySelector("a")!;
     expect(link.getAttribute("href")).toBe("/results?page=2");
     expect(link.getAttribute("role")).toBe("link");
-    fireClick(link);
+    await user.click(link);
     expect(onChange).toHaveBeenCalledWith(2);
   });
 
-  it("reports invalid range configuration with the received value", () => {
-    expect(() => render(<Pagination totalPages={0} />)).toThrow(
-      "Pagination totalPages must be a positive integer; received 0.",
+  it("falls back to safe range values and warns once for each invalid count", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = render(
+      <Pagination totalPages={0} siblingCount={-2} boundaryCount={1.5}>
+        {({ pages, totalPages }) => `${totalPages}:${pages.join(",")}`}
+      </Pagination>,
     );
+    expect(container.querySelector("nav")?.textContent).toBe("1:1");
+    expect(error.mock.calls.map(([message]) => message)).toEqual([
+      "Pagination totalPages must be a positive integer; received 0. Using 1.",
+      "Pagination siblingCount must be a non-negative integer; received -2. Using 1.",
+      "Pagination boundaryCount must be a non-negative integer; received 1.5. Using 1.",
+    ]);
+    error.mockRestore();
   });
 });

@@ -1,6 +1,5 @@
 import { type ComponentProps, type ReactNode } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { monthStartDate, useCalendarContext } from "./calendar-shared.js";
 
 export type CalendarHeaderProps = Omit<ComponentProps<"div">, "children"> &
@@ -22,12 +21,7 @@ export function CalendarHeader({ as, children, id, ...props }: CalendarHeaderPro
 
   const Part = partElement(as, "div");
   return (
-    <Part
-      {...props}
-      id={id ?? calendar.headerId}
-      aria-live="polite"
-      data-slot={dataSlot(props, "calendar-header")}
-    >
+    <Part data-slot="calendar-header" {...props} id={id ?? calendar.headerId} aria-live="polite">
       {content}
     </Part>
   );

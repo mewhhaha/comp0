@@ -4,7 +4,6 @@ import { dataAttr } from "@comp0/core";
 import { useModalDialog } from "../internal/overlay/modal-dialog.js";
 import { useRequiredDialogContext } from "../internal/overlay/context.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type DialogContentProps = Omit<ComponentProps<"dialog">, "open"> &
   AsProp & {
@@ -32,13 +31,13 @@ export function DialogContent({
   const Part = partElement(as, "dialog");
   const content = (
     <Part
+      data-slot="dialog-content"
       {...props}
       {...modal}
       id={props.id ?? dialog.contentId}
       role={props.role ?? "dialog"}
       aria-modal={props["aria-modal"] ?? true}
       data-open={dataAttr(dialog.open)}
-      data-slot={dataSlot(props, "dialog-content")}
     />
   );
 

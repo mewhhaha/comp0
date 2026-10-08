@@ -12,7 +12,7 @@ export default component({
     supporting:
       "Place ComboboxTrigger beside the input, then add ComboboxPopover as the listbox of results; group related results with ComboboxOptGroup.",
     behavior:
-      "Combobox owns the selected value, field, form serialization, and open state; control the results with open, defaultOpen, and onToggle.",
+      "Combobox owns the selected value, field, form serialization, and open state; control the results with open, defaultOpen, and onOpenChange.",
     code: '<Combobox name="city">\n  <Label>City</Label>\n  <ComboboxInput />\n  <ComboboxTrigger aria-label="Show suggestions" />\n  <ComboboxPopover>\n    <ComboboxOption value="Paris">Paris</ComboboxOption>\n  </ComboboxPopover>\n</Combobox>;',
   },
   imports: [
@@ -35,20 +35,31 @@ export default component({
       false,
       [
         prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
+        prop(
+          "id",
+          "string",
+          "Base for the generated input, listbox, and field ids; also the wrapper id when `as` is set.",
+        ),
         prop("value / defaultValue", "string", "Controlled or initial committed option."),
         prop("onChange", "(value: string) => void", "Receives the committed option."),
         prop("inputValue / defaultInputValue", "string", "Controlled or initial editable text."),
         prop("onInputChange", "(value: string) => void", "Receives the editable text."),
         prop("open / defaultOpen", "boolean", "Controlled or initial open state of the results."),
-        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
         prop("filter", "(textValue, inputValue) => boolean", "Custom match rule for results."),
         prop(
           "autoHighlight",
           "boolean",
           "Activates the first visible enabled option whenever the editable text changes.",
         ),
+        prop(
+          "allowEmptyCollection",
+          "boolean",
+          "Shows every option regardless of the editable text, so filtering can happen elsewhere.",
+        ),
         prop("name", "string", "Submission name."),
         prop("form", "string", "Associates the combobox value with a form by id."),
+        prop("disabled / invalid / required", "boolean", "Field-wide states."),
       ],
     ),
     p("Label", "label", "Visible name connected to the input."),

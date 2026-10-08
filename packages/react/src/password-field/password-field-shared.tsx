@@ -10,6 +10,9 @@ export type PasswordSelection = {
 export type PasswordFieldContextValue = {
   announcement: string;
   inputRef: RefObject<HTMLInputElement | null>;
+  /** The mounted input's id, for the toggle's aria-controls; undefined without an input. */
+  inputId: string | undefined;
+  setInputId: (id: string | undefined) => void;
   mounted: boolean;
   passwordVisible: boolean;
   selectionRef: RefObject<PasswordSelection | null>;

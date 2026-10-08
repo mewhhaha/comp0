@@ -1,7 +1,6 @@
 import { type ComponentProps, type CSSProperties, type ReactNode } from "react";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type MeterState = {
   value: number;
@@ -66,6 +65,7 @@ export function Meter({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="meter"
       {...props}
       id={id ?? field?.controlId}
       role="meter"
@@ -78,7 +78,6 @@ export function Meter({
       data-high={high}
       data-low={low}
       data-optimum={optimum}
-      data-slot={dataSlot(props, "meter")}
       data-value={resolvedValue}
       style={{ ...style, "--comp0-meter-value": `${fraction}` } as CSSProperties}
     >

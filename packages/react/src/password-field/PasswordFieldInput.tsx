@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
+import { useFieldContext } from "../field/field-shared.js";
 import { Input, type InputProps } from "../text-field/Input.js";
 import { usePasswordFieldContext } from "./password-field-shared.js";
 
@@ -13,8 +14,15 @@ export function PasswordFieldInput({
   ...props
 }: PasswordFieldInputProps) {
   const passwordField = usePasswordFieldContext("PasswordFieldInput");
-  const { hidePassword, inputRef, passwordVisible, selectionRef } = passwordField;
+  const { hidePassword, inputRef, passwordVisible, selectionRef, setInputId } = passwordField;
+  const field = useFieldContext();
+  const inputId = props.id ?? field?.controlId;
   const handleSubmit = useEffectEvent(() => hidePassword());
+
+  useEffect(() => {
+    setInputId(inputId);
+    return () => setInputId(undefined);
+  }, [inputId, setInputId]);
 
   useEffect(() => {
     const owningForm = inputRef.current?.form;

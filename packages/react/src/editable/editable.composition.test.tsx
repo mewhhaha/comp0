@@ -1,21 +1,12 @@
-import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Editable } from "./Editable.js";
 import { EditableInput } from "./EditableInput.js";
 import { EditableView } from "./EditableView.js";
 
-function fireInput(element: HTMLInputElement, value: string) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setter?.call(element, value);
-    element.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-  });
-}
-
 describe("editable composition", () => {
-  it("shows the committed value and swaps to a focused, selected input on click", () => {
-    const { container } = render(
+  it("shows the committed value and swaps to a focused, selected input on click", async () => {
+    const { container, user } = setup(
       <Editable defaultValue="Quarterly report">
         <EditableView />
         <EditableInput aria-label="Document title" />
@@ -28,7 +19,7 @@ describe("editable composition", () => {
     expect(view.hasAttribute("hidden")).toBe(false);
     expect(input.hasAttribute("hidden")).toBe(true);
 
-    fireClick(view);
+    await user.click(view);
 
     expect(view.hasAttribute("hidden")).toBe(true);
     expect(input.hasAttribute("hidden")).toBe(false);
@@ -39,9 +30,9 @@ describe("editable composition", () => {
     expect(input.selectionEnd).toBe("Quarterly report".length);
   });
 
-  it("commits the draft on Enter, firing onChange once and refocusing the view", () => {
+  it("commits the draft on Enter, firing onChange once and refocusing the view", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Editable defaultValue="Draft" onChange={changed}>
         <EditableView />
         <EditableInput aria-label="Document title" />
@@ -50,11 +41,11 @@ describe("editable composition", () => {
     const view = container.querySelector("button")!;
     const input = container.querySelector("input")!;
 
-    fireClick(view);
-    fireInput(input, "Final");
+    await user.click(view);
+    await user.keyboard("Final");
     expect(changed).not.toHaveBeenCalled();
 
-    fireKeyDown(input, "Enter");
+    await user.keyboard("{Enter}");
 
     expect(changed).toHaveBeenCalledTimes(1);
     expect(changed).toHaveBeenCalledWith("Final");
@@ -63,9 +54,9 @@ describe("editable composition", () => {
     expect(document.activeElement).toBe(view);
   });
 
-  it("cancels on Escape, restoring the committed value without firing onChange", () => {
+  it("cancels on Escape, restoring the committed value without firing onChange", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Editable defaultValue="Draft" onChange={changed}>
         <EditableView />
         <EditableInput aria-label="Document title" />
@@ -74,9 +65,9 @@ describe("editable composition", () => {
     const view = container.querySelector("button")!;
     const input = container.querySelector("input")!;
 
-    fireClick(view);
-    fireInput(input, "Scratch");
-    fireKeyDown(input, "Escape");
+    await user.click(view);
+    await user.keyboard("Scratch");
+    await user.keyboard("{Escape}");
 
     expect(changed).not.toHaveBeenCalled();
     expect(view.textContent).toBe("Draft");
@@ -84,9 +75,9 @@ describe("editable composition", () => {
     expect(view.hasAttribute("hidden")).toBe(false);
   });
 
-  it("commits the draft when focus leaves the input without stealing focus back", () => {
+  it("commits the draft when focus leaves the input without stealing focus back", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <div>
         <Editable defaultValue="Draft" onChange={changed}>
           <EditableView />
@@ -96,12 +87,11 @@ describe("editable composition", () => {
       </div>,
     );
     const view = container.querySelector("button")!;
-    const input = container.querySelector<HTMLInputElement>("[aria-label='Document title']")!;
     const outside = container.querySelector<HTMLInputElement>("[aria-label='Outside']")!;
 
-    fireClick(view);
-    fireInput(input, "Blurred");
-    act(() => outside.focus());
+    await user.click(view);
+    await user.keyboard("Blurred");
+    await user.click(outside);
 
     expect(changed).toHaveBeenCalledTimes(1);
     expect(changed).toHaveBeenCalledWith("Blurred");
@@ -109,8 +99,8 @@ describe("editable composition", () => {
     expect(document.activeElement).toBe(outside);
   });
 
-  it("submits the committed value through the always-present named input", () => {
-    const { container } = render(
+  it("submits the committed value through the always-present named input", async () => {
+    const { container, user } = setup(
       <form>
         <Editable defaultValue="Quarterly report">
           <EditableView />
@@ -120,19 +110,18 @@ describe("editable composition", () => {
     );
     const form = container.querySelector("form")!;
     const view = container.querySelector("button")!;
-    const input = container.querySelector("input")!;
 
     expect(new FormData(form).get("title")).toBe("Quarterly report");
 
-    fireClick(view);
-    fireInput(input, "Annual report");
-    fireKeyDown(input, "Enter");
+    await user.click(view);
+    await user.keyboard("Annual report");
+    await user.keyboard("{Enter}");
 
     expect(new FormData(form).get("title")).toBe("Annual report");
   });
 
-  it("blocks entering edit mode while disabled", () => {
-    const { container } = render(
+  it("blocks entering edit mode while disabled", async () => {
+    const { container, user } = setup(
       <Editable defaultValue="Locked" disabled>
         <EditableView />
         <EditableInput aria-label="Document title" />
@@ -145,13 +134,13 @@ describe("editable composition", () => {
     expect(view.hasAttribute("data-disabled")).toBe(true);
     expect(input.hasAttribute("data-disabled")).toBe(true);
 
-    fireClick(view);
+    await user.click(view);
 
     expect(input.hasAttribute("hidden")).toBe(true);
     expect(view.hasAttribute("data-open")).toBe(false);
   });
 
-  it("marks an empty committed value so a placeholder can be styled", () => {
+  it("marks an empty committed value so a placeholder can be styled", async () => {
     const { container } = render(
       <Editable defaultValue="">
         <EditableView>Untitled</EditableView>
@@ -173,10 +162,10 @@ describe("editable composition", () => {
     );
   });
 
-  it("reports edit mode through open and onToggle and exposes data-open", () => {
+  it("reports edit mode through open and onOpenChange and exposes data-open", async () => {
     const toggled = vi.fn();
-    const { container, rerender } = render(
-      <Editable defaultValue="Draft" open={false} onToggle={toggled}>
+    const { container, rerender, user } = setup(
+      <Editable defaultValue="Draft" open={false} onOpenChange={toggled}>
         <EditableView />
         <EditableInput aria-label="Title" />
       </Editable>,
@@ -184,13 +173,13 @@ describe("editable composition", () => {
     const view = container.querySelector("button")!;
     const input = container.querySelector("input")!;
 
-    fireClick(view);
+    await user.click(view);
     expect(toggled).toHaveBeenLastCalledWith(true);
     expect(input.hasAttribute("hidden")).toBe(true);
     expect(view.hasAttribute("data-open")).toBe(false);
 
     rerender(
-      <Editable defaultValue="Draft" open onToggle={toggled}>
+      <Editable defaultValue="Draft" open onOpenChange={toggled}>
         <EditableView />
         <EditableInput aria-label="Title" />
       </Editable>,

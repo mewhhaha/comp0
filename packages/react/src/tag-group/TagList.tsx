@@ -1,5 +1,5 @@
-import { useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
-import { useCollection, useCollectionNavigation, type CollectionItem } from "@comp0/core";
+import { useState, type ComponentProps, type KeyboardEvent } from "react";
+import { useCollectionNavigation, type CollectionItem } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { writingDirection } from "../internal/writing-direction.js";
@@ -20,18 +20,13 @@ export function TagList({
   const group = useTagGroupContext("TagList");
   const field = useFieldContext();
   const navigate = useCollectionNavigation();
-  const collection = useCollection();
+  const { collection } = group;
   const [activeKey, setActiveKey] = useState("");
-  const activeKeyRef = useRef(activeKey);
-  activeKeyRef.current = activeKey;
 
   // The first registered, enabled tag becomes the tab stop.
   const register = (item: CollectionItem) => {
     collection.register(item);
-    if (item.element && !activeKeyRef.current && !item.disabled) {
-      activeKeyRef.current = item.key;
-      setActiveKey(item.key);
-    }
+    if (item.element && !item.disabled) setActiveKey((current) => current || item.key);
   };
   const context: TagListContextValue = {
     activeKey,

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Label } from "../field/Label.js";
 import { NumberField } from "./NumberField.js";
 import { NumberFieldDecrement } from "./NumberFieldDecrement.js";
@@ -7,9 +7,9 @@ import { NumberFieldIncrement } from "./NumberFieldIncrement.js";
 import { NumberFieldInput } from "./NumberFieldInput.js";
 
 describe("number field composition", () => {
-  it("connects a native number input to custom step buttons", () => {
+  it("connects a native number input to custom step buttons", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <NumberField
         id="tickets"
         name="tickets"
@@ -42,28 +42,28 @@ describe("number field composition", () => {
     expect(decrement?.getAttribute("aria-label")).toBe("Decrease value");
     expect(increment?.getAttribute("aria-controls")).toBe("tickets");
 
-    fireClick(increment!);
+    await user.click(increment!);
     expect(input.valueAsNumber).toBe(3);
     expect(changed).toHaveBeenLastCalledWith(3);
     expect(container.querySelector("output")?.textContent).toBe("3");
     expect(decrement?.disabled).toBe(false);
 
-    fireClick(increment!);
+    await user.click(increment!);
     expect(input.valueAsNumber).toBe(5);
     expect(increment?.disabled).toBe(true);
     expect(increment?.hasAttribute("data-disabled")).toBe(true);
   });
 
-  it("keeps a controlled value until its owner accepts the step", () => {
+  it("keeps a controlled value until its owner accepts the step", async () => {
     const changed = vi.fn();
-    const { container, rerender } = render(
+    const { container, rerender, user } = setup(
       <NumberField id="quantity" value={2} onChange={changed}>
         <NumberFieldInput />
         <NumberFieldIncrement />
       </NumberField>,
     );
 
-    fireClick(container.querySelector("button")!);
+    await user.click(container.querySelector("button")!);
     expect(changed).toHaveBeenLastCalledWith(3);
     expect(container.querySelector("input")?.valueAsNumber).toBe(2);
 
@@ -76,9 +76,9 @@ describe("number field composition", () => {
     expect(container.querySelector("input")?.valueAsNumber).toBe(3);
   });
 
-  it("allows consumers to veto a step", () => {
+  it("allows consumers to veto a step", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <NumberField defaultValue={2} onChange={changed}>
         <NumberFieldInput />
         <NumberFieldIncrement onClick={(event) => event.preventDefault()} />
@@ -86,7 +86,7 @@ describe("number field composition", () => {
     );
     const input = container.querySelector("input")!;
 
-    fireClick(container.querySelector("button")!);
+    await user.click(container.querySelector("button")!);
     expect(input.valueAsNumber).toBe(2);
     expect(changed).not.toHaveBeenCalled();
   });

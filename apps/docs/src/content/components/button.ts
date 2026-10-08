@@ -21,6 +21,11 @@ export default component({
       prop("type", '"button" | "submit" | "reset"', 'Native button type; defaults to "button".'),
       prop("disabled", "boolean", "Disables the button; pending also disables it."),
       prop("pending", "boolean", "Marks a busy action: disables the button and sets aria-busy."),
+      prop(
+        "command / commandfor",
+        "string",
+        "Native invoker attributes: the command to run and the id of the element it targets.",
+      ),
       prop("as", "ElementType", "Renders another element with button semantics restored."),
     ]),
   ],

@@ -34,6 +34,7 @@ import {
   SearchField,
   SearchFieldInput,
 } from "./index.js";
+import { expectNoAxeViolations } from "../test/axe.js";
 import { render } from "../test/render.js";
 
 describe("real-browser interaction contracts", () => {
@@ -168,7 +169,7 @@ describe("real-browser interaction contracts", () => {
     const { unmount } = render(
       <div>
         <button type="button">Outside target</button>
-        <Select id="controlled-select" open onToggle={onToggle}>
+        <Select id="controlled-select" open onOpenChange={onToggle}>
           <SelectTrigger>Choose</SelectTrigger>
           <SelectPopover>
             <SelectOption value="one">One</SelectOption>
@@ -192,7 +193,7 @@ describe("real-browser interaction contracts", () => {
   it("keeps a controlled picker open when its owner rejects Escape", async () => {
     const onToggle = vi.fn();
     const { unmount } = render(
-      <Select open onToggle={onToggle}>
+      <Select open onOpenChange={onToggle}>
         <SelectTrigger>Choose</SelectTrigger>
         <SelectPopover>
           <SelectOption value="one">One</SelectOption>
@@ -216,13 +217,13 @@ describe("real-browser interaction contracts", () => {
     const secondToggle = vi.fn();
     const controlledPopovers = (firstOpen: boolean, secondOpen: boolean) => (
       <div>
-        <Select id="first-controlled-select" open={firstOpen} onToggle={firstToggle}>
+        <Select id="first-controlled-select" open={firstOpen} onOpenChange={firstToggle}>
           <SelectTrigger>First choice</SelectTrigger>
           <SelectPopover>
             <SelectOption value="one">One</SelectOption>
           </SelectPopover>
         </Select>
-        <Select id="second-controlled-select" open={secondOpen} onToggle={secondToggle}>
+        <Select id="second-controlled-select" open={secondOpen} onOpenChange={secondToggle}>
           <SelectTrigger>Second choice</SelectTrigger>
           <SelectPopover>
             <SelectOption value="two">Two</SelectOption>
@@ -318,7 +319,7 @@ describe("real-browser interaction contracts", () => {
     const { unmount } = render(
       <Select id="browser-select">
         <SelectTrigger>Choose</SelectTrigger>
-        <SelectPopover>
+        <SelectPopover aria-label="Choices">
           <SelectOption value="one">One</SelectOption>
           <SelectOption value="two">Two</SelectOption>
         </SelectPopover>
@@ -329,6 +330,7 @@ describe("real-browser interaction contracts", () => {
     await act(async () => userEvent.click(trigger));
     const content = page.getByRole("listbox").element() as HTMLElement;
     expect(document.activeElement?.textContent).toBe("One");
+    await expectNoAxeViolations(document.body, "open select");
     await act(async () => userEvent.keyboard("{Enter}"));
 
     expect(content.hidden).toBe(true);
@@ -552,7 +554,9 @@ describe("real-browser interaction contracts", () => {
     }
 
     const { container, unmount } = render(<Board />);
-    const button = container.querySelector<HTMLButtonElement>("[data-to='done']")!;
+    const button = container.querySelector<HTMLButtonElement>(
+      "[data-slot='grid-list-move-button']",
+    )!;
     const destination = container.querySelector<HTMLElement>("[aria-label='Done']")!;
 
     expect(button.disabled).toBe(true);

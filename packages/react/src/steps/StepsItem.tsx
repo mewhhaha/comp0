@@ -1,7 +1,6 @@
 import { useLayoutEffect, useState, type ComponentProps } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { StepsItemContext, stepsPairIds, useStepsContext } from "./steps-shared.js";
 
 export type StepsItemProps = Omit<ComponentProps<"li">, "id" | "value"> &
@@ -40,10 +39,10 @@ export function StepsItem({ as, value, ref, ...props }: StepsItemProps) {
   return (
     <StepsItemContext value={{ value, current, completed }}>
       <Part
+        data-slot="steps-item"
         {...props}
         ref={composeRefs(ref, setElement)}
         id={itemId}
-        data-slot={dataSlot(props, "steps-item")}
         data-current={dataAttr(current)}
         data-completed={dataAttr(completed)}
         data-step={step}

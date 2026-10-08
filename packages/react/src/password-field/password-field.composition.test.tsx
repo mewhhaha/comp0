@@ -2,7 +2,7 @@ import { act, createRef } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Description } from "../field/Description.js";
 import { FieldError } from "../field/FieldError.js";
 import { Label } from "../field/Label.js";
@@ -10,19 +10,10 @@ import { PasswordField } from "./PasswordField.js";
 import { PasswordFieldInput } from "./PasswordFieldInput.js";
 import { PasswordFieldToggle } from "./PasswordFieldToggle.js";
 
-function fireInput(element: HTMLInputElement, value: string) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setter?.call(element, value);
-    element.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-    element.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
-  });
-}
-
 describe("password field composition", () => {
-  it("inherits field semantics and forwards native password input behavior", () => {
+  it("inherits field semantics and forwards native password input behavior", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <PasswordField
         id="account-password"
         defaultValue="initial"
@@ -51,14 +42,15 @@ describe("password field composition", () => {
     expect(input.getAttribute("autocapitalize")).toBe("none");
     expect(container.querySelector("label")?.htmlFor).toBe("account-password");
 
-    fireInput(input, "replacement");
+    await user.clear(input);
+    await user.type(input, "replacement");
     expect(input.value).toBe("replacement");
     expect(changed).toHaveBeenLastCalledWith("replacement");
   });
 
-  it("reveals one stable input without losing its value, focus, or caret", () => {
+  it("reveals one stable input without losing its value, focus, or caret", async () => {
     const inputRef = createRef<HTMLInputElement>();
-    const { container } = render(
+    const { container, user } = setup(
       <PasswordField id="field-password" defaultValue="correct horse">
         <PasswordFieldInput id="password" ref={inputRef} />
         <PasswordFieldToggle>Reveal</PasswordFieldToggle>
@@ -67,10 +59,8 @@ describe("password field composition", () => {
     const input = inputRef.current!;
     const toggle = container.querySelector("button")!;
 
-    act(() => {
-      input.focus();
-      input.setSelectionRange(3, 7, "forward");
-    });
+    await user.click(input);
+    act(() => input.setSelectionRange(3, 7, "forward"));
     expect(toggle.type).toBe("button");
     expect(toggle.getAttribute("aria-label")).toBe("Show password");
     expect(toggle.getAttribute("aria-controls")).toBe("password");
@@ -79,8 +69,7 @@ describe("password field composition", () => {
     expect(toggle.textContent).toBe("Reveal");
     expect(container.querySelector("output")?.textContent).toBe("");
 
-    act(() => toggle.focus());
-    fireClick(toggle);
+    await user.click(toggle);
 
     expect(container.querySelector("input")).toBe(input);
     expect(input.type).toBe("text");
@@ -94,14 +83,14 @@ describe("password field composition", () => {
     expect(input.hasAttribute("data-visible")).toBe(true);
     expect(container.querySelector("output")?.textContent).toBe("Your password is visible.");
 
-    fireClick(toggle);
+    await user.click(toggle);
     expect(container.querySelector("input")).toBe(input);
     expect(input.type).toBe("password");
     expect(container.querySelector("output")?.textContent).toBe("Your password is hidden.");
   });
 
-  it("shares disabled state with the toggle", () => {
-    const { container } = render(
+  it("shares disabled state with the toggle", async () => {
+    const { container, user } = setup(
       <PasswordField disabled>
         <PasswordFieldInput />
         <PasswordFieldToggle />
@@ -113,13 +102,13 @@ describe("password field composition", () => {
     expect(input.disabled).toBe(true);
     expect(toggle.disabled).toBe(true);
     expect(toggle.hasAttribute("data-disabled")).toBe(true);
-    fireClick(toggle);
+    await user.click(toggle);
     expect(input.type).toBe("password");
   });
 
-  it("supports localized labels and announcements while respecting cancelled clicks", () => {
+  it("supports localized labels and announcements while respecting cancelled clicks", async () => {
     let cancelToggle = true;
-    const { container } = render(
+    const { container, user } = setup(
       <PasswordField
         visibleAnnouncement="The account password is visible."
         hiddenAnnouncement="The account password is hidden."
@@ -138,20 +127,20 @@ describe("password field composition", () => {
     const toggle = container.querySelector("button")!;
 
     expect(toggle.textContent).toBe("Show account password");
-    fireClick(toggle);
+    await user.click(toggle);
     expect(input.type).toBe("password");
     expect(container.querySelector("output")?.textContent).toBe("");
 
     cancelToggle = false;
-    fireClick(toggle);
+    await user.click(toggle);
     expect(input.type).toBe("text");
     expect(toggle.getAttribute("aria-label")).toBe("Hide account password");
     expect(toggle.textContent).toBe("Hide account password");
     expect(container.querySelector("output")?.textContent).toBe("The account password is visible.");
   });
 
-  it("allows the toggle to mount before an input without crashing", () => {
-    const { container } = render(
+  it("allows the toggle to mount before an input without crashing", async () => {
+    const { container, user } = setup(
       <PasswordField>
         <PasswordFieldToggle />
       </PasswordField>,
@@ -159,13 +148,13 @@ describe("password field composition", () => {
     const toggle = container.querySelector("button")!;
 
     expect(toggle.hasAttribute("aria-controls")).toBe(false);
-    expect(() => fireClick(toggle)).not.toThrow();
+    await user.click(toggle);
     expect(toggle.getAttribute("aria-label")).toBe("Hide password");
   });
 
-  it("conceals the password when its owning form submits", () => {
+  it("conceals the password when its owning form submits", async () => {
     const submitted = vi.fn((event: React.FormEvent) => event.preventDefault());
-    const { container } = render(
+    const { container, user } = setup(
       <form onSubmit={submitted}>
         <PasswordField defaultValue="secret">
           <PasswordFieldInput name="password" />
@@ -178,7 +167,7 @@ describe("password field composition", () => {
     const toggle = container.querySelector("button")!;
 
     expect(toggle.type).toBe("button");
-    fireClick(toggle);
+    await user.click(toggle);
     expect(submitted).not.toHaveBeenCalled();
     expect(input.type).toBe("text");
     act(() => form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true })));
@@ -188,8 +177,8 @@ describe("password field composition", () => {
     expect(input.value).toBe("secret");
   });
 
-  it("conceals the password after a persisted page restore", () => {
-    const { container } = render(
+  it("conceals the password after a persisted page restore", async () => {
+    const { container, user } = setup(
       <PasswordField>
         <PasswordFieldInput />
         <PasswordFieldToggle />
@@ -197,7 +186,7 @@ describe("password field composition", () => {
     );
     const input = container.querySelector("input")!;
 
-    fireClick(container.querySelector("button")!);
+    await user.click(container.querySelector("button")!);
     expect(input.type).toBe("text");
     act(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
     expect(input.type).toBe("password");

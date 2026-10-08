@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -108,23 +107,11 @@ export function ScatterChartPlot({
     });
     return candidates[0]?.index ?? currentIndex;
   };
-  const xTicks = xScale.ticks(resolvedXTickCount).map((value) => ({
-    label: context.formatX(value),
-    position: xScale.position(value),
-  }));
-  const yTicks = yScale.ticks(resolvedYTickCount).map((value) => ({
-    label: context.formatY(value),
-    position: yScale.position(value),
-  }));
+  const xTicks = xScale.axisTicks(resolvedXTickCount, context.formatX);
+  const yTicks = yScale.axisTicks(resolvedYTickCount, context.formatY);
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 120 120"
-      role="group"
-      data-slot={dataSlot(props, "scatter-chart-plot")}
-    >
+    <svg data-slot="scatter-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xGrid
         xLabel={context.xLabel}

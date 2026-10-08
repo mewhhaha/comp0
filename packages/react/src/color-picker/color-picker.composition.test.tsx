@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { ColorArea } from "./ColorArea.js";
 import { ColorAreaThumb } from "./ColorAreaThumb.js";
 import { ColorPicker } from "./ColorPicker.js";
@@ -12,6 +12,7 @@ import { ColorSlider } from "./ColorSlider.js";
 import { ColorSwatch } from "./ColorSwatch.js";
 import { Label } from "../field/Label.js";
 
+// userEvent cannot drag a range input, so sliders are set in one input event.
 function fireInput(element: HTMLInputElement, value: string) {
   act(() => {
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -22,7 +23,7 @@ function fireInput(element: HTMLInputElement, value: string) {
 }
 
 function renderPicker(onChange = vi.fn()) {
-  const result = render(
+  const result = setup(
     <form>
       <ColorPicker as="div" id="accent" name="accent" defaultValue="#f00" onChange={onChange}>
         <Label>Accent color</Label>
@@ -44,8 +45,8 @@ function renderPicker(onChange = vi.fn()) {
 }
 
 describe("color picker composition", () => {
-  it("connects the field label, trigger, popover, displayed value, and form value", () => {
-    const { container } = renderPicker();
+  it("connects the field label, trigger, popover, displayed value, and form value", async () => {
+    const { container, user } = renderPicker();
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
     const popover = container.querySelector<HTMLElement>("[role='dialog']")!;
     const swatch = container.querySelector<HTMLElement>("span[data-value]")!;
@@ -60,15 +61,15 @@ describe("color picker composition", () => {
     expect(container.textContent).toContain("#ff0000");
     expect(new FormData(container.querySelector("form")!).get("accent")).toBe("#ff0000");
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
     expect(popover.hidden).toBe(false);
     expect(document.activeElement?.getAttribute("data-color-area-input")).toBe("saturation");
   });
 
-  it("exposes the color area as two native range inputs controlling one thumb", () => {
-    const { container, onChange } = renderPicker();
-    fireClick(container.querySelector("button")!);
+  it("exposes the color area as two native range inputs controlling one thumb", async () => {
+    const { container, onChange, user } = renderPicker();
+    await user.click(container.querySelector("button")!);
     const saturation = container.querySelector<HTMLInputElement>(
       "[data-color-area-input='saturation']",
     )!;
@@ -88,9 +89,9 @@ describe("color picker composition", () => {
     expect(thumb.style.top).toBe("0%");
   });
 
-  it("changes hue with a native slider and preserves the other color channels", () => {
-    const { container, onChange } = renderPicker();
-    fireClick(container.querySelector("button")!);
+  it("changes hue with a native slider and preserves the other color channels", async () => {
+    const { container, onChange, user } = renderPicker();
+    await user.click(container.querySelector("button")!);
     const hue = container.querySelector<HTMLInputElement>("[data-channel='hue']")!;
 
     expect(hue.type).toBe("range");
@@ -100,9 +101,9 @@ describe("color picker composition", () => {
     expect(hue.getAttribute("aria-valuetext")).toBe("120 degrees");
   });
 
-  it("preserves hue and saturation while the selected color is black", () => {
-    const { container, onChange } = renderPicker();
-    fireClick(container.querySelector("button")!);
+  it("preserves hue and saturation while the selected color is black", async () => {
+    const { container, onChange, user } = renderPicker();
+    await user.click(container.querySelector("button")!);
     const brightness = container.querySelector<HTMLInputElement>(
       "[data-color-area-input='brightness']",
     )!;
@@ -115,33 +116,36 @@ describe("color picker composition", () => {
     expect(onChange).toHaveBeenLastCalledWith("#00ff00");
   });
 
-  it("keeps partial hex input editable and reports malformed input on commit", () => {
-    const { container, onChange } = renderPicker();
-    fireClick(container.querySelector("button")!);
+  it("keeps partial hex input editable and reports malformed input on commit", async () => {
+    const { container, onChange, user } = renderPicker();
+    await user.click(container.querySelector("button")!);
     const input = container.querySelector<HTMLInputElement>("input[type='text']")!;
 
-    act(() => input.focus());
-    fireInput(input, "#12");
+    await user.click(input);
+    await user.clear(input);
+    await user.type(input, "#12");
     expect(input.value).toBe("#12");
     expect(input.getAttribute("aria-invalid")).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
 
-    fireKeyDown(input, "Enter");
+    await user.keyboard("{Enter}");
     expect(input.getAttribute("aria-invalid")).toBe("true");
-    fireInput(input, "#0d9488");
+    await user.clear(input);
+    await user.type(input, "#0d9488");
     expect(onChange).toHaveBeenLastCalledWith("#0d9488");
     expect(input.getAttribute("aria-invalid")).toBeNull();
   });
 
-  it("replaces an invalid blurred draft when another control changes the color", () => {
-    const { container } = renderPicker();
-    fireClick(container.querySelector("button")!);
+  it("replaces an invalid blurred draft when another control changes the color", async () => {
+    const { container, user } = renderPicker();
+    await user.click(container.querySelector("button")!);
     const input = container.querySelector<HTMLInputElement>("input[type='text']")!;
     const hue = container.querySelector<HTMLInputElement>("[data-channel='hue']")!;
 
-    act(() => input.focus());
-    fireInput(input, "not-a-color");
-    act(() => input.blur());
+    await user.click(input);
+    await user.clear(input);
+    await user.type(input, "not-a-color");
+    await user.tab();
     expect(input.getAttribute("aria-invalid")).toBe("true");
 
     fireInput(hue, "120");
@@ -198,5 +202,54 @@ describe("color picker composition", () => {
     );
 
     expect(new FormData(container.querySelector("form")!).has("accent")).toBe(false);
+  });
+});
+
+describe("color picker validation", () => {
+  it("warns about an invalid default value and falls back to black", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = render(
+      <ColorPicker defaultValue="chartreuse">
+        <ColorPickerValue />
+      </ColorPicker>,
+    );
+
+    expect(error).toHaveBeenCalledWith(
+      'ColorPicker defaultValue "chartreuse" must be a three- or six-digit hex color. It was ignored.',
+    );
+    expect(container.textContent).toBe("#000000");
+    error.mockRestore();
+  });
+
+  it("warns about an invalid controlled value and keeps the last valid color", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = render(
+      <ColorPicker value="#12" defaultValue="#0d9488">
+        <ColorPickerValue />
+      </ColorPicker>,
+    );
+
+    expect(error).toHaveBeenCalledWith(
+      'ColorPicker value "#12" must be a three- or six-digit hex color. It was ignored.',
+    );
+    expect(container.textContent).toBe("#0d9488");
+    error.mockRestore();
+  });
+
+  it("reports open state changes through onOpenChange", async () => {
+    const onOpenChange = vi.fn();
+    const { container, user } = setup(
+      <ColorPicker onOpenChange={onOpenChange}>
+        <ColorPickerTrigger />
+        <ColorPickerPopover>
+          <ColorSlider channel="hue" />
+        </ColorPickerPopover>
+      </ColorPicker>,
+    );
+
+    await user.click(container.querySelector("button")!);
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
   });
 });

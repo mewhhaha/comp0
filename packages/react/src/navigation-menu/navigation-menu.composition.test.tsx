@@ -1,8 +1,8 @@
-import { act, type AnchorHTMLAttributes } from "react";
+import { type AnchorHTMLAttributes } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { setup } from "../../test/render.js";
 import { NavigationMenu } from "./NavigationMenu.js";
-import { NavigationMenuContent } from "./NavigationMenuContent.js";
+import { NavigationMenuPanel } from "./NavigationMenuPanel.js";
 import { NavigationMenuItem } from "./NavigationMenuItem.js";
 import { NavigationMenuLink } from "./NavigationMenuLink.js";
 import { NavigationMenuList } from "./NavigationMenuList.js";
@@ -14,16 +14,16 @@ function SiteNavigation(props: { value?: string; onChange?: (value: string) => v
       <NavigationMenuList>
         <NavigationMenuItem value="products">
           <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-          <NavigationMenuContent>
+          <NavigationMenuPanel>
             <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
             <NavigationMenuLink href="#reports">Reports</NavigationMenuLink>
-          </NavigationMenuContent>
+          </NavigationMenuPanel>
         </NavigationMenuItem>
         <NavigationMenuItem value="resources">
           <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
-          <NavigationMenuContent>
+          <NavigationMenuPanel>
             <NavigationMenuLink href="#docs">Docs</NavigationMenuLink>
-          </NavigationMenuContent>
+          </NavigationMenuPanel>
         </NavigationMenuItem>
         <NavigationMenuItem value="pricing">
           <NavigationMenuLink href="#pricing">Pricing</NavigationMenuLink>
@@ -39,8 +39,8 @@ const triggerNamed = (container: Element, text: string) =>
   )!;
 
 describe("navigation menu composition", () => {
-  it("wires each trigger to its hidden panel with aria-expanded and aria-controls", () => {
-    const { container } = render(<SiteNavigation />);
+  it("wires each trigger to its hidden panel with aria-expanded and aria-controls", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
     const navigation = container.querySelector("nav")!;
     expect(navigation.getAttribute("aria-label")).toBe("Main");
@@ -49,7 +49,7 @@ describe("navigation menu composition", () => {
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(panel.hidden).toBe(true);
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
     expect(panel.hidden).toBe(false);
     expect(trigger.hasAttribute("data-open")).toBe(true);
@@ -57,40 +57,40 @@ describe("navigation menu composition", () => {
     expect(trigger.closest("li")?.hasAttribute("data-open")).toBe(true);
   });
 
-  it("keeps a single panel open: opening one item closes the other", () => {
-    const { container } = render(<SiteNavigation />);
+  it("keeps a single panel open: opening one item closes the other", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
-    fireClick(triggerNamed(container, "Products"));
-    fireClick(triggerNamed(container, "Resources"));
+    await user.click(triggerNamed(container, "Products"));
+    await user.click(triggerNamed(container, "Resources"));
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("false");
     expect(triggerNamed(container, "Resources").getAttribute("aria-expanded")).toBe("true");
     expect(
-      container.querySelectorAll("[data-slot='navigation-menu-content']:not([hidden])"),
+      container.querySelectorAll("[data-slot='navigation-menu-panel']:not([hidden])"),
     ).toHaveLength(1);
   });
 
-  it("closes the open panel on Escape and refocuses its trigger", () => {
-    const { container } = render(<SiteNavigation />);
+  it("closes the open panel on Escape and refocuses its trigger", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
     const trigger = triggerNamed(container, "Products");
-    fireClick(trigger);
-    const link = container.querySelector<HTMLAnchorElement>("a[href='#analytics']")!;
-    fireKeyDown(link, "Escape");
+    await user.click(trigger);
+    container.querySelector<HTMLAnchorElement>("a[href='#analytics']")!.focus();
+    await user.keyboard("{Escape}");
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("closes the menu when a panel link is activated", () => {
-    const { container } = render(<SiteNavigation />);
+  it("closes the menu when a panel link is activated", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
-    fireClick(triggerNamed(container, "Products"));
-    fireClick(container.querySelector("a[href='#analytics']")!);
+    await user.click(triggerNamed(container, "Products"));
+    await user.click(container.querySelector("a[href='#analytics']")!);
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelector("nav")?.hasAttribute("data-open")).toBe(false);
   });
 
   it("marks the current link with aria-current='page'", () => {
-    const { container } = render(
+    const { container } = setup(
       <NavigationMenu aria-label="Main">
         <NavigationMenuList>
           <NavigationMenuItem value="pricing">
@@ -107,12 +107,14 @@ describe("navigation menu composition", () => {
     expect(link.hasAttribute("data-current")).toBe(true);
   });
 
-  it("follows a controlled value and reports toggles without changing itself", () => {
+  it("follows a controlled value and reports toggles without changing itself", async () => {
     const onChange = vi.fn();
-    const { container, rerender } = render(<SiteNavigation value="products" onChange={onChange} />);
+    const { container, rerender, user } = setup(
+      <SiteNavigation value="products" onChange={onChange} />,
+    );
 
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("true");
-    fireClick(triggerNamed(container, "Products"));
+    await user.click(triggerNamed(container, "Products"));
     expect(onChange).toHaveBeenCalledWith("");
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("true");
 
@@ -121,7 +123,7 @@ describe("navigation menu composition", () => {
     expect(triggerNamed(container, "Resources").getAttribute("aria-expanded")).toBe("true");
   });
 
-  it("composes router-style links through as and still closes on activation", () => {
+  it("composes router-style links through as and still closes on activation", async () => {
     function RouterLink({
       to,
       children,
@@ -134,143 +136,134 @@ describe("navigation menu composition", () => {
       );
     }
 
-    const { container } = render(
+    const { container, user } = setup(
       <NavigationMenu aria-label="Main">
         <NavigationMenuList>
           <NavigationMenuItem value="products">
             <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-            <NavigationMenuContent>
+            <NavigationMenuPanel>
               <NavigationMenuLink as={RouterLink} to="#reports">
                 Reports
               </NavigationMenuLink>
-            </NavigationMenuContent>
+            </NavigationMenuPanel>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>,
     );
 
-    fireClick(triggerNamed(container, "Products"));
+    await user.click(triggerNamed(container, "Products"));
     const link = container.querySelector("a")!;
     expect(link.getAttribute("href")).toBe("#reports");
-    fireClick(link);
+    await user.click(link);
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("moves along the top-level row with arrow keys without opening panels", () => {
-    const { container } = render(<SiteNavigation />);
+  it("moves along the top-level row with arrow keys without opening panels", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
     const products = triggerNamed(container, "Products");
     products.focus();
-    fireKeyDown(products, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(triggerNamed(container, "Resources"));
-    fireKeyDown(triggerNamed(container, "Resources"), "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     const pricing = container.querySelector<HTMLAnchorElement>("a[href='#pricing']")!;
     expect(document.activeElement).toBe(pricing);
-    fireKeyDown(pricing, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(pricing);
-    fireKeyDown(pricing, "ArrowLeft");
-    fireKeyDown(triggerNamed(container, "Resources"), "ArrowUp");
+    await user.keyboard("{ArrowLeft}");
+    await user.keyboard("{ArrowUp}");
     expect(document.activeElement).toBe(products);
-    fireKeyDown(products, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(products);
     expect(container.querySelector("nav")?.hasAttribute("data-open")).toBe(false);
   });
 
-  it("mirrors top-level arrow navigation in right-to-left layouts", () => {
-    const { container } = render(<SiteNavigation />);
+  it("mirrors top-level arrow navigation in right-to-left layouts", async () => {
+    const { container, user } = setup(<SiteNavigation />);
     const navigation = container.querySelector("nav")!;
     const products = triggerNamed(container, "Products");
     navigation.style.direction = "rtl";
     products.focus();
 
-    fireKeyDown(products, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(triggerNamed(container, "Resources"));
   });
 
-  it("moves focus within the navigation menu's owning document", () => {
+  it("moves focus within the navigation menu's owning document", async () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
-    const { container, unmount } = render(<SiteNavigation />, frameDocument);
+    const { container, unmount, user } = setup(<SiteNavigation />, frameDocument);
     const products = triggerNamed(container, "Products");
     const resources = triggerNamed(container, "Resources");
 
-    act(() => {
-      products.focus();
-      products.dispatchEvent(
-        new frameWindow.KeyboardEvent("keydown", {
-          key: "ArrowRight",
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    });
+    products.focus();
+    await user.keyboard("{ArrowRight}");
 
     expect(frameDocument.activeElement).toBe(resources);
     unmount();
     frame.remove();
   });
 
-  it("moves from an expanded trigger into its panel and between the panel links without wrapping", () => {
-    const { container } = render(<SiteNavigation />);
+  it("moves from an expanded trigger into its panel and between the panel links without wrapping", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
     const products = triggerNamed(container, "Products");
-    fireClick(products);
+    await user.click(products);
     products.focus();
-    fireKeyDown(products, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     const analytics = container.querySelector<HTMLAnchorElement>("a[href='#analytics']")!;
     const reports = container.querySelector<HTMLAnchorElement>("a[href='#reports']")!;
     expect(document.activeElement).toBe(analytics);
     expect(products.getAttribute("aria-expanded")).toBe("true");
 
-    fireKeyDown(analytics, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(reports);
-    fireKeyDown(reports, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(reports);
-    fireKeyDown(reports, "ArrowUp");
+    await user.keyboard("{ArrowUp}");
     expect(document.activeElement).toBe(analytics);
-    fireKeyDown(analytics, "ArrowUp");
+    await user.keyboard("{ArrowUp}");
     expect(document.activeElement).toBe(analytics);
   });
 
-  it("jumps to the first and last stop with Home and End in each context", () => {
-    const { container } = render(<SiteNavigation />);
+  it("jumps to the first and last stop with Home and End in each context", async () => {
+    const { container, user } = setup(<SiteNavigation />);
 
     const resources = triggerNamed(container, "Resources");
     resources.focus();
-    fireKeyDown(resources, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(container.querySelector("a[href='#pricing']"));
     resources.focus();
-    fireKeyDown(resources, "Home");
+    await user.keyboard("{Home}");
     expect(document.activeElement).toBe(triggerNamed(container, "Products"));
 
-    fireClick(triggerNamed(container, "Products"));
+    await user.click(triggerNamed(container, "Products"));
     const analytics = container.querySelector<HTMLAnchorElement>("a[href='#analytics']")!;
     const reports = container.querySelector<HTMLAnchorElement>("a[href='#reports']")!;
     analytics.focus();
-    fireKeyDown(analytics, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(reports);
-    fireKeyDown(reports, "Home");
+    await user.keyboard("{Home}");
     expect(document.activeElement).toBe(analytics);
   });
 
-  it("leaves modified keys and non-link panel widgets to their own behavior", () => {
-    const { container } = render(
+  it("leaves modified keys and non-link panel widgets to their own behavior", async () => {
+    const { container, user } = setup(
       <NavigationMenu aria-label="Main">
         <NavigationMenuList>
           <NavigationMenuItem value="products">
             <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-            <NavigationMenuContent>
+            <NavigationMenuPanel>
               <input aria-label="Filter destinations" />
               <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
-            </NavigationMenuContent>
+            </NavigationMenuPanel>
           </NavigationMenuItem>
           <NavigationMenuItem value="resources">
             <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
-            <NavigationMenuContent>
+            <NavigationMenuPanel>
               <NavigationMenuLink href="#docs">Docs</NavigationMenuLink>
-            </NavigationMenuContent>
+            </NavigationMenuPanel>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>,
@@ -278,27 +271,40 @@ describe("navigation menu composition", () => {
 
     const products = triggerNamed(container, "Products");
     products.focus();
-    fireKeyDown(products, "ArrowRight", { ctrlKey: true });
+    await user.keyboard("{Control>}{ArrowRight}{/Control}");
     expect(document.activeElement).toBe(products);
 
-    fireClick(products);
+    await user.click(products);
     const filter = container.querySelector("input")!;
     filter.focus();
-    fireKeyDown(filter, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(filter);
   });
 
-  it("reports a missing item value with the received value", () => {
-    expect(() =>
-      render(
-        <NavigationMenu aria-label="Main">
-          <NavigationMenuList>
-            <NavigationMenuItem value="">
-              <NavigationMenuTrigger>Broken</NavigationMenuTrigger>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>,
-      ),
-    ).toThrow('NavigationMenuItem requires a non-empty value; received "".');
+  it("warns about a missing item value and keeps that item closed", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container, user } = setup(
+      <NavigationMenu aria-label="Main">
+        <NavigationMenuList>
+          <NavigationMenuItem value="">
+            <NavigationMenuTrigger>Broken</NavigationMenuTrigger>
+            <NavigationMenuPanel>
+              <NavigationMenuLink href="#broken">Broken link</NavigationMenuLink>
+            </NavigationMenuPanel>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>,
+    );
+
+    const trigger = triggerNamed(container, "Broken");
+    await user.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(
+      container.querySelector<HTMLElement>("[data-slot='navigation-menu-panel']")?.hidden,
+    ).toBe(true);
+    expect(error.mock.calls.flat().join(" ")).toContain(
+      'NavigationMenuItem requires a non-empty value; received "".',
+    );
+    error.mockRestore();
   });
 });

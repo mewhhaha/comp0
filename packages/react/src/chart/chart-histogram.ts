@@ -1,3 +1,4 @@
+import { warnOnce } from "../internal/dev.js";
 import { createChartScale } from "./chart-scale.js";
 import { type HistogramBinValue } from "./chart-shared.js";
 import { type HistogramBinOptions } from "./chart-meta.js";
@@ -8,11 +9,14 @@ export function binHistogram(
   values: readonly number[],
   { binCount, xMin, xMax }: HistogramBinOptions,
 ) {
-  const resolvedBinCount = binCount ?? Math.max(1, Math.ceil(Math.sqrt(values.length)));
+  const defaultBinCount = Math.max(1, Math.ceil(Math.sqrt(values.length)));
+  let resolvedBinCount = binCount ?? defaultBinCount;
   if (!Number.isInteger(resolvedBinCount) || resolvedBinCount < 1) {
-    throw new Error(
-      `${chartName} binCount must be a positive integer; received ${resolvedBinCount}.`,
+    warnOnce(
+      `${chartName}:bin-count:${resolvedBinCount}`,
+      `${chartName} binCount must be a positive integer; received ${resolvedBinCount}. It was replaced by ${defaultBinCount}.`,
     );
+    resolvedBinCount = defaultBinCount;
   }
   const observations = values.map((value, index) => ({ label: String(index), value }));
   const xScale = createChartScale(`${chartName} x axis`, observations, {

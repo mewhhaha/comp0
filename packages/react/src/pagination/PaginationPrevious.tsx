@@ -1,10 +1,9 @@
 import { type ElementType, type MouseEvent as ReactMouseEvent } from "react";
-import { type ButtonProps } from "../button/Button.js";
-import { PaginationControl } from "./pagination-control.js";
+import { PaginationControl, type PaginationControlProps } from "./pagination-control.js";
 import { usePaginationContext } from "./pagination-shared.js";
 
 export type PaginationPreviousProps<TElement extends ElementType = "button"> =
-  ButtonProps<TElement>;
+  PaginationControlProps<TElement>;
 
 export function PaginationPrevious<TElement extends ElementType = "button">({
   disabled,
@@ -16,7 +15,7 @@ export function PaginationPrevious<TElement extends ElementType = "button">({
 
   return (
     <PaginationControl
-      {...(props as ButtonProps<ElementType>)}
+      {...(props as PaginationControlProps<ElementType>)}
       aria-label={props["aria-label"] ?? "Previous page"}
       disabled={resolvedDisabled}
       onClick={(event: ReactMouseEvent<HTMLElement>) => {

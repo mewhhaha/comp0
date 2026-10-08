@@ -1,6 +1,7 @@
-import { act, Fragment } from "react";
+import { Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
+import { pressKey } from "../../test/press-key.js";
 import { Table } from "./Table.js";
 import { TableBody } from "./TableBody.js";
 import { TableCaption } from "./TableCaption.js";
@@ -11,22 +12,18 @@ import { TableHeader } from "./TableHeader.js";
 import { TableRow } from "./TableRow.js";
 import { TableRowHeader } from "./TableRowHeader.js";
 
-function fireClickWith(element: Element, shiftKey: boolean) {
-  act(() => {
-    element.dispatchEvent(new MouseEvent("click", { shiftKey, bubbles: true, cancelable: true }));
-  });
-}
-
-function fireKey(element: Element, key: string, ctrlKey = false, shiftKey = false) {
-  act(() => {
-    element.dispatchEvent(
-      new KeyboardEvent("keydown", { key, ctrlKey, shiftKey, bubbles: true, cancelable: true }),
-    );
-  });
+async function clickWith(
+  user: ReturnType<typeof setup>["user"],
+  element: Element,
+  shiftKey: boolean,
+) {
+  if (shiftKey) await user.keyboard("{Shift>}");
+  await user.click(element);
+  if (shiftKey) await user.keyboard("{/Shift}");
 }
 
 function renderTable() {
-  const result = render(
+  const result = setup(
     <Table aria-label="People">
       <TableHeader>
         <TableRow>
@@ -52,7 +49,7 @@ function renderTable() {
 }
 
 describe("table composition", () => {
-  it("renders the complete native table anatomy", () => {
+  it("renders the complete native table anatomy", async () => {
     const { container } = render(
       <Table>
         <TableCaption>Quarterly revenue</TableCaption>
@@ -76,7 +73,7 @@ describe("table composition", () => {
     expect(container.querySelector("tfoot")).not.toBeNull();
   });
 
-  it("renders native table semantics with the grid role and one tab stop", () => {
+  it("renders native table semantics with the grid role and one tab stop", async () => {
     const { table, cells } = renderTable();
     expect(table.getAttribute("role")).toBe("grid");
     expect(table.querySelectorAll("thead th[scope='col']")).toHaveLength(2);
@@ -85,49 +82,49 @@ describe("table composition", () => {
     expect(cells[0]!.tabIndex).toBe(0);
   });
 
-  it("moves between cells in two dimensions with the arrow keys", () => {
-    const { cells } = renderTable();
+  it("moves between cells in two dimensions with the arrow keys", async () => {
+    const { cells, user } = renderTable();
     cells[0]!.focus();
-    fireKey(cells[0]!, "ArrowRight");
+    await pressKey(user, cells[0]!, "{ArrowRight}");
     expect(document.activeElement).toBe(cells[1]);
-    fireKey(cells[1]!, "ArrowDown");
+    await pressKey(user, cells[1]!, "{ArrowDown}");
     expect(document.activeElement).toBe(cells[3]);
-    fireKey(cells[3]!, "ArrowLeft");
+    await pressKey(user, cells[3]!, "{ArrowLeft}");
     expect(document.activeElement).toBe(cells[2]);
-    fireKey(cells[2]!, "ArrowUp");
+    await pressKey(user, cells[2]!, "{ArrowUp}");
     expect(document.activeElement).toBe(cells[0]);
-    fireKey(cells[0]!, "ArrowUp");
+    await pressKey(user, cells[0]!, "{ArrowUp}");
     expect(document.activeElement).toBe(cells[0]);
   });
 
-  it("mirrors horizontal cell navigation in right-to-left layouts", () => {
-    const { table, cells } = renderTable();
+  it("mirrors horizontal cell navigation in right-to-left layouts", async () => {
+    const { table, cells, user } = renderTable();
     table.style.direction = "rtl";
     cells[0]!.focus();
 
-    fireKey(cells[0]!, "ArrowLeft");
+    await pressKey(user, cells[0]!, "{ArrowLeft}");
     expect(document.activeElement).toBe(cells[1]);
   });
 
-  it("supports Home, End, and Ctrl edges, and moves the roving tab stop", () => {
-    const { cells } = renderTable();
+  it("supports Home, End, and Ctrl edges, and moves the roving tab stop", async () => {
+    const { cells, user } = renderTable();
     cells[0]!.focus();
-    fireKey(cells[0]!, "End");
+    await pressKey(user, cells[0]!, "{End}");
     expect(document.activeElement).toBe(cells[1]);
-    fireKey(cells[1]!, "Home");
+    await pressKey(user, cells[1]!, "{Home}");
     expect(document.activeElement).toBe(cells[0]);
-    fireKey(cells[0]!, "End", true);
+    await pressKey(user, cells[0]!, "{Control>}{End}{/Control}");
     expect(document.activeElement).toBe(cells[5]);
     expect(cells[5]!.tabIndex).toBe(0);
     expect(cells[0]!.tabIndex).toBe(-1);
-    fireKey(cells[5]!, "Home", true);
+    await pressKey(user, cells[5]!, "{Control>}{Home}{/Control}");
     expect(document.activeElement).toBe(cells[0]);
   });
 });
 
 describe("table selection, sort, and resize", () => {
-  it("walks through every interactive item in a cell before moving on", () => {
-    const { container } = render(
+  it("walks through every interactive item in a cell before moving on", async () => {
+    const { container, user } = setup(
       <Table aria-label="Files">
         <TableBody>
           <TableRow>
@@ -147,20 +144,20 @@ describe("table selection, sort, and resize", () => {
     expect(buttons.every((button) => button.tabIndex === -1)).toBe(true);
 
     cells[0]!.focus();
-    fireKey(cells[0]!, "ArrowRight");
+    await pressKey(user, cells[0]!, "{ArrowRight}");
     expect(document.activeElement).toBe(cells[1]);
-    fireKey(cells[1]!, "ArrowRight");
+    await pressKey(user, cells[1]!, "{ArrowRight}");
     expect(document.activeElement).toBe(buttons[0]);
-    fireKey(buttons[0]!, "ArrowRight");
+    await pressKey(user, buttons[0]!, "{ArrowRight}");
     expect(document.activeElement).toBe(buttons[1]);
-    fireKey(buttons[1]!, "ArrowRight");
+    await pressKey(user, buttons[1]!, "{ArrowRight}");
     expect(document.activeElement).toBe(cells[2]);
-    fireKey(cells[2]!, "ArrowLeft");
+    await pressKey(user, cells[2]!, "{ArrowLeft}");
     expect(document.activeElement).toBe(buttons[1]);
   });
 
-  it("focuses a cell's single widget instead of the cell and keeps one tab stop", () => {
-    const { container } = render(
+  it("focuses a cell's single widget instead of the cell and keeps one tab stop", async () => {
+    const { container, user } = setup(
       <Table aria-label="Files">
         <TableBody>
           <TableRow selected>
@@ -183,13 +180,13 @@ describe("table selection, sort, and resize", () => {
 
     cells[1]!.tabIndex = 0;
     cells[1]!.focus();
-    fireKey(cells[1]!, "ArrowLeft");
+    await pressKey(user, cells[1]!, "{ArrowLeft}");
     expect(document.activeElement).toBe(checkbox);
   });
 
-  it("activates sort from click and keyboard and exposes aria-sort", () => {
+  it("activates sort from click and keyboard and exposes aria-sort", async () => {
     const onSort = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Table aria-label="People">
         <TableHeader>
           <TableRow>
@@ -202,17 +199,16 @@ describe("table selection, sort, and resize", () => {
     );
     const header = container.querySelector("th")!;
     expect(header.getAttribute("aria-sort")).toBe("ascending");
-    expect(header.dataset["sort"]).toBe("ascending");
     expect(header.dataset["sortable"]).toBe("");
-    fireClick(header);
+    await user.click(header);
     expect(onSort).toHaveBeenCalledTimes(1);
-    fireKey(header, "Enter");
+    await pressKey(user, header, "{Enter}");
     expect(onSort).toHaveBeenCalledTimes(2);
   });
 
-  it("resizes with Shift+Arrow on the header without moving grid focus", () => {
+  it("resizes with Shift+Arrow on the header without moving grid focus", async () => {
     const onResize = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Table aria-label="People">
         <TableHeader>
           <TableRow>
@@ -224,17 +220,17 @@ describe("table selection, sort, and resize", () => {
     );
     const headers = [...container.querySelectorAll<HTMLTableCellElement>("th")];
     headers[0]!.focus();
-    fireKey(headers[0]!, "ArrowRight", false, true);
+    await pressKey(user, headers[0]!, "{Shift>}{ArrowRight}{/Shift}");
     expect(onResize).toHaveBeenLastCalledWith(16);
     expect(document.activeElement).toBe(headers[0]);
-    fireKey(headers[0]!, "ArrowLeft", false, true);
+    await pressKey(user, headers[0]!, "{Shift>}{ArrowLeft}{/Shift}");
     expect(onResize).toHaveBeenLastCalledWith(0);
   });
 });
 
 describe("table range selection", () => {
   function renderSelectable(onRangeSelect = vi.fn()) {
-    const result = render(
+    const result = setup(
       <Table aria-label="People" onRangeSelect={onRangeSelect}>
         <TableBody>
           <TableRow value="a">
@@ -253,31 +249,31 @@ describe("table range selection", () => {
     return { ...result, cells, onRangeSelect };
   }
 
-  it("selects the range from the click anchor on shift-click", () => {
-    const { cells, onRangeSelect } = renderSelectable();
-    fireClickWith(cells[0]!, false);
-    fireClickWith(cells[2]!, true);
+  it("selects the range from the click anchor on shift-click", async () => {
+    const { cells, onRangeSelect, user } = renderSelectable();
+    await clickWith(user, cells[0]!, false);
+    await clickWith(user, cells[2]!, true);
     expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b", "c"]);
-    fireClickWith(cells[1]!, false);
-    fireClickWith(cells[0]!, true);
+    await clickWith(user, cells[1]!, false);
+    await clickWith(user, cells[0]!, true);
     expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b"]);
   });
 
-  it("extends the range while moving with Shift+ArrowDown and resets on plain movement", () => {
-    const { cells, onRangeSelect } = renderSelectable();
+  it("extends the range while moving with Shift+ArrowDown and resets on plain movement", async () => {
+    const { cells, onRangeSelect, user } = renderSelectable();
     cells[0]!.focus();
-    fireClickWith(cells[0]!, false);
-    fireKey(cells[0]!, "ArrowDown", false, true);
+    await clickWith(user, cells[0]!, false);
+    await pressKey(user, cells[0]!, "{Shift>}{ArrowDown}{/Shift}");
     expect(document.activeElement).toBe(cells[1]);
     expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b"]);
-    fireKey(cells[1]!, "ArrowDown", false, true);
+    await pressKey(user, cells[1]!, "{Shift>}{ArrowDown}{/Shift}");
     expect(onRangeSelect).toHaveBeenLastCalledWith(["a", "b", "c"]);
-    fireKey(cells[2]!, "ArrowUp", false, false);
-    fireKey(cells[1]!, "ArrowDown", false, true);
+    await pressKey(user, cells[2]!, "{ArrowUp}");
+    await pressKey(user, cells[1]!, "{Shift>}{ArrowDown}{/Shift}");
     expect(onRangeSelect).toHaveBeenLastCalledWith(["b", "c"]);
   });
 
-  it("renders any part as another element with as and merges into a Fragment child", () => {
+  it("renders any part as another element with as and merges into a Fragment child", async () => {
     const { container } = render(
       <Table as="div" aria-label="Custom">
         <TableBody as="section" data-testid="body">

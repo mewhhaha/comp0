@@ -1,17 +1,11 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Resizer } from "./Resizer.js";
 import { Table } from "../table/Table.js";
 import { TableColumn } from "../table/TableColumn.js";
 import { TableHeader } from "../table/TableHeader.js";
 import { TableRow } from "../table/TableRow.js";
-
-function fireKey(element: Element, key: string) {
-  act(() => {
-    element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
-  });
-}
 
 describe("resizer composition", () => {
   it("renders the separator as the element given to as", () => {
@@ -20,9 +14,9 @@ describe("resizer composition", () => {
     expect(separator.getAttribute("aria-valuenow")).toBe("10");
   });
 
-  it("is a focusable window splitter with keyboard resizing and clamping", () => {
+  it("is a focusable window splitter with keyboard resizing and clamping", async () => {
     const onResize = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <div>
         <Resizer aria-label="Resize sidebar" size={180} min={120} max={320} onResize={onResize} />
       </div>,
@@ -34,19 +28,20 @@ describe("resizer composition", () => {
     expect(separator.getAttribute("aria-valuemin")).toBe("120");
     expect(separator.getAttribute("aria-valuemax")).toBe("320");
 
-    fireKey(separator, "ArrowRight");
+    act(() => separator.focus());
+    await user.keyboard("{ArrowRight}");
     expect(onResize).toHaveBeenLastCalledWith(196);
-    fireKey(separator, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(onResize).toHaveBeenLastCalledWith(164);
-    fireKey(separator, "Home");
+    await user.keyboard("{Home}");
     expect(onResize).toHaveBeenLastCalledWith(120);
-    fireKey(separator, "End");
+    await user.keyboard("{End}");
     expect(onResize).toHaveBeenLastCalledWith(320);
   });
 
-  it("joins the arrow-key path inside a resizable column without a tab stop", () => {
+  it("joins the arrow-key path inside a resizable column without a tab stop", async () => {
     const onResize = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Table aria-label="People">
         <TableHeader>
           <TableRow>
@@ -66,29 +61,20 @@ describe("resizer composition", () => {
     expect(separator.tabIndex).toBe(-1);
     expect(separator.getAttribute("aria-hidden")).toBeNull();
 
-    headers[0]!.focus();
-    fireKey(headers[0]!, "ArrowRight");
+    act(() => headers[0]!.focus());
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(separator);
     // Shift+Arrow on the focused handle resizes through the column header.
-    act(() => {
-      separator.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          key: "ArrowRight",
-          shiftKey: true,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    });
+    await user.keyboard("{Shift>}{ArrowRight}{/Shift}");
     expect(onResize).toHaveBeenLastCalledWith(16);
     // Plain ArrowRight keeps navigating to the next column.
-    fireKey(separator, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(headers[1]);
   });
 
-  it("uses the resizer bounds for keyboard resizing inside a table column", () => {
+  it("uses the resizer bounds for keyboard resizing inside a table column", async () => {
     const onResize = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Table aria-label="People">
         <TableHeader>
           <TableRow>
@@ -102,16 +88,8 @@ describe("resizer composition", () => {
     );
     const separator = container.querySelector<HTMLElement>("[role='separator']")!;
 
-    act(() => {
-      separator.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          key: "ArrowRight",
-          shiftKey: true,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    });
+    act(() => separator.focus());
+    await user.keyboard("{Shift>}{ArrowRight}{/Shift}");
     expect(onResize).toHaveBeenLastCalledWith(128);
   });
 });

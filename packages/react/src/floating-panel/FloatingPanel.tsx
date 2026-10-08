@@ -8,8 +8,8 @@ import {
   type ReactNode,
 } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   FloatingPanelContext,
   useFloatingPanelGroupContext,
@@ -25,21 +25,35 @@ type PointerMove = {
   position: FloatingPanelPosition;
 };
 
-function finitePosition(position: FloatingPanelPosition | null, name: string) {
-  if (!position) return;
-  if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
-    throw new Error(`${name} must contain finite x and y coordinates.`);
-  }
+/** Returns the position when valid; otherwise warns and returns null so the panel falls back to its anchored placement. */
+function validPosition(position: FloatingPanelPosition | null | undefined, name: string) {
+  if (!position) return null;
+  if (Number.isFinite(position.x) && Number.isFinite(position.y)) return position;
+  warnOnce(
+    `FloatingPanel:position:${position.x}:${position.y}`,
+    `${name} must contain finite x and y coordinates. It was ignored.`,
+  );
+  return null;
 }
 
-function finiteSize(size: FloatingPanelSize | null, name: string) {
-  if (!size) return;
+/** Returns the size when valid; otherwise warns and returns null so the panel keeps its natural size. */
+function validSize(size: FloatingPanelSize | null | undefined, name: string) {
+  if (!size) return null;
   if (!Number.isFinite(size.width) || !Number.isFinite(size.height)) {
-    throw new Error(`${name} must contain finite width and height values.`);
+    warnOnce(
+      `FloatingPanel:size-finite:${size.width}:${size.height}`,
+      `${name} must contain finite width and height values. It was ignored.`,
+    );
+    return null;
   }
   if (size.width <= 0 || size.height <= 0) {
-    throw new Error(`${name} width and height must be greater than 0.`);
+    warnOnce(
+      `FloatingPanel:size-positive:${size.width}:${size.height}`,
+      `${name} width and height must be greater than 0. It was ignored.`,
+    );
+    return null;
   }
+  return size;
 }
 
 export type FloatingPanelProps = RootProps<{
@@ -48,7 +62,7 @@ export type FloatingPanelProps = RootProps<{
   id?: string | undefined;
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   position?: FloatingPanelPosition | null | undefined;
   defaultPosition?: FloatingPanelPosition | null | undefined;
   onPositionChange?: ((position: FloatingPanelPosition) => void) | undefined;
@@ -63,20 +77,22 @@ export function FloatingPanel({
   id,
   open: openProp,
   defaultOpen = false,
-  onToggle,
-  position: positionProp,
-  defaultPosition = null,
+  onOpenChange,
+  position: positionInput,
+  defaultPosition: defaultPositionInput = null,
   onPositionChange,
-  size: sizeProp,
-  defaultSize = null,
+  size: sizeInput,
+  defaultSize: defaultSizeInput = null,
   onSizeChange,
   ...props
 }: FloatingPanelProps) {
-  finitePosition(
-    positionProp === undefined ? defaultPosition : positionProp,
-    "FloatingPanel position",
-  );
-  finiteSize(sizeProp === undefined ? defaultSize : sizeProp, "FloatingPanel size");
+  const positionProp =
+    positionInput === undefined
+      ? undefined
+      : validPosition(positionInput, "FloatingPanel position");
+  const defaultPosition = validPosition(defaultPositionInput, "FloatingPanel defaultPosition");
+  const sizeProp = sizeInput === undefined ? undefined : validSize(sizeInput, "FloatingPanel size");
+  const defaultSize = validSize(defaultSizeInput, "FloatingPanel defaultSize");
   const group = useFloatingPanelGroupContext("FloatingPanel");
   const { activeId, activate, boundary, register, stack, unregister } = group;
   const generatedId = useId();
@@ -91,7 +107,7 @@ export function FloatingPanel({
   const [open, setOpenState] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const [position, setPosition] = useControllableState<FloatingPanelPosition | null>({
     value: positionProp,
@@ -139,7 +155,6 @@ export function FloatingPanel({
       open,
       surface: surfaceRef.current,
       trigger: triggerRef.current,
-      lastFocused: null,
     });
   }, [baseId, open, register]);
   useEffect(() => () => unregister(baseId), [baseId, unregister]);
@@ -314,12 +329,7 @@ export function FloatingPanel({
         stackIndex,
       }}
     >
-      <Root
-        {...props}
-        id={id}
-        data-open={dataAttr(open)}
-        data-slot={dataSlot(props, "floating-panel")}
-      >
+      <Root data-slot="floating-panel" {...props} id={id} data-open={dataAttr(open)}>
         {children}
       </Root>
     </FloatingPanelContext>

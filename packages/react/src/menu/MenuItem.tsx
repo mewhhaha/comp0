@@ -4,11 +4,11 @@ import {
   useRef,
   useState,
   type ComponentProps,
-  type KeyboardEvent,
-  type MouseEvent,
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
+import { disabledProps } from "../internal/disabled.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import {
   resolveAutocompleteItemText,
@@ -66,12 +66,12 @@ export function MenuItem({
     renderedText.hasElement &&
     !ariaLabel
   ) {
-    throw new Error(
-      `MenuItem with value "${value}" requires textValue when Autocomplete filters child content that cannot be read before render.`,
+    warnOnce(
+      `MenuItem:unreadable-text:${value}`,
+      `MenuItem with value "${value}" requires textValue when Autocomplete filters child content that cannot be read before render. It is filtered by its aria-label or value instead.`,
     );
   }
   const visible = autocomplete?.isItemVisible(label) ?? true;
-  const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
   const active = autocomplete?.activeId === id;
   const itemRef = useComposedRefs(ref, (element: HTMLDivElement | null) => {
     elementRef.current = element;
@@ -99,13 +99,22 @@ export function MenuItem({
     });
   });
 
-  useLayoutEffect(() => {
-    if (!setAutocompleteCollectionVersion || !visible) return;
-    setAutocompleteCollectionVersion((version) => version + 1);
-    return () => setAutocompleteCollectionVersion((version) => version + 1);
-  }, [resolvedDisabled, setAutocompleteCollectionVersion, visible]);
-
   if (!visible) return null;
+
+  const disabledAttributes = disabledProps<HTMLDivElement>(resolvedDisabled, {
+    native: false,
+    onClick(event) {
+      onClick?.(event);
+      if (!event.defaultPrevented) menu.close();
+    },
+    onKeyDown(event) {
+      onKeyDown?.(event);
+      if (event.defaultPrevented) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.currentTarget.click();
+    },
+  });
 
   const Part = partElement(as, "div");
   return (
@@ -115,11 +124,8 @@ export function MenuItem({
       id={id}
       role={props.role ?? "menuitem"}
       tabIndex={resolvedDisabled ? undefined : -1}
-      aria-disabled={resolvedDisabled || undefined}
       data-active={dataAttr(active)}
-      data-autocomplete-item={autocomplete ? "" : undefined}
       data-value={value}
-      data-disabled={dataAttr(resolvedDisabled)}
       onPointerEnter={(event: PointerEvent<HTMLDivElement>) => {
         onPointerEnter?.(event);
         if (event.defaultPrevented || resolvedDisabled) return;
@@ -142,21 +148,7 @@ export function MenuItem({
           event.preventDefault();
         }
       }}
-      onClick={(event: MouseEvent<HTMLDivElement>) => {
-        if (resolvedDisabled) {
-          event.preventDefault();
-          return;
-        }
-        onClick?.(event);
-        if (!event.defaultPrevented) menu.close();
-      }}
-      onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
-        onKeyDown?.(event);
-        if (event.defaultPrevented || resolvedDisabled) return;
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        event.currentTarget.click();
-      }}
+      {...disabledAttributes}
     >
       {children}
     </Part>

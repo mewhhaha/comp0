@@ -1,6 +1,5 @@
 import { type ComponentProps, type MouseEvent } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   useToastContext,
   useToastItemContext,
@@ -15,17 +14,17 @@ const focusableSelector = "button, [href], input, select, textarea, [tabindex]";
  * node; move it to the neighboring toast first, or back to where it came
  * from when this was the last toast.
  */
-function moveFocusBeforeDismiss(toastElement: HTMLElement, region: ToastRegionContextValue | null) {
-  const regionElement = region?.regionRef.current ?? toastElement.parentElement;
-  let siblings: HTMLElement[] = [];
-  if (regionElement) {
-    siblings = Array.from(regionElement.querySelectorAll<HTMLElement>('[data-slot="toast"]'));
-  }
-  const index = siblings.indexOf(toastElement);
-  let neighbor: HTMLElement | undefined = siblings[index + 1];
+function moveFocusBeforeDismiss(
+  toastElement: HTMLElement,
+  toastId: string,
+  region: ToastRegionContextValue | null,
+) {
+  const siblings = region?.collection.items() ?? [];
+  const index = siblings.findIndex((sibling) => sibling.key === toastId);
+  let neighbor = siblings[index + 1];
   if (neighbor === undefined && index > 0) neighbor = siblings[index - 1];
   let target: HTMLElement | null = null;
-  if (neighbor) target = neighbor.querySelector<HTMLElement>(focusableSelector);
+  if (neighbor?.element) target = neighbor.element.querySelector<HTMLElement>(focusableSelector);
   const restore = region?.restoreFocusRef.current;
   if (!target && restore?.isConnected) target = restore;
   target?.focus();
@@ -42,17 +41,17 @@ export function ToastClose({ as, onClick, ...props }: ToastCloseProps) {
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="toast-close"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       aria-label={props["aria-label"] ?? "Dismiss notification"}
-      data-slot={dataSlot(props, "toast-close")}
       onClick={(event: MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (event.defaultPrevented) return;
         const toastElement = item.itemRef.current;
         const activeElement = toastElement?.ownerDocument.activeElement;
         if (toastElement && activeElement && toastElement.contains(activeElement)) {
-          moveFocusBeforeDismiss(toastElement, region);
+          moveFocusBeforeDismiss(toastElement, item.toast.id, region);
         }
         context.dismiss(item.toast.id);
       }}

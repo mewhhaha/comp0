@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Drawer } from "./Drawer.js";
 import { DrawerContent } from "./DrawerContent.js";
 import { DrawerTrigger } from "./DrawerTrigger.js";
@@ -37,8 +37,8 @@ function mockDragGeometry(panel: HTMLDialogElement, size: { width: number; heigh
 }
 
 describe("drawer composition", () => {
-  it("opens and closes from the trigger and anchors to the right edge by default", () => {
-    const { container } = render(
+  it("opens and closes from the trigger and anchors to the right edge by default", async () => {
+    const { container, user } = setup(
       <Drawer>
         <DrawerTrigger>Open settings</DrawerTrigger>
         <DrawerContent portal={false}>Settings</DrawerContent>
@@ -54,12 +54,12 @@ describe("drawer composition", () => {
     expect(panel.dataset.side).toBe("right");
     expect(panel.open).toBe(false);
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(panel.open).toBe(true);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
     expect(panel.hasAttribute("data-open")).toBe(true);
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(panel.open).toBe(false);
     expect(panel.hasAttribute("data-open")).toBe(false);
   });
@@ -76,9 +76,9 @@ describe("drawer composition", () => {
   });
 
   it("notifies a controlled owner once for native cancel and close and stays open when rejected", () => {
-    const onToggle = vi.fn();
+    const onOpenChange = vi.fn();
     const { container } = render(
-      <Drawer open onToggle={onToggle}>
+      <Drawer open onOpenChange={onOpenChange}>
         <DrawerContent portal={false}>Settings</DrawerContent>
       </Drawer>,
     );
@@ -89,8 +89,8 @@ describe("drawer composition", () => {
       panel.dispatchEvent(new Event("close"));
     });
 
-    expect(onToggle).toHaveBeenCalledTimes(1);
-    expect(onToggle).toHaveBeenCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(panel.open).toBe(true);
   });
 

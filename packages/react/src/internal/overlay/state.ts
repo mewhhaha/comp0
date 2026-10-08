@@ -11,7 +11,7 @@ import { type PopoverContextValue } from "./context.js";
 export function usePopoverState(options: {
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   triggerId: string;
   contentId: string;
 }): PopoverContextValue {
@@ -21,7 +21,7 @@ export function usePopoverState(options: {
   const [open, setOpenState] = useControllableState({
     value: options.open,
     defaultValue: options.defaultOpen ?? false,
-    onChange: options.onToggle,
+    onChange: options.onOpenChange,
   });
   const setOpen = (nextOpen: boolean) => {
     if (!nextOpen) restoreFocus.current = false;

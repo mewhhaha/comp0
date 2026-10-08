@@ -1,6 +1,5 @@
 import { type ReactNode } from "react";
-import { type MonthMatrixCell } from "@comp0/core";
-import { dataSlot } from "../internal/shared.js";
+import { type MonthMatrixCell } from "../internal/date.js";
 import { CalendarGrid, type CalendarGridProps } from "../calendar/CalendarGrid.js";
 import { RangeCalendarCell } from "./RangeCalendarCell.js";
 import { useRangeCalendarContext } from "../date-range-picker/date-range-shared.js";
@@ -20,8 +19,8 @@ export function RangeCalendarGrid({ children, ...props }: RangeCalendarGridProps
 
   return (
     <CalendarGrid
+      data-slot="range-calendar-grid"
       {...props}
-      data-slot={dataSlot(props, "range-calendar-grid")}
       aria-multiselectable={props["aria-multiselectable"] ?? true}
     >
       {renderCell}

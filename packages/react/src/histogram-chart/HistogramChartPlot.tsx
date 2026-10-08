@@ -1,5 +1,4 @@
 import { Fragment, useEffect, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -113,23 +112,11 @@ export function HistogramChartPlot({
       height: bottom - y,
     };
   });
-  const xTicks = xScale.ticks(resolvedXTickCount).map((value) => ({
-    label: context.formatY(value),
-    position: xScale.position(value),
-  }));
-  const yTicks = yScale.ticks(resolvedYTickCount).map((value) => ({
-    label: String(Math.round(value)),
-    position: yScale.position(value),
-  }));
+  const xTicks = xScale.axisTicks(resolvedXTickCount, context.formatY);
+  const yTicks = yScale.axisTicks(resolvedYTickCount, (value) => String(Math.round(value)));
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 120 120"
-      role="group"
-      data-slot={dataSlot(props, "histogram-chart-plot")}
-    >
+    <svg data-slot="histogram-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xLabel={context.valueLabel}
         xTicks={xTicks}

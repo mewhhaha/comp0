@@ -66,7 +66,7 @@ export function Example() {
           value={selected}
           onChange={setSelected}
           open={open}
-          onToggle={setOpen}
+          onOpenChange={setOpen}
         >
           <TreeGridRowGroup as="thead" className="bg-zinc-50 dark:bg-zinc-900/50">
             <TreeGridRow>

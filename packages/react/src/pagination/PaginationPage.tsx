@@ -1,7 +1,6 @@
 import { type ElementType, type MouseEvent as ReactMouseEvent } from "react";
 import { dataAttr } from "@comp0/core";
-import { type ButtonProps } from "../button/Button.js";
-import { PaginationControl } from "./pagination-control.js";
+import { PaginationControl, type PaginationControlProps } from "./pagination-control.js";
 import { usePaginationContext } from "./pagination-shared.js";
 
 type PaginationPageOwnProps = {
@@ -10,7 +9,7 @@ type PaginationPageOwnProps = {
 };
 
 export type PaginationPageProps<TElement extends ElementType = "button"> = PaginationPageOwnProps &
-  Omit<ButtonProps<TElement>, keyof PaginationPageOwnProps>;
+  Omit<PaginationControlProps<TElement>, keyof PaginationPageOwnProps>;
 
 export function PaginationPage<TElement extends ElementType = "button">({
   value,
@@ -22,7 +21,7 @@ export function PaginationPage<TElement extends ElementType = "button">({
 
   return (
     <PaginationControl
-      {...(props as ButtonProps<ElementType>)}
+      {...(props as PaginationControlProps<ElementType>)}
       aria-current={current ? "page" : undefined}
       aria-label={props["aria-label"] ?? `Page ${value}`}
       data-current={dataAttr(current)}

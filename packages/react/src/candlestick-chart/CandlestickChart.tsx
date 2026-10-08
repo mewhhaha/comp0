@@ -1,11 +1,8 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
+import { candlestickChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
-import {
-  type CandlestickChartValue,
-  type ChartContextValue,
-  numberOf,
-} from "../chart/chart-shared.js";
+import { type CandlestickChartValue } from "../chart/chart-shared.js";
 
 export type CandlestickChartProps = ComponentProps<"figure"> &
   AsProp & {
@@ -42,52 +39,13 @@ export function CandlestickChart({
   ref,
   ...props
 }: CandlestickChartProps) {
-  if (!xLabel.trim()) throw new Error("CandlestickChart x-axis label must not be empty.");
-  if (!yLabel.trim()) throw new Error("CandlestickChart y-axis label must not be empty.");
-  const tableLabels = { openLabel, highLabel, lowLabel, closeLabel };
-  for (const [label, value] of Object.entries(tableLabels)) {
-    if (!value.trim()) throw new Error(`CandlestickChart ${label} must not be empty.`);
-  }
-  let previousX: number | undefined;
-  for (const [index, value] of values.entries()) {
-    const x = numberOf(value.x);
-    if (!Number.isFinite(x)) {
-      throw new Error(
-        `CandlestickChart x value at index ${index} must be finite; received ${value.x}.`,
-      );
-    }
-    for (const field of ["open", "high", "low", "close"] as const) {
-      if (!Number.isFinite(value[field])) {
-        throw new Error(
-          `CandlestickChart ${field} value at index ${index} must be finite; received ${value[field]}.`,
-        );
-      }
-    }
-    if (previousX !== undefined && x <= previousX) {
-      throw new Error(
-        `CandlestickChart x values must increase; index ${index - 1} is ${previousX} and index ${index} is ${x}.`,
-      );
-    }
-    if (value.low > Math.min(value.open, value.close)) {
-      throw new Error(
-        `CandlestickChart low at index ${index} must not exceed open or close; received low=${value.low}, open=${value.open}, close=${value.close}.`,
-      );
-    }
-    if (value.high < Math.max(value.open, value.close)) {
-      throw new Error(
-        `CandlestickChart high at index ${index} must not be below open or close; received high=${value.high}, open=${value.open}, close=${value.close}.`,
-      );
-    }
-    previousX = x;
-  }
-  const context: ChartContextValue = {
-    kind: "candlestick",
+  const context = candlestickChartContext(
     values,
     xLabel,
     yLabel,
-    ...tableLabels,
-    formatX: formatX ?? String,
-    formatY: formatY ?? String,
-  };
+    { openLabel, highLabel, lowLabel, closeLabel },
+    formatX,
+    formatY,
+  );
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

@@ -3,7 +3,6 @@ import { dataAttr, useControllableState } from "@comp0/core";
 import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { DatePickerContext } from "../internal/date-shared.js";
 import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
 import { useFormReset } from "../internal/form-control-state.js";
@@ -12,7 +11,6 @@ import { visuallyHiddenInputStyle } from "../internal/visually-hidden-input.js";
 export type DatePickerProps = RootProps<{
   id?: string | undefined;
   children?: ReactNode | undefined;
-  "aria-invalid"?: boolean | "true" | "false" | undefined;
   /** The selected date as "YYYY-MM-DD". */
   value?: string | undefined;
   defaultValue?: string | undefined;
@@ -22,7 +20,7 @@ export type DatePickerProps = RootProps<{
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state rather than a native ToggleEvent. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   name?: string | undefined;
   form?: string | undefined;
   disabled?: boolean | undefined;
@@ -39,7 +37,7 @@ export function DatePicker({
   onChange,
   open,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   name,
   form,
   disabled,
@@ -52,7 +50,7 @@ export function DatePicker({
   const popover = usePopoverState({
     open,
     defaultOpen,
-    onToggle,
+    onOpenChange,
     triggerId: `${ids.controlId}-trigger`,
     contentId: `${ids.controlId}-popover`,
   });
@@ -63,8 +61,7 @@ export function DatePicker({
   });
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
-  const resolvedInvalid =
-    props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
+  const resolvedInvalid = Boolean(invalid);
   useFormReset({
     controlRef: hiddenInputRef,
     form,
@@ -95,9 +92,9 @@ export function DatePicker({
       <PopoverContext value={popover}>
         <DatePickerContext value={pickerContext}>
           <Root
+            data-slot="date-picker"
             {...props}
-            aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
-            data-slot={dataSlot(props, "date-picker")}
+            aria-invalid={resolvedInvalid || undefined}
             data-disabled={dataAttr(resolvedDisabled)}
             data-invalid={dataAttr(resolvedInvalid)}
             data-required={dataAttr(resolvedRequired)}

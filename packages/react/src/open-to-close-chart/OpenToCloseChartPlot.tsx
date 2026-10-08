@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -45,9 +44,9 @@ export function OpenToCloseChartRange({ range, ref, ...props }: OpenToCloseChart
         formattedClose,
       }}
       fallbackSlot="open-to-close-chart-range"
-      data-close={range.value.close}
+      data-close-value={range.value.close}
       data-direction={range.direction}
-      data-open={range.value.open}
+      data-open-value={range.value.open}
     />
   );
 }
@@ -114,18 +113,15 @@ export function OpenToCloseChartPlot({
     label: context.formatX(value.x),
     position: context.values.length === 0 ? 0.5 : (xPositions[index]! - left) / plotWidth,
   }));
-  const yTicks = yScale.ticks(resolvedYTickCount).map((value) => ({
-    label: context.formatY(value),
-    position: yScale.position(value),
-  }));
+  const yTicks = yScale.axisTicks(resolvedYTickCount, context.formatY);
 
   return (
     <svg
+      data-slot="open-to-close-chart-plot"
       {...props}
       ref={ref}
       viewBox="0 0 120 120"
       role="group"
-      data-slot={dataSlot(props, "open-to-close-chart-plot")}
     >
       <ChartAxes
         bounds={bounds}

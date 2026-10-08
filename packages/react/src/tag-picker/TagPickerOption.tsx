@@ -17,9 +17,10 @@ export function TagPickerOption({
   const renderedText = resolveAutocompleteItemText(children);
   const label = textValue ?? renderedText.text ?? props["aria-label"] ?? value;
 
+  const { registerOptionLabel } = tagPicker;
   useLayoutEffect(() => {
-    tagPicker.registerOptionLabel(value, label);
-  }, [label, tagPicker, value]);
+    registerOptionLabel(value, label);
+  }, [label, registerOptionLabel, value]);
 
   if (tagPicker.value.includes(value)) return null;
 

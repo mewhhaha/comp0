@@ -1,4 +1,4 @@
-import { parseISODate } from "@comp0/core";
+import { parseISODate } from "../internal/date.js";
 import { createRequiredContext } from "../internal/context.js";
 
 export type CalendarContextValue = {

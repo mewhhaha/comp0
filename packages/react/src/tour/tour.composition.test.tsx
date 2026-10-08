@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Tour } from "./Tour.js";
 import { TourContent } from "./TourContent.js";
 import { TourTrigger } from "./TourTrigger.js";
@@ -41,15 +41,15 @@ function TourExample({ onStepChange }: { onStepChange?: (step: number | null) =>
 }
 
 describe("Tour composition", () => {
-  it("anchors each step to its named target and restores target attributes", () => {
+  it("anchors each step to its named target and restores target attributes", async () => {
     const changed = vi.fn();
-    const { container } = render(<TourExample onStepChange={changed} />);
+    const { container, user } = setup(<TourExample onStepChange={changed} />);
     const trigger = container.querySelector<HTMLButtonElement>("[data-slot='tour-trigger']")!;
     const search = container.querySelector<HTMLElement>("[data-tour-target='search']")!;
     const create = container.querySelector<HTMLElement>("[data-tour-target='create']")!;
     const overlay = document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!;
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(changed).toHaveBeenLastCalledWith(0);
     expect(search.hasAttribute("data-tour-active")).toBe(true);
     expect(search.style.getPropertyValue("anchor-name")).toMatch(/^--comp0-anchor-/);
@@ -58,7 +58,7 @@ describe("Tour composition", () => {
     expect(overlay.dataset["step"]).toBe("0");
     expect(overlay.style.getPropertyValue("position-area")).toBe("block-end");
 
-    fireClick(
+    await user.click(
       Array.from(overlay.querySelectorAll("button")).find(
         (button) => button.textContent === "Next",
       )!,
@@ -71,19 +71,18 @@ describe("Tour composition", () => {
     expect(overlay.style.getPropertyValue("position-area")).toBe("right");
   });
 
-  it("finishes on the last step and restores focus to the tour trigger", () => {
-    const { container } = render(<TourExample />);
+  it("finishes on the last step and restores focus to the tour trigger", async () => {
+    const { container, user } = setup(<TourExample />);
     const trigger = container.querySelector<HTMLButtonElement>("[data-slot='tour-trigger']")!;
     const overlay = document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!;
 
-    trigger.focus();
-    fireClick(trigger);
-    fireClick(
+    await user.click(trigger);
+    await user.click(
       Array.from(overlay.querySelectorAll("button")).find(
         (button) => button.textContent === "Next",
       )!,
     );
-    fireClick(
+    await user.click(
       Array.from(overlay.querySelectorAll("button")).find(
         (button) => button.textContent === "Next",
       )!,
@@ -94,9 +93,9 @@ describe("Tour composition", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("stays open when a controlled owner rejects a close request", () => {
+  it("stays open when a controlled owner rejects a close request", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Tour steps={steps} value={0} onChange={changed}>
         <TourTrigger>Start tour</TourTrigger>
         <button type="button" data-tour-target="search">
@@ -114,7 +113,7 @@ describe("Tour composition", () => {
     const overlay = document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!;
     const close = overlay.querySelector<HTMLButtonElement>("button")!;
 
-    fireClick(close);
+    await user.click(close);
 
     expect(changed).toHaveBeenLastCalledWith(null);
     expect(overlay.open).toBe(true);
@@ -123,19 +122,53 @@ describe("Tour composition", () => {
     ).toBe(true);
   });
 
-  it("rejects empty and duplicate step definitions", () => {
-    expect(() => render(<Tour steps={[]} />)).toThrow(
-      "Tour requires at least one step; received 0.",
+  it("warns about empty and duplicate step definitions and keeps rendering", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const empty = render(<Tour steps={[]} />);
+    expect(error).toHaveBeenCalledWith(
+      "Tour requires at least one step; received 0. The tour stays closed.",
     );
-    expect(() =>
-      render(
-        <Tour
-          steps={[
-            { target: "search", title: "First" },
-            { target: "search", title: "Again" },
-          ]}
-        />,
-      ),
-    ).toThrow('Tour target "search" is used by more than one step.');
+    empty.unmount();
+
+    render(
+      <Tour
+        steps={[
+          { target: "dup-target", title: "First" },
+          { target: "dup-target", title: "Again" },
+        ]}
+      />,
+    );
+    expect(error).toHaveBeenCalledWith('Tour target "dup-target" is used by more than one step.');
+    error.mockRestore();
+  });
+
+  it("keeps the step hidden when its target is missing and ignores an out-of-range step", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { user } = setup(
+      <Tour steps={[{ target: "missing-target", title: "Nowhere" }]}>
+        <TourTrigger>Start tour</TourTrigger>
+        <TourContent aria-label="Missing tour">Body</TourContent>
+      </Tour>,
+    );
+
+    await user.click(document.querySelector("[data-slot='tour-trigger']")!);
+
+    expect(error).toHaveBeenCalledWith(
+      'Tour target "missing-target" must match exactly one element; found 0. The step stays hidden.',
+    );
+    expect(document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!.open).toBe(
+      false,
+    );
+
+    render(
+      <Tour steps={[{ target: "range-target", title: "Only" }]} value={4}>
+        <TourContent aria-label="Range tour">Body</TourContent>
+      </Tour>,
+    );
+    expect(error).toHaveBeenCalledWith(
+      "Tour step must be null or an index from 0 to 0; received 4. The tour stays closed.",
+    );
+    error.mockRestore();
   });
 });

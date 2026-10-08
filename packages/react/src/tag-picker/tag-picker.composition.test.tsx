@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { ListBox } from "../list-box/ListBox.js";
 import { Tag } from "../tag-group/Tag.js";
 import { TagGroup } from "../tag-group/TagGroup.js";
@@ -9,14 +9,6 @@ import { TagPicker } from "./TagPicker.js";
 import { TagPickerInput } from "./TagPickerInput.js";
 import { TagPickerOption } from "./TagPickerOption.js";
 import { TextField } from "../text-field/TextField.js";
-
-function fireInput(element: HTMLInputElement, value: string) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setter?.call(element, value);
-    element.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-  });
-}
 
 function Tags({ values }: { values: string[] }) {
   return (
@@ -86,13 +78,13 @@ describe("tag picker composition", () => {
     }
   });
 
-  it("adds a ListBox option once, clears the query, and announces its label", () => {
+  it("adds a ListBox option once, clears the query, and announces its label", async () => {
     const changed = vi.fn();
-    const { container } = render(<FrameworkPicker defaultValue={[]} onChange={changed} />);
+    const { container, user } = setup(<FrameworkPicker defaultValue={[]} onChange={changed} />);
     const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;
 
-    fireInput(input, "v");
-    fireClick(container.querySelector<HTMLElement>("[data-value='vue']")!);
+    await user.type(input, "v");
+    await user.click(container.querySelector<HTMLElement>("[data-value='vue']")!);
 
     expect(changed).toHaveBeenLastCalledWith(["vue"]);
     expect(container.querySelectorAll("[role='row']")).toHaveLength(1);
@@ -107,52 +99,51 @@ describe("tag picker composition", () => {
     expect(document.activeElement).toBe(input);
   });
 
-  it("hands an empty input back to the last tag so Backspace removes it", () => {
-    const { container } = render(<FrameworkPicker defaultValue={["react", "vue"]} />);
+  it("hands an empty input back to the last tag so Backspace removes it", async () => {
+    const { container, user } = setup(<FrameworkPicker defaultValue={["react", "vue"]} />);
     const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;
     const tags = container.querySelectorAll<HTMLElement>("[role='row']");
 
-    input.focus();
-    fireKeyDown(input, "Backspace");
+    await user.click(input);
+    await user.keyboard("{Backspace}");
     expect(document.activeElement).toBe(tags[1]);
 
-    fireKeyDown(tags[1]!, "Backspace");
+    await user.keyboard("{Backspace}");
     expect(container.querySelectorAll("[role='row']")).toHaveLength(1);
     expect(document.activeElement).toBe(tags[0]);
     expect(container.querySelector("[aria-live]")?.textContent).toBe("Removed Vue.");
   });
 
-  it("uses the inline-backward arrow to reach the last tag", () => {
-    const { container } = render(<FrameworkPicker defaultValue={["react", "vue"]} />);
+  it("uses the inline-backward arrow to reach the last tag", async () => {
+    const { container, user } = setup(<FrameworkPicker defaultValue={["react", "vue"]} />);
     const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;
     const tags = container.querySelectorAll<HTMLElement>("[role='row']");
     input.style.direction = "rtl";
-    input.focus();
-
-    fireKeyDown(input, "ArrowRight");
+    await user.click(input);
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(tags[1]);
   });
 
-  it("returns focus to the input when the final tag is removed", () => {
-    const { container } = render(<FrameworkPicker defaultValue={["react"]} />);
+  it("returns focus to the input when the final tag is removed", async () => {
+    const { container, user } = setup(<FrameworkPicker defaultValue={["react"]} />);
     const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;
     const tag = container.querySelector<HTMLElement>("[role='row']")!;
 
     tag.focus();
-    fireKeyDown(tag, "Backspace");
+    await user.keyboard("{Backspace}");
 
     expect(container.querySelector("[role='row']")).toBeNull();
     expect(document.activeElement).toBe(input);
   });
 
   it("serializes repeated hidden values and restores uncontrolled state on form reset", async () => {
-    const { container } = render(
+    const { container, user } = setup(
       <form>
         <FrameworkPicker defaultValue={["react"]} name="framework" />
       </form>,
     );
     const form = container.querySelector("form")!;
-    fireClick(container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!);
+    await user.click(container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!);
     expect(new FormData(form).getAll("framework")).toEqual(["react", "vue"]);
 
     await act(async () => {
@@ -164,22 +155,22 @@ describe("tag picker composition", () => {
     expect(container.querySelectorAll("[role='row']")).toHaveLength(1);
   });
 
-  it("reports controlled additions without rendering a rejected value", () => {
+  it("reports controlled additions without rendering a rejected value", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <FrameworkPicker value={["react"]} onChange={changed} name="framework" />,
     );
 
-    fireClick(container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!);
+    await user.click(container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!);
 
     expect(changed).toHaveBeenLastCalledWith(["react", "vue"]);
     expect(container.querySelectorAll("[role='row']")).toHaveLength(1);
     expect(container.querySelector("[role='option'][data-value='vue']")).not.toBeNull();
   });
 
-  it("disables additions, removals, and successful form controls as one contract", () => {
+  it("disables additions, removals, and successful form controls as one contract", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <form>
         <FrameworkPicker defaultValue={["react"]} onChange={changed} name="framework" disabled />
       </form>,
@@ -193,28 +184,29 @@ describe("tag picker composition", () => {
     expect(input.disabled).toBe(true);
     expect(option.getAttribute("aria-disabled")).toBe("true");
     expect(tag.getAttribute("aria-disabled")).toBeNull();
-    fireClick(option);
-    fireKeyDown(tag, "Backspace");
+    await user.click(option);
+    tag.focus();
+    await user.keyboard("{Backspace}");
     expect(changed).not.toHaveBeenCalled();
     expect(container.querySelectorAll("[role='row']")).toHaveLength(1);
     expect(new FormData(container.querySelector("form")!).getAll("framework")).toEqual([]);
   });
 
-  it("rejects duplicate controlled values with the offending value attached", () => {
+  it("rejects duplicate controlled values with the offending value attached", async () => {
     expect(() => render(<FrameworkPicker value={["react", "react"]} />)).toThrow(
       'TagPicker value contains duplicate value "react". Tag values must be unique.',
     );
   });
 
-  it("does not inherit an unrelated outer TagGroup selection contract", () => {
+  it("does not inherit an unrelated outer TagGroup selection contract", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <TagGroup defaultValue={["outside"]} onChange={changed}>
         <FrameworkPicker defaultValue={["react"]} />
       </TagGroup>,
     );
 
-    fireClick(container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!);
+    await user.click(container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!);
     expect(changed).not.toHaveBeenCalled();
     expect(container.querySelectorAll("[role='row']")).toHaveLength(2);
   });

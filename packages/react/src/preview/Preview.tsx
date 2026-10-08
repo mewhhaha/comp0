@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { PopoverContext, useEscapeDismiss } from "../internal/overlay/index.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { PreviewContext } from "./preview-shared.js";
 
 export type PreviewProps = RootProps<{
@@ -11,7 +11,7 @@ export type PreviewProps = RootProps<{
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state; native cancel, close, and toggle events stay on content parts. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   /** Milliseconds the pointer must rest on the trigger before the preview opens; focus opens immediately. */
   openDelay?: number | undefined;
   /** Milliseconds after the pointer or focus leaves before the preview closes. */
@@ -25,23 +25,26 @@ export function Preview({
   closeDelay = 300,
   defaultOpen = false,
   id,
-  onToggle,
+  onOpenChange,
   open: openProp,
   openDelay = 600,
   ...props
 }: PreviewProps) {
   if (openDelay < 0 || closeDelay < 0) {
-    throw new Error(
-      `Preview delays must be non-negative; received openDelay ${openDelay} and closeDelay ${closeDelay}.`,
+    warnOnce(
+      `Preview:negative-delay:${openDelay}:${closeDelay}`,
+      `Preview delays must be non-negative; received openDelay ${openDelay} and closeDelay ${closeDelay}. Negative delays were treated as 0.`,
     );
   }
+  const openDelayMs = Math.max(0, openDelay);
+  const closeDelayMs = Math.max(0, closeDelay);
   const generatedId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const intentTimer = useRef<number | undefined>(undefined);
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const context = {
     open,
@@ -54,11 +57,11 @@ export function Preview({
     // the trigger onto the card (WCAG 1.4.13).
     scheduleOpen() {
       window.clearTimeout(intentTimer.current);
-      intentTimer.current = window.setTimeout(() => setOpen(true), openDelay);
+      intentTimer.current = window.setTimeout(() => setOpen(true), openDelayMs);
     },
     scheduleClose() {
       window.clearTimeout(intentTimer.current);
-      intentTimer.current = window.setTimeout(() => setOpen(false), closeDelay);
+      intentTimer.current = window.setTimeout(() => setOpen(false), closeDelayMs);
     },
     cancelClose() {
       window.clearTimeout(intentTimer.current);
@@ -86,7 +89,7 @@ export function Preview({
   return (
     <PreviewContext value={context}>
       <PopoverContext value={popoverContext}>
-        <Root {...props} id={id} data-open={dataAttr(open)} data-slot={dataSlot(props, "preview")}>
+        <Root data-slot="preview" {...props} id={id} data-open={dataAttr(open)}>
           {children}
         </Root>
       </PopoverContext>

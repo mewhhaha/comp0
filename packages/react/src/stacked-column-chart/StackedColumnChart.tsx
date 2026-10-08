@@ -1,6 +1,7 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
-import { ChartFigure, stackedChartContext } from "../chart/chart-root.js";
+import { stackedChartContext } from "../chart/chart-context.js";
+import { ChartFigure } from "../chart/chart-root.js";
 import { type StackedChartValue } from "../chart/chart-shared.js";
 
 export type StackedColumnChartProps = ComponentProps<"figure"> &

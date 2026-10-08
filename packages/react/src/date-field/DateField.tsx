@@ -2,7 +2,6 @@ import { type ChangeEvent, type ComponentProps } from "react";
 import { dataAttr, mergeProps, useFocusRing, useHover } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useOptionalDatePickerContext } from "../internal/date-shared.js";
 
 export type DateFieldProps = Omit<
@@ -41,6 +40,7 @@ export function DateField({
   const Part = partElement(as, "input");
   return (
     <Part
+      data-slot="date-field"
       {...mergeProps(props, focusProps, hoverProps)}
       type="date"
       id={id ?? field?.controlId}
@@ -49,7 +49,6 @@ export function DateField({
       required={required}
       aria-describedby={description || undefined}
       aria-invalid={invalid}
-      data-slot={dataSlot(props, "date-field")}
       data-disabled={dataAttr(disabled)}
       data-focused={dataAttr(isFocused)}
       data-focus-visible={dataAttr(isFocusVisible)}

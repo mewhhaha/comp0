@@ -5,7 +5,6 @@ import {
   type PopoverPlacementProps,
 } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type TooltipContentProps = ComponentProps<"div"> & AsProp & PopoverPlacementProps;
 
@@ -37,10 +36,10 @@ export function TooltipContent({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="tooltip-content"
       {...props}
       {...surface.props}
       role={props.role ?? "tooltip"}
-      data-slot={dataSlot(props, "tooltip-content")}
       // Hovering the content keeps the tooltip open (WCAG 1.4.13).
       onPointerEnter={(event: PointerEvent<HTMLDivElement>) => {
         onPointerEnter?.(event);

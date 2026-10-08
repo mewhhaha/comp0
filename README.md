@@ -106,7 +106,7 @@ The attributes are present only while their state is true, so they work with Tai
 
 ## Controlled and uncontrolled state
 
-Stateful roots follow the familiar React controlled/uncontrolled shape. Value owners accept `value`, `defaultValue`, and `onChange(nextValue)`. Open-state roots accept `open`, `defaultOpen`, and `onToggle(nextOpen)`.
+Stateful roots follow the familiar React controlled/uncontrolled shape. Value owners accept `value`, `defaultValue`, and `onChange(nextValue)`. Open-state roots accept `open`, `defaultOpen`, and `onOpenChange(nextOpen)`; the native `onToggle` event stays available on the element a root renders with `as`.
 
 ```tsx
 import { useState } from "react";

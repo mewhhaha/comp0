@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
+import { warnOnce } from "../internal/dev.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
 import {
@@ -46,6 +46,52 @@ export function MapChartRegion({ region, ref, ...props }: MapChartRegionProps) {
   );
 }
 
+const fallbackViewBox = "0 0 100 100";
+
+/** Returns `viewBox` when it holds x, y, and a positive width and height; otherwise a unit square. */
+function validViewBox(viewBox: string) {
+  const parts = viewBox.trim().split(/\s+/).map(Number);
+  const [, , width, height] = parts;
+  if (parts.length === 4 && parts.every(Number.isFinite) && width! > 0 && height! > 0) {
+    return viewBox;
+  }
+  warnOnce(
+    `MapChartPlot:view-box:${viewBox}`,
+    `MapChartPlot viewBox must contain x, y, width, and height with positive dimensions; received "${viewBox}". "${fallbackViewBox}" was used instead.`,
+  );
+  return fallbackViewBox;
+}
+
+function regionProblem(
+  region: MapChartRegionGeometry,
+  index: number,
+  seen: ReadonlySet<string>,
+  valuesById: ReadonlyMap<string, MapChartValue>,
+) {
+  if (!region.id.trim() || !region.d.trim()) {
+    return {
+      key: `empty:${index}`,
+      message: `region at index ${index} must have a non-empty id and path.`,
+    };
+  }
+  if (seen.has(region.id)) {
+    return { key: `duplicate:${region.id}`, message: `region id "${region.id}" is duplicated.` };
+  }
+  if (!Number.isFinite(region.centerX) || !Number.isFinite(region.centerY)) {
+    return {
+      key: `center:${region.id}`,
+      message: `region "${region.id}" must have finite center coordinates; received centerX=${region.centerX}, centerY=${region.centerY}.`,
+    };
+  }
+  if (!valuesById.has(region.id)) {
+    return {
+      key: `no-value:${region.id}`,
+      message: `region "${region.id}" has no matching MapChart value.`,
+    };
+  }
+  return undefined;
+}
+
 export type MapChartPlotProps = Omit<
   ComponentProps<"svg">,
   "children" | "aria-label" | "role" | "viewBox"
@@ -58,41 +104,25 @@ export type MapChartPlotProps = Omit<
 
 export function MapChartPlot({ children, regions, ref, viewBox, ...props }: MapChartPlotProps) {
   const context = useChartKind("MapChartPlot", "MapChart", "map");
-  const viewBoxParts = viewBox.trim().split(/\s+/).map(Number);
-  if (
-    viewBoxParts.length !== 4 ||
-    viewBoxParts.some((part) => !Number.isFinite(part)) ||
-    viewBoxParts[2]! <= 0 ||
-    viewBoxParts[3]! <= 0
-  ) {
-    throw new Error(
-      `MapChartPlot viewBox must contain x, y, width, and height with positive dimensions; received "${viewBox}".`,
-    );
-  }
+  const safeViewBox = validViewBox(viewBox);
   const valuesById = new Map(context.values.map((value) => [value.id, value]));
   const regionIds = new Set<string>();
-  const regionStates = regions.map((region, index): MapChartRegionState => {
-    if (!region.id.trim() || !region.d.trim()) {
-      throw new Error(`MapChartPlot region at index ${index} must have a non-empty id and path.`);
-    }
-    if (regionIds.has(region.id)) {
-      throw new Error(`MapChartPlot region id "${region.id}" is duplicated.`);
-    }
-    if (!Number.isFinite(region.centerX) || !Number.isFinite(region.centerY)) {
-      throw new Error(
-        `MapChartPlot region "${region.id}" must have finite center coordinates; received centerX=${region.centerX}, centerY=${region.centerY}.`,
-      );
-    }
-    const value = valuesById.get(region.id);
-    if (!value) {
-      throw new Error(`MapChartPlot region "${region.id}" has no matching MapChart value.`);
+  const regionStates: MapChartRegionState[] = [];
+  for (const [index, region] of regions.entries()) {
+    const problem = regionProblem(region, index, regionIds, valuesById);
+    if (problem) {
+      warnOnce(`MapChartPlot:${problem.key}`, `MapChartPlot ${problem.message} It was skipped.`);
+      continue;
     }
     regionIds.add(region.id);
-    return { region, value, index };
-  });
+    regionStates.push({ region, value: valuesById.get(region.id)!, index: regionStates.length });
+  }
   for (const value of context.values) {
     if (!regionIds.has(value.id)) {
-      throw new Error(`MapChart value "${value.id}" has no matching MapChartPlot region.`);
+      warnOnce(
+        `MapChartPlot:no-region:${value.id}`,
+        `MapChart value "${value.id}" has no matching MapChartPlot region. It was not drawn.`,
+      );
     }
   }
   const getTargetIndex = (currentIndex: number, key: string) => {
@@ -119,13 +149,7 @@ export function MapChartPlot({ children, regions, ref, viewBox, ...props }: MapC
   };
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox={viewBox}
-      role="group"
-      data-slot={dataSlot(props, "map-chart-plot")}
-    >
+    <svg data-slot="map-chart-plot" {...props} ref={ref} viewBox={safeViewBox} role="group">
       <ChartNavigationProvider
         count={regionStates.length}
         getTargetIndex={getTargetIndex}

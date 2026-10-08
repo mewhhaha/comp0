@@ -2,7 +2,6 @@ import { type ComponentProps, type CSSProperties, type ReactNode } from "react";
 import { dataAttr } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type ProgressBarState = {
   value: number | undefined;
@@ -54,6 +53,7 @@ export function ProgressBar({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="progress-bar"
       {...props}
       id={id ?? field?.controlId}
       role="progressbar"
@@ -64,7 +64,6 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuenow={resolvedValue}
       data-indeterminate={dataAttr(indeterminate)}
-      data-slot={dataSlot(props, "progress-bar")}
       data-value={resolvedValue}
       style={progressStyle}
     >

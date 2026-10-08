@@ -35,7 +35,7 @@ export function Example() {
 
   return (
     <div className="flex flex-col items-start gap-1.5">
-      <Dialog open={open} onToggle={setOpen}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger className="flex items-center gap-2 rounded border border-zinc-950/10 px-3 py-2.5 text-base text-zinc-800 sm:py-2 sm:text-sm dark:border-white/10 dark:text-zinc-100">
           Search commands
           <kbd className="rounded border border-zinc-950/10 px-1.5 font-sans text-xs text-zinc-500 dark:border-white/10 dark:text-zinc-400">

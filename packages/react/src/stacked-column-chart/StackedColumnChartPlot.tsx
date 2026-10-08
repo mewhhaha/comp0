@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -130,18 +129,15 @@ export function StackedColumnChartPlot({
     label: value.label,
     position: context.values.length === 0 ? 0.5 : (index + 0.5) / context.values.length,
   }));
-  const yTicks = scale.ticks(resolvedTickCount).map((value) => ({
-    label: context.formatY(value),
-    position: scale.position(value),
-  }));
+  const yTicks = scale.axisTicks(resolvedTickCount, context.formatY);
 
   return (
     <svg
+      data-slot="stacked-column-chart-plot"
       {...props}
       ref={ref}
       viewBox="0 0 120 120"
       role="group"
-      data-slot={dataSlot(props, "stacked-column-chart-plot")}
     >
       <ChartAxes
         xLabel={context.categoryLabel}

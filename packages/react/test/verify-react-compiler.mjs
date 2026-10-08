@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { assertBaselineMatches } from "../../../scripts/lib/compiler-coverage.mjs";
 
 async function javascriptFiles(directory) {
   const files = [];
@@ -30,11 +30,7 @@ for (const file of distFiles) {
 const expectedFiles = JSON.parse(
   await readFile("packages/react/react-compiler-files.json", "utf8"),
 );
-assert.deepEqual(
-  compiledFiles.sort(),
-  expectedFiles,
-  "React Compiler file coverage changed; run the Babel comparison and review the baseline",
-);
+assertBaselineMatches(compiledFiles, expectedFiles);
 
 await import("../dist/index.js");
 

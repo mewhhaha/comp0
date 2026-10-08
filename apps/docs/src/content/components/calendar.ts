@@ -30,6 +30,8 @@ export default component({
       prop("value / defaultValue", "string", 'Controlled or initial date as "YYYY-MM-DD".'),
       prop("onChange", "(value: string) => void", "Receives the selected ISO date."),
       prop("min / max", "string", "Inclusive selectable range; days outside it are disabled."),
+      prop("disabled", "boolean", "Disables every day and navigation control."),
+      prop("id", "string", "Id of the calendar element when rendered with as."),
       prop(
         "locale",
         "string",

@@ -4,7 +4,6 @@ import {
   type Ref,
   type RefCallback,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useRef,
 } from "react";
@@ -14,10 +13,6 @@ type AnyEventHandler = (event: { defaultPrevented?: boolean }) => void;
 /** A callback ref, object ref, or omitted ref. */
 export type PossibleRef<T> = Ref<T> | undefined;
 type RefCleanup = () => void;
-
-const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
-/** Uses a layout effect in the browser and an effect during server rendering. */
-export const useIsoLayoutEffect = isBrowser ? useLayoutEffect : useEffect;
 
 /** Assigns a value to either form of React ref and returns its React 19 cleanup. */
 export function assignRef<T>(ref: PossibleRef<T>, value: T | null): RefCleanup | undefined {
@@ -59,7 +54,7 @@ export function useComposedRefs(...refs: PossibleRef<unknown>[]): RefCallback<un
     Array<{ ref: PossibleRef<unknown>; cleanup: RefCleanup | undefined }>
   >([]);
 
-  useIsoLayoutEffect(() => {
+  useLayoutEffect(() => {
     const value = valueRef.current;
     refsRef.current = refs;
     if (value === null) return;
@@ -107,7 +102,7 @@ export function useEventCallback(
 ): (...args: unknown[]) => unknown {
   const callbackRef = useRef(callback);
 
-  useIsoLayoutEffect(() => {
+  useLayoutEffect(() => {
     callbackRef.current = callback;
   });
 

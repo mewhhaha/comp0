@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useRef, type Ref } from "react";
-import { assignRef, type CollectionItem } from "@comp0/core";
-import { FOCUSABLE_SELECTOR } from "../grid-list/grid-list-shared.js";
+import { assignRef, type Collection, type CollectionItem } from "@comp0/core";
+import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
 import { createRequiredContext } from "../internal/context.js";
 
 export type TableContextValue = {
@@ -8,6 +8,8 @@ export type TableContextValue = {
   setActiveKey: (key: string) => void;
   register: (item: CollectionItem) => void;
   keyFor: (element: Element) => string | undefined;
+  /** Rows that carry a value, in document order, for range selection. */
+  rows: Collection;
 };
 
 export const [TableContext, useTableContext, useOptionalTableContext] =

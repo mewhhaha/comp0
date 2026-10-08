@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from "react";
-import { useEventCallback, useIsoLayoutEffect } from "./utils.js";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useEventCallback } from "./utils.js";
 
 /** Options for a controlled or uncontrolled state value. */
 export type ControllableStateOptions<T> = {
@@ -46,7 +46,7 @@ export function useControllableState({
   const onChangeStable = useEventCallback(onChange);
   const currentValueRef = useRef(currentValue);
   const controlledRef = useRef(controlled);
-  useIsoLayoutEffect(() => {
+  useLayoutEffect(() => {
     currentValueRef.current = currentValue;
     controlledRef.current = controlled;
   }, [currentValue, controlled]);

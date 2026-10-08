@@ -13,3 +13,6 @@ packages/*/dist
 *.tsbuildinfo
 pnpm-lock.yaml.tmp
 __screenshots__
+.playwright
+.playwright-browsers
+test-results

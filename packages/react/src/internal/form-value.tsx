@@ -17,15 +17,19 @@ export type FormValueProps = {
 export function FormValue({ ref, name, value, form, disabled }: FormValueProps) {
   if (!name || value === undefined) return null;
   const values = typeof value === "string" ? [value] : value;
-  return values.map((entry, index) => (
-    <input
-      key={index}
-      ref={index === 0 ? ref : undefined}
-      type="hidden"
-      name={name}
-      value={entry}
-      form={form}
-      disabled={disabled}
-    />
-  ));
+  return (
+    <>
+      {values.map((entry, index) => (
+        <input
+          key={index}
+          ref={index === 0 ? ref : undefined}
+          type="hidden"
+          name={name}
+          value={entry}
+          form={form}
+          disabled={disabled}
+        />
+      ))}
+    </>
+  );
 }

@@ -1,7 +1,7 @@
-import { useCallback, useId, useState, type ComponentProps, type KeyboardEvent } from "react";
-import { composeRefs, useControllableState } from "@comp0/core";
+import { useId, useLayoutEffect, useState, type ComponentProps, type KeyboardEvent } from "react";
+import { composeRefs, useCollection, useControllableState } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   ConnectContext,
   compatiblePorts,
@@ -30,44 +30,32 @@ export function Connect({
 }: ConnectProps) {
   const instructionsId = useId();
   const [element, setElement] = useState<HTMLElement | null>(null);
-  const [connections, setConnections] = useControllableState<readonly ConnectConnection[]>({
-    value,
-    defaultValue: defaultValue ?? [],
-    onChange,
-  });
-  const connectedInputs = new Set<string>();
-  for (const connection of connections) {
-    if (!connection.from || !connection.to || connectedInputs.has(connection.to)) {
-      throw new Error(
-        `Connect requires nonempty endpoints and one source per input; received ${JSON.stringify(connection)}.`,
-      );
-    }
-    connectedInputs.add(connection.to);
-  }
+  const [requestedConnections, setConnections] = useControllableState<readonly ConnectConnection[]>(
+    {
+      value,
+      defaultValue: defaultValue ?? [],
+      onChange,
+    },
+  );
+  const connections = validConnections(requestedConnections);
+  const portCollection = useCollection<ConnectPort>();
+  const cards = useCollection();
   const [ports, setPorts] = useState<readonly ConnectPort[]>([]);
   const [selectedPort, setSelectedPort] = useState<ConnectPort | null>(null);
-  let selectedOutput: string | null = null;
-  if (selectedPort && ports.includes(selectedPort) && !selectedPort.disabled)
-    selectedOutput = selectedPort.value;
   const [announcement, setAnnouncement] = useState("");
 
-  // Port registration is a layout-effect dependency, including after a compiler bailout.
-  const register = useCallback((port: ConnectPort) => {
-    if (!port.value || !port.kind || !port.label || !port.card || !port.cardLabel) {
-      throw new Error(
-        `Connect ${port.direction} "${port.value}" requires a nonempty value, label, kind, and labelled card.`,
-      );
-    }
-    setPorts((previous) => {
-      if (
-        previous.some((entry) => entry.direction === port.direction && entry.value === port.value)
-      ) {
-        throw new Error(`Connect has duplicate ${port.direction} value "${port.value}".`);
-      }
-      return [...previous, port];
-    });
-    return () => setPorts((previous) => previous.filter((entry) => entry !== port));
-  }, []);
+  // Ports register in their own layout effects, which run before this one, so the list is read
+  // once here and then kept current by the collection's change notifications.
+  useLayoutEffect(() => {
+    const syncPorts = () => setPorts(portCollection.items());
+    syncPorts();
+    return portCollection.subscribe(syncPorts);
+  }, [portCollection]);
+
+  let selectedOutput: string | null = null;
+  if (selectedPort && ports.includes(selectedPort) && !selectedPort.disabled) {
+    selectedOutput = selectedPort.value;
+  }
 
   function cancel() {
     const output = ports.find(
@@ -123,7 +111,8 @@ export function Connect({
         ports,
         selectedOutput,
         element,
-        register,
+        portCollection,
+        cards,
         selectOutput,
         connect,
         disconnect,
@@ -131,12 +120,11 @@ export function Connect({
       }}
     >
       <Part
+        data-slot="connect"
         {...props}
         ref={composeRefs(ref, setElement)}
         role={props.role ?? "group"}
-        data-connect-root=""
         style={{ position: "relative", ...props.style }}
-        data-slot={dataSlot(props, "connect")}
         onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
           onKeyDown?.(event);
           if (event.defaultPrevented || event.key !== "Escape" || selectedOutput === null) return;
@@ -159,4 +147,22 @@ export function Connect({
       </Part>
     </ConnectContext>
   );
+}
+
+/** Drops connections with an empty endpoint or a second source for the same input. */
+function validConnections(connections: readonly ConnectConnection[]) {
+  const connectedInputs = new Set<string>();
+  const valid: ConnectConnection[] = [];
+  for (const connection of connections) {
+    if (!connection.from || !connection.to || connectedInputs.has(connection.to)) {
+      warnOnce(
+        `Connect:connection:${connection.from}:${connection.to}`,
+        `Connect requires nonempty endpoints and one source per input; received ${JSON.stringify(connection)}. It was skipped.`,
+      );
+      continue;
+    }
+    connectedInputs.add(connection.to);
+    valid.push(connection);
+  }
+  return valid;
 }

@@ -1,10 +1,9 @@
-import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { dataAttr, useCollection, useControllableState, useIsoLayoutEffect } from "@comp0/core";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { dataAttr, useCollection, useControllableState } from "@comp0/core";
 import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
 import { FormValue } from "../internal/form-value.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
 import { useFormReset } from "../internal/form-control-state.js";
 import { ComboboxContext } from "./combobox-shared.js";
@@ -23,8 +22,8 @@ export type ComboboxProps = RootProps<{
   /** Controlled or initial open state of the results; Combobox owns its own popover. */
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  /** Receives the next open state rather than a native ToggleEvent. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  /** Receives the next open state. */
+  onOpenChange?: ((open: boolean) => void) | undefined;
   inputValue?: string | undefined;
   defaultInputValue?: string | undefined;
   /** Receives editable text; ComboboxInput.onChange still receives the native ChangeEvent. */
@@ -47,7 +46,7 @@ export function Combobox({
   onChange,
   open,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   inputValue: inputValueProp,
   defaultInputValue = "",
   onInputChange,
@@ -68,7 +67,7 @@ export function Combobox({
   const popover = usePopoverState({
     open,
     defaultOpen,
-    onToggle,
+    onOpenChange,
     triggerId: ids.controlId,
     contentId: `${ids.controlId}-listbox`,
   });
@@ -115,7 +114,7 @@ export function Combobox({
   };
   const isItemVisible = (textValue: string) =>
     allowEmptyCollection || inputValue === "" || filter(textValue, inputValue);
-  useIsoLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!autoHighlight || !popover.open) return;
     const highlightFirst = () => {
       const first = collection.enabledItems()[0];
@@ -166,6 +165,7 @@ export function Combobox({
       <PopoverContext value={popover}>
         <ComboboxContext value={context}>
           <Root
+            data-slot="combobox"
             {...props}
             id={id}
             aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
@@ -173,8 +173,6 @@ export function Combobox({
             data-invalid={dataAttr(resolvedInvalid)}
             data-placeholder={dataAttr(displayValue === "")}
             data-required={dataAttr(resolvedRequired)}
-            data-selected-key={selected || undefined}
-            data-slot={dataSlot(props, "combobox")}
             data-value={displayValue || undefined}
           >
             <>

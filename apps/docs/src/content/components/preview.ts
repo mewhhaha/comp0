@@ -30,16 +30,16 @@ export default component({
         "Base for the generated trigger and content ids; also the wrapper id when as is set.",
       ),
       prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-      prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
       prop(
         "openDelay",
         "number",
-        "Milliseconds the pointer must rest before opening; 600 by default. Focus opens immediately.",
+        "Milliseconds the pointer must rest before opening; 600 by default. Focus opens immediately. Negative values warn in development and count as 0.",
       ),
       prop(
         "closeDelay",
         "number",
-        "Milliseconds after the pointer or focus leaves before closing; 300 by default.",
+        "Milliseconds after the pointer or focus leaves before closing; 300 by default. Negative values warn in development and count as 0.",
       ),
     ]),
     p(

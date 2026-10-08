@@ -124,6 +124,12 @@ export default component({
   ],
   stateHooks: [
     {
+      attribute: "[data-from] / [data-to]",
+      on: "ConnectLines",
+      meaning:
+        "Each wire path names the output and input it joins, so one connection can be styled.",
+    },
+    {
       attribute: "[data-selected]",
       on: "ConnectOutput",
       meaning: "This output is waiting for an input.",

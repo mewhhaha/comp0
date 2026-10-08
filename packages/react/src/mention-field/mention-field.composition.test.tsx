@@ -1,6 +1,6 @@
 import { act, Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render, userEvent } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import {
   Label,
   ListBox,
@@ -9,29 +9,6 @@ import {
   MentionFieldInput,
   MentionFieldPopover,
 } from "../index.js";
-
-function fireInput(input: HTMLTextAreaElement, value: string, caret = value.length) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
-    setter?.call(input, value);
-    input.setSelectionRange(caret, caret);
-    input.dispatchEvent(
-      new InputEvent("input", {
-        bubbles: true,
-        cancelable: true,
-        data: value,
-        inputType: "insertText",
-      }),
-    );
-  });
-}
-
-function moveCaret(input: HTMLTextAreaElement, caret: number) {
-  act(() => {
-    input.setSelectionRange(caret, caret);
-    input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "ArrowLeft" }));
-  });
-}
 
 function Composer({ onChange = () => undefined }: { onChange?: (value: string) => void }) {
   return (
@@ -71,8 +48,7 @@ describe("MentionField composition", () => {
 
   it("filters the active token and inserts the keyboard-active mention", async () => {
     const changed = vi.fn();
-    const user = userEvent.setup();
-    const { getByLabelText, getByRole } = render(<Composer onChange={changed} />);
+    const { getByLabelText, getByRole, user } = setup(<Composer onChange={changed} />);
     const input = getByLabelText("Message") as HTMLTextAreaElement;
     const listBox = getByRole("listbox", { name: "Teammates", hidden: true });
     const popover = listBox.parentElement!;
@@ -97,8 +73,8 @@ describe("MentionField composition", () => {
     expect(popover.hidden, "suggestions close after insertion").toBe(true);
   });
 
-  it("replaces a mention at the caret without changing surrounding text", () => {
-    const { container } = render(
+  it("replaces a mention at the caret without changing surrounding text", async () => {
+    const { container, user } = setup(
       <MentionField defaultValue="Ask @Mi, about shipping">
         <Label>Message</Label>
         <MentionFieldInput />
@@ -113,16 +89,17 @@ describe("MentionField composition", () => {
     const input = container.querySelector("textarea")!;
     const mina = container.querySelector<HTMLElement>("[data-value='Mina']")!;
 
-    input.focus();
-    moveCaret(input, 7);
-    fireClick(mina);
+    await user.click(input);
+    input.setSelectionRange(8, 8);
+    await user.keyboard("{ArrowLeft}");
+    await user.click(mina);
 
     expect(input.value).toBe("Ask @Mina, about shipping");
     expect(input.selectionStart).toBe(9);
   });
 
-  it("supports multiple triggers and ignores trigger characters inside words", () => {
-    const { container } = render(
+  it("supports multiple triggers and ignores trigger characters inside words", async () => {
+    const { container, user } = setup(
       <MentionField defaultValue="" triggers={["@", "#"]}>
         <MentionFieldInput aria-label="Message" />
         <MentionFieldPopover>
@@ -135,22 +112,21 @@ describe("MentionField composition", () => {
     const input = container.querySelector("textarea")!;
     const popover = container.querySelector<HTMLElement>("[popover]")!;
 
-    input.focus();
-    fireInput(input, "Track #rel");
+    await user.type(input, "Track #rel");
     expect(popover.dataset.trigger).toBe("#");
 
-    fireInput(input, "mail@example");
+    await user.clear(input);
+    await user.type(input, "mail@example");
     expect(popover.hidden).toBe(true);
   });
 
-  it("dismisses suggestions with Escape without changing the message", () => {
-    const { container } = render(<Composer />);
+  it("dismisses suggestions with Escape without changing the message", async () => {
+    const { container, user } = setup(<Composer />);
     const input = container.querySelector("textarea")!;
     const popover = container.querySelector<HTMLElement>("[popover]")!;
 
-    input.focus();
-    fireInput(input, "Ask @");
-    fireKeyDown(input, "Escape");
+    await user.type(input, "Ask @");
+    await user.keyboard("{Escape}");
 
     expect(input.value).toBe("Ask @");
     expect(popover.dataset.trigger, "active trigger clears on Escape").toBeUndefined();
@@ -160,7 +136,7 @@ describe("MentionField composition", () => {
   });
 
   it("restores the initial message when its form resets", async () => {
-    const { container } = render(
+    const { container, user } = setup(
       <form>
         <MentionField defaultValue="Ask @Mina">
           <MentionFieldInput name="message" />
@@ -173,7 +149,7 @@ describe("MentionField composition", () => {
     const form = container.querySelector("form")!;
     const input = container.querySelector("textarea")!;
 
-    fireInput(input, "Ask @Diego");
+    await user.type(input, "go");
     await act(async () => {
       form.reset();
       await Promise.resolve();
@@ -182,13 +158,28 @@ describe("MentionField composition", () => {
     expect(input.value).toBe("Ask @Mina");
   });
 
-  it("rejects empty and whitespace triggers with the failing value", () => {
-    expect(() =>
-      render(
-        <MentionField triggers={[" "]}>
+  it("warns about and ignores empty and whitespace triggers", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const { container, user } = setup(
+        <MentionField defaultValue="" triggers={[" ", "@"]}>
           <MentionFieldInput aria-label="Message" />
+          <MentionFieldPopover>
+            <ListBox aria-label="Suggestions">
+              <ListBoxOption value="Mina">Mina</ListBoxOption>
+            </ListBox>
+          </MentionFieldPopover>
         </MentionField>,
-      ),
-    ).toThrow('MentionField trigger " " must be non-empty and contain no whitespace.');
+      );
+      const popover = container.querySelector<HTMLElement>("[popover]")!;
+
+      expect(consoleError).toHaveBeenCalledWith(
+        'MentionField trigger " " must be non-empty and contain no whitespace. It was ignored.',
+      );
+      await user.type(container.querySelector("textarea")!, "Hi @Mi");
+      expect(popover.dataset.trigger).toBe("@");
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 });

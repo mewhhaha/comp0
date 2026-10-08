@@ -2,7 +2,6 @@ import { type ReactNode } from "react";
 import { dataAttr } from "@comp0/core";
 import { DialogContent, type DialogContentProps } from "../dialog/DialogContent.js";
 import { placementSurfaceStyle } from "../internal/overlay/placement.js";
-import { dataSlot } from "../internal/shared.js";
 import { useTourContext, type TourState } from "./tour-shared.js";
 
 export type TourContentProps = Omit<DialogContentProps, "children"> & {
@@ -18,6 +17,7 @@ export function TourContent({ children, offset, onClose, style, ...props }: Tour
 
   return (
     <DialogContent
+      data-slot="tour-content"
       {...props}
       style={placementSurfaceStyle(
         state?.step.placement ?? "bottom",
@@ -29,7 +29,6 @@ export function TourContent({ children, offset, onClose, style, ...props }: Tour
       data-target={state?.step.target}
       data-first={dataAttr(state?.first)}
       data-last={dataAttr(state?.last)}
-      data-slot={dataSlot(props, "tour-content")}
       onClose={(event) => {
         onClose?.(event);
         queueMicrotask(() => tour.focusTrigger());

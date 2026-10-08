@@ -9,7 +9,7 @@ import {
 } from "./tree-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
-export type TreeProps = Omit<ComponentProps<"div">, "defaultValue" | "onChange" | "onToggle"> &
+export type TreeProps = Omit<ComponentProps<"div">, "defaultValue" | "onChange"> &
   AsProp & {
     /** Controlled or initial selected item; selection is single. */
     value?: string | undefined;
@@ -20,7 +20,7 @@ export type TreeProps = Omit<ComponentProps<"div">, "defaultValue" | "onChange" 
     open?: string[] | undefined;
     defaultOpen?: string[] | undefined;
     /** Receives the next list of open item values. */
-    onToggle?: ((open: string[]) => void) | undefined;
+    onOpenChange?: ((open: string[]) => void) | undefined;
   };
 
 export function Tree({
@@ -30,7 +30,7 @@ export function Tree({
   onChange,
   open: openProp,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   onKeyDown,
   children,
   ...props
@@ -43,7 +43,7 @@ export function Tree({
   const [open, setOpen] = useControllableState<string[]>({
     value: openProp,
     defaultValue: defaultOpen ?? [],
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const navigate = useCollectionNavigation();
   const [activeKey, setActiveKey] = useState(selected);
@@ -130,9 +130,12 @@ export function Tree({
             const ownerWindow = event.currentTarget.ownerDocument.defaultView;
             const target =
               ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
-            const itemElement = target?.closest('[role="treeitem"]');
             const visible = visibleItems();
-            const current = visible.find((item) => item.element === itemElement);
+            // Nested items contain their descendants, so the innermost
+            // registered element around the target is the focused item.
+            const current = visible
+              .filter((item) => target && item.element?.contains(target))
+              .at(-1);
             const currentElement = current?.element;
             if (!current || !currentElement) return;
             const rtl = writingDirection(event.currentTarget) === "rtl";
@@ -163,8 +166,9 @@ export function Tree({
                 setItemOpen(current.key, false);
                 return;
               }
-              const parentElement = currentElement.parentElement?.closest('[role="treeitem"]');
-              const parent = visible.find((item) => item.element === parentElement);
+              const parent = visible
+                .filter((item) => item !== current && item.element?.contains(currentElement))
+                .at(-1);
               if (parent && !parent.disabled) {
                 event.preventDefault();
                 focusItem(parent.key);

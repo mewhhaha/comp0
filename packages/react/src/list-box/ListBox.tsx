@@ -17,6 +17,7 @@ import { type ListBoxContextValue } from "./list-box-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
 import { useMentionFieldListBoxContext } from "../mention-field/mention-field-shared.js";
+import { useRenderedId } from "../internal/rendered-id.js";
 import { writingDirection } from "../internal/writing-direction.js";
 import { ListBoxContext } from "./list-box-shared.js";
 
@@ -43,7 +44,7 @@ export function ListBox({
   const mentionField = useMentionFieldListBoxContext();
   const collectionId = props.id ?? mentionField?.id ?? autocomplete?.defaultCollectionId;
   const setAutocompleteCollectionId = autocomplete?.setCollectionId;
-  const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
+  const attachAutocompleteCollection = autocomplete?.attachCollection;
   const [selected, setSelected] = useControllableState({
     value: mentionField ? "" : value,
     defaultValue: defaultValue ?? "",
@@ -53,7 +54,8 @@ export function ListBox({
     },
   });
   const navigate = useCollectionNavigation();
-  const composedRef = useComposedRefs(ref, autocomplete?.collectionRef);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const composedRef = useComposedRefs(ref, listRef);
   const collection = useCollection();
   const [activeKey, setActiveKey] = useState(selected);
   const activeKeyRef = useRef(activeKey);
@@ -116,16 +118,22 @@ export function ListBox({
   };
 
   useLayoutEffect(() => {
-    if (!collectionId || !setAutocompleteCollectionId || !setAutocompleteCollectionVersion) return;
+    if (!collectionId || !setAutocompleteCollectionId || !attachAutocompleteCollection) return;
     setAutocompleteCollectionId(collectionId);
-    setAutocompleteCollectionVersion((version) => version + 1);
+    const detach = attachAutocompleteCollection(collection);
     return () => {
+      detach();
       setAutocompleteCollectionId((currentId) =>
         currentId === collectionId ? undefined : currentId,
       );
-      setAutocompleteCollectionVersion((version) => version + 1);
     };
-  }, [collectionId, setAutocompleteCollectionId, setAutocompleteCollectionVersion]);
+  }, [attachAutocompleteCollection, collection, collectionId, setAutocompleteCollectionId]);
+
+  // Reference the mention field's label only when one is rendered.
+  const mentionLabel = useRenderedId(listRef, mentionField?.labelId, mentionField);
+  let labelledBy = props["aria-labelledby"];
+  if (props["aria-label"]) labelledBy = undefined;
+  else labelledBy = labelledBy ?? mentionLabel;
 
   const Part = partElement(as, "div");
   return (
@@ -135,9 +143,7 @@ export function ListBox({
         ref={composedRef}
         id={collectionId}
         role="listbox"
-        aria-labelledby={
-          props["aria-label"] ? undefined : (props["aria-labelledby"] ?? mentionField?.labelId)
-        }
+        aria-labelledby={labelledBy}
         aria-orientation={orientation}
         data-orientation={orientation}
         onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {

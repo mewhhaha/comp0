@@ -7,7 +7,7 @@ import {
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { FOCUSABLE_SELECTOR } from "../grid-list/grid-list-shared.js";
+import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
 import { TreeGridRowContext, treeGridRowKey, useTreeGridContext } from "./tree-grid-shared.js";
 
 export type TreeGridRowProps = ComponentProps<"tr"> &
@@ -91,8 +91,6 @@ export function TreeGridRow({
         aria-selected={selected || undefined}
         aria-disabled={resolvedDisabled || undefined}
         data-value={value}
-        data-parent-value={parentValue}
-        data-level={metadata?.level}
         data-selected={dataAttr(selected)}
         data-open={dataAttr(Boolean(metadata?.expandable && open))}
         data-disabled={dataAttr(resolvedDisabled)}

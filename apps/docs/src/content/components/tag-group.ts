@@ -23,6 +23,11 @@ export default component({
         "ElementType",
         "Renders a wrapper element that carries the root's DOM props; without it the root renders no DOM and DOM props are a type error.",
       ),
+      prop(
+        "id",
+        "string",
+        "Base id for the tag list, its label, and its feedback; generated when omitted.",
+      ),
       prop("value / defaultValue", "string[]", "Controlled or initial selected tags."),
       prop("onChange", "(value: string[]) => void", "Receives the next selected tags."),
       prop(
@@ -47,6 +52,7 @@ export default component({
         "Element or component rendered in place of the default; Fragment merges the part onto your own element child.",
       ),
       prop("value", "string", "This tag’s identity; required."),
+      prop("id", "string", "The tag's DOM id; generated when omitted."),
       prop("disabled", "boolean", "Disables the tag."),
       prop(
         "textValue",

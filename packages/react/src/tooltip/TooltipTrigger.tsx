@@ -2,11 +2,8 @@ import { Fragment, type ComponentProps, type FocusEvent, type PointerEvent } fro
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { triggerAnchorStyle, useRequiredTooltipContext } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
-export type TooltipTriggerProps = ComponentProps<"button"> &
-  Pick<ComponentProps<"a">, "download" | "href" | "rel" | "target"> &
-  AsProp;
+export type TooltipTriggerProps = ComponentProps<"button"> & AsProp;
 
 export function TooltipTrigger({
   as,
@@ -26,6 +23,7 @@ export function TooltipTrigger({
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="tooltip-trigger"
       {...props}
       ref={triggerRef}
       id={props.id ?? tooltip.triggerId}
@@ -36,7 +34,6 @@ export function TooltipTrigger({
       style={triggerAnchorStyle(tooltip.triggerId, style)}
       aria-describedby={ariaDescribedBy}
       data-open={dataAttr(tooltip.open)}
-      data-slot={dataSlot(props, "tooltip-trigger")}
       onFocus={(event: FocusEvent<HTMLButtonElement>) => {
         onFocus?.(event);
         if (!event.defaultPrevented) tooltip.setOpen(true);

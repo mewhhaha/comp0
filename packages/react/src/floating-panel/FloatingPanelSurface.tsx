@@ -9,7 +9,6 @@ import {
 import { createPortal } from "react-dom";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useFloatingPanelContext } from "./floating-panel-shared.js";
 import { placementSurfaceStyle, type PopoverPlacement } from "../internal/overlay/placement.js";
 import { visuallyHiddenStyle } from "../visually-hidden/visually-hidden-shared.js";
@@ -85,6 +84,7 @@ export function FloatingPanelSurface({
   const Part = partElement(as, "div");
   const surface = (
     <Part
+      data-slot="floating-panel-surface"
       {...props}
       ref={composedRef}
       id={props.id ?? panel.contentId}
@@ -98,7 +98,6 @@ export function FloatingPanelSurface({
       data-moving={dataAttr(panel.moving)}
       data-open={dataAttr(panel.open)}
       data-resizing={dataAttr(panel.resizing)}
-      data-slot={dataSlot(props, "floating-panel-surface")}
       style={surfaceStyle}
       onFocusCapture={(event: FocusEvent<HTMLDivElement>) => {
         onFocusCapture?.(event);

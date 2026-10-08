@@ -1,5 +1,4 @@
 import {
-  useContext,
   useLayoutEffect,
   useRef,
   useState,
@@ -10,8 +9,7 @@ import {
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
-import { TableColumnContext } from "../table/table-shared.js";
+import { useOptionalTableColumnContext } from "../table/table-shared.js";
 
 const RESIZE_STEP = 16;
 
@@ -51,7 +49,7 @@ export function Resizer({
   ref,
   ...props
 }: ResizerProps) {
-  const column = useContext(TableColumnContext);
+  const column = useOptionalTableColumnContext();
   const selfRef = useRef<HTMLElement | null>(null);
   const composedRef = useComposedRefs(selfRef, ref);
   const drag = useRef<{ pointerId: number; start: number; startSize: number } | null>(null);
@@ -89,6 +87,7 @@ export function Resizer({
   const Part = partElement(as, "span");
   return (
     <Part
+      data-slot="resizer"
       {...props}
       ref={composedRef}
       role="separator"
@@ -98,7 +97,6 @@ export function Resizer({
       aria-valuenow={size ?? measured}
       tabIndex={props.tabIndex ?? (inColumn ? -1 : 0)}
       data-dragging={dataAttr(dragging)}
-      data-slot={dataSlot(props, "resizer")}
       style={{
         touchAction: "none",
         cursor: orientation === "vertical" ? "col-resize" : "row-resize",

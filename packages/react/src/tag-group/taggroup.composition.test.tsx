@@ -1,13 +1,19 @@
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Label } from "../field/Label.js";
 import { Tag } from "./Tag.js";
 import { TagGroup } from "./TagGroup.js";
 import { TagList } from "./TagList.js";
 
+async function press(user: ReturnType<typeof setup>["user"], element: HTMLElement, keys: string) {
+  if (document.activeElement !== element) act(() => element.focus());
+  await user.keyboard(keys);
+}
+
 function renderTags(overrides: { onRemove?: (value: string) => void } = {}) {
   const onChange = vi.fn();
-  const result = render(
+  const result = setup(
     <TagGroup defaultValue={["news"]} onChange={onChange} {...overrides}>
       <Label>Filters</Label>
       <TagList>
@@ -69,33 +75,33 @@ describe("tag group composition", () => {
     }
   });
 
-  it("roves horizontally and toggles selection with Space", () => {
-    const { onChange, tags } = renderTags();
+  it("roves horizontally and toggles selection with Space", async () => {
+    const { onChange, tags, user } = renderTags();
     tags[0]!.focus();
-    fireKeyDown(tags[0]!, "ArrowRight");
+    await press(user, tags[0]!, "{ArrowRight}");
     expect(document.activeElement).toBe(tags[1]);
-    fireKeyDown(tags[1]!, " ");
+    await press(user, tags[1]!, " ");
     expect(onChange).toHaveBeenLastCalledWith(["news", "sports"]);
-    fireKeyDown(tags[1]!, "End");
+    await press(user, tags[1]!, "{End}");
     expect(document.activeElement).toBe(tags[2]);
-    fireKeyDown(tags[2]!, "Home");
+    await press(user, tags[2]!, "{Home}");
     expect(document.activeElement).toBe(tags[0]);
-    fireKeyDown(tags[0]!, " ");
+    await press(user, tags[0]!, " ");
     expect(onChange).toHaveBeenLastCalledWith(["sports"]);
   });
 
-  it("removes with Delete and moves focus to a neighbor", () => {
+  it("removes with Delete and moves focus to a neighbor", async () => {
     const onRemove = vi.fn();
-    const { tags } = renderTags({ onRemove });
+    const { tags, user } = renderTags({ onRemove });
     tags[0]!.focus();
-    fireKeyDown(tags[0]!, "Delete");
+    await press(user, tags[0]!, "{Delete}");
     expect(onRemove).toHaveBeenLastCalledWith("news");
     expect(document.activeElement).toBe(tags[1]);
   });
 
-  it("moves focus to the grid when removing its only tag", () => {
+  it("moves focus to the grid when removing its only tag", async () => {
     const onRemove = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <TagGroup onRemove={onRemove}>
         <TagList aria-label="Filters">
           <Tag value="news">News</Tag>
@@ -106,18 +112,18 @@ describe("tag group composition", () => {
     const tag = container.querySelector<HTMLElement>("[role='row']")!;
     tag.focus();
 
-    fireKeyDown(tag, "Delete");
+    await press(user, tag, "{Delete}");
 
     expect(onRemove).toHaveBeenLastCalledWith("news");
     expect(document.activeElement).toBe(grid);
   });
 
-  it("selects on tag click but not when clicking a control inside", () => {
-    const { onChange, tags } = renderTags();
-    fireClick(tags[1]!);
+  it("selects on tag click but not when clicking a control inside", async () => {
+    const { onChange, tags, user } = renderTags();
+    await user.click(tags[1]!);
     expect(onChange).toHaveBeenLastCalledWith(["news", "sports"]);
     onChange.mockClear();
-    fireClick(tags[0]!.querySelector("button")!);
+    await user.click(tags[0]!.querySelector("button")!);
     expect(onChange).not.toHaveBeenCalled();
   });
 });

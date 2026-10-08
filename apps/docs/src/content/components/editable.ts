@@ -28,7 +28,7 @@ export default component({
         "Receives the committed value when an edit commits, not per keystroke.",
       ),
       prop("open / defaultOpen", "boolean", "Controlled or initial edit mode."),
-      prop("onToggle", "(open: boolean) => void", "Receives the next edit mode."),
+      prop("onOpenChange", "(open: boolean) => void", "Receives the next edit mode."),
       prop("disabled", "boolean", "Blocks entering edit mode and disables both parts."),
     ]),
     p(

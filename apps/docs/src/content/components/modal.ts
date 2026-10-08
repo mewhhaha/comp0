@@ -19,8 +19,18 @@ export default component({
     '<Dialog>\n  <DialogTrigger>Edit profile</DialogTrigger>\n  <DialogContent aria-labelledby="profile-title">\n    <h2 id="profile-title">Edit profile</h2>\n  </DialogContent>\n</Dialog>;',
   parts: [
     p("Dialog", "root", "Wrapper-free provider for the composed modal state.", false, false, [
+      prop(
+        "as",
+        "ElementType",
+        "Renders a wrapper element that carries the root's data attributes and DOM props; without it the root renders no DOM.",
+      ),
+      prop(
+        "id",
+        "string",
+        "Base for the generated trigger and content ids; also the wrapper id when as is set.",
+      ),
       prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-      prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
     ]),
     p("DialogTrigger", "trigger", "Button that opens the modal.", true, false, [
       prop(

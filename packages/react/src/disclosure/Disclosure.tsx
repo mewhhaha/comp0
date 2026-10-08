@@ -4,11 +4,10 @@ import { DisclosureContext } from "./disclosure-shared.js";
 
 // The root is a native <details>, whose open state and toggle event are the
 // behavior, so it renders that element and takes no `as`.
-export type DisclosureProps = Omit<ComponentProps<"details">, "open" | "onToggle" | "onChange"> & {
+export type DisclosureProps = Omit<ComponentProps<"details">, "open" | "onChange"> & {
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  /** Receives the next open state; the native toggle event remains internal to details. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
 };
 
 export function Disclosure({
@@ -16,6 +15,7 @@ export function Disclosure({
   id,
   open: openProp,
   defaultOpen = false,
+  onOpenChange,
   onToggle,
   ...props
 }: DisclosureProps) {
@@ -24,7 +24,7 @@ export function Disclosure({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
 
   return (
@@ -34,7 +34,10 @@ export function Disclosure({
         id={id}
         open={open}
         data-open={dataAttr(open)}
-        onToggle={(event) => setOpen(event.currentTarget.open)}
+        onToggle={(event) => {
+          onToggle?.(event);
+          if (!event.defaultPrevented) setOpen(event.currentTarget.open);
+        }}
       >
         {children}
       </details>

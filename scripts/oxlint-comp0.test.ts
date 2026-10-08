@@ -73,3 +73,32 @@ tester.run("presence-data-attributes", rules["presence-data-attributes"] as neve
     { code: "<div data-open={String(open)} />", errors: 1 },
   ],
 });
+
+tester.run("no-synthetic-events", rules["no-synthetic-events"] as never, {
+  valid: [
+    {
+      code: 'import { fireClick } from "../test/render.js";',
+      filename: "packages/react/src/a/a.test.tsx",
+    },
+    {
+      code: 'import { fireClick } from "../test/render.js";\nfireClick(button);',
+      filename: "packages/react/src/a/A.tsx",
+    },
+    {
+      code: 'import { fireClick } from "./other.js";\nfireClick(button);',
+      filename: "packages/react/src/a/a.test.tsx",
+    },
+  ],
+  invalid: [
+    {
+      code: 'import { fireClick, render } from "../test/render.js";\nfireClick(button);',
+      filename: "packages/react/src/a/a.test.tsx",
+      errors: [{ message: /fireClick/ }],
+    },
+    {
+      code: 'import { fireKeyDown as key } from "../../test/render";\nkey(input, "a");\nkey(input, "b");',
+      filename: "packages/react/src/a/a.test.ts",
+      errors: [{ message: /fireKeyDown/ }, { message: /fireKeyDown/ }],
+    },
+  ],
+});

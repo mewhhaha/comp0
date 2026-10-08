@@ -2,7 +2,8 @@ import { type KeyboardEvent } from "react";
 import { useCollectionNavigation, type Collection } from "@comp0/core";
 import { writingDirection } from "../internal/writing-direction.js";
 import { resolveRowControlMove } from "./grid-list-row-keyboard.js";
-import { rowFocusables, type GridListDndContextValue } from "./grid-list-shared.js";
+import { focusableWithin } from "../internal/focusable.js";
+import { type GridListDndContextValue } from "./grid-list-shared.js";
 
 /**
  * The GridList keydown handler: Alt+Arrow reordering, inline arrows into and
@@ -48,7 +49,7 @@ export function useGridListKeyboard(options: {
       dir: writingDirection(event.currentTarget),
       row,
       target,
-      focusables: rowFocusables(row),
+      focusables: focusableWithin(row),
     });
     if (controlMove) {
       if (controlMove.handled) event.preventDefault();

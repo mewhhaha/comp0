@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
 import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { inventoryItemFocusables, InventoryContext } from "./inventory-shared.js";
-import { assertInventoryLayout, type InventoryLayout } from "./inventory-layout.js";
+import { sanitizeInventoryLayout, type InventoryLayout } from "./inventory-layout.js";
 import {
   findInventoryNeighbor,
   inventoryTabTarget,
@@ -28,8 +28,8 @@ export type InventoryProps = Omit<ComponentProps<"ol">, "defaultValue" | "onChan
 
 export function Inventory({
   as,
-  columns,
-  rows,
+  columns: columnsProp,
+  rows: rowsProp,
   value,
   defaultValue,
   onChange,
@@ -40,12 +40,17 @@ export function Inventory({
   ref,
   ...props
 }: InventoryProps) {
-  const [layout, setLayout] = useControllableState<InventoryLayout>({
+  const [rawLayout, setLayout] = useControllableState<InventoryLayout>({
     value,
     defaultValue: defaultValue ?? [],
     onChange,
   });
-  assertInventoryLayout(layout, columns, rows);
+  const { layout, columns, rows, problems } = sanitizeInventoryLayout(
+    rawLayout,
+    columnsProp,
+    rowsProp,
+  );
+  for (const problem of problems) warnOnce(problem.key, problem.message);
   const rootRef = useRef<HTMLOListElement | null>(null);
   const composedRef = useComposedRefs(rootRef, ref);
   const [focusedValue, setFocusedValue] = useState(layout[0]?.value ?? "");
@@ -116,11 +121,11 @@ export function Inventory({
   return (
     <InventoryContext value={context}>
       <Part
+        data-slot="inventory"
         {...props}
         ref={composedRef}
         data-dragging={dataAttr(session.interaction === "move")}
         data-resizing={dataAttr(session.interaction === "resize")}
-        data-slot={dataSlot(props, "inventory")}
         onKeyDown={handleKeyDown}
         style={{
           ...style,

@@ -1,4 +1,5 @@
 import { createRequiredContext } from "../internal/context.js";
+import { warnOnce } from "../internal/dev.js";
 
 export type HsvColor = {
   hue: number;
@@ -33,6 +34,21 @@ export function normalizeHexColor(value: string) {
   let hex = match[1].toLowerCase();
   if (hex.length === 3) hex = [...hex].map((channel) => channel + channel).join("");
   return `#${hex}`;
+}
+
+/**
+ * Normalizes a consumer-supplied hex color. An invalid color warns once in
+ * development and resolves to `undefined`, so callers choose their fallback.
+ */
+export function normalizeHexColorProp(component: string, prop: string, value: string) {
+  const normalized = normalizeHexColor(value);
+  if (!normalized) {
+    warnOnce(
+      `${component}:invalid-${prop}:${value}`,
+      `${component} ${prop} "${value}" must be a three- or six-digit hex color. It was ignored.`,
+    );
+  }
+  return normalized;
 }
 
 export function hexToHsv(value: string): HsvColor {

@@ -13,6 +13,7 @@ type Node = {
 type Comment = { loc: { start: { line: number }; end: { line: number } } };
 
 type Context = {
+  filename: string;
   report(descriptor: { node: Node; message: string }): void;
   sourceCode: { getCommentsBefore(node: Node): Comment[]; getAllComments(): Comment[] };
 };
@@ -193,12 +194,45 @@ const presenceDataAttributes: Rule = {
   },
 };
 
+const syntheticEvents = new Set(["fireClick", "fireKeyDown"]);
+
+// Tests drive components with real input (userEvent through the provider), so
+// the synthetic dispatch helpers from test/render stay out of test files. An
+// `oxlint-disable-next-line comp0/no-synthetic-events -- reason` documents the
+// rare case that genuinely needs one.
+const noSyntheticEvents: Rule = {
+  create(context) {
+    if (!/\.test\.[cm]?[jt]sx?$/.test(context.filename)) return {};
+    const localNames = new Map<string, string>();
+    return {
+      ImportDeclaration(node) {
+        if (!/(?:^|\/)test\/render(?:\.[jt]sx?)?$/.test(String(node.source.value))) return;
+        for (const specifier of node.specifiers) {
+          if (specifier.type !== "ImportSpecifier") continue;
+          const name = specifier.imported.name ?? specifier.imported.value;
+          if (syntheticEvents.has(name)) localNames.set(specifier.local.name, name);
+        }
+      },
+      CallExpression(node) {
+        if (node.callee.type !== "Identifier") return;
+        const name = localNames.get(node.callee.name);
+        if (!name) return;
+        context.report({
+          node,
+          message: `Drive the component with userEvent instead of ${name}; if a synthetic event is the only way, add \`oxlint-disable-next-line comp0/no-synthetic-events -- <reason>\`.`,
+        });
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: "comp0" },
   rules: {
     "compact-ternaries": compactTernaries,
     "inline-class-names": inlineClassNames,
     "memo-needs-reason": memoNeedsReason,
+    "no-synthetic-events": noSyntheticEvents,
     "presence-data-attributes": presenceDataAttributes,
     "props-above-component": propsAboveComponent,
   },

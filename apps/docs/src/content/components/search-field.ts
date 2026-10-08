@@ -20,6 +20,11 @@ export default component({
   parts: [
     p("SearchField", "root", "Field provider with no DOM by default.", false, false, [
       prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
+      prop(
+        "id",
+        "string",
+        "Base id for the input; the label, description, and error ids derive from it.",
+      ),
       prop("value / defaultValue", "string", "Controlled or initial field value."),
       prop("onChange", "(value: string) => void", "Receives the next value."),
       prop("disabled / invalid / required", "boolean", "Field-wide states shared with every part."),

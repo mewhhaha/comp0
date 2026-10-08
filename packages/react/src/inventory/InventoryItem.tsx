@@ -6,8 +6,8 @@ import {
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   inventoryItemFocusables,
   InventoryItemContext,
@@ -35,7 +35,6 @@ export function InventoryItem({
   const itemRef = useRef<HTMLLIElement | null>(null);
   const composedRef = useComposedRefs(itemRef, ref);
   const entry = inventory.layout.find((candidate) => candidate.value === value);
-  if (!entry) throw new Error(`InventoryItem value "${value}" is missing from Inventory layout.`);
   const label = textValue ?? value;
   const dragging = inventory.activeValue === value && inventory.interaction === "move";
   const resizing = inventory.activeValue === value && inventory.interaction === "resize";
@@ -47,10 +46,19 @@ export function InventoryItem({
     for (const element of inventoryItemFocusables(item)) element.tabIndex = -1;
   });
 
+  if (!entry) {
+    warnOnce(
+      `InventoryItem:missing:${value}`,
+      `InventoryItem value "${value}" is missing from Inventory layout. It was skipped.`,
+    );
+    return null;
+  }
+
   const Part = partElement(as, "li");
   return (
     <InventoryItemContext value={{ label, value }}>
       <Part
+        data-slot="inventory-item"
         {...props}
         ref={composedRef}
         tabIndex={focused ? 0 : -1}
@@ -61,7 +69,6 @@ export function InventoryItem({
         data-resizing={dataAttr(resizing)}
         data-row={entry.row}
         data-row-span={entry.rowSpan}
-        data-slot={dataSlot(props, "inventory-item")}
         data-value={value}
         onFocusCapture={(event: FocusEvent<HTMLLIElement>) => {
           onFocusCapture?.(event);

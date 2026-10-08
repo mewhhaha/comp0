@@ -1,7 +1,6 @@
 import { Fragment, type ComponentProps, type KeyboardEvent, type ReactNode } from "react";
-import { addDays, addMonths, monthMatrix, type MonthMatrixCell } from "@comp0/core";
+import { addDays, addMonths, monthMatrix, type MonthMatrixCell } from "../internal/date.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { CalendarCell } from "./CalendarCell.js";
 import { isoWeekday, useCalendarContext, weekdayName, weekdayOrder } from "./calendar-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
@@ -26,10 +25,10 @@ export function CalendarGrid({ as, children, onKeyDown, ...props }: CalendarGrid
   const Part = partElement(as, "table");
   return (
     <Part
+      data-slot="calendar-grid"
       {...props}
       role="grid"
       aria-labelledby={labelledBy}
-      data-slot={dataSlot(props, "calendar-grid")}
       onKeyDown={(event: KeyboardEvent<HTMLTableElement>) => {
         onKeyDown?.(event);
         if (event.defaultPrevented || calendar.disabled) return;

@@ -29,7 +29,7 @@ export default component({
         "Base for the generated trigger and content ids; also the wrapper id when as is set.",
       ),
       prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-      prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
     ]),
     p("DialogTrigger", "trigger", "Button that opens the dialog.", true, false, [
       prop(

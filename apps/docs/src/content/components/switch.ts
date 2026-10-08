@@ -21,6 +21,7 @@ export default component({
       prop("checked / defaultChecked", "boolean", "Controlled or initial on state."),
       prop("onChange", "(checked: boolean) => void", "Receives the next on state."),
       prop("disabled", "boolean", "Disables the switch."),
+      prop("inputProps", "InputHTMLAttributes", "Props for the hidden native input."),
     ]),
   ],
   keyboard: [{ keys: ["Space"], action: "Changes the switch." }],

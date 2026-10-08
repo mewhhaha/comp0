@@ -1,7 +1,6 @@
 import { type ReactNode } from "react";
 import { useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { AccordionContext } from "./accordion-shared.js";
 
 type AccordionValue = string | string[];
@@ -82,7 +81,7 @@ export function Accordion({
   const Root = rootElement(as);
   return (
     <AccordionContext value={context}>
-      <Root {...props} data-slot={dataSlot(props, "accordion")} data-orientation="vertical">
+      <Root data-slot="accordion" {...props} data-orientation="vertical">
         {children}
       </Root>
     </AccordionContext>

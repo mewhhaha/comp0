@@ -82,48 +82,84 @@ export function resolveInventoryLayout(
   return layout.map((entry) => resolved.get(entry.value) ?? entry);
 }
 
-export function assertInventoryLayout(layout: InventoryLayout, columns: number, rows: number) {
+export type InventoryLayoutProblem = {
+  /** Unique per bad entry so each warns once. */
+  key: string;
+  message: string;
+};
+
+function positiveInteger(value: number) {
+  if (!Number.isFinite(value)) return 1;
+  return Math.max(1, Math.floor(value));
+}
+
+/**
+ * Validates runtime layout data without throwing: invalid or conflicting
+ * entries are skipped (the earlier of two conflicting entries wins) and a bad
+ * grid size is clamped to a positive integer. The same result is used in
+ * development and production; callers report `problems`.
+ */
+export function sanitizeInventoryLayout(layout: InventoryLayout, columns: number, rows: number) {
+  const problems: InventoryLayoutProblem[] = [];
   if (!Number.isInteger(columns) || columns < 1) {
-    throw new Error(`Inventory columns must be a positive integer; received ${columns}.`);
+    problems.push({
+      key: `Inventory:columns:${columns}`,
+      message: `Inventory columns must be a positive integer; received ${columns}. It was clamped.`,
+    });
   }
   if (!Number.isInteger(rows) || rows < 1) {
-    throw new Error(`Inventory rows must be a positive integer; received ${rows}.`);
+    problems.push({
+      key: `Inventory:rows:${rows}`,
+      message: `Inventory rows must be a positive integer; received ${rows}. It was clamped.`,
+    });
   }
+  const safeColumns = positiveInteger(columns);
+  const safeRows = positiveInteger(rows);
 
+  const kept: InventoryLayout = [];
   const seen = new Set<string>();
   for (const entry of layout) {
     if (seen.has(entry.value)) {
-      throw new Error(`Inventory layout value "${entry.value}" appears more than once.`);
+      problems.push({
+        key: `Inventory:duplicate:${entry.value}`,
+        message: `Inventory layout value "${entry.value}" appears more than once. The later entry was skipped.`,
+      });
+      continue;
     }
     seen.add(entry.value);
-    for (const [name, value] of [
-      ["column", entry.column],
-      ["row", entry.row],
-      ["columnSpan", entry.columnSpan],
-      ["rowSpan", entry.rowSpan],
-    ] as const) {
-      if (!Number.isInteger(value) || value < 1) {
-        throw new Error(
-          `Inventory layout value "${entry.value}" has ${name} ${value}; expected a positive integer.`,
-        );
-      }
+    const invalid = (
+      [
+        ["column", entry.column],
+        ["row", entry.row],
+        ["columnSpan", entry.columnSpan],
+        ["rowSpan", entry.rowSpan],
+      ] as const
+    ).find(([, value]) => !Number.isInteger(value) || value < 1);
+    if (invalid) {
+      problems.push({
+        key: `Inventory:invalid:${entry.value}:${invalid[0]}`,
+        message: `Inventory layout value "${entry.value}" has ${invalid[0]} ${invalid[1]}; expected a positive integer. It was skipped.`,
+      });
+      continue;
     }
-    if (!fits(entry, columns, rows)) {
-      throw new Error(
-        `Inventory layout value "${entry.value}" at column ${entry.column}, row ${entry.row} with span ${entry.columnSpan}×${entry.rowSpan} exceeds the ${columns}×${rows} inventory.`,
-      );
+    if (!fits(entry, safeColumns, safeRows)) {
+      problems.push({
+        key: `Inventory:bounds:${entry.value}`,
+        message: `Inventory layout value "${entry.value}" at column ${entry.column}, row ${entry.row} with span ${entry.columnSpan}×${entry.rowSpan} exceeds the ${safeColumns}×${safeRows} inventory. It was skipped.`,
+      });
+      continue;
     }
+    const conflict = kept.find((other) => overlaps(entry, other));
+    if (conflict) {
+      problems.push({
+        key: `Inventory:overlap:${conflict.value}:${entry.value}`,
+        message: `Inventory layout values "${conflict.value}" and "${entry.value}" overlap. "${entry.value}" was skipped.`,
+      });
+      continue;
+    }
+    kept.push(entry);
   }
-
-  for (let index = 0; index < layout.length; index += 1) {
-    const first = layout[index]!;
-    for (let otherIndex = index + 1; otherIndex < layout.length; otherIndex += 1) {
-      const second = layout[otherIndex]!;
-      if (overlaps(first, second)) {
-        throw new Error(`Inventory layout values "${first.value}" and "${second.value}" overlap.`);
-      }
-    }
-  }
+  return { layout: kept, columns: safeColumns, rows: safeRows, problems };
 }
 
 export function hasSamePlacement(first: InventoryLayoutEntry, second: InventoryLayoutEntry) {

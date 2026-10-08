@@ -22,6 +22,7 @@ export default component({
       prop("onChange", "(value: string[]) => void", "Receives the next selected values."),
       prop("name", "string", "Shared submission name for the group."),
       prop("required", "boolean", "Requires at least one checkbox to be selected."),
+      prop("invalid", "boolean", "Marks the group invalid and shows its FieldError."),
     ]),
     p("Checkbox", "input", "Label with a hidden native checkbox.", true, false, [
       prop("name", "string", "Submission name; falls back to the group name."),

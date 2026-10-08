@@ -1,7 +1,10 @@
+import { useCollection, type Collection, type CollectionItem } from "@comp0/core";
 import { useState, type ReactNode } from "react";
 import { createRequiredContext } from "../internal/context.js";
 
 type ChartNavigationContextValue = {
+  /** The plot's marks in document order; each ChartValue registers itself. */
+  collection: Collection<CollectionItem<SVGElement>>;
   getTargetIndex?: ((currentIndex: number, key: string) => number | undefined) | undefined;
   loop: boolean;
   overlayElement: SVGGElement | null;
@@ -31,12 +34,14 @@ export function ChartNavigationProvider({
   orientation,
   paintActiveLast = true,
 }: ChartNavigationProviderProps) {
+  const collection = useCollection<CollectionItem<SVGElement>>();
   const [tabStopIndex, setTabStopIndex] = useState(0);
   const [overlayElement, setOverlayElement] = useState<SVGGElement | null>(null);
   const resolvedTabStopIndex = tabStopIndex < count ? tabStopIndex : 0;
   return (
     <ChartNavigationContext
       value={{
+        collection,
         getTargetIndex,
         loop,
         overlayElement,

@@ -1,9 +1,8 @@
 import { type ReactNode } from "react";
-import { useControllableState } from "@comp0/core";
+import { useCollection, useControllableState } from "@comp0/core";
 import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { TagGroupContext } from "./tag-shared.js";
 
 export type TagGroupProps = RootProps<{
@@ -28,6 +27,7 @@ export function TagGroup({
   ...props
 }: TagGroupProps) {
   const ids = useFieldIds(id);
+  const collection = useCollection();
   const feedback = fieldFeedback(children);
   const selectionEnabled =
     value !== undefined || defaultValue !== undefined || onChange !== undefined;
@@ -46,13 +46,14 @@ export function TagGroup({
       });
     },
     remove: onRemove,
+    collection,
   };
 
   const Root = rootElement(as);
   return (
     <FieldProvider value={{ ...ids, ...feedback }}>
       <TagGroupContext value={context}>
-        <Root {...props} data-slot={dataSlot(props, "tag-group")}>
+        <Root data-slot="tag-group" {...props}>
           {children}
         </Root>
       </TagGroupContext>

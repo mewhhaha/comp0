@@ -1,13 +1,30 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
-  ignorePatterns: ["dist", "node_modules", "apps/docs/build"],
+  // Lint runs over the whole repo; list generated and tool-owned directories here.
+  ignorePatterns: [
+    "**/dist",
+    "**/node_modules",
+    "**/dist-types",
+    "apps/docs/build",
+    "apps/docs/.react-router",
+    "apps/docs/.wrangler",
+    ".agents",
+    ".claude",
+    ".playwright",
+    ".playwright-browsers",
+    ".todo",
+    ".vitest",
+    ".vitest-attachments",
+    "**/__screenshots__",
+  ],
   plugins: ["typescript", "react", "jsx-a11y"],
   jsPlugins: ["./scripts/oxlint-comp0.ts"],
   rules: {
     "comp0/compact-ternaries": "error",
     "comp0/inline-class-names": "error",
     "comp0/memo-needs-reason": "error",
+    "comp0/no-synthetic-events": "error",
     "comp0/presence-data-attributes": "error",
     "no-nested-ternary": "error",
     "react/jsx-key": "error",

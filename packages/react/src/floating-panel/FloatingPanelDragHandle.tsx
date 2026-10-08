@@ -8,7 +8,6 @@ import {
 } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useFloatingPanelContext, type FloatingPanelPosition } from "./floating-panel-shared.js";
 
 const MOVE_STEP = 16;
@@ -62,6 +61,7 @@ export function FloatingPanelDragHandle({
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="floating-panel-drag-handle"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       disabled={disabled}
@@ -70,7 +70,6 @@ export function FloatingPanelDragHandle({
         props["aria-keyshortcuts"] ?? "Enter Space ArrowLeft ArrowRight ArrowUp ArrowDown Escape"
       }
       data-moving={dataAttr(panel.moving)}
-      data-slot={dataSlot(props, "floating-panel-drag-handle")}
       style={{ touchAction: "none", ...props.style }}
       onBlur={(event: FocusEvent<HTMLButtonElement>) => {
         onBlur?.(event);

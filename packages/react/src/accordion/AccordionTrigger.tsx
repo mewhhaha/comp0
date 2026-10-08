@@ -1,7 +1,7 @@
-import { type ComponentProps, type KeyboardEvent, type MouseEvent } from "react";
-import { composeRefs, dataAttr, useCollectionNavigation } from "@comp0/core";
+import { type ComponentProps, type KeyboardEvent } from "react";
+import { composeRefs, useCollectionNavigation } from "@comp0/core";
+import { useDisclosureTrigger } from "../internal/disclosure-trigger.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useAccordionContext, useAccordionItemContext } from "./accordion-shared.js";
 
 export type AccordionTriggerProps = Omit<ComponentProps<"button">, "id"> & AsProp;
@@ -9,7 +9,6 @@ export type AccordionTriggerProps = Omit<ComponentProps<"button">, "id"> & AsPro
 export function AccordionTrigger({
   as,
   disabled,
-  onClick,
   onKeyDown,
   ref,
   ...props
@@ -17,7 +16,6 @@ export function AccordionTrigger({
   const accordion = useAccordionContext("AccordionTrigger");
   const item = useAccordionItemContext("AccordionTrigger");
   const navigate = useCollectionNavigation();
-  const isNativeButton = as === undefined || as === "button";
   const resolvedDisabled = Boolean(disabled || item.disabled);
   const { open } = item;
   const triggerRef = (element: HTMLButtonElement | null) => {
@@ -30,29 +28,16 @@ export function AccordionTrigger({
     });
     composeRefs(ref)(element);
   };
-  let ariaDisabled: boolean | undefined;
-  if (accordion.type === "single" && open && !accordion.collapsible) ariaDisabled = true;
-  if (!isNativeButton && resolvedDisabled) ariaDisabled = true;
-
-  const Part = partElement(as, "button");
-  return (
-    <Part
-      {...props}
-      ref={triggerRef}
-      id={item.triggerId}
-      type={isNativeButton ? (props.type ?? "button") : undefined}
-      aria-expanded={open}
-      aria-controls={item.panelId}
-      aria-disabled={ariaDisabled}
-      disabled={isNativeButton ? resolvedDisabled : undefined}
-      data-slot={dataSlot(props, "accordion-trigger")}
-      data-open={dataAttr(open)}
-      data-disabled={dataAttr(resolvedDisabled)}
-      onClick={(event: MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event);
-        if (!event.defaultPrevented && !resolvedDisabled) accordion.setItemOpen(item.value, !open);
-      }}
-      onKeyDown={(event: KeyboardEvent<HTMLButtonElement>) => {
+  const trigger = useDisclosureTrigger({
+    as,
+    open,
+    onOpenChange: (next) => accordion.setItemOpen(item.value, next),
+    id: item.triggerId,
+    controls: item.panelId,
+    props: {
+      ...props,
+      disabled: resolvedDisabled,
+      onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
         const targetKey = navigate(event.key, accordion.collection.items(), item.value, {
@@ -63,7 +48,20 @@ export function AccordionTrigger({
         if (!targetKey) return;
         event.preventDefault();
         accordion.collection.get(targetKey)?.element?.focus();
-      }}
+      },
+    },
+  });
+  // The one open item of a non-collapsible single accordion cannot close.
+  const locked = accordion.type === "single" && open && !accordion.collapsible;
+
+  const Part = partElement(as, "button");
+  return (
+    <Part
+      data-slot="accordion-trigger"
+      {...props}
+      ref={triggerRef}
+      {...trigger}
+      aria-disabled={locked || trigger["aria-disabled"]}
     />
   );
 }

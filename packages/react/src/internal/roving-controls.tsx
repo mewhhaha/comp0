@@ -1,12 +1,12 @@
 import { useLayoutEffect, useRef, type FocusEvent, type KeyboardEvent } from "react";
 import { useCollectionNavigation } from "@comp0/core";
-import { rowFocusables } from "../grid-list/grid-list-shared.js";
+import { focusableWithin } from "./focusable.js";
 import { writingDirection } from "./writing-direction.js";
 
 const NESTED_COMPOSITE_SELECTOR = "[role='listbox'],[role='grid'],[role='menu']";
 
 function rovingControlCandidates(container: HTMLElement) {
-  return rowFocusables(container).filter((element) => {
+  return focusableWithin(container).filter((element) => {
     if (element.closest("[hidden]")) return false;
     const composite = element.closest(NESTED_COMPOSITE_SELECTOR);
     return !composite || !container.contains(composite);

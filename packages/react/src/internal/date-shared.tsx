@@ -1,6 +1,6 @@
 import { createRequiredContext } from "./context.js";
 
-export type DatePickerContextValue = {
+type DatePickerContextValue = {
   /** The picker's selected date as "YYYY-MM-DD", or "" when empty. */
   value: string;
   setValue: (iso: string) => void;

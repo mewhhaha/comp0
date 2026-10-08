@@ -6,6 +6,8 @@ import { InventoryItem } from "./InventoryItem.js";
 import { InventoryMoveHandle } from "./InventoryMoveHandle.js";
 import { InventoryResizeHandle } from "./InventoryResizeHandle.js";
 import { render } from "../../test/render.js";
+import { expectNoAxeViolations } from "../../test/axe.js";
+import { InventoryPreview } from "./InventoryPreview.js";
 
 describe("inventory browser interactions", () => {
   it("enters once, moves spatially, tabs through one card, and leaves", async () => {
@@ -94,6 +96,34 @@ describe("inventory browser interactions", () => {
     expect(document.activeElement).toBe(after);
     expect(card.dataset.column).toBe("1");
     expect(card.hasAttribute("data-dragging")).toBe(false);
+    unmount();
+  });
+
+  it("has no axe violations while a card is being moved by keyboard", async () => {
+    const { container, unmount } = render(
+      <Inventory
+        aria-label="Dashboard"
+        columns={3}
+        rows={1}
+        defaultValue={[{ value: "card", column: 1, row: 1, columnSpan: 1, rowSpan: 1 }]}
+      >
+        <InventoryItem value="card" textValue="Card">
+          Card
+          <InventoryMoveHandle />
+          <InventoryResizeHandle />
+        </InventoryItem>
+        <InventoryPreview />
+      </Inventory>,
+    );
+    const move = page.getByRole("button", { name: "Move Card" }).element();
+
+    act(() => move.focus());
+    await act(async () => userEvent.keyboard("{Enter}{ArrowRight}"));
+    const card = move.closest("li")!;
+    expect(card.hasAttribute("data-dragging")).toBe(true);
+    expect(container.querySelector("[data-slot='inventory-preview']")).not.toBeNull();
+
+    await expectNoAxeViolations(container, "inventory moving");
     unmount();
   });
 });

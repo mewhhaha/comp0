@@ -1,6 +1,6 @@
 import { dataAttr } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { useActiveChartValue } from "../chart/chart-interaction-context.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -87,12 +87,12 @@ export function SankeyChartLink({ link, ref, ...props }: SankeyChartLinkProps) {
     (active.value.id === link.value.source || active.value.id === link.value.target);
   return (
     <g
+      data-slot="sankey-chart-link"
       {...props}
       ref={ref}
       aria-hidden="true"
       pointerEvents="none"
       data-connected={dataAttr(connected)}
-      data-slot={dataSlot(props, "sankey-chart-link")}
       data-source={link.value.source}
       data-target={link.value.target}
       data-value={link.value.value}
@@ -140,9 +140,11 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
         0,
       );
       if (!Number.isFinite(incoming) || !Number.isFinite(outgoing)) {
-        throw new Error(
-          `SankeyChartPlot node "${node.id}" aggregate flow must be finite; received incoming=${incoming}, outgoing=${outgoing}.`,
+        warnOnce(
+          `SankeyChartPlot:node-flow:${node.id}`,
+          `SankeyChartPlot node "${node.id}" aggregate flow must be finite; received incoming=${incoming}, outgoing=${outgoing}. The node was drawn at its minimum size.`,
         );
+        return [node.id, 0];
       }
       return [node.id, Math.max(incoming, outgoing)];
     }),
@@ -158,25 +160,32 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
     .map((nodes) => {
       const total = nodes.reduce((sum, node) => sum + (nodeTotals.get(node.id) ?? 0), 0);
       if (!Number.isFinite(total)) {
-        throw new Error(`SankeyChartPlot layer flow must be finite; received ${total}.`);
+        warnOnce(
+          `SankeyChartPlot:layer-flow:${total}`,
+          `SankeyChartPlot layer flow must be finite; received ${total}. The layer was ignored when sizing flows.`,
+        );
+        return Number.POSITIVE_INFINITY;
       }
       const available = availableHeight - Math.max(0, nodes.length - 1) * nodeGap;
       return total > 0 ? available / total : Number.POSITIVE_INFINITY;
     })
     .filter(Number.isFinite);
-  const flowScale = Math.min(...scaleCandidates, 1);
-  if (!Number.isFinite(flowScale) || flowScale < 0) {
-    throw new Error(`SankeyChartPlot cannot fit its node layers within the available height.`);
-  }
+  const flowScale = Math.max(0, Math.min(...scaleCandidates, 1));
   const nodeStates: SankeyChartNodeState[] = [];
   for (const [layer, nodes] of nodesByLayer.entries()) {
-    const heights = nodes.map((node) => Math.max(4, (nodeTotals.get(node.id) ?? 0) * flowScale));
-    const groupHeight =
-      heights.reduce((sum, height) => sum + height, 0) + Math.max(0, nodes.length - 1) * nodeGap;
+    let layerGap = nodeGap;
+    let heights = nodes.map((node) => Math.max(4, (nodeTotals.get(node.id) ?? 0) * flowScale));
+    let groupHeight =
+      heights.reduce((sum, height) => sum + height, 0) + Math.max(0, nodes.length - 1) * layerGap;
     if (groupHeight > availableHeight) {
-      throw new Error(
-        `SankeyChartPlot layer ${layer} with ${nodes.length} nodes exceeds the available height of ${availableHeight}.`,
+      warnOnce(
+        `SankeyChartPlot:layer-height:${layer}:${nodes.length}`,
+        `SankeyChartPlot layer ${layer} with ${nodes.length} nodes exceeds the available height of ${availableHeight}. Its nodes and gaps were shrunk to fit.`,
       );
+      const shrink = availableHeight / groupHeight;
+      layerGap *= shrink;
+      heights = heights.map((height) => height * shrink);
+      groupHeight = availableHeight;
     }
     let y = top + (bottom - top - groupHeight) / 2;
     for (const [layerIndex, node] of nodes.entries()) {
@@ -195,7 +204,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
         incoming: incomingByNode.get(node.id) ?? [],
         outgoing: outgoingByNode.get(node.id) ?? [],
       });
-      y += (heights[layerIndex] ?? 4) + nodeGap;
+      y += (heights[layerIndex] ?? 4) + layerGap;
     }
   }
   const nodesById = new Map(nodeStates.map((node) => [node.value.id, node]));
@@ -293,13 +302,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
   if (children) content = children(state);
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 120 100"
-      role="group"
-      data-slot={dataSlot(props, "sankey-chart-plot")}
-    >
+    <svg data-slot="sankey-chart-plot" {...props} ref={ref} viewBox="0 0 120 100" role="group">
       <ChartNavigationProvider
         count={nodeStates.length}
         getTargetIndex={getTargetIndex}

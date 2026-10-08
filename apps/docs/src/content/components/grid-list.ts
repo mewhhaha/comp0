@@ -86,6 +86,7 @@ export default component({
         "Element or component rendered in place of the default; Fragment merges the part onto your own element child.",
       ),
       prop("value", "string", "This row’s selection key; required."),
+      prop("id", "string", "The row's DOM id; generated when omitted."),
       prop("disabled", "boolean", "Disables the row."),
       prop(
         "draggable",

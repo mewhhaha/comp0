@@ -32,7 +32,7 @@ export type PopoverSurfaceSource = {
  * The owner defaults to the nearest popover context; pass `source` for surfaces
  * that have no popover context (ToastRegion).
  */
-export function usePopoverSurface<TElement extends PopoverSurfaceElement>(
+function usePopoverSurface<TElement extends PopoverSurfaceElement>(
   popoverMode: "auto" | "manual" | undefined,
   source?: PopoverSurfaceSource | null | undefined,
 ) {
@@ -142,6 +142,17 @@ export type OverlaySurfaceOptions<TElement extends HTMLElement = HTMLElement> =
     hidden?: boolean | undefined;
     style?: CSSProperties | undefined;
     ref?: Ref<TElement> | undefined;
+    /**
+     * Where focus goes each time the surface opens: a selector, selectors tried
+     * in priority order, or a callback that returns the element (or nothing to
+     * leave focus alone). Selectors and the callback's argument are scoped to
+     * the surface.
+     */
+    initialFocus?:
+      | string
+      | readonly string[]
+      | ((surface: TElement) => HTMLElement | null | undefined)
+      | undefined;
     /** The consumer's toggle handler; runs first and can `preventDefault()` to skip state sync. */
     onToggle?: ((event: ToggleEvent<TElement>) => void) | undefined;
   };
@@ -161,6 +172,7 @@ export type OverlaySurfaceOptions<TElement extends HTMLElement = HTMLElement> =
 export function useOverlaySurface<TElement extends HTMLElement = HTMLElement>({
   hidden,
   id,
+  initialFocus,
   offset,
   onToggle,
   placement,
@@ -177,8 +189,29 @@ export function useOverlaySurface<TElement extends HTMLElement = HTMLElement>({
   const owner = source === undefined ? context : source;
   const composedRef = useComposedRefs(surfaceRef, ref);
   const triggerId = context?.triggerId;
+  const open = Boolean(owner?.open);
+  const wasOpen = useRef(false);
+  useLayoutEffect(() => {
+    // Runs after the show/hide effect above, so the surface is already visible.
+    if (open && !wasOpen.current) {
+      const surface = surfaceRef.current;
+      if (surface && initialFocus !== undefined) {
+        let target: HTMLElement | null | undefined;
+        if (typeof initialFocus === "function") {
+          target = initialFocus(surface);
+        } else {
+          for (const selector of typeof initialFocus === "string" ? [initialFocus] : initialFocus) {
+            target = surface.querySelector<HTMLElement>(selector);
+            if (target) break;
+          }
+        }
+        target?.focus();
+      }
+    }
+    wasOpen.current = open;
+  }, [open, initialFocus, surfaceRef]);
   return {
-    open: Boolean(owner?.open),
+    open,
     popover: context,
     surfaceRef,
     props: {

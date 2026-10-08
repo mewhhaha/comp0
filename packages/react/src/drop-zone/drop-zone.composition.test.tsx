@@ -2,7 +2,7 @@ import { act, createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { FileTrigger } from "../file-trigger/FileTrigger.js";
 import { DropZone } from "./DropZone.js";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 
 type DragFile = Pick<File, "name" | "type">;
 
@@ -107,10 +107,10 @@ describe("DropZone", () => {
     expect(dropped).not.toHaveBeenCalled();
   });
 
-  it("leaves native file selection to a composed FileTrigger", () => {
+  it("leaves native file selection to a composed FileTrigger", async () => {
     const inputRef = createRef<HTMLInputElement>();
     const clicked = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <DropZone accept="image/png">
         <FileTrigger ref={inputRef} accept="image/png">
           Choose image
@@ -121,11 +121,11 @@ describe("DropZone", () => {
     const input = inputRef.current!;
     input.addEventListener("click", clicked);
 
-    fireClick(label);
+    await user.click(label);
     expect(clicked).toHaveBeenCalledOnce();
 
     act(() => input.focus());
-    fireKeyDown(input, "Enter");
+    await user.keyboard("{Enter}");
     expect(document.activeElement).toBe(input);
     expect(input.accept).toBe("image/png");
   });

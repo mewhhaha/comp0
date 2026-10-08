@@ -11,11 +11,11 @@ import {
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { focusableWithin } from "../internal/focusable.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import {
   GridListItemContext,
   rowCell,
-  rowFocusables,
   useGridListContext,
   useOptionalGridListDndContext,
   type GridListItemContextValue,
@@ -89,7 +89,7 @@ export function GridListItem({
   useLayoutEffect(() => {
     const row = rowRef.current;
     if (!row) return;
-    for (const element of rowFocusables(row)) element.tabIndex = -1;
+    for (const element of focusableWithin(row)) element.tabIndex = -1;
     // Re-register after every render so crawled labels follow content changes.
     const resolvedLabel = resolveItemLabel({
       textValue,
@@ -145,7 +145,7 @@ export function GridListItem({
           const ownerWindow = event.currentTarget.ownerDocument.defaultView;
           const target =
             ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
-          if (target && rowFocusables(event.currentTarget).some((el) => el.contains(target))) {
+          if (target && focusableWithin(event.currentTarget).some((el) => el.contains(target))) {
             return;
           }
           gridList.setActiveKey(value);
@@ -161,7 +161,7 @@ export function GridListItem({
           pointerStartedOnControl.current = Boolean(
             !startsFromHandle &&
             target &&
-            rowFocusables(event.currentTarget).some((element) => element.contains(target)),
+            focusableWithin(event.currentTarget).some((element) => element.contains(target)),
           );
         }}
         onPointerUpCapture={(event: PointerEvent<HTMLDivElement>) => {
@@ -176,7 +176,7 @@ export function GridListItem({
             ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
           const dragHandle = eventTarget?.closest("[data-slot='grid-list-drag-handle']");
           const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
-          const startsFromControl = rowFocusables(event.currentTarget).some((element) =>
+          const startsFromControl = focusableWithin(event.currentTarget).some((element) =>
             eventTarget ? element.contains(eventTarget) : false,
           );
           if (!startsFromHandle && startsFromControl) return;

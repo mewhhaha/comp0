@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it } from "vitest";
-import { fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Feed, type FeedProps } from "./Feed.js";
 import { FeedArticle } from "./FeedArticle.js";
 
@@ -11,7 +11,7 @@ function focus(element: HTMLElement) {
 }
 
 function renderFeed(props: Partial<FeedProps> = {}) {
-  const result = render(
+  const result = setup(
     <div>
       <button type="button">Refresh</button>
       <Feed aria-label="Recipe feed" {...props}>
@@ -82,51 +82,51 @@ describe("feed composition", () => {
     expect(feed.hasAttribute("data-busy")).toBe(true);
   });
 
-  it("moves between articles with PageDown and PageUp, stopping at the ends", () => {
-    const { articles } = renderFeed();
+  it("moves between articles with PageDown and PageUp, stopping at the ends", async () => {
+    const { articles, user } = renderFeed();
     focus(articles[0]!);
-    fireKeyDown(articles[0]!, "PageDown");
+    await user.keyboard("{PageDown}");
     expect(document.activeElement).toBe(articles[1]);
 
-    fireKeyDown(articles[1]!, "PageDown");
+    await user.keyboard("{PageDown}");
     expect(document.activeElement).toBe(articles[2]);
 
-    fireKeyDown(articles[2]!, "PageDown");
+    await user.keyboard("{PageDown}");
     expect(document.activeElement).toBe(articles[2]);
 
-    fireKeyDown(articles[2]!, "PageUp");
+    await user.keyboard("{PageUp}");
     expect(document.activeElement).toBe(articles[1]);
 
-    fireKeyDown(articles[1]!, "PageUp");
+    await user.keyboard("{PageUp}");
     expect(document.activeElement).toBe(articles[0]);
 
-    fireKeyDown(articles[0]!, "PageUp");
+    await user.keyboard("{PageUp}");
     expect(document.activeElement).toBe(articles[0]);
   });
 
-  it("moves from a control inside an article relative to that article", () => {
-    const { container, articles } = renderFeed();
+  it("moves from a control inside an article relative to that article", async () => {
+    const { container, articles, user } = renderFeed();
     const link = container.querySelector<HTMLAnchorElement>("a")!;
     focus(link);
-    fireKeyDown(link, "PageDown");
+    await user.keyboard("{PageDown}");
     expect(document.activeElement).toBe(articles[1]);
   });
 
-  it("escapes the feed with Ctrl+End and Ctrl+Home", () => {
-    const { articles, before, after } = renderFeed();
+  it("escapes the feed with Ctrl+End and Ctrl+Home", async () => {
+    const { articles, before, after, user } = renderFeed();
     focus(articles[1]!);
-    fireKeyDown(articles[1]!, "End", { ctrlKey: true });
+    await user.keyboard("{Control>}{End}{/Control}");
     expect(document.activeElement).toBe(after);
 
     focus(articles[1]!);
-    fireKeyDown(articles[1]!, "Home", { ctrlKey: true });
+    await user.keyboard("{Control>}{Home}{/Control}");
     expect(document.activeElement).toBe(before);
   });
 
-  it("leaves plain End and Home alone", () => {
-    const { articles } = renderFeed();
+  it("leaves plain End and Home alone", async () => {
+    const { articles, user } = renderFeed();
     focus(articles[1]!);
-    fireKeyDown(articles[1]!, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(articles[1]);
   });
 });

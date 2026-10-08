@@ -19,7 +19,7 @@ export type CoordinatedAutoPopover = {
   priority: number;
 };
 
-export type AutoPopoverCoordinator = {
+type AutoPopoverCoordinator = {
   document: Document;
   entries: Set<CoordinatedAutoPopover>;
   nextPriority: number;

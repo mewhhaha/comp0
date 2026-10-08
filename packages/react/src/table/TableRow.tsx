@@ -1,6 +1,7 @@
 import { type ComponentProps } from "react";
-import { dataAttr } from "@comp0/core";
+import { composeRefs, dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { useOptionalTableContext } from "./table-shared.js";
 
 export type TableRowProps = ComponentProps<"tr"> &
   AsProp & {
@@ -10,11 +11,19 @@ export type TableRowProps = ComponentProps<"tr"> &
     value?: string | undefined;
   };
 
-export function TableRow({ as, selected, value, ...props }: TableRowProps) {
+export function TableRow({ as, selected, value, ref, ...props }: TableRowProps) {
+  const rows = useOptionalTableContext()?.rows;
   const Part = partElement(as, "tr");
   return (
     <Part
       {...props}
+      ref={composeRefs(ref, (element: HTMLTableRowElement | null) => {
+        if (!rows || value === undefined) return;
+        rows.register({ key: value, textValue: value, element });
+        return () => {
+          rows.unregister(value, element);
+        };
+      })}
       aria-selected={selected}
       data-selected={dataAttr(Boolean(selected))}
       data-value={value}

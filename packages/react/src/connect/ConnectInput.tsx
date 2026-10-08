@@ -1,7 +1,6 @@
 import { useState, type ComponentProps } from "react";
 import { composeRefs, dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   ConnectInputContext,
   useConnectCardContext,
@@ -31,17 +30,20 @@ export function ConnectInput({
   const card = useConnectCardContext("ConnectInput");
   const disabled = disabledProp || card.disabled;
   const [element, setElement] = useState<HTMLElement | null>(null);
+  const [trigger, setTrigger] = useState<HTMLElement | null>(null);
+  const [select, setSelect] = useState<HTMLElement | null>(null);
   useConnectPort(
     { value, label, kind, card: card.value, cardLabel: card.label, direction: "input", disabled },
     element,
+    trigger,
   );
   const Part = partElement(as, "div");
   return (
-    <ConnectInputContext value={{ value, label, kind, disabled }}>
+    <ConnectInputContext value={{ value, label, kind, disabled, select, setTrigger, setSelect }}>
       <Part
+        data-slot="connect-input"
         {...props}
         ref={composeRefs(ref, setElement)}
-        data-slot={dataSlot(props, "connect-input")}
         data-connected={dataAttr(context.connections.some((connection) => connection.to === value))}
       >
         {children}

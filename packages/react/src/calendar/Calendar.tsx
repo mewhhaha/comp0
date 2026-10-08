@@ -1,17 +1,10 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import {
-  addMonths,
-  clampISODate,
-  dataAttr,
-  isValidISODate,
-  todayISODate,
-  useControllableState,
-} from "@comp0/core";
+import { dataAttr, useControllableState } from "@comp0/core";
+import { addMonths, clampISODate, isValidISODate, todayISODate } from "../internal/date.js";
 import { CalendarContext, resolveWeekStart } from "./calendar-shared.js";
 import { useOptionalDatePickerContext } from "../internal/date-shared.js";
 import { usePopoverContext } from "../internal/overlay/index.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type CalendarProps = RootProps<{
   id?: string | undefined;
@@ -124,9 +117,9 @@ export function Calendar({
   return (
     <CalendarContext value={context}>
       <Root
+        data-slot="calendar"
         {...props}
         id={id}
-        data-slot={dataSlot(props, "calendar")}
         data-disabled={dataAttr(resolvedDisabled)}
         data-value={selected || undefined}
       >

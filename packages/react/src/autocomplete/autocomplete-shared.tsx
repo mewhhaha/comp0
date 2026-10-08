@@ -1,3 +1,4 @@
+import { type Collection } from "@comp0/core";
 import { createRequiredContext } from "../internal/context.js";
 import {
   Children,
@@ -13,7 +14,12 @@ export type AutocompleteContextValue = {
   activeId: string;
   collectionId: string | undefined;
   defaultCollectionId: string;
-  collectionRef: RefObject<HTMLElement | null>;
+  /**
+   * Makes `collection` the set of items the input navigates and auto-focuses.
+   * Returns the detach function; call it from an effect. The collection's own
+   * changes (items mounting, unmounting, enabling) re-run the auto-focus logic.
+   */
+  attachCollection: (collection: Collection) => () => void;
   disableVirtualFocus: boolean;
   hasFilter: boolean;
   inputRef: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
@@ -22,7 +28,6 @@ export type AutocompleteContextValue = {
   handleInputKeyDown: (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   isItemVisible: (textValue: string) => boolean;
   setCollectionId: Dispatch<SetStateAction<string | undefined>>;
-  setCollectionVersion: Dispatch<SetStateAction<number>>;
   setActiveId: (id: string) => void;
   setInputValue: (inputValue: string, inputType?: string) => void;
 };

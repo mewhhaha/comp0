@@ -32,7 +32,15 @@ export default component({
       prop("name", "string", "Submission name for the time value."),
       prop("onChange", "(event) => void", "Receives typed native input changes."),
     ]),
-    p("Popover", "root", "Wrapper-free provider for the suggested-time popover.", false),
+    p("Popover", "root", "Wrapper-free provider for the suggested-time popover.", false, false, [
+      prop(
+        "id",
+        "string",
+        "Base for the generated trigger and content ids; also the wrapper id when as is set.",
+      ),
+      prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
+      prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
+    ]),
     p("PopoverTrigger", "trigger", "Icon button that opens the time suggestions.", true, false, [
       prop("aria-label", "string", "Names the icon-only trigger."),
     ]),
@@ -40,8 +48,15 @@ export default component({
       prop("placement", "PopoverPlacement", "Places the surface beside the trigger."),
       prop("offset", "number", "Pixel gap between the trigger and surface."),
     ]),
-    p("ListBox", "region", "Selectable collection synchronized with the TimeField.", true),
-    p("ListBoxOption", "item", "One localized label backed by an HH:mm value.", true),
+    p("ListBox", "region", "Selectable collection synchronized with the TimeField.", true, false, [
+      prop("value", "string", "The selected HH:mm value, kept in sync with the TimeField."),
+      prop("orientation", '"vertical" | "horizontal"', "Arrow-key axis."),
+    ]),
+    p("ListBoxOption", "item", "One localized label backed by an HH:mm value.", true, false, [
+      prop("value", "string", "The HH:mm value this option selects."),
+      prop("textValue", "string", "Text used for typeahead when the label is not plain text."),
+      prop("disabled", "boolean", "Disables the option."),
+    ]),
   ],
   keyboard: [
     { keys: ["Enter"], action: "Opens from the trigger or selects the focused time." },

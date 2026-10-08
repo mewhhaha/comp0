@@ -8,9 +8,9 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
+import { useCollection } from "@comp0/core";
 import { useOverlaySurface } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { ToastRegionContext, useToastContext, type ToastRecord } from "./toast-shared.js";
 
 function ignoreOpenChange() {
@@ -38,6 +38,7 @@ export function ToastRegion({
 }: ToastRegionProps) {
   const context = useToastContext("ToastRegion");
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const collection = useCollection();
   const contextRef = useRef(context);
   const pointerPauseRef = useRef(false);
   const focusPauseRef = useRef(false);
@@ -70,15 +71,15 @@ export function ToastRegion({
   if (!mounted) return null;
   const Part = partElement(as, "div");
   return (
-    <ToastRegionContext value={{ regionRef, restoreFocusRef }}>
+    <ToastRegionContext value={{ collection, regionRef, restoreFocusRef }}>
       <Part
+        data-slot="toast-region"
         {...props}
         {...surfaceProps}
         // The region only exists while mounted, so an open marker would carry no information.
         data-open={undefined}
         role={props.role ?? "region"}
         aria-label={props["aria-label"] ?? "Notifications"}
-        data-slot={dataSlot(props, "toast-region")}
         onPointerEnter={(event: PointerEvent<HTMLDivElement>) => {
           onPointerEnter?.(event);
           if (event.defaultPrevented || pointerPauseRef.current) return;

@@ -1,5 +1,5 @@
 import { type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
+import { composeRefs } from "@comp0/core";
 import {
   compatiblePorts,
   portLabel,
@@ -13,7 +13,7 @@ export type ConnectInputSelectProps = Omit<
   "value" | "defaultValue" | "children" | "multiple"
 >;
 
-export function ConnectInputSelect({ onChange, disabled, ...props }: ConnectInputSelectProps) {
+export function ConnectInputSelect({ onChange, disabled, ref, ...props }: ConnectInputSelectProps) {
   const context = useConnectContext("ConnectInputSelect");
   const card = useConnectCardContext("ConnectInputSelect");
   const input = useConnectInputContext("ConnectInputSelect");
@@ -26,10 +26,11 @@ export function ConnectInputSelect({ onChange, disabled, ...props }: ConnectInpu
   const connection = context.connections.find((entry) => entry.to === input.value);
   return (
     <select
+      data-slot="connect-input-select"
       {...props}
+      ref={composeRefs(ref, input.setSelect)}
       disabled={disabled || input.disabled}
       aria-label={props["aria-label"] ?? `${card.label}: ${input.label} source (${input.kind})`}
-      data-slot={dataSlot(props, "connect-input-select")}
       value={connection?.from ?? ""}
       onChange={(event) => {
         onChange?.(event);

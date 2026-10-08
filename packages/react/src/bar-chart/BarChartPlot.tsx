@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -97,23 +96,14 @@ export function BarChartPlot({
       height: barHeight,
     };
   });
-  const xTicks = scale.ticks(tickCount).map((value) => ({
-    label: context.formatY(value),
-    position: scale.position(value),
-  }));
+  const xTicks = scale.axisTicks(tickCount, context.formatY);
   const yTicks = context.values.map((value, index) => ({
     label: value.label,
     position: context.values.length === 0 ? 0.5 : 1 - (index + 0.5) / context.values.length,
   }));
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 120 120"
-      role="group"
-      data-slot={dataSlot(props, "bar-chart-plot")}
-    >
+    <svg data-slot="bar-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         bounds={bounds}
         xGrid

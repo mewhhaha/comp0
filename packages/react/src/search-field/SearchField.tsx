@@ -48,7 +48,7 @@ export function SearchField({
 
   return (
     <SearchFieldContext value={context}>
-      <TextField {...props} value={searchValue} onChange={setSearch} data-search="">
+      <TextField {...props} value={searchValue} onChange={setSearch}>
         {children}
       </TextField>
     </SearchFieldContext>

@@ -1,5 +1,5 @@
 import { type ComponentProps, type MouseEvent } from "react";
-import { dataAttr } from "@comp0/core";
+import { disabledProps } from "../internal/disabled.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useCarouselContext } from "./carousel-shared.js";
 
@@ -13,18 +13,21 @@ export function CarouselPrevious({ as, disabled, onClick, ...props }: CarouselPr
   const carousel = useCarouselContext("CarouselPrevious");
   const resolvedDisabled = Boolean(disabled ?? (!carousel.loop && carousel.value <= 0));
 
+  const disabledAttributes = disabledProps<HTMLButtonElement>(resolvedDisabled, {
+    native: true,
+    onClick(event: MouseEvent<HTMLButtonElement>) {
+      onClick?.(event);
+      if (!event.defaultPrevented) carousel.previous();
+    },
+  });
+
   const Part = partElement(as, "button");
   return (
     <Part
       type={as === undefined || as === "button" ? "button" : undefined}
       {...props}
       aria-label={props["aria-label"] ?? "Previous slide"}
-      disabled={resolvedDisabled}
-      data-disabled={dataAttr(resolvedDisabled)}
-      onClick={(event: MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event);
-        if (!event.defaultPrevented) carousel.previous();
-      }}
+      {...disabledAttributes}
     />
   );
 }

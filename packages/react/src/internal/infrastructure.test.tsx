@@ -1,6 +1,6 @@
 import { createRef, Fragment, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { fireClick, render, setup } from "../../test/render.js";
 import { createRequiredContext } from "./context.js";
 import { FormValue } from "./form-value.js";
 import { partElement, rootElement, type AsProp, type RootProps } from "./polymorphic.js";
@@ -90,6 +90,47 @@ describe("polymorphic helpers", () => {
     expect([bare, bareRef, wrapped]).toHaveLength(3);
   });
 
+  it("types a part's attributes and ref from its fallback tag", () => {
+    const buttonRef = createRef<HTMLButtonElement>();
+
+    function TypedPart() {
+      const Part = partElement(undefined, "button");
+      return (
+        <>
+          <Part ref={buttonRef} type="button" data-state="open" aria-expanded="true" />
+          {/* @ts-expect-error href is not a button attribute. */}
+          <Part href="#nope" />
+          {/* @ts-expect-error a button part's ref is a button ref. */}
+          <Part ref={createRef<HTMLDivElement>()} />
+          {/* @ts-expect-error type only accepts button types. */}
+          <Part type="checkbox" />
+        </>
+      );
+    }
+
+    const { container } = render(<TypedPart />);
+
+    expect(buttonRef.current).toBe(container.querySelector("button"));
+    expect(buttonRef.current?.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("types a typed root's attributes from its tag", () => {
+    function TypedRoot() {
+      const Root = rootElement<"ul">("ul");
+      return (
+        <>
+          <Root data-kind="list" ref={createRef<HTMLUListElement>()} />
+          {/* @ts-expect-error a ul root's ref is a ul ref. */}
+          <Root ref={createRef<HTMLButtonElement>()} />
+          {/* @ts-expect-error unknown attributes are not part of a ul. */}
+          <Root unknownAttribute="x" />
+        </>
+      );
+    }
+
+    expect(render(<TypedRoot />).container.querySelectorAll("ul")).toHaveLength(3);
+  });
+
   it("renders a part as its fallback tag or the as element", () => {
     const { container } = render(
       <>
@@ -114,6 +155,7 @@ describe("polymorphic helpers", () => {
     );
     const anchor = container.querySelector("a")!;
 
+    // oxlint-disable-next-line comp0/no-synthetic-events -- the merged anchor's click must not navigate the jsdom page
     fireClick(anchor);
 
     expect(container.querySelector("button")).toBeNull();
@@ -134,6 +176,7 @@ describe("polymorphic helpers", () => {
       </ExamplePart>,
     );
 
+    // oxlint-disable-next-line comp0/no-synthetic-events -- the merged anchor's click must not navigate the jsdom page
     fireClick(container.querySelector("a")!);
 
     expect(part).not.toHaveBeenCalled();
@@ -170,5 +213,24 @@ describe("FormValue", () => {
     expect([...new FormData(container.querySelector("form")!).entries()]).toEqual([
       ["size", "small"],
     ]);
+  });
+});
+
+describe("setup", () => {
+  it("drives real pointer and keyboard sequences through user", async () => {
+    const calls: string[] = [];
+    const { getByRole, user } = setup(
+      <button type="button" onClick={() => calls.push("click")} onFocus={() => calls.push("focus")}>
+        Press
+      </button>,
+    );
+    const button = getByRole("button");
+
+    await user.click(button);
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+
+    expect(document.activeElement).toBe(button);
+    expect(calls).toEqual(["focus", "click", "click", "click"]);
   });
 });

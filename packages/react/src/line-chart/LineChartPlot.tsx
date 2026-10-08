@@ -1,5 +1,4 @@
 import { type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -102,10 +101,7 @@ export function LineChartPlot({
     label: context.formatX(value.x),
     position: context.values.length === 1 ? 0.5 : xScale.position(numberOf(value.x)),
   }));
-  const yTicks = yScale.ticks(tickCount).map((value) => ({
-    label: context.formatY(value),
-    position: yScale.position(value),
-  }));
+  const yTicks = yScale.axisTicks(tickCount, context.formatY);
   const state = { path, points };
   let content: ReactNode = (
     <path
@@ -119,13 +115,7 @@ export function LineChartPlot({
   if (children) content = children(state);
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 120 120"
-      role="group"
-      data-slot={dataSlot(props, "line-chart-plot")}
-    >
+    <svg data-slot="line-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes xLabel={context.xLabel} xTicks={xTicks} yLabel={context.yLabel} yTicks={yTicks} />
       <ChartNavigationProvider count={points.length} orientation="horizontal">
         <g role="presentation" data-slot="line-chart-line">

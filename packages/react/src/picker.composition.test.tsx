@@ -1,33 +1,18 @@
-import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Combobox,
   ComboboxPopover,
   ComboboxInput,
-  ComboboxOptGroup,
   ComboboxOption,
-  ComboboxTrigger,
   Description,
   FieldError,
   Label,
-  ListBox,
-  ListBoxOption,
   Select,
-  SelectOptGroup,
   SelectPopover,
   SelectOption,
   SelectTrigger,
 } from "./index.js";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
-
-function fireInput(element: HTMLInputElement, value: string) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setter?.call(element, value);
-    element.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-    element.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
-  });
-}
+import { render, setup } from "../test/render.js";
 
 describe("picker composition", () => {
   it("wires picker parts without a Popover wrapper and still requires the root", () => {
@@ -88,10 +73,10 @@ describe("picker composition", () => {
     expect(input.getAttribute("aria-describedby")).toBe("described-combobox-description");
   });
 
-  it("keeps disabled picker roots authoritative over every interactive part", () => {
+  it("keeps disabled picker roots authoritative over every interactive part", async () => {
     const selectChanged = vi.fn();
     const comboboxChanged = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <form>
         <Select disabled name="plan" onChange={selectChanged} defaultOpen>
           <SelectTrigger disabled={false}>Choose</SelectTrigger>
@@ -116,8 +101,8 @@ describe("picker composition", () => {
     expect([...options].every((option) => option.getAttribute("aria-disabled") === "true")).toBe(
       true,
     );
-    fireClick(options[0]!);
-    fireClick(options[1]!);
+    await user.click(options[0]!);
+    await user.click(options[1]!);
 
     expect(selectChanged).not.toHaveBeenCalled();
     expect(comboboxChanged).not.toHaveBeenCalled();
@@ -141,299 +126,8 @@ describe("picker composition", () => {
     expect(container.querySelector("button")?.id).toBe("plain-select");
   });
 
-  it("toggles select content and commits a keyboard selection", () => {
-    const toggled = vi.fn();
-    const { container } = render(
-      <Select id="plan" defaultValue="free" onToggle={toggled}>
-        <SelectTrigger>Plan</SelectTrigger>
-        <SelectPopover>
-          <SelectOption value="free">Free</SelectOption>
-          <SelectOption value="pro">Pro</SelectOption>
-        </SelectPopover>
-      </Select>,
-    );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
-
-    expect(content.hidden).toBe(true);
-    fireClick(trigger);
-    expect(content.hidden).toBe(false);
-    expect(toggled).toHaveBeenLastCalledWith(true);
-    expect(document.activeElement?.textContent).toBe("Free");
-    fireKeyDown(document.activeElement!, "ArrowDown");
-    fireKeyDown(document.activeElement!, "Enter");
-
-    expect(content.hidden).toBe(true);
-    expect(container.querySelector("[data-value='pro']")?.getAttribute("aria-selected")).toBe(
-      "true",
-    );
-  });
-
-  it("changes the selection from typeahead on the closed select trigger", () => {
-    const { container } = render(
-      <Select id="plan" defaultValue="free">
-        <SelectTrigger>Plan</SelectTrigger>
-        <SelectPopover>
-          <SelectOption value="free">Free</SelectOption>
-          <SelectOption value="pro">Pro</SelectOption>
-          <SelectOption value="team" disabled>
-            Team
-          </SelectOption>
-        </SelectPopover>
-      </Select>,
-    );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const content = container.querySelector<HTMLElement>("[role='listbox']")!;
-
-    fireKeyDown(trigger, "p");
-    expect(content.hidden).toBe(true);
-    expect(container.querySelector("[data-value='pro']")?.getAttribute("aria-selected")).toBe(
-      "true",
-    );
-    fireKeyDown(trigger, "t");
-    expect(container.querySelector("[data-value='pro']")?.getAttribute("aria-selected")).toBe(
-      "true",
-    );
-  });
-
-  it("navigates labelled select opt groups and submits the selected option", () => {
-    const { container } = render(
-      <form>
-        <Select name="size" defaultValue="medium">
-          <SelectTrigger>Size</SelectTrigger>
-          <SelectPopover>
-            <SelectOptGroup label="Standard sizes">
-              <SelectOption value="small">Small</SelectOption>
-              <SelectOption value="medium">Medium</SelectOption>
-            </SelectOptGroup>
-            <SelectOptGroup label="Extended sizes">
-              <SelectOption value="large">Large</SelectOption>
-            </SelectOptGroup>
-          </SelectPopover>
-        </Select>
-      </form>,
-    );
-    const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const groups = container.querySelectorAll<HTMLElement>("[role='group']");
-
-    expect([...groups].map((group) => group.getAttribute("aria-label"))).toEqual([
-      "Standard sizes",
-      "Extended sizes",
-    ]);
-    fireClick(trigger);
-    expect(document.activeElement?.textContent).toBe("Medium");
-    fireKeyDown(document.activeElement!, "ArrowDown");
-    expect(document.activeElement?.textContent).toBe("Large");
-    fireKeyDown(document.activeElement!, "Enter");
-
-    expect(new FormData(container.querySelector("form")!).get("size")).toBe("large");
-  });
-
-  it("navigates select options in their current document order after reordering", () => {
-    function ReorderedSelect({ reversed }: { reversed: boolean }) {
-      let options = [
-        <SelectOption key="free" value="free">
-          Free
-        </SelectOption>,
-        <SelectOption key="pro" value="pro">
-          Pro
-        </SelectOption>,
-      ];
-      if (reversed) options = [...options].reverse();
-      return (
-        <Select>
-          <SelectTrigger>Plan</SelectTrigger>
-          <SelectPopover>{options}</SelectPopover>
-        </Select>
-      );
-    }
-
-    const { container, rerender } = render(<ReorderedSelect reversed={false} />);
-    rerender(<ReorderedSelect reversed />);
-    fireClick(container.querySelector("button")!);
-    expect(document.activeElement?.textContent).toBe("Pro");
-    fireKeyDown(document.activeElement!, "ArrowDown");
-    expect(document.activeElement?.textContent).toBe("Free");
-  });
-
-  it("navigates labelled combobox opt groups and serializes a committed option", () => {
-    const { container } = render(
-      <form>
-        <Combobox name="city">
-          <ComboboxInput aria-label="City" />
-          <ComboboxPopover>
-            <ComboboxOptGroup label="Poland">
-              <ComboboxOption value="krakow">Kraków</ComboboxOption>
-            </ComboboxOptGroup>
-            <ComboboxOptGroup label="Portugal">
-              <ComboboxOption value="lisbon">Lisbon</ComboboxOption>
-            </ComboboxOptGroup>
-          </ComboboxPopover>
-        </Combobox>
-      </form>,
-    );
-    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
-    const groups = container.querySelectorAll<HTMLElement>("[role='group']");
-
-    expect([...groups].map((group) => group.getAttribute("aria-label"))).toEqual([
-      "Poland",
-      "Portugal",
-    ]);
-    fireKeyDown(input, "ArrowDown");
-    fireKeyDown(input, "ArrowDown");
-    expect(input.getAttribute("aria-activedescendant")).toBe(
-      container.querySelector<HTMLElement>("[data-value='lisbon']")?.id,
-    );
-    fireKeyDown(input, "Enter");
-
-    expect(new FormData(container.querySelector("form")!).get("city")).toBe("lisbon");
-  });
-
-  it("preserves native combobox onChange and supports navigation and commit keys", () => {
-    const changed = vi.fn();
-    const inputChanged = vi.fn();
-    const nativeChanged = vi.fn();
-    const { container } = render(
-      <Combobox id="framework" onChange={changed} onInputChange={inputChanged}>
-        <ComboboxInput aria-label="Framework" onChange={nativeChanged} />
-        <ComboboxTrigger />
-        <ComboboxPopover>
-          <ComboboxOption value="react" id="react-option">
-            React
-          </ComboboxOption>
-          <ComboboxOption value="svelte" id="svelte-option">
-            Svelte
-          </ComboboxOption>
-          <ComboboxOption value="vue" id="vue-option">
-            Vue
-          </ComboboxOption>
-        </ComboboxPopover>
-      </Combobox>,
-    );
-    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
-    const trigger = container.querySelector<HTMLButtonElement>("button[aria-haspopup='listbox']")!;
-
-    expect(trigger.getAttribute("aria-controls")).toBe("framework-listbox");
-    fireClick(trigger);
-    expect(trigger.getAttribute("aria-expanded")).toBe("true");
-    expect(document.activeElement).toBe(input);
-
-    fireInput(input, "r");
-    expect(nativeChanged.mock.calls[0]?.[0].nativeEvent).toBeInstanceOf(Event);
-    expect(inputChanged).toHaveBeenLastCalledWith("r");
-    fireInput(input, "");
-    fireKeyDown(input, "ArrowDown");
-    fireKeyDown(input, "ArrowDown");
-    fireKeyDown(input, "Home");
-    fireKeyDown(input, "End");
-    fireKeyDown(input, "Enter");
-
-    expect(input.value).toBe("Vue");
-    expect(changed).toHaveBeenLastCalledWith("vue");
-    expect(input.getAttribute("aria-expanded")).toBe("false");
-    fireKeyDown(input, "Escape");
-    expect(input.getAttribute("aria-expanded")).toBe("false");
-    fireKeyDown(input, "ArrowUp");
-    expect(input.getAttribute("aria-expanded")).toBe("true");
-  });
-
-  it("points aria-activedescendant at a mounted option despite a different logical value", () => {
-    const { container } = render(
-      <Combobox id="city" defaultValue="logical-value" allowEmptyCollection>
-        <ComboboxInput aria-label="City" />
-        <ComboboxPopover>
-          <ComboboxOption value="paris" id="mounted-paris">
-            Paris
-          </ComboboxOption>
-        </ComboboxPopover>
-      </Combobox>,
-    );
-    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
-
-    fireKeyDown(input, "ArrowDown");
-
-    expect(input.getAttribute("aria-activedescendant")).toBe("mounted-paris");
-    expect(document.getElementById("mounted-paris")).not.toBeNull();
-    expect(document.getElementById("mounted-paris")?.hasAttribute("data-active")).toBe(true);
-    fireKeyDown(input, "Escape");
-    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
-    expect(document.getElementById("mounted-paris")?.hasAttribute("data-active")).toBe(false);
-  });
-
-  it("automatically highlights the first visible enabled option after editing", () => {
-    const { container } = render(
-      <Combobox autoHighlight defaultOpen>
-        <ComboboxInput aria-label="City" />
-        <ComboboxPopover>
-          <ComboboxOption value="disabled" id="disabled-city" disabled>
-            Prague disabled
-          </ComboboxOption>
-          <ComboboxOption value="paris" id="paris-option">
-            Paris
-          </ComboboxOption>
-          <ComboboxOption value="prague" id="prague-option">
-            Prague
-          </ComboboxOption>
-        </ComboboxPopover>
-      </Combobox>,
-    );
-    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
-
-    expect(input.getAttribute("aria-activedescendant")).toBe("paris-option");
-    fireInput(input, "prag");
-    expect(input.getAttribute("aria-activedescendant")).toBe("prague-option");
-    expect(container.querySelector("#prague-option")?.hasAttribute("data-active")).toBe(true);
-
-    fireInput(input, "missing");
-    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
-  });
-
-  it("keeps generic ListBox and ListBoxOption selection functional", () => {
-    const changed = vi.fn();
-    const { container } = render(
-      <ListBox aria-label="Libraries" onChange={changed}>
-        <ListBoxOption id="react" value="react">
-          React
-        </ListBoxOption>
-        <ListBoxOption id="solid" value="solid">
-          Solid
-        </ListBoxOption>
-      </ListBox>,
-    );
-    const items = container.querySelectorAll<HTMLElement>("[role='option']");
-
-    fireClick(items[1]!);
-    expect(items[1]?.getAttribute("aria-selected")).toBe("true");
-    expect(changed).toHaveBeenLastCalledWith("solid");
-    fireKeyDown(items[1]!, "ArrowUp");
-    expect(items[0]?.getAttribute("aria-selected")).toBe("true");
-  });
-
-  it("keeps an enabled option reachable when the selected value is missing or disabled", () => {
-    const { container, rerender } = render(
-      <ListBox aria-label="Libraries" value="missing">
-        <ListBoxOption value="react">React</ListBoxOption>
-        <ListBoxOption value="solid">Solid</ListBoxOption>
-      </ListBox>,
-    );
-    let options = container.querySelectorAll<HTMLElement>("[role='option']");
-    expect(options[0]!.tabIndex).toBe(0);
-
-    rerender(
-      <ListBox aria-label="Libraries" value="react">
-        <ListBoxOption value="react" disabled>
-          React
-        </ListBoxOption>
-        <ListBoxOption value="solid">Solid</ListBoxOption>
-      </ListBox>,
-    );
-    options = container.querySelectorAll<HTMLElement>("[role='option']");
-    expect(options[0]!.hasAttribute("tabindex")).toBe(false);
-    expect(options[1]!.tabIndex).toBe(0);
-  });
-
-  it("preserves explicit trigger labels and enforces required picker values", () => {
-    const { container } = render(
+  it("preserves explicit trigger labels and enforces required picker values", async () => {
+    const { container, user } = setup(
       <form>
         <Select id="required-plan" name="plan" required>
           <SelectTrigger aria-label="Choose plan">+</SelectTrigger>
@@ -455,9 +149,9 @@ describe("picker composition", () => {
     expect(input.required).toBe(true);
     expect(form.checkValidity()).toBe(false);
 
-    fireClick(trigger);
-    fireClick(container.querySelector<HTMLElement>("[role='option']")!);
-    fireInput(input, "Warsaw");
+    await user.click(trigger);
+    await user.click(container.querySelector<HTMLElement>("[role='option']")!);
+    await user.type(input, "Warsaw");
 
     expect(form.checkValidity()).toBe(true);
     const data = new FormData(form);
@@ -465,42 +159,39 @@ describe("picker composition", () => {
     expect(data.get("city")).toBe("Warsaw");
   });
 
-  it("focuses the select trigger in the control's owning document after native validation", () => {
-    const frame = document.createElement("iframe");
-    document.body.append(frame);
-    const frameDocument = frame.contentDocument!;
-    const { container, unmount } = render(
-      <Select id="framed-plan" name="plan" required>
-        <SelectTrigger>Choose plan</SelectTrigger>
-      </Select>,
-      frameDocument,
-    );
-    const nativeSelect = container.querySelector("select")!;
-    const trigger = container.querySelector("button")!;
-
-    act(() => nativeSelect.dispatchEvent(new Event("invalid", { cancelable: true })));
-
-    expect(frameDocument.activeElement).toBe(trigger);
-    unmount();
-    frame.remove();
-  });
-
-  it("treats an initial committed combobox value as a valid form value", () => {
+  it("names a popover by its label only when a label is rendered", () => {
     const { container } = render(
-      <form>
-        <Combobox id="initial-city" name="city" defaultValue="paris" required>
+      <>
+        <Select id="labelled-select">
+          <Label>Plan</Label>
+          <SelectTrigger>Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="pro">Pro</SelectOption>
+          </SelectPopover>
+        </Select>
+        <Select id="unlabelled-select">
+          <SelectTrigger>Choose</SelectTrigger>
+          <SelectPopover>
+            <SelectOption value="pro">Pro</SelectOption>
+          </SelectPopover>
+        </Select>
+        <Combobox id="unlabelled-combobox">
           <ComboboxInput aria-label="City" />
           <ComboboxPopover>
             <ComboboxOption value="paris">Paris</ComboboxOption>
           </ComboboxPopover>
         </Combobox>
-      </form>,
+      </>,
     );
-    const form = container.querySelector("form")!;
-    const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
+    const lists = container.querySelectorAll<HTMLElement>("[role='listbox']");
 
-    expect(input.value).toBe("Paris");
-    expect(form.checkValidity()).toBe(true);
-    expect(new FormData(form).get("city")).toBe("paris");
+    expect(lists[0]?.getAttribute("aria-labelledby")).toBe("labelled-select-label");
+    expect(lists[1]?.getAttribute("aria-labelledby")).toBe("unlabelled-select");
+    expect(lists[2]?.getAttribute("aria-labelledby")).toBe("unlabelled-combobox");
+    for (const list of lists) {
+      for (const id of list.getAttribute("aria-labelledby")!.split(" ")) {
+        expect(document.getElementById(id), `${id} is rendered`).not.toBeNull();
+      }
+    }
   });
 });

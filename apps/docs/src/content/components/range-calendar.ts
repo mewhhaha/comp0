@@ -47,6 +47,7 @@ export default component({
         prop("min / max", "string", "Inclusive selectable ISO date bounds."),
         prop("locale", "string", "BCP 47 locale for month and weekday names."),
         prop("disabled", "boolean", "Disables every day and navigation control."),
+        prop("id", "string", "Id of the calendar element when rendered with as."),
         prop(
           "as",
           "ElementType",
@@ -100,6 +101,17 @@ export default component({
     { keys: ["Enter", "Space"], action: "Starts or completes the range at the focused day." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-complete]",
+      on: "RangeCalendar (with as)",
+      meaning: "Both start and end dates have values.",
+    },
+    {
+      attribute: "[data-start-value] / [data-end-value]",
+      on: "RangeCalendar (with as)",
+      meaning: "Carry the selected ISO start and end dates.",
+    },
+    { attribute: "[data-today]", on: "RangeCalendarCell", meaning: "The day is today." },
     {
       attribute: "[data-range-start]",
       on: "RangeCalendarCell",

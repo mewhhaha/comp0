@@ -9,7 +9,6 @@ import {
 } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { normalizeHexColor, useColorPickerContext } from "./color-picker-shared.js";
 
 export type ColorPickerInputProps = Omit<
@@ -59,6 +58,7 @@ export function ColorPickerInput({
   const Part = partElement(as, "input");
   return (
     <Part
+      data-slot="color-picker-input"
       {...props}
       id={props.id ?? colorPicker.inputId}
       type="text"
@@ -68,7 +68,6 @@ export function ColorPickerInput({
       aria-label={props["aria-label"] ?? "Hex color"}
       autoCapitalize={autoCapitalize ?? "none"}
       spellCheck={spellCheck ?? false}
-      data-slot={dataSlot(props, "color-picker-input")}
       data-disabled={dataAttr(resolvedDisabled)}
       data-invalid={dataAttr(invalid)}
       data-value={draft || undefined}

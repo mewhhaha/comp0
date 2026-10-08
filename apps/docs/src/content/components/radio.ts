@@ -22,9 +22,12 @@ export default component({
       prop("onChange", "(value: string) => void", "Receives the next choice."),
       prop("name", "string", "Shared submission name for the group."),
       prop("required", "boolean", "Requires one radio in the group to be selected."),
+      prop("invalid", "boolean", "Marks the group invalid and shows its FieldError."),
     ]),
     p("Radio", "item", "Labelled native radio option.", true, false, [
       prop("value", "string", "This option’s value."),
+      prop("name", "string", "Submission name; falls back to the group name."),
+      prop("inputProps", "InputHTMLAttributes", "Props for the hidden native input."),
       prop("checked / defaultChecked", "boolean", "Controlled or initial standalone state."),
       prop("disabled", "boolean", "Disables the option."),
     ]),

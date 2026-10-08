@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ComponentProps } from "react";
-import { dataAttr, isAfter, isBefore, parseISODate } from "@comp0/core";
+import { dataAttr } from "@comp0/core";
+import { isAfter, isBefore, parseISODate } from "../internal/date.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useCalendarContext } from "../calendar/calendar-shared.js";
 import { useRangeCalendarContext } from "../date-range-picker/date-range-shared.js";
 
@@ -67,9 +67,9 @@ export function RangeCalendarCell({
   const Part = partElement(as, "td");
   return (
     <Part
+      data-slot="range-calendar-cell"
       {...props}
       aria-selected={selected || undefined}
-      data-slot={dataSlot(props, "range-calendar-cell")}
       data-outside-month={dataAttr(Boolean(outsideMonth))}
       data-selected={dataAttr(selected)}
       data-range-start={dataAttr(rangeStart)}

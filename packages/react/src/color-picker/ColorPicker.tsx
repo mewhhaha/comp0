@@ -4,13 +4,13 @@ import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
 import { FormValue } from "../internal/form-value.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   ColorPickerContext,
   colorCoordinatesForValue,
   hexToHsv,
   hsvToHex,
   normalizeHexColor,
+  normalizeHexColorProp,
 } from "./color-picker-shared.js";
 import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
 import { useFormReset } from "../internal/form-control-state.js";
@@ -18,13 +18,12 @@ import { useFormReset } from "../internal/form-control-state.js";
 export type ColorPickerProps = RootProps<{
   id?: string | undefined;
   children?: ReactNode | undefined;
-  "aria-invalid"?: boolean | "true" | "false" | undefined;
   value?: string | undefined;
   defaultValue?: string | undefined;
   onChange?: ((value: string) => void) | undefined;
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   name?: string | undefined;
   form?: string | undefined;
   disabled?: boolean | undefined;
@@ -41,7 +40,7 @@ export function ColorPicker({
   onChange,
   open,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   name,
   form,
   disabled,
@@ -51,21 +50,11 @@ export function ColorPicker({
 }: ColorPickerProps) {
   const ids = useFieldIds(id);
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
-  const initialValue = normalizeHexColor(value ?? defaultValue);
-  if (!initialValue) {
-    throw new Error(
-      `ColorPicker value "${value ?? defaultValue}" must be a three- or six-digit hex color.`,
-    );
-  }
-  const [colorValue, setColorValue, colorState] = useControllableState({
-    value: value === undefined ? undefined : normalizeHexColor(value),
-    defaultValue: initialValue,
+  const [normalizedValue, setColorValue, colorState] = useControllableState({
+    value: value === undefined ? undefined : normalizeHexColorProp("ColorPicker", "value", value),
+    defaultValue: normalizeHexColorProp("ColorPicker", "defaultValue", defaultValue) ?? "#000000",
     onChange,
   });
-  const normalizedValue = normalizeHexColor(colorValue);
-  if (!normalizedValue) {
-    throw new Error(`ColorPicker value "${colorValue}" must be a three- or six-digit hex color.`);
-  }
   const [colorCoordinates, setColorCoordinates] = useState(() => hexToHsv(normalizedValue));
   let resolvedCoordinates = colorCoordinates;
   if (hsvToHex(colorCoordinates) !== normalizedValue) {
@@ -74,13 +63,12 @@ export function ColorPicker({
   const popover = usePopoverState({
     open,
     defaultOpen,
-    onToggle,
+    onOpenChange,
     triggerId: ids.controlId,
     contentId: `${ids.controlId}-popover`,
   });
   const resolvedDisabled = Boolean(disabled);
-  const resolvedInvalid =
-    props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
+  const resolvedInvalid = Boolean(invalid);
   const feedback = fieldFeedback(children, resolvedInvalid);
   const resolvedRequired = Boolean(required);
   useFormReset({
@@ -127,9 +115,9 @@ export function ColorPicker({
           }}
         >
           <Root
+            data-slot="color-picker"
             {...props}
-            aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
-            data-slot={dataSlot(props, "color-picker")}
+            aria-invalid={resolvedInvalid || undefined}
             data-open={dataAttr(popover.open)}
             data-disabled={dataAttr(resolvedDisabled)}
             data-invalid={dataAttr(resolvedInvalid)}

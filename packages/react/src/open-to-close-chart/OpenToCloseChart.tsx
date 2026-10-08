@@ -1,11 +1,8 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
+import { openToCloseChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
-import {
-  type ChartContextValue,
-  numberOf,
-  type OpenToCloseChartValue,
-} from "../chart/chart-shared.js";
+import { type OpenToCloseChartValue } from "../chart/chart-shared.js";
 
 export type OpenToCloseChartProps = ComponentProps<"figure"> &
   AsProp & {
@@ -29,34 +26,14 @@ export function OpenToCloseChart({
   ref,
   ...props
 }: OpenToCloseChartProps) {
-  if (!xLabel.trim()) throw new Error("OpenToCloseChart x-axis label must not be empty.");
-  if (!yLabel.trim()) throw new Error("OpenToCloseChart y-axis label must not be empty.");
-  if (!openLabel.trim()) throw new Error("OpenToCloseChart open label must not be empty.");
-  if (!closeLabel.trim()) throw new Error("OpenToCloseChart close label must not be empty.");
-  let previousX: number | undefined;
-  for (const [index, value] of values.entries()) {
-    const x = numberOf(value.x);
-    if (!Number.isFinite(x) || !Number.isFinite(value.open) || !Number.isFinite(value.close)) {
-      throw new Error(
-        `OpenToCloseChart value at index ${index} must have finite coordinates; received x=${value.x}, open=${value.open}, close=${value.close}.`,
-      );
-    }
-    if (previousX !== undefined && x <= previousX) {
-      throw new Error(
-        `OpenToCloseChart x values must increase; index ${index - 1} is ${previousX} and index ${index} is ${x}.`,
-      );
-    }
-    previousX = x;
-  }
-  const context: ChartContextValue = {
-    kind: "open-to-close",
+  const context = openToCloseChartContext(
     values,
     xLabel,
     yLabel,
     openLabel,
     closeLabel,
-    formatX: formatX ?? String,
-    formatY: formatY ?? String,
-  };
+    formatX,
+    formatY,
+  );
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

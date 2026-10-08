@@ -86,6 +86,15 @@ export default component({
       "Optional floating segment label shown on hover or focus.",
       true,
       true,
+      [
+        prop("placement", "PopoverPlacement", 'Side of the active mark; defaults to "top".'),
+        prop("offset", "number", "Distance from the active mark; defaults to eight pixels."),
+        prop(
+          "children",
+          "ReactNode | (details: ChartValueDetails) => ReactNode",
+          "Custom content receiving the active segment's formatted details.",
+        ),
+      ],
     ),
   ],
   keyboard: [
@@ -105,6 +114,11 @@ export default component({
     { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-category]",
+      on: "StackedBarChartSegment",
+      meaning: "The category label of the bar this segment belongs to.",
+    },
     {
       attribute: "[data-segment]",
       on: "StackedBarChartSegment",

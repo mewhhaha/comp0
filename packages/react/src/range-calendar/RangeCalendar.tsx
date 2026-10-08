@@ -1,13 +1,12 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { dataAttr, useControllableState } from "@comp0/core";
 import {
   addMonths,
   clampISODate,
-  dataAttr,
   isBefore,
   isValidISODate,
   todayISODate,
-  useControllableState,
-} from "@comp0/core";
+} from "../internal/date.js";
 import { CalendarContext, resolveWeekStart } from "../calendar/calendar-shared.js";
 import {
   RangeCalendarContext,
@@ -16,7 +15,6 @@ import {
 } from "../date-range-picker/date-range-shared.js";
 import { usePopoverContext } from "../internal/overlay/index.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type { DateRange } from "../date-range-picker/date-range-shared.js";
 
@@ -143,9 +141,9 @@ export function RangeCalendar({
     <CalendarContext value={calendarContext}>
       <RangeCalendarContext value={{ previewDate, value: range, setPreviewDate }}>
         <Root
+          data-slot="range-calendar"
           {...props}
           id={id}
-          data-slot={dataSlot(props, "range-calendar")}
           data-disabled={dataAttr(resolvedDisabled)}
           data-complete={dataAttr(Boolean(start && end))}
           data-start-value={start || undefined}

@@ -16,7 +16,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "./index.js";
-import { fireClick, render } from "../test/render.js";
+import { render, setup } from "../test/render.js";
 
 describe("foundation components", () => {
   it("forwards file input props without an inputProps wrapper", () => {
@@ -48,9 +48,9 @@ describe("foundation components", () => {
     expect(changed).toHaveBeenCalledOnce();
   });
 
-  it("keeps generic buttons independent from picker state", () => {
+  it("keeps generic buttons independent from picker state", async () => {
     const clicked = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Select defaultValue="alpha">
         <Button onClick={clicked}>Generic action</Button>
         <SelectTrigger>Open</SelectTrigger>
@@ -62,16 +62,16 @@ describe("foundation components", () => {
     const buttons = container.querySelectorAll("button");
     const content = container.querySelector<HTMLElement>("[role='listbox']")!;
 
-    fireClick(buttons[0]!);
+    await user.click(buttons[0]!);
     expect(clicked).toHaveBeenCalledOnce();
     expect(content.hidden).toBe(true);
-    fireClick(buttons[1]!);
+    await user.click(buttons[1]!);
     expect(content.hidden).toBe(false);
   });
 
-  it("keeps disabled anchors exposed as links without an activation target", () => {
+  it("keeps disabled anchors exposed as links without an activation target", async () => {
     const clicked = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Link href="/account" disabled onClick={clicked}>
         Account
       </Link>,
@@ -81,7 +81,7 @@ describe("foundation components", () => {
     expect(link.getAttribute("role")).toBe("link");
     expect(link.hasAttribute("href")).toBe(false);
     expect(link.getAttribute("aria-disabled")).toBe("true");
-    fireClick(link);
+    await user.click(link);
     expect(clicked).not.toHaveBeenCalled();
   });
 

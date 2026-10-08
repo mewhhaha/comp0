@@ -2,7 +2,6 @@ import { useId, useRef, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { DialogContext } from "../internal/overlay/context.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type DialogProps = RootProps<{
   /** Base for the generated trigger and content ids; also the wrapper id when `as` is set. */
@@ -10,7 +9,7 @@ export type DialogProps = RootProps<{
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state; native cancel, close, and toggle events stay on content parts. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   children?: ReactNode | undefined;
 }>;
 
@@ -19,7 +18,7 @@ export function Dialog({
   children,
   defaultOpen = false,
   id,
-  onToggle,
+  onOpenChange,
   open: openProp,
   ...props
 }: DialogProps) {
@@ -29,7 +28,7 @@ export function Dialog({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const context = {
     open,
@@ -47,7 +46,7 @@ export function Dialog({
   const Root = rootElement(as);
   return (
     <DialogContext value={context}>
-      <Root {...props} id={id} data-open={dataAttr(open)} data-slot={dataSlot(props, "dialog")}>
+      <Root data-slot="dialog" {...props} id={id} data-open={dataAttr(open)}>
         {children}
       </Root>
     </DialogContext>

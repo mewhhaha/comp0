@@ -12,21 +12,21 @@ export default component({
   steps: {
     main: "Start NavigationMenu with NavigationMenuList around the items.",
     supporting:
-      "Give each NavigationMenuItem a value, then pair a NavigationMenuTrigger with its NavigationMenuContent panel of links.",
+      "Give each NavigationMenuItem a value, then pair a NavigationMenuTrigger with its NavigationMenuPanel of links.",
     behavior:
       "Use NavigationMenuLink for every destination and mark the page you are on with current.",
-    code: '<NavigationMenu aria-label="Main">\n  <NavigationMenuList>\n    <NavigationMenuItem value="products">\n      <NavigationMenuTrigger>Products</NavigationMenuTrigger>\n      <NavigationMenuContent>\n        <NavigationMenuLink href="/analytics">Analytics</NavigationMenuLink>\n      </NavigationMenuContent>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>;',
+    code: '<NavigationMenu aria-label="Main">\n  <NavigationMenuList>\n    <NavigationMenuItem value="products">\n      <NavigationMenuTrigger>Products</NavigationMenuTrigger>\n      <NavigationMenuPanel>\n        <NavigationMenuLink href="/analytics">Analytics</NavigationMenuLink>\n      </NavigationMenuPanel>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>;',
   },
   imports: [
     "NavigationMenu",
-    "NavigationMenuContent",
+    "NavigationMenuPanel",
     "NavigationMenuItem",
     "NavigationMenuLink",
     "NavigationMenuList",
     "NavigationMenuTrigger",
   ],
   snippet:
-    '<NavigationMenu aria-label="Main">\n  <NavigationMenuList>\n    <NavigationMenuItem value="products">\n      <NavigationMenuTrigger>Products</NavigationMenuTrigger>\n      <NavigationMenuContent>\n        <NavigationMenuLink href="/analytics">Analytics</NavigationMenuLink>\n      </NavigationMenuContent>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>;',
+    '<NavigationMenu aria-label="Main">\n  <NavigationMenuList>\n    <NavigationMenuItem value="products">\n      <NavigationMenuTrigger>Products</NavigationMenuTrigger>\n      <NavigationMenuPanel>\n        <NavigationMenuLink href="/analytics">Analytics</NavigationMenuLink>\n      </NavigationMenuPanel>\n    </NavigationMenuItem>\n  </NavigationMenuList>\n</NavigationMenu>;',
   parts: [
     p(
       "NavigationMenu",
@@ -46,7 +46,7 @@ export default component({
     ),
     p("NavigationMenuList", "root", "Native list of navigation items.", true, false),
     p("NavigationMenuItem", "item", "List item pairing one trigger with its panel.", true, false, [
-      prop("value", "string", "Identity that pairs the trigger with its content panel."),
+      prop("value", "string", "Identity that pairs the trigger with its panel."),
     ]),
     p(
       "NavigationMenuTrigger",
@@ -63,7 +63,7 @@ export default component({
       ],
     ),
     p(
-      "NavigationMenuContent",
+      "NavigationMenuPanel",
       "region",
       "Inline panel of links; it stays in the page flow so CSS positions it.",
       true,
@@ -108,7 +108,7 @@ export default component({
   stateHooks: [
     {
       attribute: "[data-open]",
-      on: "NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent",
+      on: "NavigationMenuItem, NavigationMenuTrigger, NavigationMenuPanel",
       meaning: "This item's panel is open.",
     },
     { attribute: "[data-open]", on: "NavigationMenu", meaning: "Some panel is open." },

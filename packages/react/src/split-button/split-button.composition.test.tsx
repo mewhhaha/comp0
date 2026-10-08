@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { setup } from "../../test/render.js";
 import { Button } from "../button/Button.js";
 import { Menu } from "../menu/Menu.js";
 import { MenuItem } from "../menu/MenuItem.js";
@@ -11,7 +11,7 @@ import { SplitButton } from "./SplitButton.js";
 function renderSplit(primaryProps: { disabled?: boolean } = {}) {
   const onSave = vi.fn();
   const onSaveAs = vi.fn();
-  const result = render(
+  const result = setup(
     <SplitButton aria-label="Save">
       <Button onClick={onSave} {...primaryProps}>
         Save
@@ -36,7 +36,7 @@ function renderSplit(primaryProps: { disabled?: boolean } = {}) {
 }
 
 describe("split button composition", () => {
-  it("groups the two segments with a name and one tab stop", () => {
+  it("groups the two segments with a name and one tab stop", async () => {
     const { group, primary, menuTrigger } = renderSplit();
     expect(group.getAttribute("aria-label")).toBe("Save");
     expect(primary.textContent).toBe("Save");
@@ -44,33 +44,33 @@ describe("split button composition", () => {
     expect(menuTrigger.tabIndex).toBe(-1);
   });
 
-  it("roves between the segments with the arrow keys, without wrapping", () => {
-    const { primary, menuTrigger } = renderSplit();
+  it("roves between the segments with the arrow keys, without wrapping", async () => {
+    const { primary, menuTrigger, user } = renderSplit();
     primary.focus();
-    fireKeyDown(primary, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(menuTrigger);
     expect(menuTrigger.tabIndex).toBe(0);
     expect(primary.tabIndex).toBe(-1);
-    fireKeyDown(menuTrigger, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(menuTrigger);
-    fireKeyDown(menuTrigger, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(primary);
-    fireKeyDown(primary, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(primary);
-    fireKeyDown(primary, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(menuTrigger);
-    fireKeyDown(menuTrigger, "Home");
+    await user.keyboard("{Home}");
     expect(document.activeElement).toBe(primary);
   });
 
-  it("drops a disabled default action from the tab stop", () => {
+  it("drops a disabled default action from the tab stop", async () => {
     const { primary, menuTrigger } = renderSplit({ disabled: true });
     expect(primary.disabled).toBe(true);
     expect(menuTrigger.tabIndex).toBe(0);
   });
 
   it("drops an aria-disabled polymorphic action from the tab stop", () => {
-    const { container } = render(
+    const { container } = setup(
       <SplitButton aria-label="Save">
         <Button as="a" href="/save" disabled>
           Save
@@ -85,21 +85,21 @@ describe("split button composition", () => {
     expect(secondary.tabIndex).toBe(0);
   });
 
-  it("opens the menu from its own button and restores focus on Escape", () => {
-    const { menuTrigger, surface } = renderSplit();
+  it("opens the menu from its own button and restores focus on Escape", async () => {
+    const { menuTrigger, surface, user } = renderSplit();
     expect(surface.hidden).toBe(true);
     menuTrigger.focus();
-    fireKeyDown(menuTrigger, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(surface.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("Save as");
-    fireKeyDown(document.activeElement!, "Escape");
+    await user.keyboard("{Escape}");
     expect(surface.hidden).toBe(true);
     expect(document.activeElement).toBe(menuTrigger);
   });
 
-  it("activates the default action on click", () => {
-    const { primary, onSave } = renderSplit();
-    fireClick(primary);
+  it("activates the default action on click", async () => {
+    const { primary, onSave, user } = renderSplit();
+    await user.click(primary);
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 });

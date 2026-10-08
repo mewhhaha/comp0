@@ -6,6 +6,7 @@ import {
   type MentionCaretRect,
   type MentionMatch,
 } from "./mention-field-shared.js";
+import { warnOnce } from "../internal/dev.js";
 import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
 import { TextField, type TextFieldOwnProps, type TextFieldProps } from "../text-field/TextField.js";
 import { type RootProps } from "../internal/polymorphic.js";
@@ -117,13 +118,14 @@ export function MentionField({
   value,
   ...props
 }: MentionFieldProps) {
-  for (const trigger of triggers) {
-    if (!trigger || /\s/u.test(trigger)) {
-      throw new Error(
-        `MentionField trigger ${JSON.stringify(trigger)} must be non-empty and contain no whitespace.`,
-      );
-    }
-  }
+  const validTriggers = triggers.filter((trigger) => {
+    if (trigger && !/\s/u.test(trigger)) return true;
+    warnOnce(
+      `MentionField:invalid-trigger:${JSON.stringify(trigger)}`,
+      `MentionField trigger ${JSON.stringify(trigger)} must be non-empty and contain no whitespace. It was ignored.`,
+    );
+    return false;
+  });
 
   const id = useId().replace(/:/g, "");
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -144,7 +146,7 @@ export function MentionField({
   });
   const popover = usePopoverState({
     open: match !== null,
-    onToggle(open) {
+    onOpenChange(open) {
       if (!open) setMatch(null);
     },
     triggerId: `mention-field-${id}-input`,
@@ -175,7 +177,7 @@ export function MentionField({
     const key = selectionKey(input);
     if (replacing.current || (!inputChanged && dismissedSelection.current === key)) return null;
     dismissedSelection.current = "";
-    const nextMatch = findMentionMatch(input.value, input.selectionStart, triggers);
+    const nextMatch = findMentionMatch(input.value, input.selectionStart, validTriggers);
     setMatch(nextMatch);
     if (nextMatch) {
       const nextRect = measureCaret(input);
@@ -189,7 +191,7 @@ export function MentionField({
   const replaceMatch = (selectedValue: string) => {
     const input = inputRef.current;
     if (!input || !match) return;
-    const currentMatch = findMentionMatch(input.value, input.selectionStart, triggers);
+    const currentMatch = findMentionMatch(input.value, input.selectionStart, validTriggers);
     if (!currentMatch) return;
     const followingCharacter = input.value[currentMatch.end];
     const separator = followingCharacter ? "" : " ";

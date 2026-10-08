@@ -1,7 +1,6 @@
 import { useId, type ComponentProps, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { dataAttr, getRovingFocusTarget } from "@comp0/core";
-import { dataSlot } from "../internal/shared.js";
+import { composeRefs, dataAttr, useCollectionNavigation } from "@comp0/core";
 import { writingDirection } from "../internal/writing-direction.js";
 import { useChartInteraction } from "./chart-interaction-context.js";
 import { useChartNavigation } from "./chart-navigation.js";
@@ -39,31 +38,37 @@ export function ChartValue({
   const active = interaction.active?.key === generatedId;
   const valueId = id ?? generatedId;
 
+  const navigate = useCollectionNavigation();
+  const { collection } = navigation;
+
   const moveFocus = (event: KeyboardEvent<SVGGElement>) => {
-    const plot = event.currentTarget.ownerSVGElement;
-    if (!plot) return;
-    const values = [...plot.querySelectorAll<SVGGElement>("[data-chart-value]")];
-    const currentIndex = values.indexOf(event.currentTarget);
+    const items = collection.items();
+    const currentIndex = items.findIndex((item) => item.key === generatedId);
     if (currentIndex === -1) return;
     const customTargetIndex = navigation.getTargetIndex?.(currentIndex, event.key);
     if (customTargetIndex !== undefined) {
       event.preventDefault();
-      values[customTargetIndex]?.focus();
+      items[customTargetIndex]?.element?.focus();
       return;
     }
-    const targetKey = getRovingFocusTarget(
-      values.map((_, index) => ({ key: String(index) })),
-      String(currentIndex),
-      event.key,
-      {
-        orientation: navigation.orientation,
-        dir: writingDirection(event.currentTarget),
-        loop: navigation.loop,
-      },
-    );
+    const targetKey = navigate(event.key, items, generatedId, {
+      orientation: navigation.orientation,
+      dir: writingDirection(event.currentTarget),
+      loop: navigation.loop,
+      typeahead: false,
+    });
     if (targetKey === undefined) return;
     event.preventDefault();
-    values[Number(targetKey)]?.focus();
+    collection.get(targetKey)?.element?.focus();
+  };
+  const markRef = (element: SVGGElement | null) => {
+    collection.register({
+      key: generatedId,
+      id: valueId,
+      textValue: details.label,
+      element,
+    });
+    composeRefs(ref)(element);
   };
   let activeOverlay: ReactNode;
   if (active && navigation.overlayElement) {
@@ -82,16 +87,15 @@ export function ChartValue({
   return (
     <>
       <g
+        data-slot={fallbackSlot}
         {...props}
-        ref={ref}
+        ref={markRef}
         id={valueId}
         role="img"
         tabIndex={details.index === navigation.tabStopIndex ? 0 : -1}
         aria-label={details.label}
         style={style}
         data-active={dataAttr(active)}
-        data-chart-value=""
-        data-slot={dataSlot(props, fallbackSlot)}
         onFocus={(event) => {
           onFocus?.(event);
           if (event.defaultPrevented) return;

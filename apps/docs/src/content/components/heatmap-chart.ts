@@ -81,6 +81,15 @@ export default component({
       "Optional floating cell value shown on hover or focus.",
       true,
       true,
+      [
+        prop("placement", "PopoverPlacement", 'Side of the active mark; defaults to "top".'),
+        prop("offset", "number", "Distance from the active mark; defaults to eight pixels."),
+        prop(
+          "children",
+          "ReactNode | (details: ChartValueDetails) => ReactNode",
+          "Custom content receiving the active cell's formatted details.",
+        ),
+      ],
     ),
   ],
   keyboard: [
@@ -96,6 +105,16 @@ export default component({
     { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-x]",
+      on: "HeatmapChartCell",
+      meaning: "The column label of this cell.",
+    },
+    {
+      attribute: "[data-y]",
+      on: "HeatmapChartCell",
+      meaning: "The row label of this cell.",
+    },
     {
       attribute: "[data-value]",
       on: "HeatmapChartCell",

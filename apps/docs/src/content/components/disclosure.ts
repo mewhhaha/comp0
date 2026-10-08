@@ -19,7 +19,7 @@ export default component({
   parts: [
     p("Disclosure", "root", "Native details element that owns the open state.", true, false, [
       prop("open / defaultOpen", "boolean", "Controlled or initial open state."),
-      prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+      prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
     ]),
     p("DisclosureTrigger", "trigger", "Native summary element that toggles the details."),
     p("DisclosurePanel", "region", "Revealed content."),

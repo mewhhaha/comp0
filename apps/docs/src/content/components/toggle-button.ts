@@ -54,6 +54,12 @@ export default component({
       ),
       prop("onChange", "(selected: boolean) => void", "Receives the next on state."),
       prop("disabled", "boolean", "Disables the toggle."),
+      prop(
+        "command / commandfor",
+        "string",
+        "Invoker command and target id, forwarded to the native button.",
+      ),
+      prop("pending", "boolean", "Disables the button and sets aria-busy while work is in flight."),
     ]),
   ],
   keyboard: [

@@ -3,6 +3,7 @@ import {
   Fragment,
   isValidElement,
   type ComponentProps,
+  type ComponentPropsWithRef,
   type ElementType,
   type JSX,
   type ReactNode,
@@ -53,21 +54,29 @@ function Passthrough({ children }: { children?: ReactNode }) {
  *
  * Roots and parts render the returned type as JSX (`<Root {...props} />`)
  * rather than through a helper call, so the React Compiler can see the props
- * and handlers as JSX attributes and keep memoizing the component.
+ * and handlers as JSX attributes and keep memoizing the component. The tag
+ * type parameter types those attributes as the tag's props, `ref` included;
+ * `data-*` and `aria-*` attributes are always accepted.
  */
-export function rootElement(as: ElementType | undefined): ElementType {
-  if (as === undefined || as === Fragment) return Passthrough;
-  return as;
+export function rootElement<TTag extends IntrinsicTag = "div">(
+  as: ElementType | undefined,
+): (props: ComponentPropsWithRef<TTag>) => ReactNode {
+  if (as === undefined || as === Fragment) return Passthrough as never;
+  return as as never;
 }
 
 /**
  * The element a part renders: its `as` element, or `fallback` when none is
  * given. `as={Fragment}` renders `Slot`, which merges the part's props into
- * its single child element.
+ * its single child element. The returned component is typed with the
+ * fallback tag's props, `ref` included.
  */
-export function partElement(as: ElementType | undefined, fallback: ElementType): ElementType {
-  if (as === Fragment) return Slot;
-  return as ?? fallback;
+export function partElement<TTag extends IntrinsicTag>(
+  as: ElementType | undefined,
+  fallback: TTag,
+): (props: ComponentPropsWithRef<TTag>) => ReactNode {
+  if (as === Fragment) return Slot as never;
+  return (as ?? fallback) as never;
 }
 
 type SlotProps = Record<string, unknown> & { children?: ReactNode };
@@ -77,7 +86,7 @@ type SlotProps = Record<string, unknown> & { children?: ReactNode };
  * the child's handlers run first, classes concatenate, refs compose, and the
  * part's other defined props win.
  */
-export function Slot({ children, ...props }: SlotProps) {
+function Slot({ children, ...props }: SlotProps) {
   if (!isValidElement<Record<string, unknown>>(children)) {
     throw new Error("A part rendered as={Fragment} needs exactly one element child.");
   }

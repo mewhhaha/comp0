@@ -1,6 +1,7 @@
 import { type ComponentProps } from "react";
 import { type AsProp } from "../internal/polymorphic.js";
-import { categoricalChartContext, ChartFigure } from "../chart/chart-root.js";
+import { categoricalChartContext } from "../chart/chart-context.js";
+import { ChartFigure } from "../chart/chart-root.js";
 import { type CategoricalChartValue } from "../chart/chart-shared.js";
 
 export type ColumnChartProps = ComponentProps<"figure"> &

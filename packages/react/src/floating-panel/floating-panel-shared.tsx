@@ -15,7 +15,6 @@ type FloatingPanelRegistration = {
   open: boolean;
   surface: HTMLElement | null;
   trigger: HTMLElement | null;
-  lastFocused: HTMLElement | null;
 };
 
 export type FloatingPanelGroupContextValue = {

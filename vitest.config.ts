@@ -47,6 +47,7 @@ export default defineConfig({
             "react",
             "react/jsx-runtime",
             "react/compiler-runtime",
+            "axe-core",
             "react-dom",
             "react-dom/client",
           ],

@@ -38,7 +38,6 @@ export function TableColumn({
       ref={cellRef}
       tabIndex={tabIndex}
       aria-sort={sort}
-      data-sort={sort === "ascending" || sort === "descending" ? sort : undefined}
       data-sortable={dataAttr(Boolean(onSort))}
       onClick={(event: MouseEvent<HTMLTableCellElement>) => {
         onClick?.(event);

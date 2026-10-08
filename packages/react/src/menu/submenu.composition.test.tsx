@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { setup } from "../../test/render.js";
 import { Menu } from "./Menu.js";
 import { MenuItem } from "./MenuItem.js";
 import { MenuList } from "./MenuList.js";
@@ -9,7 +9,7 @@ import { MenuSeparator } from "./MenuSeparator.js";
 import { MenuTrigger } from "./MenuTrigger.js";
 
 function renderNested() {
-  const result = render(
+  const result = setup(
     <Menu defaultOpen>
       <MenuTrigger>Actions</MenuTrigger>
       <MenuPopover>
@@ -47,44 +47,44 @@ describe("submenu composition", () => {
     expect(popovers[1]!.hidden).toBe(true);
   });
 
-  it("participates in the parent's roving focus and opens with ArrowRight", () => {
-    const { container, popovers, subTrigger } = renderNested();
+  it("participates in the parent's roving focus and opens with ArrowRight", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
     const rename = container.querySelector<HTMLElement>("[data-value='rename']")!;
     expect(document.activeElement).toBe(rename);
-    fireKeyDown(rename, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(subTrigger);
 
-    fireKeyDown(subTrigger, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(popovers[1]!.hidden).toBe(false);
     const email = container.querySelector<HTMLElement>("[data-value='email']")!;
     expect(document.activeElement).toBe(email);
   });
 
-  it("closes only the submenu with ArrowLeft and with Escape", () => {
-    const { container, popovers, subTrigger } = renderNested();
-    fireKeyDown(subTrigger, "ArrowRight");
-    const email = container.querySelector<HTMLElement>("[data-value='email']")!;
+  it("closes only the submenu with ArrowLeft and with Escape", async () => {
+    const { popovers, subTrigger, user } = renderNested();
+    subTrigger.focus();
+    await user.keyboard("{ArrowRight}");
 
-    fireKeyDown(email, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(popovers[1]!.hidden).toBe(true);
     expect(popovers[0]!.hidden).toBe(false);
     expect(document.activeElement).toBe(subTrigger);
 
-    fireKeyDown(subTrigger, "ArrowRight");
-    const emailAgain = container.querySelector<HTMLElement>("[data-value='email']")!;
-    fireKeyDown(emailAgain, "Escape");
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Escape}");
     expect(popovers[1]!.hidden).toBe(true);
     expect(popovers[0]!.hidden).toBe(false);
     expect(document.activeElement).toBe(subTrigger);
   });
 
-  it("opens on click and keeps arrow navigation scoped per menu", () => {
-    const { container, popovers, subTrigger } = renderNested();
-    fireClick(subTrigger);
+  it("opens on click and keeps arrow navigation scoped per menu", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    await user.click(subTrigger);
     expect(popovers[1]!.hidden).toBe(false);
     const email = container.querySelector<HTMLElement>("[data-value='email']")!;
     const link = container.querySelector<HTMLElement>("[data-value='link']")!;
-    fireKeyDown(email, "ArrowDown");
+    email.focus();
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(link);
     // The parent menu did not also move its own focus.
     expect(popovers[0]!.hidden).toBe(false);
@@ -92,9 +92,10 @@ describe("submenu composition", () => {
 });
 
 describe("submenu coordination", () => {
-  it("closes the submenu when focus moves to a different parent item", () => {
-    const { container, popovers, subTrigger } = renderNested();
-    fireKeyDown(subTrigger, "ArrowRight");
+  it("closes the submenu when focus moves to a different parent item", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    subTrigger.focus();
+    await user.keyboard("{ArrowRight}");
     expect(popovers[1]!.hidden).toBe(false);
 
     const rename = container.querySelector<HTMLElement>("[data-value='rename']")!;
@@ -103,11 +104,12 @@ describe("submenu coordination", () => {
     expect(popovers[0]!.hidden).toBe(false);
   });
 
-  it("closes the whole chain and refocuses the root trigger on activation", () => {
-    const { container, popovers, subTrigger } = renderNested();
-    fireKeyDown(subTrigger, "ArrowRight");
+  it("closes the whole chain and refocuses the root trigger on activation", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    subTrigger.focus();
+    await user.keyboard("{ArrowRight}");
     const email = container.querySelector<HTMLElement>("[data-value='email']")!;
-    fireClick(email);
+    await user.click(email);
     expect(popovers[1]!.hidden).toBe(true);
     expect(popovers[0]!.hidden).toBe(true);
     const rootTrigger = container.querySelector<HTMLButtonElement>("button")!;

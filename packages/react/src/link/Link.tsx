@@ -6,6 +6,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { dataAttr, mergeProps, useFocusRing, useHover } from "@comp0/core";
+import { disabledProps } from "../internal/disabled.js";
 import { partElement } from "../internal/polymorphic.js";
 
 type LinkOwnProps = {
@@ -37,27 +38,23 @@ export function Link<TElement extends ElementType = "a">({
   else if (!isNativeAnchor) resolvedTabIndex = tabIndex ?? 0;
   let role = (props as Record<string, unknown>).role;
   if (!isNativeAnchor || disabled || !href) role = role ?? "link";
+  // aria-disabled links stay focusable; the helper swallows their activation.
+  const disabledAttributes = disabledProps<HTMLElement>(disabled, {
+    native: false,
+    onClick: onClick as ((event: ReactMouseEvent<HTMLElement>) => void) | undefined,
+  });
   const mergedProps: Record<string, unknown> = mergeProps(
     props as Record<string, unknown>,
     focusProps,
     hoverProps,
     {
-      ref,
       href: disabled ? undefined : href,
       tabIndex: resolvedTabIndex,
       role,
-      "aria-disabled": disabled || undefined,
-      "data-disabled": dataAttr(disabled),
+      ...disabledAttributes,
       "data-focused": dataAttr(isFocused),
       "data-focus-visible": dataAttr(isFocusVisible),
       "data-hovered": dataAttr(isHovered),
-      onClick(event: ReactMouseEvent<HTMLAnchorElement>) {
-        if (disabled) {
-          event.preventDefault();
-          return;
-        }
-        onClick?.(event);
-      },
       onKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
         if (isNativeAnchor || disabled || event.key !== "Enter") return;
         // Custom elements that still render a real anchor activate natively.
@@ -68,5 +65,5 @@ export function Link<TElement extends ElementType = "a">({
   );
 
   const Part = partElement(as, "a");
-  return <Part {...mergedProps} />;
+  return <Part {...mergedProps} ref={ref} />;
 }

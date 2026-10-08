@@ -1,7 +1,6 @@
 import { useState, type ComponentProps, type CSSProperties, type PointerEvent } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { ColorAreaContext, useColorPickerContext } from "./color-picker-shared.js";
 import { visuallyHiddenStyle } from "../visually-hidden/visually-hidden-shared.js";
 
@@ -49,10 +48,10 @@ export function ColorArea({
   return (
     <ColorAreaContext value={{ color, disabled: resolvedDisabled }}>
       <Part
+        data-slot="color-area"
         {...props}
         role={props.role ?? "group"}
         aria-label={areaLabel}
-        data-slot={dataSlot(props, "color-area")}
         data-dragging={dataAttr(activePointer !== null)}
         data-disabled={dataAttr(resolvedDisabled)}
         data-value={colorPicker.value}

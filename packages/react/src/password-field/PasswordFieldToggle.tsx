@@ -19,20 +19,20 @@ export function PasswordFieldToggle({
   as,
   children,
   disabled: disabledProp,
-  showLabel = "Show password",
-  hideLabel = "Hide password",
+  showLabel,
+  hideLabel,
   onClick,
   onPointerDown,
   ...props
 }: PasswordFieldToggleProps) {
   const field = useFieldContext();
   const passwordField = usePasswordFieldContext("PasswordFieldToggle");
-  const { announcement, captureSelection, inputRef, mounted, passwordVisible, toggleVisibility } =
+  const { announcement, captureSelection, mounted, passwordVisible, toggleVisibility } =
     passwordField;
   const disabled = Boolean(disabledProp ?? field?.disabled);
   if (!mounted) return null;
 
-  const label = passwordVisible ? hideLabel : showLabel;
+  const label = passwordVisible ? (hideLabel ?? "Hide password") : (showLabel ?? "Show password");
 
   return (
     <>
@@ -41,7 +41,7 @@ export function PasswordFieldToggle({
         as={as}
         disabled={disabled}
         aria-label={label}
-        aria-controls={props["aria-controls"] ?? inputRef.current?.id}
+        aria-controls={props["aria-controls"] ?? passwordField.inputId}
         data-visible={dataAttr(passwordVisible)}
         onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {
           onPointerDown?.(event);

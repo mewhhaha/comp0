@@ -11,8 +11,10 @@ import { DateRangePickerStartField } from "./DateRangePickerStartField.js";
 import { DateRangePickerTrigger } from "./DateRangePickerTrigger.js";
 import { RangeCalendar } from "../range-calendar/RangeCalendar.js";
 import { RangeCalendarGrid } from "../range-calendar/RangeCalendarGrid.js";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 
+// A controlled date input restores its value after every keystroke, so userEvent
+// can never type a complete date into it; set the whole value in one input event.
 function fireInput(element: HTMLInputElement, value: string) {
   act(() => {
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -27,7 +29,7 @@ function dayButton(container: HTMLElement, iso: string) {
 }
 
 describe("range calendar", () => {
-  it("marks the endpoints and interior of a selected range", () => {
+  it("marks the endpoints and interior of a selected range", async () => {
     const { container } = render(
       <RangeCalendar defaultValue={["2024-02-12", "2024-02-15"]} locale="en-GB">
         <CalendarHeader />
@@ -52,22 +54,22 @@ describe("range calendar", () => {
     expect(dayButton(container, "2024-02-15").tabIndex).toBe(0);
   });
 
-  it("starts a new range after a completed one and orders a backwards second selection", () => {
+  it("starts a new range after a completed one and orders a backwards second selection", async () => {
     const onChange = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <RangeCalendar defaultValue={["2024-02-12", "2024-02-15"]} locale="en-GB" onChange={onChange}>
         <RangeCalendarGrid />
       </RangeCalendar>,
     );
 
-    fireClick(dayButton(container, "2024-02-20"));
+    await user.click(dayButton(container, "2024-02-20"));
     expect(onChange).toHaveBeenLastCalledWith(["2024-02-20", ""]);
     expect(
       container.querySelector("td[data-value='2024-02-20']")?.hasAttribute("data-range-start"),
     ).toBe(true);
     expect(container.querySelectorAll("td[data-in-range]")).toHaveLength(0);
 
-    fireClick(dayButton(container, "2024-02-18"));
+    await user.click(dayButton(container, "2024-02-18"));
     expect(onChange).toHaveBeenLastCalledWith(["2024-02-18", "2024-02-20"]);
     expect(
       container.querySelector("td[data-value='2024-02-18']")?.hasAttribute("data-range-start"),
@@ -80,7 +82,7 @@ describe("range calendar", () => {
     ).toBe(true);
   });
 
-  it("previews an incomplete range toward the hovered date and clears after pointer exit", () => {
+  it("previews an incomplete range toward the hovered date and clears after pointer exit", async () => {
     const { container } = render(
       <RangeCalendar defaultValue={["2024-02-12", ""]} locale="en-GB">
         <RangeCalendarGrid />
@@ -103,7 +105,7 @@ describe("range calendar", () => {
     expect(container.querySelectorAll("td[data-range-preview]")).toHaveLength(0);
   });
 
-  it("orders a backwards range preview chronologically", () => {
+  it("orders a backwards range preview chronologically", async () => {
     const { container } = render(
       <RangeCalendar defaultValue={["2024-02-15", ""]} locale="en-GB">
         <RangeCalendarGrid />
@@ -125,9 +127,9 @@ describe("range calendar", () => {
     ).toBe(true);
   });
 
-  it("uses the calendar grid keyboard contract and respects controlled state", () => {
+  it("uses the calendar grid keyboard contract and respects controlled state", async () => {
     const onChange = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <RangeCalendar value={["2024-02-12", "2024-02-15"]} locale="en-GB" onChange={onChange}>
         <RangeCalendarGrid />
       </RangeCalendar>,
@@ -137,9 +139,9 @@ describe("range calendar", () => {
       end.focus();
     });
 
-    fireKeyDown(end, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-16"));
-    fireKeyDown(document.activeElement!, "Enter");
+    await user.keyboard("{Enter}");
 
     expect(onChange).toHaveBeenLastCalledWith(["2024-02-16", ""]);
     expect(
@@ -152,10 +154,15 @@ describe("range calendar", () => {
 });
 
 describe("date range picker composition", () => {
-  function renderPicker() {
+  function renderPicker(props: { onOpenChange?: (open: boolean) => void } = {}) {
     const onChange = vi.fn();
-    const result = render(
-      <DateRangePicker id="trip" defaultValue={["2024-02-12", "2024-02-15"]} onChange={onChange}>
+    const result = setup(
+      <DateRangePicker
+        id="trip"
+        defaultValue={["2024-02-12", "2024-02-15"]}
+        onChange={onChange}
+        {...props}
+      >
         <Label>Trip dates</Label>
         <DateRangePickerStartField />
         <DateRangePickerEndField />
@@ -180,8 +187,8 @@ describe("date range picker composition", () => {
     return { ...result, endField: fields[1]!, onChange, startField: fields[0]!, surface, trigger };
   }
 
-  it("labels both fields and opens with the range end as the roving date", () => {
-    const { container, endField, startField, surface, trigger } = renderPicker();
+  it("labels both fields and opens with the range end as the roving date", async () => {
+    const { container, endField, startField, surface, trigger, user } = renderPicker();
 
     expect(startField.id).toBe("trip-start");
     expect(endField.id).toBe("trip-end");
@@ -192,22 +199,22 @@ describe("date range picker composition", () => {
     expect(trigger.getAttribute("aria-label")).toBe("Choose dates");
     expect(surface.hidden).toBe(true);
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(surface.hidden).toBe(false);
     expect(document.activeElement).toBe(dayButton(container, "2024-02-15"));
   });
 
-  it("stays open for the start, then closes and restores focus when the range completes", () => {
-    const { container, endField, onChange, startField, surface, trigger } = renderPicker();
+  it("stays open for the start, then closes and restores focus when the range completes", async () => {
+    const { container, endField, onChange, startField, surface, trigger, user } = renderPicker();
 
-    fireClick(trigger);
-    fireClick(dayButton(container, "2024-02-20"));
+    await user.click(trigger);
+    await user.click(dayButton(container, "2024-02-20"));
     expect(onChange).toHaveBeenLastCalledWith(["2024-02-20", ""]);
     expect(startField.value).toBe("2024-02-20");
     expect(endField.value).toBe("");
     expect(surface.hidden).toBe(false);
 
-    fireClick(dayButton(container, "2024-02-18"));
+    await user.click(dayButton(container, "2024-02-18"));
     expect(onChange).toHaveBeenLastCalledWith(["2024-02-18", "2024-02-20"]);
     expect(startField.value).toBe("2024-02-18");
     expect(endField.value).toBe("2024-02-20");
@@ -234,7 +241,7 @@ describe("date range picker composition", () => {
   });
 
   it("submits and resets an uncontrolled pair of date values", async () => {
-    const { container } = render(
+    const { container, user } = setup(
       <form>
         <DateRangePicker name="trip" defaultValue={["2024-02-12", "2024-02-15"]} defaultOpen>
           <DateRangePickerStartField aria-label="Start date" />
@@ -249,8 +256,8 @@ describe("date range picker composition", () => {
     );
     const form = container.querySelector("form")!;
 
-    fireClick(dayButton(container, "2024-02-20"));
-    fireClick(dayButton(container, "2024-02-22"));
+    await user.click(dayButton(container, "2024-02-20"));
+    await user.click(dayButton(container, "2024-02-22"));
     expect(new FormData(form).get("trip-start")).toBe("2024-02-20");
     expect(new FormData(form).get("trip-end")).toBe("2024-02-22");
 
@@ -260,5 +267,16 @@ describe("date range picker composition", () => {
     });
     expect(new FormData(form).get("trip-start")).toBe("2024-02-12");
     expect(new FormData(form).get("trip-end")).toBe("2024-02-15");
+  });
+
+  it("reports open state through onOpenChange", async () => {
+    const onOpenChange = vi.fn();
+    const { trigger, user } = renderPicker({ onOpenChange });
+
+    await user.click(trigger);
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(document.activeElement).toBe(trigger);
   });
 });

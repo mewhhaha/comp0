@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { warnOnce } from "../internal/dev.js";
 import { gridListMessages } from "./grid-list-announcements.js";
 import {
   currentPosition,
@@ -76,9 +77,11 @@ export function useGridListGroupSession(options: {
     startDrag(list: string, rowValue: string, label: string) {
       if (transaction.locked()) return;
       if (!order[list]?.includes(rowValue)) {
-        throw new Error(
-          `GridList "${list}" cannot move row "${rowValue}" because it is absent from GridListReorderGroup.value.`,
+        warnOnce(
+          `GridList:absent-row:${list}:${rowValue}`,
+          `GridList "${list}" cannot move row "${rowValue}" because it is absent from GridListReorderGroup.value. The drag was ignored.`,
         );
+        return;
       }
       setSource({ list, value: rowValue, label });
       setTarget(null);

@@ -1,7 +1,3 @@
-export function dataSlot(props: Record<string, unknown>, fallback: string) {
-  return (props["data-slot"] as string | undefined) ?? fallback;
-}
-
 export type CommandAttributeProps = {
   command?:
     | "show-popover"

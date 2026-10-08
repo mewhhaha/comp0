@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -100,19 +99,10 @@ export function ColumnChartPlot({
     label: value.label,
     position: context.values.length === 0 ? 0.5 : (index + 0.5) / context.values.length,
   }));
-  const yTicks = scale.ticks(tickCount).map((value) => ({
-    label: context.formatY(value),
-    position: scale.position(value),
-  }));
+  const yTicks = scale.axisTicks(tickCount, context.formatY);
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 120 120"
-      role="group"
-      data-slot={dataSlot(props, "column-chart-plot")}
-    >
+    <svg data-slot="column-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xLabel={context.categoryLabel}
         xTicks={xTicks}

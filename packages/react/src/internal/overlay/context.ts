@@ -13,7 +13,7 @@ export type PopoverContextValue = OverlayContextValue & {
   requestClose: () => void;
 };
 
-export type TooltipContextValue = OverlayContextValue & {
+type TooltipContextValue = OverlayContextValue & {
   cancelClose: () => void;
   scheduleClose: () => void;
 };

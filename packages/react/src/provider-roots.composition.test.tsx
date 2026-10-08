@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
+import { setup } from "../test/render.js";
 import { Accordion } from "./accordion/Accordion.js";
 import { AccordionHeader } from "./accordion/AccordionHeader.js";
 import { AccordionItem } from "./accordion/AccordionItem.js";
@@ -17,10 +17,10 @@ import { Tabs } from "./tabs/Tabs.js";
 import { TextField } from "./text-field/TextField.js";
 
 describe("provider roots", () => {
-  it("keeps text and search field roots wrapper-free while their explicit parts own behavior", () => {
+  it("keeps text and search field roots wrapper-free while their explicit parts own behavior", async () => {
     const submitted = vi.fn();
     const cleared = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <>
         <TextField id="name">
           <Input />
@@ -43,16 +43,17 @@ describe("provider roots", () => {
     expect(search.type).toBe("search");
     expect(search.value).toBe("docs");
 
-    fireKeyDown(search, "Enter");
+    search.focus();
+    await user.keyboard("{Enter}");
     expect(submitted).toHaveBeenLastCalledWith("docs");
-    fireClick(container.querySelector("button")!);
+    await user.click(container.querySelector("button")!);
     expect(search.value).toBe("");
     expect(cleared).toHaveBeenCalledTimes(1);
   });
 
-  it("renders an opt-in root wrapper and keeps accordion and tabs interactions intact", () => {
+  it("renders an opt-in root wrapper and keeps accordion and tabs interactions intact", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <>
         <TextField as="section" data-testid="field">
           <Input />
@@ -90,12 +91,14 @@ describe("provider roots", () => {
     expect(accordionTriggers[0]!.id).toBe("shipping-trigger");
     expect(accordionTriggers[0]!.getAttribute("aria-controls")).toBe(firstPanel.id);
     expect(firstPanel.getAttribute("aria-labelledby")).toBe(accordionTriggers[0]!.id);
-    fireKeyDown(accordionTriggers[0]!, "ArrowDown");
+    accordionTriggers[0]!.focus();
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(accordionTriggers[1]);
-    fireClick(accordionTriggers[1]!);
+    await user.click(accordionTriggers[1]!);
     expect(container.querySelectorAll("[role='region']")[1]?.hasAttribute("hidden")).toBe(false);
 
-    fireKeyDown(tabs[0]!, "ArrowRight");
+    tabs[0]!.focus();
+    await user.keyboard("{ArrowRight}");
     expect(changed).toHaveBeenLastCalledWith("two");
   });
 });

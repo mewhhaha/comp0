@@ -92,6 +92,15 @@ export default component({
       "Optional incoming and outgoing node detail shown on hover or focus.",
       true,
       true,
+      [
+        prop("placement", "PopoverPlacement", 'Side of the active mark; defaults to "top".'),
+        prop("offset", "number", "Distance from the active mark; defaults to eight pixels."),
+        prop(
+          "children",
+          "ReactNode | (details: ChartValueDetails) => ReactNode",
+          "Custom content receiving the active node's formatted details.",
+        ),
+      ],
     ),
   ],
   keyboard: [
@@ -108,6 +117,21 @@ export default component({
     { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-node-id]",
+      on: "SankeyChartNode",
+      meaning: "The id of the node this mark represents.",
+    },
+    {
+      attribute: "[data-source]",
+      on: "SankeyChartLink",
+      meaning: "The id of the node this link leaves.",
+    },
+    {
+      attribute: "[data-target]",
+      on: "SankeyChartLink",
+      meaning: "The id of the node this link enters.",
+    },
     {
       attribute: "[data-connected]",
       on: "SankeyChartLink",

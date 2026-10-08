@@ -70,6 +70,23 @@ export default component({
       "root",
       "Editable query field; use TextField and TextArea for inline completion.",
       false,
+      false,
+      [
+        prop(
+          "id",
+          "string",
+          "Base id for the input; the label, description, and error ids derive from it.",
+        ),
+        prop("value / defaultValue", "string", "Controlled or initial field value."),
+        prop("onChange", "(value: string) => void", "Receives the next value."),
+        prop(
+          "disabled / invalid / required",
+          "boolean",
+          "Field-wide states shared with every part.",
+        ),
+        prop("onSubmit", "(value: string) => void", "Receives the query when Enter submits."),
+        prop("onClear", "() => void", "Runs when the query is erased."),
+      ],
     ),
     p("Label", "label", "Visible name connected to the query field."),
     p(
@@ -98,6 +115,7 @@ export default component({
         prop("value / defaultValue", "string", "Controlled or initial selected item key."),
         prop("onChange", "(value: string) => void", "Receives the selected completion key."),
         prop("aria-label", "string", "Names results when no visible heading names them."),
+        prop("orientation", '"vertical" | "horizontal"', "Arrow-key axis."),
       ],
     ),
     p("ListBoxOption", "item", "One selectable completion result.", true, false, [

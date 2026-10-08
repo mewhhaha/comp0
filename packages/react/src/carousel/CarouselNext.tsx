@@ -1,5 +1,5 @@
 import { type ComponentProps, type MouseEvent } from "react";
-import { dataAttr } from "@comp0/core";
+import { disabledProps } from "../internal/disabled.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useCarouselContext } from "./carousel-shared.js";
 
@@ -14,18 +14,21 @@ export function CarouselNext({ as, disabled, onClick, ...props }: CarouselNextPr
   const atEnd = carousel.count > 0 && carousel.value >= carousel.count - 1;
   const resolvedDisabled = Boolean(disabled ?? (!carousel.loop && atEnd));
 
+  const disabledAttributes = disabledProps<HTMLButtonElement>(resolvedDisabled, {
+    native: true,
+    onClick(event: MouseEvent<HTMLButtonElement>) {
+      onClick?.(event);
+      if (!event.defaultPrevented) carousel.next();
+    },
+  });
+
   const Part = partElement(as, "button");
   return (
     <Part
       type={as === undefined || as === "button" ? "button" : undefined}
       {...props}
       aria-label={props["aria-label"] ?? "Next slide"}
-      disabled={resolvedDisabled}
-      data-disabled={dataAttr(resolvedDisabled)}
-      onClick={(event: MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event);
-        if (!event.defaultPrevented) carousel.next();
-      }}
+      {...disabledAttributes}
     />
   );
 }

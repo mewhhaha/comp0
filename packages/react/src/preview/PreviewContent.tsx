@@ -1,7 +1,6 @@
 import { type ComponentProps, type FocusEvent, type PointerEvent } from "react";
 import { useOverlaySurface, type PopoverPlacementProps } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { usePreviewContext } from "./preview-shared.js";
 
 export type PreviewContentProps = ComponentProps<"div"> & AsProp & PopoverPlacementProps;
@@ -36,9 +35,9 @@ export function PreviewContent({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="preview-content"
       {...props}
       {...surface.props}
-      data-slot={dataSlot(props, "preview-content")}
       // Hovering the card keeps the preview open (WCAG 1.4.13).
       onPointerEnter={(event: PointerEvent<HTMLDivElement>) => {
         onPointerEnter?.(event);

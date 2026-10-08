@@ -1,7 +1,7 @@
 import { useEffect, useRef, type Ref, type SyntheticEvent } from "react";
 import { useComposedRefs } from "@comp0/core";
 
-export type ModalDialogOptions = {
+type ModalDialogOptions = {
   open: boolean;
   setOpen: (open: boolean) => void;
   ref?: Ref<HTMLDialogElement> | undefined;

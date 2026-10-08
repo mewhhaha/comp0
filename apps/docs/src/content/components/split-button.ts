@@ -38,6 +38,12 @@ export default component({
       [
         prop("onClick", "(event) => void", "Runs the default action."),
         prop("disabled", "boolean", "Removes this segment from the tab stop."),
+        prop("pending", "boolean", "Marks a busy action: disables the button and sets aria-busy."),
+        prop(
+          "command / commandfor",
+          "string",
+          "Native invoker attributes: the command to run and the id of the element it targets.",
+        ),
       ],
     ),
     p("MenuTrigger", "trigger", "The menu button that opens the alternatives.", true, false, [
@@ -47,6 +53,19 @@ export default component({
       "MenuPopover / MenuList / MenuItem",
       "content",
       "The floating surface, action list, and alternative actions from the Menu family.",
+      true,
+      false,
+      [
+        prop(
+          "placement",
+          "PopoverPlacement",
+          'Side of the menu button to open on, such as "bottom end".',
+        ),
+        prop("offset", "number", "Pixel gap between the menu button and the menu."),
+        prop("value", "string", "Optional identity for typeahead and data-value."),
+        prop("disabled", "boolean", "Disables the alternative action."),
+        prop("textValue", "string", "Overrides the text crawled from children for typeahead."),
+      ],
     ),
   ],
   keyboard: [

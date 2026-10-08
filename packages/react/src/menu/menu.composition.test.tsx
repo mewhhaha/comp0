@@ -1,6 +1,5 @@
-import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Menu } from "./Menu.js";
 import { MenuList } from "./MenuList.js";
 import { MenuPopover } from "./MenuPopover.js";
@@ -41,10 +40,10 @@ describe("menu composition", () => {
     expect(surface.hidden).toBe(true);
   });
 
-  it("opens, moves focus, typeaheads, and restores trigger focus on escape", () => {
+  it("opens, moves focus, typeaheads, and restores trigger focus on escape", async () => {
     const changed = vi.fn();
-    const { container } = render(
-      <Menu id="actions" onToggle={changed}>
+    const { container, user } = setup(
+      <Menu id="actions" onOpenChange={changed}>
         <MenuTrigger>Actions</MenuTrigger>
         <MenuPopover>
           <MenuList>
@@ -56,31 +55,29 @@ describe("menu composition", () => {
       </Menu>,
     );
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
-    const content = container.querySelector<HTMLElement>("[role='menu']")!;
     const surface = container.querySelector<HTMLElement>("[popover]")!;
     const items = container.querySelectorAll<HTMLElement>("[role='menuitem']");
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(changed).toHaveBeenLastCalledWith(true);
     expect(surface.hidden).toBe(false);
     expect(document.activeElement).toBe(items[0]);
-    fireKeyDown(content, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(items[2]);
-    fireKeyDown(content, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(items[2]);
-    fireKeyDown(content, "c");
+    await user.keyboard("c");
     expect(document.activeElement).toBe(items[0]);
-    fireKeyDown(content, "Escape");
+    await user.keyboard("{Escape}");
     expect(surface.hidden).toBe(true);
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("navigates menu items in the menu's owning document", () => {
+  it("navigates menu items in the menu's owning document", async () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
-    const frameWindow = frame.contentWindow as Window & typeof globalThis;
     const frameDocument = frame.contentDocument!;
-    const { container, unmount } = render(
+    const { container, unmount, user } = setup(
       <Menu>
         <MenuTrigger>Actions</MenuTrigger>
         <MenuPopover>
@@ -93,32 +90,19 @@ describe("menu composition", () => {
       frameDocument,
     );
     const trigger = container.querySelector("button")!;
-    const menu = container.querySelector<HTMLElement>("[role='menu']")!;
     const items = container.querySelectorAll<HTMLElement>("[role='menuitem']");
 
-    act(() =>
-      trigger.dispatchEvent(
-        new frameWindow.MouseEvent("click", { bubbles: true, cancelable: true }),
-      ),
-    );
-    act(() =>
-      menu.dispatchEvent(
-        new frameWindow.KeyboardEvent("keydown", {
-          key: "ArrowDown",
-          bubbles: true,
-          cancelable: true,
-        }),
-      ),
-    );
+    await user.click(trigger);
+    await user.keyboard("{ArrowDown}");
 
     expect(frameDocument.activeElement).toBe(items[1]);
     unmount();
     frame.remove();
   });
 
-  it("closes after an item activation unless the item callback prevents it", () => {
+  it("closes after an item activation unless the item callback prevents it", async () => {
     const prevented = vi.fn((event: React.MouseEvent) => event.preventDefault());
-    const { container } = render(
+    const { container, user } = setup(
       <Menu defaultOpen>
         <MenuTrigger>Actions</MenuTrigger>
         <MenuPopover>
@@ -132,14 +116,14 @@ describe("menu composition", () => {
     const surface = container.querySelector<HTMLElement>("[popover]")!;
     const items = container.querySelectorAll<HTMLElement>("[role='menuitem']");
 
-    fireClick(items[0]!);
+    await user.click(items[0]!);
     expect(surface.hidden).toBe(false);
-    fireClick(items[1]!);
+    await user.click(items[1]!);
     expect(surface.hidden).toBe(true);
   });
 
-  it("opens from the trigger with ArrowDown and focuses the first item", () => {
-    const { container } = render(
+  it("opens from the trigger with ArrowDown and focuses the first item", async () => {
+    const { container, user } = setup(
       <Menu>
         <MenuTrigger>Actions</MenuTrigger>
         <MenuPopover>
@@ -153,13 +137,14 @@ describe("menu composition", () => {
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
     const surface = container.querySelector<HTMLElement>("[popover]")!;
 
-    fireKeyDown(trigger, "ArrowDown");
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
     expect(surface.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("Copy");
   });
 
-  it("opens from the trigger with ArrowUp and focuses the last enabled item", () => {
-    const { container } = render(
+  it("opens from the trigger with ArrowUp and focuses the last enabled item", async () => {
+    const { container, user } = setup(
       <Menu>
         <MenuTrigger>Actions</MenuTrigger>
         <MenuPopover>
@@ -174,13 +159,14 @@ describe("menu composition", () => {
     const trigger = container.querySelector<HTMLButtonElement>("button")!;
     const surface = container.querySelector<HTMLElement>("[popover]")!;
 
-    fireKeyDown(trigger, "ArrowUp");
+    trigger.focus();
+    await user.keyboard("{ArrowUp}");
     expect(surface.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("Paste");
   });
 
-  it("closes when focus moves outside the menu and its trigger", () => {
-    const { container } = render(
+  it("closes when focus moves outside the menu and its trigger", async () => {
+    const { container, user } = setup(
       <>
         <Menu defaultOpen>
           <MenuTrigger>Actions</MenuTrigger>
@@ -195,12 +181,9 @@ describe("menu composition", () => {
     );
     const surface = container.querySelector<HTMLElement>("[popover]")!;
     const item = container.querySelector<HTMLElement>("[role='menuitem']")!;
-    const after = container.querySelectorAll<HTMLButtonElement>("button")[1]!;
 
-    act(() => {
-      item.focus();
-      item.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: after }));
-    });
+    item.focus();
+    await user.tab();
     expect(surface.hidden).toBe(true);
   });
 });

@@ -31,6 +31,7 @@ export default component({
           'Controlled or initial hex value such as "#0d9488".',
         ),
         prop("onChange", "(value: string) => void", "Receives the next hex value."),
+        prop("id", "string", "Id of the input; the label and help ids derive from it."),
         prop(
           "disabled / invalid / required",
           "boolean",

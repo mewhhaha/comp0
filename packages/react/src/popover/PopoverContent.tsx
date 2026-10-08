@@ -1,11 +1,10 @@
-import { useLayoutEffect, useRef, type ComponentProps, type KeyboardEvent } from "react";
+import { type ComponentProps, type KeyboardEvent } from "react";
 import {
   useOverlaySurface,
   useRequiredPopoverContext,
   type PopoverPlacementProps,
 } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 
 export type PopoverContentProps = Omit<ComponentProps<"div">, "popover"> &
   AsProp &
@@ -37,36 +36,28 @@ export function PopoverContent({
     placement,
     ref,
     style,
+    // The surface announces as a dialog, so opening must move focus into it;
+    // Escape-to-close and screen-reader context depend on focus being inside.
+    initialFocus(element) {
+      if (element.contains(element.ownerDocument.activeElement)) return undefined;
+      return (
+        element.querySelector<HTMLElement>("[autofocus]") ??
+        element.querySelector<HTMLElement>(
+          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+        ) ??
+        element
+      );
+    },
   });
   const popover = useRequiredPopoverContext("PopoverContent");
-  const { open, surfaceRef } = surface;
-  const wasOpen = useRef(false);
-  // The surface announces as a dialog, so opening must move focus into it;
-  // Escape-to-close and screen-reader context depend on focus being inside.
-  useLayoutEffect(() => {
-    const element = surfaceRef.current;
-    if (open && !wasOpen.current && element) {
-      if (!element.contains(element.ownerDocument.activeElement)) {
-        const target =
-          element.querySelector<HTMLElement>("[autofocus]") ??
-          element.querySelector<HTMLElement>(
-            "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
-          ) ??
-          element;
-        target.focus();
-      }
-    }
-    wasOpen.current = open;
-  });
-
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="popover-content"
       {...props}
       {...surface.props}
       role={props.role ?? "dialog"}
       tabIndex={props.tabIndex ?? -1}
-      data-slot={dataSlot(props, "popover-content")}
       onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
         onKeyDown?.(event);
         if (event.defaultPrevented || event.key !== "Escape") return;

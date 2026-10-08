@@ -1,7 +1,6 @@
 import { type ComponentProps, type PointerEvent } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useFloatingPanelContext } from "./floating-panel-shared.js";
 
 function ownsPointerGesture(target: EventTarget | null) {
@@ -29,9 +28,9 @@ export function FloatingPanelHeader({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="floating-panel-header"
       {...props}
       data-moving={dataAttr(panel.moving)}
-      data-slot={dataSlot(props, "floating-panel-header")}
       style={{ touchAction: "none", ...props.style }}
       onPointerDown={(event: PointerEvent<HTMLDivElement>) => {
         onPointerDown?.(event);

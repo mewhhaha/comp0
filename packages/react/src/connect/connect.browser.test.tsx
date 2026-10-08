@@ -1,6 +1,7 @@
 import { act, useState } from "react";
 import { page, userEvent } from "vitest/browser";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { expectNoAxeViolations } from "../../test/axe.js";
 import { cleanupRoots, render } from "../../test/render.js";
 import {
   Connect,
@@ -138,5 +139,17 @@ describe("Connect browser interactions", () => {
       page.getByRole("button", { name: "Target: Color input (color)" }),
     );
     expect((page.getByRole("combobox").element() as HTMLSelectElement).value).toBe("color");
+  });
+
+  it("has no axe violations while an output is selected and waiting for an input", async () => {
+    const { container } = render(<Connections />);
+    await act(async () =>
+      userEvent.click(page.getByRole("button", { name: "Source: Color output (color)" })),
+    );
+    expect(
+      page.getByRole("button", { name: "Source: Color output (color)" }).element().ariaPressed,
+    ).toBe("true");
+    expect(container.querySelector("[data-available]")).not.toBeNull();
+    await expectNoAxeViolations(container, "connecting");
   });
 });

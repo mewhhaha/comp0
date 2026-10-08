@@ -9,7 +9,6 @@ import {
 import { dataAttr, useCollection, useControllableState } from "@comp0/core";
 import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
-import { dataSlot } from "../internal/shared.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
 import { resolveAutocompleteItemText } from "../autocomplete/autocomplete-shared.js";
 import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
@@ -46,8 +45,8 @@ export type SelectProps = RootProps<{
   /** Controlled or initial open state of the listbox; Select owns its own popover. */
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  /** Receives the next open state rather than a native ToggleEvent. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  /** Receives the next open state. */
+  onOpenChange?: ((open: boolean) => void) | undefined;
   disabled?: boolean | undefined;
   invalid?: boolean | undefined;
   required?: boolean | undefined;
@@ -63,7 +62,7 @@ export function Select({
   onChange,
   open,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   disabled,
   invalid,
   required,
@@ -77,7 +76,7 @@ export function Select({
   const popover = usePopoverState({
     open,
     defaultOpen,
-    onToggle,
+    onOpenChange,
     triggerId: ids.controlId,
     contentId: `${ids.controlId}-listbox`,
   });
@@ -154,6 +153,7 @@ export function Select({
       <PopoverContext value={popover}>
         <SelectContext value={context}>
           <Root
+            data-slot="select"
             {...props}
             id={id}
             aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
@@ -161,7 +161,6 @@ export function Select({
             data-invalid={dataAttr(resolvedInvalid)}
             data-placeholder={dataAttr(selected === "")}
             data-required={dataAttr(resolvedRequired)}
-            data-slot={dataSlot(props, "select")}
             data-value={selected || undefined}
           >
             <>

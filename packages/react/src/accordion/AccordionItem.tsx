@@ -1,7 +1,6 @@
 import { useId, type ComponentProps } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { AccordionItemContext, useAccordionContext } from "./accordion-shared.js";
 
 export type AccordionItemProps = ComponentProps<"div"> &
@@ -28,9 +27,9 @@ export function AccordionItem({ as, value, disabled = false, id, ...props }: Acc
       }}
     >
       <Part
+        data-slot="accordion-item"
         {...props}
         id={id}
-        data-slot={dataSlot(props, "accordion-item")}
         data-open={dataAttr(open)}
         data-disabled={dataAttr(disabled)}
       />

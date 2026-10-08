@@ -15,6 +15,21 @@ const packageSources = {
   react: JSON.parse(readFileSync(join(root, "packages/react/package.json"), "utf8")),
 };
 const workspaceManifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+// The consumer installs outside the workspace, so `catalog:` specs resolve to the
+// versions pinned in pnpm-workspace.yaml's default catalog.
+const catalog = Object.fromEntries(
+  [
+    ...(readFileSync(join(root, "pnpm-workspace.yaml"), "utf8")
+      .match(/^catalog:\n((?:[ \t]+.*\n?)*)/m)?.[1]
+      .matchAll(/^\s+"?([^":\s]+)"?:\s*(\S+)\s*$/gm) ?? []),
+  ].map(([, name, version]) => [name, version]),
+);
+function resolveSpec(name, spec) {
+  if (spec !== "catalog:") return spec;
+  const version = catalog[name];
+  if (!version) throw new Error(`No catalog version for ${name} in pnpm-workspace.yaml.`);
+  return version;
+}
 const docsManifest = JSON.parse(readFileSync(join(root, "apps/docs/package.json"), "utf8"));
 
 function run(command, args, cwd = root) {
@@ -128,13 +143,19 @@ writeFileSync(
       dependencies: {
         "@comp0/core": `file:${join(packageDirectory, coreArchive)}`,
         "@comp0/react": `file:${join(packageDirectory, reactArchive)}`,
-        react: workspaceManifest.devDependencies.react,
-        "react-dom": workspaceManifest.devDependencies["react-dom"],
-        "react-router": docsManifest.dependencies["react-router"],
+        react: resolveSpec("react", workspaceManifest.devDependencies.react),
+        "react-dom": resolveSpec("react-dom", workspaceManifest.devDependencies["react-dom"]),
+        "react-router": resolveSpec("react-router", docsManifest.dependencies["react-router"]),
       },
       devDependencies: {
-        "@types/react": workspaceManifest.devDependencies["@types/react"],
-        "@types/react-dom": workspaceManifest.devDependencies["@types/react-dom"],
+        "@types/react": resolveSpec(
+          "@types/react",
+          workspaceManifest.devDependencies["@types/react"],
+        ),
+        "@types/react-dom": resolveSpec(
+          "@types/react-dom",
+          workspaceManifest.devDependencies["@types/react-dom"],
+        ),
       },
     },
     null,

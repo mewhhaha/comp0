@@ -20,6 +20,11 @@ export default component({
     '<TextField>\n  <Label>Source code</Label>\n  <Description>Tab moves to the next control.</Description>\n  <CodeEditor name="source" defaultValue={code} readOnly />\n</TextField>;',
   parts: [
     p("TextField", "root", "Optional field provider; it owns no DOM by default.", false, false, [
+      prop(
+        "id",
+        "string",
+        "Base id for the editor; the label, description, and error ids derive from it.",
+      ),
       prop("value", "string", "Controlled editor value."),
       prop("defaultValue", "string", "Initial uncontrolled editor value."),
       prop("onChange", "(value: string) => void", "Receives the next value."),

@@ -1,7 +1,6 @@
 import { type ComponentProps, type MouseEvent } from "react";
-import { addMonths, isAfter } from "@comp0/core";
+import { addMonths, isAfter } from "../internal/date.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useCalendarContext } from "./calendar-shared.js";
 
 export type CalendarNextButtonProps = ComponentProps<"button"> & AsProp;
@@ -25,10 +24,10 @@ export function CalendarNextButton({
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="calendar-next-button"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       aria-label={props["aria-label"] ?? "Next month"}
-      data-slot={dataSlot(props, "calendar-next-button")}
       disabled={resolvedDisabled}
       onClick={(event: MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);

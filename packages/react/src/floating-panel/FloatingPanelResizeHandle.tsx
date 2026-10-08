@@ -8,7 +8,6 @@ import {
 } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useFloatingPanelContext, type FloatingPanelSize } from "./floating-panel-shared.js";
 
 const RESIZE_STEP = 16;
@@ -114,6 +113,7 @@ export function FloatingPanelResizeHandle({
   const Part = partElement(as, "button");
   return (
     <Part
+      data-slot="floating-panel-resize-handle"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       disabled={disabled}
@@ -122,7 +122,6 @@ export function FloatingPanelResizeHandle({
         props["aria-keyshortcuts"] ?? "Enter Space ArrowLeft ArrowRight ArrowUp ArrowDown Escape"
       }
       data-resizing={dataAttr(panel.resizing)}
-      data-slot={dataSlot(props, "floating-panel-resize-handle")}
       style={{ touchAction: "none", ...props.style }}
       onBlur={(event: FocusEvent<HTMLButtonElement>) => {
         onBlur?.(event);

@@ -2,7 +2,6 @@ import { Fragment, type ComponentProps, type FocusEvent, type PointerEvent } fro
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { triggerAnchorStyle } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { usePreviewContext } from "./preview-shared.js";
 
 export type PreviewTriggerProps = ComponentProps<"a"> & AsProp;
@@ -25,6 +24,7 @@ export function PreviewTrigger({
   const Part = partElement(as, "a");
   return (
     <Part
+      data-slot="preview-trigger"
       {...props}
       ref={triggerRef}
       id={props.id ?? preview.triggerId}
@@ -37,7 +37,6 @@ export function PreviewTrigger({
       aria-controls={ariaControls}
       aria-expanded={preview.open}
       data-open={dataAttr(preview.open)}
-      data-slot={dataSlot(props, "preview-trigger")}
       onFocus={(event: FocusEvent<HTMLAnchorElement>) => {
         onFocus?.(event);
         if (!event.defaultPrevented) preview.setOpen(true);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Steps } from "./Steps.js";
 import { StepsItem } from "./StepsItem.js";
 import { StepsList } from "./StepsList.js";
@@ -38,16 +38,16 @@ describe("steps composition", () => {
     expect(items.map((item) => item.hasAttribute("data-current"))).toEqual([false, false, true]);
   });
 
-  it("jumps to a clicked step, moving aria-current and the visible panel", () => {
+  it("jumps to a clicked step, moving aria-current and the visible panel", async () => {
     const onChange = vi.fn();
-    const { container } = render(<Checkout defaultValue="shipping" onChange={onChange} />);
+    const { container, user } = setup(<Checkout defaultValue="shipping" onChange={onChange} />);
     const trigger = (text: string) =>
       [...container.querySelectorAll<HTMLButtonElement>("button")].find(
         (element) => element.textContent === text,
       )!;
 
     expect(trigger("shipping").getAttribute("aria-current")).toBe("step");
-    fireClick(trigger("payment"));
+    await user.click(trigger("payment"));
 
     expect(onChange).toHaveBeenCalledWith("payment");
     expect(trigger("shipping").hasAttribute("aria-current")).toBe(false);
@@ -56,28 +56,28 @@ describe("steps composition", () => {
     expect(panels.map((panel) => panel.hasAttribute("hidden"))).toEqual([true, false, true]);
   });
 
-  it("keeps a controlled value until its owner applies the change", () => {
+  it("keeps a controlled value until its owner applies the change", async () => {
     const onChange = vi.fn();
-    const { container } = render(<Checkout value="shipping" onChange={onChange} />);
+    const { container, user } = setup(<Checkout value="shipping" onChange={onChange} />);
     const payment = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
       (element) => element.textContent === "payment",
     )!;
 
-    fireClick(payment);
+    await user.click(payment);
 
     expect(onChange).toHaveBeenCalledWith("payment");
     expect(payment.hasAttribute("data-current")).toBe(false);
     expect(container.querySelector("[data-current]")?.textContent).toContain("shipping");
   });
 
-  it("drives completion from an owner-updated controlled value", () => {
+  it("drives completion from an owner-updated controlled value", async () => {
     function Example() {
       const [step, setStep] = useState("shipping");
       return <Checkout value={step} onChange={setStep} />;
     }
-    const { container } = render(<Example />);
+    const { container, user } = setup(<Example />);
 
-    fireClick(
+    await user.click(
       [...container.querySelectorAll<HTMLButtonElement>("button")].find(
         (element) => element.textContent === "review",
       )!,

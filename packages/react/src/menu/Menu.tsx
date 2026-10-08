@@ -13,8 +13,7 @@ export type MenuProps = RootProps<{
   id?: string | undefined;
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
-  /** Receives the next open state rather than a native ToggleEvent. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   children?: ReactNode | undefined;
 }>;
 
@@ -23,7 +22,7 @@ export function Menu({
   children,
   defaultOpen = false,
   id,
-  onToggle,
+  onOpenChange,
   open: openProp,
   ...props
 }: MenuProps) {
@@ -37,7 +36,7 @@ export function Menu({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const menuId = id ?? `menu-${generatedId}`;
   const [listId, setListId] = useState<string>();

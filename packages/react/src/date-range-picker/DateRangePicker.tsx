@@ -3,7 +3,6 @@ import { dataAttr, useControllableState } from "@comp0/core";
 import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { DateRangePickerContext, type DateRange } from "./date-range-shared.js";
 import { visuallyHiddenInputStyle } from "../internal/visually-hidden-input.js";
 import { useFormReset } from "../internal/form-control-state.js";
@@ -12,7 +11,6 @@ import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
 export type DateRangePickerProps = RootProps<{
   id?: string | undefined;
   children?: ReactNode | undefined;
-  "aria-invalid"?: boolean | "true" | "false" | undefined;
   /** The selected [start, end] dates as "YYYY-MM-DD" strings. */
   value?: DateRange | undefined;
   defaultValue?: DateRange | undefined;
@@ -22,7 +20,7 @@ export type DateRangePickerProps = RootProps<{
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state rather than a native ToggleEvent. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   /** Submits two date inputs named `${name}-start` and `${name}-end`. */
   name?: string | undefined;
   form?: string | undefined;
@@ -40,7 +38,7 @@ export function DateRangePicker({
   onChange,
   open,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   name,
   form,
   disabled,
@@ -54,7 +52,7 @@ export function DateRangePicker({
   const popover = usePopoverState({
     open,
     defaultOpen,
-    onToggle,
+    onOpenChange,
     triggerId: `${ids.controlId}-trigger`,
     contentId: `${ids.controlId}-popover`,
   });
@@ -66,8 +64,7 @@ export function DateRangePicker({
   const [start, end] = range;
   const resolvedDisabled = Boolean(disabled);
   const resolvedRequired = Boolean(required);
-  const resolvedInvalid =
-    props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(invalid);
+  const resolvedInvalid = Boolean(invalid);
   useFormReset({
     controlRef: startInputRef,
     form,
@@ -120,9 +117,9 @@ export function DateRangePicker({
           }}
         >
           <Root
+            data-slot="date-range-picker"
             {...props}
-            aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}
-            data-slot={dataSlot(props, "date-range-picker")}
+            aria-invalid={resolvedInvalid || undefined}
             data-disabled={dataAttr(resolvedDisabled)}
             data-invalid={dataAttr(resolvedInvalid)}
             data-required={dataAttr(resolvedRequired)}

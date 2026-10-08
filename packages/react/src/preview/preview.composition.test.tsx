@@ -1,3 +1,4 @@
+/* oxlint-disable comp0/no-synthetic-events -- this suite runs on fake timers, which deadlock userEvent's internal delays. */
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireKeyDown, render } from "../../test/render.js";
@@ -6,7 +7,8 @@ import { PreviewContent } from "./PreviewContent.js";
 import { PreviewTrigger } from "./PreviewTrigger.js";
 
 // React synthesizes onPointerEnter and onPointerLeave from pointerover and
-// pointerout crossings, so hover simulation dispatches those primitives.
+// pointerout crossings, so hover simulation dispatches those primitives. This
+// suite runs on fake timers, which deadlock userEvent's async waits under vitest.
 function hoverStart(element: Element) {
   act(() => {
     element.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
@@ -27,7 +29,11 @@ function advance(milliseconds: number) {
   });
 }
 
-function Example(props: { open?: boolean; onToggle?: (open: boolean) => void }) {
+function Example(props: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  openDelay?: number;
+}) {
   return (
     <Preview {...props}>
       <PreviewTrigger href="https://example.com/pkg">pkg</PreviewTrigger>
@@ -93,7 +99,7 @@ describe("preview composition", () => {
     const card = container.querySelector("[data-slot='preview-content']")!;
     act(() => trigger.focus());
     expect(card.hasAttribute("hidden")).toBe(false);
-    fireKeyDown(trigger, "Escape");
+    fireKeyDown(document.body, "Escape");
     expect(card.hasAttribute("hidden")).toBe(true);
   });
 
@@ -128,21 +134,31 @@ describe("preview composition", () => {
     expect(card.hasAttribute("hidden")).toBe(true);
   });
 
-  it("reports the next state through onToggle while controlled open pins the card", () => {
-    const onToggle = vi.fn();
-    const { container, rerender } = render(<Example open onToggle={onToggle} />);
+  it("reports the next state through onOpenChange while controlled open pins the card", () => {
+    const onOpenChange = vi.fn();
+    const { container, rerender } = render(<Example open onOpenChange={onOpenChange} />);
     const card = container.querySelector("[data-slot='preview-content']")!;
     expect(card.hasAttribute("hidden")).toBe(false);
-    fireKeyDown(container.querySelector("a")!, "Escape");
-    expect(onToggle).toHaveBeenCalledWith(false);
+    fireKeyDown(document.body, "Escape");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(card.hasAttribute("hidden")).toBe(false);
-    rerender(<Example open={false} onToggle={onToggle} />);
+    rerender(<Example open={false} onOpenChange={onOpenChange} />);
     expect(card.hasAttribute("hidden")).toBe(true);
   });
 
-  it("reports invalid delay configuration with the received values", () => {
-    expect(() => render(<Preview openDelay={-1} />)).toThrow(
-      "Preview delays must be non-negative; received openDelay -1 and closeDelay 300.",
+  it("warns about negative delays and treats them as zero", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = render(<Example openDelay={-5} />);
+    const card = container.querySelector("[data-slot='preview-content']")!;
+
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Preview delays must be non-negative; received openDelay -5 and closeDelay 300.",
+      ),
     );
+    hoverStart(container.querySelector("a")!);
+    advance(0);
+    expect(card.hasAttribute("hidden")).toBe(false);
+    error.mockRestore();
   });
 });

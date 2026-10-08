@@ -1,7 +1,6 @@
 import { useId, useState, type ComponentProps, type PointerEvent } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { RatingContext } from "./rating-shared.js";
 
 export type RatingProps = Omit<ComponentProps<"div">, "defaultValue" | "onChange"> &
@@ -57,8 +56,8 @@ export function Rating({
       }}
     >
       <Part
+        data-slot="rating"
         {...props}
-        data-slot={dataSlot(props, "rating")}
         data-disabled={dataAttr(resolvedDisabled)}
         data-readonly={dataAttr(resolvedReadOnly)}
         onPointerLeave={(event: PointerEvent<HTMLDivElement>) => {

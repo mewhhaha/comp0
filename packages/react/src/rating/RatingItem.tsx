@@ -1,7 +1,7 @@
 import { useId, type ComponentProps, type PointerEvent } from "react";
 import { dataAttr, useFocusRing } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
+import { warnOnce } from "../internal/dev.js";
 import { visuallyHiddenInputStyle } from "../internal/visually-hidden-input.js";
 import { useRatingContext } from "./rating-shared.js";
 
@@ -25,9 +25,6 @@ export function RatingItem({
   onPointerEnter,
   ...props
 }: RatingItemProps) {
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`RatingItem value must be a positive finite number; received ${value}.`);
-  }
   const id = useId();
   const rating = useRatingContext("RatingItem");
   const { focusProps, isFocused, isFocusVisible } = useFocusRing<HTMLInputElement>({
@@ -36,11 +33,19 @@ export function RatingItem({
   const selected = rating.value === value;
   const active = value <= (rating.highlight ?? rating.value);
 
+  if (!Number.isFinite(value) || value <= 0) {
+    warnOnce(
+      `RatingItem:value:${value}`,
+      `RatingItem value must be a positive finite number; received ${value}. It was skipped.`,
+    );
+    return null;
+  }
+
   const Part = partElement(as, "label");
   return (
     <Part
+      data-slot="rating-item"
       {...props}
-      data-slot={dataSlot(props, "rating-item")}
       data-active={dataAttr(active)}
       data-selected={dataAttr(selected)}
       data-disabled={dataAttr(rating.disabled)}

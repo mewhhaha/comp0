@@ -24,7 +24,7 @@ export function Example() {
   return (
     <Autocomplete disableAutoFocusFirst filter={contains}>
       <div className="flex w-full max-w-xs flex-col items-start gap-1.5">
-        <Menu open={open} onToggle={setOpen}>
+        <Menu open={open} onOpenChange={setOpen}>
           <MenuTrigger
             aria-controls="command-search"
             aria-haspopup="dialog"

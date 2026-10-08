@@ -1,4 +1,5 @@
 import { type ReactNode, type RefObject } from "react";
+import { type Collection } from "@comp0/core";
 import { createRequiredContext } from "../internal/context.js";
 
 export type ToastKind = "status" | "alert";
@@ -31,6 +32,8 @@ export const [ToastContext, useToastContext] =
   createRequiredContext<ToastContextValue>("ToastProvider");
 
 export type ToastRegionContextValue = {
+  /** The rendered toasts in document order, keyed by toast id. */
+  collection: Collection;
   regionRef: RefObject<HTMLDivElement | null>;
   /** The element focus came from when it last entered the region, for restoration after dismissal. */
   restoreFocusRef: RefObject<HTMLElement | null>;

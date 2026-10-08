@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ComponentProps } from "react";
-import { dataAttr, isAfter, isBefore, parseISODate } from "@comp0/core";
+import { dataAttr } from "@comp0/core";
+import { isAfter, isBefore, parseISODate } from "../internal/date.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useCalendarContext } from "./calendar-shared.js";
 
 export type CalendarCellProps = ComponentProps<"td"> &
@@ -42,9 +42,9 @@ export function CalendarCell({ as, date, outsideMonth, children, ...props }: Cal
   const Part = partElement(as, "td");
   return (
     <Part
+      data-slot="calendar-cell"
       {...props}
       aria-selected={selected || undefined}
-      data-slot={dataSlot(props, "calendar-cell")}
       data-outside-month={dataAttr(Boolean(outsideMonth))}
       data-selected={dataAttr(selected)}
       data-today={dataAttr(isToday)}

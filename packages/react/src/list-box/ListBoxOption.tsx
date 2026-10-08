@@ -8,7 +8,8 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { composeRefs, dataAttr } from "@comp0/core";
+import { dataAttr, useComposedRefs } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
@@ -71,29 +72,22 @@ export function ListBoxOption({
     renderedText.hasElement &&
     !ariaLabel
   ) {
-    throw new Error(
-      `ListBoxOption with value "${value}" requires textValue when Autocomplete filters child content that cannot be read before render.`,
+    warnOnce(
+      `ListBoxOption:missing-text-value:${value}`,
+      `ListBoxOption with value "${value}" requires textValue when Autocomplete filters child content that cannot be read before render. Its value was used as its text.`,
     );
   }
   const visible = autocomplete?.isItemVisible(label) ?? true;
-  const setAutocompleteCollectionVersion = autocomplete?.setCollectionVersion;
 
-  const itemRef = (element: HTMLDivElement | null) => {
-    elementRef.current = element;
-    registerListBoxOption({
-      key: value,
-      id,
-      textValue: label,
-      element,
-      disabled: resolvedDisabled,
-    });
-    composeRefs(ref)(element);
-  };
+  const itemRef = useComposedRefs(elementRef, ref);
 
   // Re-register after every render so crawled labels follow content changes.
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {
+      registerListBoxOption({ key: value, id, textValue: label, element: null });
+      return;
+    }
     const crawled = resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value });
     if (crawled !== label) setCrawledLabel(crawled);
     registerListBoxOption({
@@ -106,10 +100,12 @@ export function ListBoxOption({
   });
 
   useLayoutEffect(() => {
-    if (!setAutocompleteCollectionVersion || !visible) return;
-    setAutocompleteCollectionVersion((version) => version + 1);
-    return () => setAutocompleteCollectionVersion((version) => version + 1);
-  }, [resolvedDisabled, setAutocompleteCollectionVersion, visible]);
+    return () => {
+      registerListBoxOption({ key: value, id, textValue: label, element: null });
+    };
+    // The cleanup must run only when the option unmounts or changes identity,
+    // not whenever its label or the ListBox's callback identity changes.
+  }, [value]);
 
   if (!visible) return null;
 
@@ -125,7 +121,6 @@ export function ListBoxOption({
       aria-disabled={resolvedDisabled || undefined}
       data-selected={dataAttr(selected)}
       data-active={dataAttr(active)}
-      data-autocomplete-item={autocomplete ? "" : undefined}
       data-disabled={dataAttr(resolvedDisabled)}
       data-value={value}
       onClick={(event: MouseEvent<HTMLDivElement>) => {

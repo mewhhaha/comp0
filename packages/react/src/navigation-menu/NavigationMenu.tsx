@@ -13,18 +13,14 @@ import {
   useControllableState,
 } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   NavigationMenuContext,
   type NavigationMenuContextValue,
+  type NavigationStop,
 } from "./navigation-menu-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
 const MOVEMENT_KEYS = new Set(["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Home", "End"]);
-
-function panelLinks(scope: Element) {
-  return [...scope.querySelectorAll<HTMLElement>('[data-slot="navigation-menu-link"]')];
-}
 
 type Navigate = ReturnType<typeof useCollectionNavigation>;
 
@@ -35,20 +31,14 @@ type Navigate = ReturnType<typeof useCollectionNavigation>;
  */
 function focusStopAfterMovement(
   navigate: Navigate,
-  stops: HTMLElement[],
-  target: HTMLElement,
+  stops: NavigationStop[],
+  target: NavigationStop,
   key: string,
   dir: "ltr" | "rtl",
 ) {
-  const index = stops.indexOf(target);
-  if (index < 0) return null;
-  const items = stops.map((stop, position) => ({
-    key: String(position),
-    textValue: stop.textContent ?? "",
-  }));
-  const next = navigate(key, items, String(index), { dir, typeahead: false });
-  if (next === undefined || next === String(index)) return null;
-  return stops[Number(next)] ?? null;
+  const next = navigate(key, stops, target.key, { dir, typeahead: false });
+  if (next === undefined || next === target.key) return null;
+  return stops.find((stop) => stop.key === next)?.element ?? null;
 }
 
 /**
@@ -58,35 +48,30 @@ function focusStopAfterMovement(
  * never wraps and never toggles a panel; null keeps the key's default
  * behavior, so unhandled edges still scroll the page.
  */
-function arrowFocusTarget(navigate: Navigate, nav: HTMLElement, target: HTMLElement, key: string) {
-  const dir = writingDirection(nav);
-  const slot = target.getAttribute("data-slot");
-  const panel = target.closest('[data-slot="navigation-menu-content"]');
-  if (panel) {
-    // Only the panel's links take part; a text input or other widget a
-    // consumer placed in a mega-menu keeps its own arrow-key behavior.
-    if (slot !== "navigation-menu-link") return null;
-    return focusStopAfterMovement(navigate, panelLinks(panel), target, key, dir);
+function arrowFocusTarget(
+  navigate: Navigate,
+  stops: NavigationStop[],
+  openValue: string,
+  dir: "ltr" | "rtl",
+  target: HTMLElement,
+  key: string,
+) {
+  // Only registered triggers and links take part; a text input or other
+  // widget a consumer placed in a mega-menu keeps its own arrow-key behavior.
+  const current = stops.find((stop) => stop.element === target);
+  if (!current) return null;
+  if (current.panel !== undefined) {
+    const links = stops.filter((stop) => stop.panel === current.panel);
+    return focusStopAfterMovement(navigate, links, current, key, dir);
   }
-  if (slot !== "navigation-menu-trigger" && slot !== "navigation-menu-link") return null;
-  if (
-    (key === "ArrowDown" || key === (dir === "ltr" ? "ArrowRight" : "ArrowLeft")) &&
-    slot === "navigation-menu-trigger" &&
-    target.getAttribute("aria-expanded") === "true"
-  ) {
-    const contentId = target.getAttribute("aria-controls");
-    const content = contentId ? target.ownerDocument.getElementById(contentId) : null;
-    if (content) return panelLinks(content)[0] ?? null;
-    return null;
+  const intoPanel = key === "ArrowDown" || key === (dir === "ltr" ? "ArrowRight" : "ArrowLeft");
+  if (intoPanel && current.kind === "trigger" && current.value === openValue) {
+    return stops.find((stop) => stop.panel === current.value)?.element ?? null;
   }
   // The APG row holds only buttons; plain sibling links join the row here so
   // arrow movement does not silently skip them.
-  const stops = [
-    ...nav.querySelectorAll<HTMLElement>(
-      '[data-slot="navigation-menu-trigger"], [data-slot="navigation-menu-link"]',
-    ),
-  ].filter((element) => !element.closest('[data-slot="navigation-menu-content"]'));
-  return focusStopAfterMovement(navigate, stops, target, key, dir);
+  const row = stops.filter((stop) => stop.panel === undefined);
+  return focusStopAfterMovement(navigate, row, current, key, dir);
 }
 
 export type NavigationMenuProps = Omit<ComponentProps<"nav">, "defaultValue" | "onChange"> &
@@ -116,7 +101,7 @@ export function NavigationMenu({
   onPointerLeave,
   ...props
 }: NavigationMenuProps) {
-  const triggers = useCollection();
+  const stops = useCollection<NavigationStop>();
   const navigate = useCollectionNavigation();
   const openTimer = useRef<number | undefined>(undefined);
   const closeTimer = useRef<number | undefined>(undefined);
@@ -152,15 +137,15 @@ export function NavigationMenu({
     cancelOpen() {
       window.clearTimeout(openTimer.current);
     },
-    triggers,
+    stops,
   };
 
   const Part = partElement(as, "nav");
   return (
     <NavigationMenuContext value={context}>
       <Part
+        data-slot="navigation-menu"
         {...props}
-        data-slot={dataSlot(props, "navigation-menu")}
         data-open={dataAttr(value !== "")}
         onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
           onKeyDown?.(event);
@@ -168,7 +153,10 @@ export function NavigationMenu({
           if (event.key === "Escape") {
             if (value === "") return;
             event.preventDefault();
-            triggers.get(value)?.element?.focus();
+            stops
+              .items()
+              .find((stop) => stop.kind === "trigger" && stop.value === value)
+              ?.element?.focus();
             context.close();
             return;
           }
@@ -176,7 +164,14 @@ export function NavigationMenu({
           if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
           const ownerWindow = event.currentTarget.ownerDocument.defaultView;
           if (!ownerWindow || !(event.target instanceof ownerWindow.HTMLElement)) return;
-          const next = arrowFocusTarget(navigate, event.currentTarget, event.target, event.key);
+          const next = arrowFocusTarget(
+            navigate,
+            stops.items(),
+            value,
+            writingDirection(event.currentTarget),
+            event.target,
+            event.key,
+          );
           if (!next) return;
           event.preventDefault();
           next.focus();

@@ -1,7 +1,6 @@
 import { type ComponentProps, type CSSProperties } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useColorAreaContext } from "./color-picker-shared.js";
 
 export type ColorAreaThumbProps = ComponentProps<"div"> & AsProp;
@@ -12,9 +11,9 @@ export function ColorAreaThumb({ as, style, ...props }: ColorAreaThumbProps) {
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="color-area-thumb"
       {...props}
       aria-hidden={props["aria-hidden"] ?? true}
-      data-slot={dataSlot(props, "color-area-thumb")}
       data-disabled={dataAttr(colorArea.disabled)}
       style={
         {

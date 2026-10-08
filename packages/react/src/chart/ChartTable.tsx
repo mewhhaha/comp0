@@ -1,6 +1,5 @@
 import { type ComponentProps } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useChartMeta } from "./chart-meta.js";
 import { useChartContext } from "./chart-shared.js";
 import { chartTableModel } from "./chart-table-model.js";
@@ -45,7 +44,7 @@ export function ChartTable({ as, children, ...props }: ChartTableProps) {
   }
   const Part = partElement(as, "table");
   return (
-    <Part {...props} data-slot={dataSlot(props, "chart-table")}>
+    <Part data-slot="chart-table" {...props}>
       {content}
     </Part>
   );

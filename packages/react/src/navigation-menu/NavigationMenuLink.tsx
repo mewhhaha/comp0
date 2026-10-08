@@ -1,8 +1,10 @@
-import { type ComponentPropsWithRef, type ElementType, type MouseEvent } from "react";
-import { dataAttr } from "@comp0/core";
+import { useId, type ComponentPropsWithRef, type ElementType, type MouseEvent } from "react";
+import { dataAttr, useComposedRefs } from "@comp0/core";
 import { partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
-import { useNavigationMenuContext } from "./navigation-menu-shared.js";
+import {
+  useNavigationMenuContext,
+  useOptionalNavigationMenuPanelContext,
+} from "./navigation-menu-shared.js";
 
 type NavigationMenuLinkOwnProps = {
   /** Marks the page you are on with aria-current="page". */
@@ -20,17 +22,31 @@ export function NavigationMenuLink<TElement extends ElementType = "a">({
   as,
   current,
   onClick,
+  ref,
   ...props
 }: NavigationMenuLinkProps<TElement>) {
   const menu = useNavigationMenuContext("NavigationMenuLink");
+  const panel = useOptionalNavigationMenuPanelContext();
+  const key = useId();
+  const linkRef = useComposedRefs(ref, (element: HTMLElement | null) => {
+    menu.stops.register({
+      key,
+      textValue: element?.textContent?.trim() ?? "",
+      element,
+      kind: "link",
+      panel: panel?.value,
+      value: undefined,
+    });
+  });
 
   const Part = partElement(as, "a");
   return (
     <Part
+      data-slot="navigation-menu-link"
       {...props}
+      ref={linkRef}
       aria-current={current ? "page" : undefined}
       data-current={dataAttr(Boolean(current))}
-      data-slot={dataSlot(props as Record<string, unknown>, "navigation-menu-link")}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => {
         (onClick as ((clickEvent: MouseEvent<HTMLAnchorElement>) => void) | undefined)?.(event);
         if (!event.defaultPrevented) menu.close();

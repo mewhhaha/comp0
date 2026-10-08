@@ -1,6 +1,5 @@
 import { type ComponentProps, type ReactNode } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { type CategoricalChartValue, useChartKind } from "../chart/chart-shared.js";
 
 export type PieChartLegendItem = {
@@ -22,7 +21,7 @@ export function PieChartLegend({ as, children, ...props }: PieChartLegendProps) 
 
   const Part = partElement(as, "ul");
   return (
-    <Part {...props} data-slot={dataSlot(props, "pie-chart-legend")}>
+    <Part data-slot="pie-chart-legend" {...props}>
       {context.values.map((value, index) => {
         const item = {
           value,

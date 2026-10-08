@@ -27,9 +27,19 @@ export default component({
       false,
       false,
       [
+        prop(
+          "id",
+          "string",
+          "Base id for the control; the label, description, and error ids derive from it.",
+        ),
         prop("value", "string", "Controlled text value."),
         prop("defaultValue", "string", "Initial uncontrolled text value."),
         prop("onChange", "(value: string) => void", "Receives the next text value."),
+        prop(
+          "disabled / invalid / required",
+          "boolean",
+          "Field-wide states shared with every part.",
+        ),
       ],
     ),
     p("Label", "label", "Visible name for the text control."),

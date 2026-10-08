@@ -1,7 +1,6 @@
 import { useId, useLayoutEffect, useRef, type ComponentProps } from "react";
 import { useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { ErrorSummaryContext } from "./error-summary-shared.js";
 
 export type ErrorSummaryProps = Omit<ComponentProps<"div">, "role"> &
@@ -32,13 +31,13 @@ export function ErrorSummary({
   return (
     <ErrorSummaryContext value={{ titleId }}>
       <Part
+        data-slot="error-summary"
         {...props}
         ref={composedRef}
         id={summaryId}
         role="alert"
         tabIndex={tabIndex ?? -1}
         aria-labelledby={props["aria-labelledby"] ?? titleId}
-        data-slot={dataSlot(props, "error-summary")}
       />
     </ErrorSummaryContext>
   );

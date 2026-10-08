@@ -1,7 +1,6 @@
 import { type ChangeEvent, type ComponentProps, type CSSProperties } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useColorPickerContext } from "./color-picker-shared.js";
 
 export type ColorSliderProps = Omit<
@@ -21,6 +20,7 @@ export function ColorSlider({ as, channel, disabled, style, ...props }: ColorSli
   const Part = partElement(as, "input");
   return (
     <Part
+      data-slot="color-slider"
       {...props}
       type="range"
       min={0}
@@ -30,7 +30,6 @@ export function ColorSlider({ as, channel, disabled, style, ...props }: ColorSli
       disabled={resolvedDisabled}
       aria-label={ariaLabel}
       aria-valuetext={`${Math.round(colorPicker.color.hue)} degrees`}
-      data-slot={dataSlot(props, "color-slider")}
       data-channel={channel}
       data-disabled={dataAttr(resolvedDisabled)}
       data-value={colorPicker.color.hue}

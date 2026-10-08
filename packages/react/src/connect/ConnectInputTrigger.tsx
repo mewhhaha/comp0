@@ -1,7 +1,6 @@
 import { useId, type ComponentProps, type MouseEvent } from "react";
-import { dataAttr } from "@comp0/core";
+import { composeRefs, dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   compatiblePorts,
   portLabel,
@@ -13,7 +12,13 @@ import { visuallyHiddenStyle } from "../visually-hidden/visually-hidden-shared.j
 
 export type ConnectInputTriggerProps = ComponentProps<"button"> & AsProp;
 
-export function ConnectInputTrigger({ as, onClick, disabled, ...props }: ConnectInputTriggerProps) {
+export function ConnectInputTrigger({
+  as,
+  onClick,
+  disabled,
+  ref,
+  ...props
+}: ConnectInputTriggerProps) {
   const context = useConnectContext("ConnectInputTrigger");
   const descriptionId = useId();
   const card = useConnectCardContext("ConnectInputTrigger");
@@ -38,14 +43,14 @@ export function ConnectInputTrigger({ as, onClick, disabled, ...props }: Connect
   return (
     <>
       <Part
+        data-slot="connect-input-trigger"
         {...props}
+        ref={composeRefs(ref, input.setTrigger)}
         type={as === undefined || as === "button" ? (props.type ?? "button") : undefined}
         disabled={disabled || input.disabled}
         aria-label={props["aria-label"] ?? `${card.label}: ${input.label} input (${input.kind})`}
         aria-describedby={[props["aria-describedby"], descriptionId].filter(Boolean).join(" ")}
-        data-connect-input-trigger=""
         aria-disabled={!available || undefined}
-        data-slot={dataSlot(props, "connect-input-trigger")}
         data-connected={dataAttr(Boolean(connection))}
         data-available={dataAttr(available)}
         onClick={(event: MouseEvent<HTMLButtonElement>) => {

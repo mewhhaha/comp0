@@ -1,7 +1,6 @@
 import { type ComponentProps } from "react";
 import { useControllableState } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import {
   ToggleButtonGroupContext,
   type ToggleButtonGroupContextValue,
@@ -79,10 +78,10 @@ export function ToggleButtonGroup({
   return (
     <ToggleButtonGroupContext value={context}>
       <Part
+        data-slot="toggle-button-group"
         {...props}
         role={props.role ?? "group"}
         data-orientation={orientation}
-        data-slot={dataSlot(props, "toggle-button-group")}
       />
     </ToggleButtonGroupContext>
   );

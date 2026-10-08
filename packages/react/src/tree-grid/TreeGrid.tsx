@@ -13,7 +13,7 @@ import {
   useControllableState,
 } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { FOCUSABLE_SELECTOR } from "../grid-list/grid-list-shared.js";
+import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
 import {
   TreeGridContext,
   treeGridRowKey,
@@ -22,15 +22,13 @@ import {
   type TreeGridRowItem,
   type TreeGridRowMetadata,
 } from "./tree-grid-shared.js";
+import { warnOnce } from "../internal/dev.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
 type MountedRow = TreeGridRowItem & { element: HTMLTableRowElement };
 type MountedCell = TreeGridCellItem & { element: HTMLTableCellElement };
 
-export type TreeGridProps = Omit<
-  ComponentProps<"table">,
-  "defaultValue" | "onChange" | "onToggle"
-> &
+export type TreeGridProps = Omit<ComponentProps<"table">, "defaultValue" | "onChange"> &
   AsProp & {
     /** Controlled or initial selected row; selection is single. */
     value?: string | undefined;
@@ -41,7 +39,7 @@ export type TreeGridProps = Omit<
     open?: string[] | undefined;
     defaultOpen?: string[] | undefined;
     /** Receives the next list of open row values. */
-    onToggle?: ((open: string[]) => void) | undefined;
+    onOpenChange?: ((open: string[]) => void) | undefined;
   };
 
 export function TreeGrid({
@@ -51,7 +49,7 @@ export function TreeGrid({
   onChange,
   open: openProp,
   defaultOpen,
-  onToggle,
+  onOpenChange,
   onKeyDown,
   children,
   ref,
@@ -65,7 +63,7 @@ export function TreeGrid({
   const [open, setOpen] = useControllableState<string[]>({
     value: openProp,
     defaultValue: defaultOpen ?? [],
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const [activeKey, setActiveKey] = useState(selected ? treeGridRowKey(selected) : "");
   const [rowMetadata, setRowMetadata] = useState<ReadonlyMap<string, TreeGridRowMetadata>>(
@@ -173,37 +171,61 @@ export function TreeGrid({
   useLayoutEffect(() => {
     const rows = orderedRows();
     const rowByValue = new Map(rows.map((row) => [row.key, row]));
+    // Invalid hierarchy data degrades to a root row: a missing parent or a
+    // cyclic parentValue chain is reported once and the row is lifted out.
+    const parentOf = new Map<string, string | undefined>();
+    for (const row of rows) {
+      let parent = row.parentValue;
+      if (parent !== undefined && !rowByValue.has(parent)) {
+        warnOnce(
+          `TreeGridRow:missing-parent:${row.key}`,
+          `TreeGridRow value "${row.key}" references missing parentValue "${parent}". It was treated as a root row.`,
+        );
+        parent = undefined;
+      }
+      parentOf.set(row.key, parent);
+    }
+    for (const row of rows) {
+      const seen = new Set([row.key]);
+      let ancestor = parentOf.get(row.key);
+      while (ancestor !== undefined) {
+        if (seen.has(ancestor)) {
+          if (ancestor === row.key) {
+            warnOnce(
+              `TreeGridRow:cyclic-parent:${row.key}`,
+              `TreeGridRow value "${row.key}" has a cyclic parentValue chain. It was treated as a root row.`,
+            );
+            parentOf.set(row.key, undefined);
+          }
+          break;
+        }
+        seen.add(ancestor);
+        ancestor = parentOf.get(ancestor);
+      }
+    }
     const childrenByParent = new Map<string | undefined, MountedRow[]>();
     for (const row of rows) {
-      const siblings = childrenByParent.get(row.parentValue) ?? [];
+      const parentKey = parentOf.get(row.key);
+      const siblings = childrenByParent.get(parentKey) ?? [];
       siblings.push(row);
-      childrenByParent.set(row.parentValue, siblings);
+      childrenByParent.set(parentKey, siblings);
     }
     const nextMetadata = new Map<string, TreeGridRowMetadata>();
-    const resolving = new Set<string>();
     const resolveMetadata = (row: MountedRow): TreeGridRowMetadata => {
       const resolved = nextMetadata.get(row.key);
       if (resolved) return resolved;
-      if (resolving.has(row.key)) {
-        throw new Error(`TreeGridRow value "${row.key}" has a cyclic parentValue chain.`);
-      }
-      resolving.add(row.key);
+      const parentKey = parentOf.get(row.key);
       let level = 1;
       let visible = !row.hidden;
-      if (row.parentValue !== undefined) {
-        const parent = rowByValue.get(row.parentValue);
-        if (!parent) {
-          throw new Error(
-            `TreeGridRow value "${row.key}" references missing parentValue "${row.parentValue}".`,
-          );
-        }
+      const parent = parentKey === undefined ? undefined : rowByValue.get(parentKey);
+      if (parent) {
         const parentMetadata = resolveMetadata(parent);
         level = parentMetadata.level + 1;
         visible = visible && parentMetadata.visible && open.includes(parent.key);
       }
-      const siblings = childrenByParent.get(row.parentValue) ?? [];
+      const siblings = childrenByParent.get(parentKey) ?? [];
       const metadata: TreeGridRowMetadata = {
-        parentValue: row.parentValue,
+        parentValue: parentKey,
         level,
         position: siblings.indexOf(row) + 1,
         setSize: siblings.length,
@@ -211,7 +233,6 @@ export function TreeGrid({
         visible,
       };
       nextMetadata.set(row.key, metadata);
-      resolving.delete(row.key);
       return metadata;
     };
     for (const row of rows) resolveMetadata(row);
@@ -272,11 +293,9 @@ export function TreeGrid({
     if (event.ctrlKey && event.key !== "Home" && event.key !== "End") return;
     const table = tableRef.current;
     const target = event.target instanceof HTMLElement ? event.target : null;
-    const rowElement = target?.closest<HTMLTableRowElement>('tr[role="row"][data-value]');
+    const rowElement = target?.closest("tr");
     if (!table || !target || !rowElement || !table.contains(rowElement)) return;
-    const rowValue = rowElement.dataset["value"];
-    if (!rowValue) return;
-    const row = rowCollection.get(rowValue);
+    const row = rowCollection.items().find((item) => item.element === rowElement);
     if (!row?.element || row.disabled) return;
     const cellElement = target.closest<HTMLTableCellElement>('td[role="gridcell"]');
     const rowFocused = target === rowElement;

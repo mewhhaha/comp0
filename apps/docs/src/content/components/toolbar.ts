@@ -56,6 +56,17 @@ export default component({
     p("ToggleButton", "item", "Native button that owns one press target.", true, true, [
       prop("value", "string", "Identifies the button inside a selection-managing group."),
       prop("disabled", "boolean", "Removes the button from the toolbar's arrow-key order."),
+      prop(
+        "selected / defaultSelected",
+        "boolean",
+        "Controlled or initial on state when standalone.",
+      ),
+      prop("pending", "boolean", "Marks a busy action: disables the button and sets aria-busy."),
+      prop(
+        "command / commandfor",
+        "string",
+        "Native invoker attributes: the command to run and the id of the element it targets.",
+      ),
     ]),
   ],
   keyboard: [

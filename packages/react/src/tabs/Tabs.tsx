@@ -1,7 +1,6 @@
 import { useId, type ReactNode } from "react";
 import { useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { TabsContext } from "./tabs-shared.js";
 
 export type TabsProps = RootProps<{
@@ -24,7 +23,7 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
   const Root = rootElement(as);
   return (
     <TabsContext value={{ baseId, selectedKey: selected, setSelectedKey: setSelected, collection }}>
-      <Root {...props} data-slot={dataSlot(props, "tabs")}>
+      <Root data-slot="tabs" {...props}>
         {children}
       </Root>
     </TabsContext>

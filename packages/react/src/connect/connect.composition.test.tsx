@@ -1,7 +1,7 @@
 import { act } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
-import { fireClick, render, userEvent, within } from "../../test/render.js";
+import { render, setup, within } from "../../test/render.js";
 import {
   Connect,
   ConnectCard,
@@ -49,6 +49,15 @@ function Connections({ showBronze = true, ...props }: ConnectProps & { showBronz
 }
 
 describe("Connect composition", () => {
+  // jsdom has no pointer capture, which outputs use while a pointer gesture is active.
+  beforeAll(() => {
+    Object.assign(HTMLElement.prototype, {
+      setPointerCapture() {},
+      releasePointerCapture() {},
+      hasPointerCapture: () => false,
+    });
+  });
+
   it("renders persistent labelled cards and connections without opening a dialog or taking focus", () => {
     const before = document.createElement("button");
     document.body.append(before);
@@ -76,15 +85,14 @@ describe("Connect composition", () => {
   });
 
   it("connects with separate clicks, replaces one input, and preserves output fanout", async () => {
-    const user = userEvent.setup();
     const onChange = vi.fn();
-    const { container } = render(<Connections onChange={onChange} />);
+    const { container, user } = setup(<Connections onChange={onChange} />);
     const controls = within(container);
     const bronze = controls.getByRole("button", { name: "Palette: Bronze output (color)" });
-    fireClick(bronze);
-    fireClick(controls.getByRole("button", { name: "Material: surface input (color)" }));
-    fireClick(bronze);
-    fireClick(controls.getByRole("button", { name: "Material: accent input (color)" }));
+    await user.click(bronze);
+    await user.click(controls.getByRole("button", { name: "Material: surface input (color)" }));
+    await user.click(bronze);
+    await user.click(controls.getByRole("button", { name: "Material: accent input (color)" }));
     expect(onChange).toHaveBeenLastCalledWith([
       { from: "bronze", to: "surface" },
       { from: "bronze", to: "accent" },
@@ -99,9 +107,9 @@ describe("Connect composition", () => {
     ]);
   });
 
-  it("offers only matching enabled sources from other cards", () => {
+  it("offers only matching enabled sources from other cards", async () => {
     const onChange = vi.fn();
-    const { container } = render(<Connections onChange={onChange} />);
+    const { container, user } = setup(<Connections onChange={onChange} />);
     const controls = within(container);
     const select = controls.getByRole("combobox", { name: "Material: surface source (color)" });
     expect(
@@ -114,14 +122,13 @@ describe("Connect composition", () => {
         controls.getByRole("combobox", { name: "Palette: Local source (color)" }),
       ).getAllByRole("option"),
     ).toHaveLength(1);
-    fireClick(controls.getByRole("button", { name: "Palette: Size output (number)" }));
-    fireClick(controls.getByRole("button", { name: "Material: surface input (color)" }));
+    await user.click(controls.getByRole("button", { name: "Palette: Size output (number)" }));
+    await user.click(controls.getByRole("button", { name: "Material: surface input (color)" }));
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("disconnects through a native selector or button and keeps focus on an enabled control", async () => {
-    const user = userEvent.setup();
-    const { container } = render(
+    const { container, user } = setup(
       <Connections
         defaultValue={[
           { from: "bronze", to: "surface" },
@@ -133,7 +140,7 @@ describe("Connect composition", () => {
     const surface = controls.getByRole("combobox", {
       name: "Material: surface source (color)",
     }) as HTMLSelectElement;
-    fireClick(controls.getByRole("button", { name: "Disconnect Material: surface" }));
+    await user.click(controls.getByRole("button", { name: "Disconnect Material: surface" }));
     expect(surface.value).toBe("");
     expect(document.activeElement).toBe(surface);
     const accent = controls.getByRole("combobox", {
@@ -148,11 +155,10 @@ describe("Connect composition", () => {
   });
 
   it("cancels selection with Escape and leaves native control arrow keys alone", async () => {
-    const user = userEvent.setup();
-    const { container } = render(<Connections />);
+    const { container, user } = setup(<Connections />);
     const controls = within(container);
     const output = controls.getByRole("button", { name: "Palette: Bronze output (color)" });
-    fireClick(output);
+    await user.click(output);
     act(() => controls.getByRole("button", { name: "Material: surface input (color)" }).focus());
     await user.keyboard("{Escape}");
     expect(document.activeElement).toBe(output);
@@ -171,10 +177,11 @@ describe("Connect composition", () => {
   });
 
   it("keeps controlled connections until the owner accepts a proposal", async () => {
-    const user = userEvent.setup();
     const onChange = vi.fn();
     const original = [{ from: "bronze", to: "surface" }];
-    const { container, rerender } = render(<Connections value={original} onChange={onChange} />);
+    const { container, rerender, user } = setup(
+      <Connections value={original} onChange={onChange} />,
+    );
     const select = within(container).getByRole("combobox", {
       name: "Material: surface source (color)",
     }) as HTMLSelectElement;
@@ -185,10 +192,10 @@ describe("Connect composition", () => {
     expect(select.value).toBe("jade");
   });
 
-  it("does not restore a pending selection when a removed output returns", () => {
-    const { container, rerender } = render(<Connections />);
+  it("does not restore a pending selection when a removed output returns", async () => {
+    const { container, rerender, user } = setup(<Connections />);
     const controls = within(container);
-    fireClick(controls.getByRole("button", { name: "Palette: Bronze output (color)" }));
+    await user.click(controls.getByRole("button", { name: "Palette: Bronze output (color)" }));
     rerender(<Connections showBronze={false} />);
     expect(controls.queryByRole("button", { name: "Palette: Bronze output (color)" })).toBeNull();
     rerender(<Connections />);
@@ -199,17 +206,65 @@ describe("Connect composition", () => {
     ).toBe("false");
   });
 
-  it("rejects ambiguous input state with the offending connection", () => {
+  it("skips a second source for the same input and warns with the offending connection", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = render(
+      <Connections
+        defaultValue={[
+          { from: "bronze", to: "surface" },
+          { from: "jade", to: "surface" },
+        ]}
+      />,
+    );
+    expect(error.mock.calls.map(([message]) => message)).toEqual([
+      'Connect requires nonempty endpoints and one source per input; received {"from":"jade","to":"surface"}. It was skipped.',
+    ]);
+    const select = within(container).getByRole("combobox", {
+      name: "Material: surface source (color)",
+    }) as HTMLSelectElement;
+    expect(select.value).toBe("bronze");
+    error.mockRestore();
+  });
+
+  it("skips ports with missing labels and warns once", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = render(
+      <Connect aria-label="Skipped port">
+        <ConnectCard value="source" label="Source">
+          <ConnectOutput value="unlabelled" label="" kind="color" />
+          <ConnectOutput value="labelled" label="Labelled" kind="color" />
+        </ConnectCard>
+        <ConnectCard value="target" label="Target">
+          <ConnectInput value="sink" label="Sink" kind="color">
+            <ConnectInputSelect />
+          </ConnectInput>
+        </ConnectCard>
+      </Connect>,
+    );
+    expect(error.mock.calls.map(([message]) => message)).toEqual([
+      'Connect output "unlabelled" requires a nonempty value, label, kind, and labelled card. It was skipped.',
+    ]);
+    const options = within(container).getAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual([
+      "Not connected",
+      "Source: Labelled (color)",
+    ]);
+    error.mockRestore();
+  });
+
+  it("rejects duplicate port values among outputs", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(() =>
       render(
-        <Connections
-          defaultValue={[
-            { from: "bronze", to: "surface" },
-            { from: "jade", to: "surface" },
-          ]}
-        />,
+        <Connect aria-label="Duplicates">
+          <ConnectCard value="source" label="Source">
+            <ConnectOutput value="same" label="One" kind="color" />
+            <ConnectOutput value="same" label="Two" kind="color" />
+          </ConnectCard>
+        </Connect>,
       ),
-    ).toThrow('received {"from":"jade","to":"surface"}');
+    ).toThrow('Connect has duplicate output value "same".');
+    error.mockRestore();
   });
 
   it("disables every port when its card is disabled", () => {

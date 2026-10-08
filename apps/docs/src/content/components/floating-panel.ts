@@ -65,11 +65,11 @@ export default component({
         ),
         prop("open", "boolean", "Controlled open state."),
         prop("defaultOpen", "boolean", "Initial uncontrolled open state."),
-        prop("onToggle", "(open: boolean) => void", "Receives the next open state."),
+        prop("onOpenChange", "(open: boolean) => void", "Receives the next open state."),
         prop(
           "position",
           "FloatingPanelPosition | null",
-          "Controlled viewport coordinates, or local coordinates when the group renders an element.",
+          "Controlled viewport coordinates, or local coordinates when the group renders an element. Non-finite coordinates warn in development and are ignored.",
         ),
         prop(
           "defaultPosition",
@@ -81,7 +81,11 @@ export default component({
           "(position: FloatingPanelPosition) => void",
           "Receives coordinates produced by moving the panel.",
         ),
-        prop("size", "FloatingPanelSize | null", "Controlled width and height in pixels."),
+        prop(
+          "size",
+          "FloatingPanelSize | null",
+          "Controlled width and height in pixels. Non-finite or non-positive sizes warn in development and are ignored.",
+        ),
         prop("defaultSize", "FloatingPanelSize | null", "Initial uncontrolled width and height."),
         prop(
           "onSizeChange",

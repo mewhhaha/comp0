@@ -115,16 +115,6 @@ export type GridListItemContextValue = {
 export const [GridListItemContext, , useOptionalGridListItemContext] =
   createRequiredContext<GridListItemContextValue>("GridListItem");
 
-export const FOCUSABLE_SELECTOR =
-  "a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]";
-
-/** The focusable elements inside a row, excluding the row itself. */
-export function rowFocusables(row: HTMLElement) {
-  return [...row.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
-    (element) => element !== row && !element.matches(":disabled"),
-  );
-}
-
 /**
  * A row's content wrapped in its gridcell. With `as={Fragment}` the row is the
  * single child element, so the cell goes inside that child instead.

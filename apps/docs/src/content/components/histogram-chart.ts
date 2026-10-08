@@ -91,6 +91,15 @@ export default component({
       "Optional floating range and count shown on hover or focus.",
       true,
       true,
+      [
+        prop("placement", "PopoverPlacement", 'Side of the active mark; defaults to "top".'),
+        prop("offset", "number", "Distance from the active mark; defaults to eight pixels."),
+        prop(
+          "children",
+          "ReactNode | (details: ChartValueDetails) => ReactNode",
+          "Custom content receiving the active bin's formatted details.",
+        ),
+      ],
     ),
   ],
   keyboard: [
@@ -103,6 +112,16 @@ export default component({
     { keys: ["Escape"], action: "Dismisses an open ChartTooltip." },
   ],
   stateHooks: [
+    {
+      attribute: "[data-min]",
+      on: "HistogramChartBin",
+      meaning: "The inclusive lower bound of this bin.",
+    },
+    {
+      attribute: "[data-max]",
+      on: "HistogramChartBin",
+      meaning: "The upper bound of this bin.",
+    },
     {
       attribute: "[data-count]",
       on: "HistogramChartBin",

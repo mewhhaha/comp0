@@ -1,5 +1,4 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { dataSlot } from "../internal/shared.js";
 import { useActiveChartValue } from "../chart/chart-interaction-context.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -95,13 +94,7 @@ export function PieChartPlot({ children, ref, ...props }: PieChartPlotProps) {
   const activeSlice = activeValue?.kind === "pie" ? slices[activeValue.index] : undefined;
 
   return (
-    <svg
-      {...props}
-      ref={ref}
-      viewBox="0 0 100 100"
-      role="group"
-      data-slot={dataSlot(props, "pie-chart-plot")}
-    >
+    <svg data-slot="pie-chart-plot" {...props} ref={ref} viewBox="0 0 100 100" role="group">
       <ChartNavigationProvider
         count={slices.length}
         loop

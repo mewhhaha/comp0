@@ -1,11 +1,11 @@
 import { useRef, type ComponentProps } from "react";
-import { useComposedRefs, dataAttr, useControllableState } from "@comp0/core";
+import { useComposedRefs, dataAttr, useCollection, useControllableState } from "@comp0/core";
 import { describedBy, fieldFeedback, useFieldIds } from "../field/field-shared.js";
 import { FieldProvider } from "../field/FieldProvider.js";
 import { visuallyHiddenInputStyle } from "../internal/visually-hidden-input.js";
 import { useFormReset } from "../internal/form-control-state.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { CheckboxGroupContext } from "./checkbox-shared.js";
+import { CheckboxGroupContext, type CheckboxGroupItem } from "./checkbox-shared.js";
 
 export type CheckboxGroupProps = Omit<
   ComponentProps<"fieldset">,
@@ -35,6 +35,7 @@ export function CheckboxGroup({
 }: CheckboxGroupProps) {
   const ids = useFieldIds(id);
   const fieldsetRef = useRef<HTMLFieldSetElement>(null);
+  const collection = useCollection<CheckboxGroupItem>();
   const [selectedValues, setSelected, selectedState] = useControllableState({
     value,
     defaultValue,
@@ -59,10 +60,11 @@ export function CheckboxGroup({
     controlRef: fieldsetRef,
     form: props.form,
     state: selectedState,
-    readValue: (element) =>
-      [...element.querySelectorAll<HTMLInputElement>("input[data-checkbox-group-control]")]
-        .filter((input) => input.checked)
-        .map((input) => input.value),
+    readValue: () =>
+      collection
+        .items()
+        .filter((item) => item.element?.checked)
+        .map((item) => item.key),
   });
 
   const composedRef = useComposedRefs(fieldsetRef, ref);
@@ -75,6 +77,7 @@ export function CheckboxGroup({
           form: props.form,
           value: selectedValues,
           disabled,
+          collection,
           onChange(nextValue, selected) {
             setSelected((current) => {
               if (selected) return [...new Set([...current, nextValue])];
@@ -102,13 +105,10 @@ export function CheckboxGroup({
               <input
                 aria-hidden="true"
                 checked={selectedValues.length > 0}
-                data-checkbox-group-validity=""
                 form={props.form}
                 onInvalid={(event) => {
                   event.preventDefault();
-                  fieldsetRef.current
-                    ?.querySelector<HTMLInputElement>("input[data-checkbox-group-control]")
-                    ?.focus();
+                  collection.items()[0]?.element?.focus();
                 }}
                 readOnly
                 required

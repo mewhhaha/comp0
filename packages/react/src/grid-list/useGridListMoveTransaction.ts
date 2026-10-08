@@ -67,7 +67,7 @@ export function useGridListMoveTransaction(options: {
       !destination ||
       destination.list !== focusRequest.list ||
       destination.disabled ||
-      !destination.element.isConnected
+      !destination.element?.isConnected
     ) {
       setFocusRequest(null);
     }

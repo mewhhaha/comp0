@@ -1,8 +1,8 @@
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { DialogContext, popoverAnchorName } from "../internal/overlay/index.js";
+import { warnOnce } from "../internal/dev.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { TourContext, type TourState, type TourStep } from "./tour-shared.js";
 export type { TourState, TourStep } from "./tour-shared.js";
 
@@ -24,16 +24,27 @@ export function Tour({
   children,
   ...props
 }: TourProps) {
-  if (steps.length === 0) throw new Error("Tour requires at least one step; received 0.");
+  if (steps.length === 0) {
+    warnOnce(
+      "Tour:no-steps",
+      "Tour requires at least one step; received 0. The tour stays closed.",
+    );
+  }
   const seenTargets = new Set<string>();
   for (const tourStep of steps) {
-    if (!tourStep.target) throw new Error("Tour step targets must not be empty.");
-    if (seenTargets.has(tourStep.target)) {
-      throw new Error(`Tour target "${tourStep.target}" is used by more than one step.`);
+    if (!tourStep.target) {
+      warnOnce(
+        `Tour:empty-target:${String(tourStep.title)}`,
+        "Tour step targets must not be empty. The step has no target to anchor to.",
+      );
+    } else if (seenTargets.has(tourStep.target)) {
+      warnOnce(
+        `Tour:duplicate-target:${tourStep.target}`,
+        `Tour target "${tourStep.target}" is used by more than one step.`,
+      );
     }
     seenTargets.add(tourStep.target);
   }
-
   const generatedId = useId();
   const triggerElement = useRef<HTMLElement | null>(null);
   const restoreFocus = useRef(false);
@@ -44,15 +55,15 @@ export function Tour({
     defaultValue,
     onChange,
   });
-  if (
-    stepIndex !== null &&
-    (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= steps.length)
-  ) {
-    throw new Error(
-      `Tour step must be null or an index from 0 to ${steps.length - 1}; received ${stepIndex}.`,
+  const stepInRange =
+    stepIndex !== null && Number.isInteger(stepIndex) && stepIndex >= 0 && stepIndex < steps.length;
+  if (stepIndex !== null && !stepInRange) {
+    warnOnce(
+      `Tour:step-out-of-range:${stepIndex}:${steps.length}`,
+      `Tour step must be null or an index from 0 to ${steps.length - 1}; received ${stepIndex}. The tour stays closed.`,
     );
   }
-  const currentStep = stepIndex === null ? null : steps[stepIndex]!;
+  const currentStep = stepInRange ? steps[stepIndex]! : null;
   const targetName = currentStep?.target;
   const triggerId = `${generatedId}-trigger`;
   const contentId = `${generatedId}-content`;
@@ -68,12 +79,19 @@ export function Tour({
       ownerDocument.querySelectorAll<HTMLElement>("[data-tour-target]"),
     ).filter((element) => element.getAttribute("data-tour-target") === targetName);
     if (matches.length !== 1) {
-      throw new Error(
-        `Tour target "${targetName}" must match exactly one element; found ${matches.length}.`,
+      let outcome = "The first match was used.";
+      if (matches.length === 0) outcome = "The step stays hidden.";
+      warnOnce(
+        `Tour:target-matches:${targetName}:${matches.length}`,
+        `Tour target "${targetName}" must match exactly one element; found ${matches.length}. ${outcome}`,
       );
     }
 
-    const target = matches[0]!;
+    const target = matches[0];
+    if (!target) {
+      setTargetElement(null);
+      return;
+    }
     const previousAnchorName = target.style.getPropertyValue("anchor-name");
     const previousAnchorPriority = target.style.getPropertyPriority("anchor-name");
     const hadActiveAttribute = target.hasAttribute("data-tour-active");
@@ -175,7 +193,7 @@ export function Tour({
           },
         }}
       >
-        <Root {...props} data-open={dataAttr(open)} data-slot={dataSlot(props, "tour")}>
+        <Root data-slot="tour" {...props} data-open={dataAttr(open)}>
           {children}
         </Root>
       </TourContext>

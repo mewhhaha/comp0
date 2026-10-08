@@ -95,6 +95,11 @@ export default component({
   ],
   stateHooks: [
     {
+      attribute: '[data-thumb="start"], [data-thumb="end"]',
+      on: "RangeSliderThumb",
+      meaning: "Which end of the range the thumb controls, so the two can be styled apart.",
+    },
+    {
       attribute: "[data-dragging]",
       on: "RangeSliderThumb",
       meaning: "The thumb is being dragged with a captured pointer.",

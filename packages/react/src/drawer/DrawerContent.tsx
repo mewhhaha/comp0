@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { dataAttr } from "@comp0/core";
 import { useModalDialog } from "../internal/overlay/modal-dialog.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useDrawerContext, type DrawerSide } from "./drawer-shared.js";
 
 const FLICK_VELOCITY = 0.5; // px per ms
@@ -89,6 +88,7 @@ export function DrawerContent({
   const Part = partElement(as, "dialog");
   const content = (
     <Part
+      data-slot="drawer-content"
       {...props}
       {...modal}
       id={props.id ?? drawer.contentId}
@@ -97,7 +97,6 @@ export function DrawerContent({
       data-dragging={dataAttr(dragging)}
       data-open={dataAttr(drawer.open)}
       data-side={side}
-      data-slot={dataSlot(props, "drawer-content")}
       onPointerDown={(event: PointerEvent<HTMLDialogElement>) => {
         onPointerDown?.(event);
         if (event.defaultPrevented) return;

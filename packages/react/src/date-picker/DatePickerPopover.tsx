@@ -1,13 +1,7 @@
-import { useLayoutEffect, useRef, type ComponentProps } from "react";
+import { type ComponentProps, type KeyboardEvent } from "react";
 import { useDatePickerContext } from "../internal/date-shared.js";
-import { dataAttr, useComposedRefs } from "@comp0/core";
+import { useOverlaySurface, type PopoverPlacementProps } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
-import {
-  placementSurfaceStyle,
-  usePopoverSurface,
-  type PopoverPlacementProps,
-} from "../internal/overlay/index.js";
 
 export type DatePickerPopoverProps = ComponentProps<"div"> & PopoverPlacementProps & AsProp;
 
@@ -23,25 +17,19 @@ export function DatePickerPopover({
   ...props
 }: DatePickerPopoverProps) {
   useDatePickerContext("DatePickerPopover");
-  const {
-    onNativeToggle,
-    popover: surfacePopover,
-    surfaceRef,
-  } = usePopoverSurface<HTMLDivElement>("auto");
+  const surface = useOverlaySurface<HTMLDivElement>({
+    popover: "auto",
+    id: props.id,
+    offset,
+    onToggle,
+    placement,
+    ref,
+    style,
+    // The roving tab stop marks the calendar cell keyboard focus starts on.
+    initialFocus: ["[role='grid'] button[tabindex='0']", "button:not([tabindex='-1'])"],
+  });
   // DatePicker provides the popover context together with its own, which the required read guarantees.
-  const popover = surfacePopover!;
-  const composedRef = useComposedRefs(surfaceRef, ref);
-  const wasOpen = useRef(false);
-  useLayoutEffect(() => {
-    if (popover.open && !wasOpen.current) {
-      const surface = surfaceRef.current;
-      // The roving tab stop marks the calendar cell keyboard focus starts on.
-      let target = surface?.querySelector<HTMLElement>("[role='grid'] button[tabindex='0']");
-      target = target ?? surface?.querySelector<HTMLElement>("button:not([tabindex='-1'])");
-      target?.focus();
-    }
-    wasOpen.current = popover.open;
-  }, [popover.open, surfaceRef]);
+  const popover = surface.popover!;
   let ariaLabel = props["aria-label"];
   if (ariaLabel === undefined && props["aria-labelledby"] === undefined) {
     ariaLabel = "Calendar";
@@ -50,24 +38,12 @@ export function DatePickerPopover({
   const Part = partElement(as, "div");
   return (
     <Part
+      data-slot="date-picker-popover"
       {...props}
-      ref={composedRef}
-      id={props.id ?? popover.contentId}
+      {...surface.props}
       role={props.role ?? "dialog"}
-      popover="auto"
-      hidden={!popover.open}
-      style={placementSurfaceStyle(placement, offset, popover.triggerId, style)}
       aria-label={ariaLabel}
-      data-slot={dataSlot(props, "date-picker-popover")}
-      data-open={dataAttr(popover.open)}
-      onToggle={(event: React.ToggleEvent<HTMLDivElement>) => {
-        onToggle?.(event);
-        // Toggle events from nested popovers bubble in the React tree; only
-        // this surface's own toggles drive its state.
-        if (event.target !== event.currentTarget) return;
-        if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
-      }}
-      onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
         if (event.key === "Escape") {

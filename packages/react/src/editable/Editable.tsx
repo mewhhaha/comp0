@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { EditableContext } from "./editable-shared.js";
 
 export type EditableProps = RootProps<{
@@ -13,7 +12,7 @@ export type EditableProps = RootProps<{
   open?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   /** Receives the next open state as editing starts, commits, or cancels. */
-  onToggle?: ((open: boolean) => void) | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   disabled?: boolean | undefined;
   children?: ReactNode | undefined;
 }>;
@@ -26,7 +25,7 @@ export function Editable({
   onChange,
   open: openProp,
   defaultOpen = false,
-  onToggle,
+  onOpenChange,
   disabled = false,
   ...props
 }: EditableProps) {
@@ -41,7 +40,7 @@ export function Editable({
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
-    onChange: onToggle,
+    onChange: onOpenChange,
   });
   const [draft, setDraft] = useState(value);
 
@@ -89,8 +88,8 @@ export function Editable({
   return (
     <EditableContext value={context}>
       <Root
+        data-slot="editable"
         {...props}
-        data-slot={dataSlot(props, "editable")}
         data-open={dataAttr(open)}
         data-disabled={dataAttr(disabled)}
       >

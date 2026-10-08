@@ -57,7 +57,7 @@ export function Example() {
         value={selected}
         onChange={setSelected}
         open={open}
-        onToggle={setOpen}
+        onOpenChange={setOpen}
       >
         {files.map((node) => (
           <FileItem key={node.name} node={node} expanded={open} />

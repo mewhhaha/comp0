@@ -1,5 +1,6 @@
 import { type ComponentProps, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
+import { warnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { PaginationContext } from "./pagination-shared.js";
 
@@ -32,30 +33,18 @@ export type PaginationProps = Omit<
 export function Pagination({
   as,
   "aria-label": ariaLabel = "Pagination",
-  boundaryCount = 1,
+  boundaryCount: boundaryCountProp = 1,
   children,
   defaultValue = 1,
   onChange,
   value,
-  siblingCount = 1,
-  totalPages,
+  siblingCount: siblingCountProp = 1,
+  totalPages: totalPagesProp,
   ...props
 }: PaginationProps) {
-  if (!Number.isInteger(totalPages) || totalPages < 1) {
-    throw new RangeError(
-      `Pagination totalPages must be a positive integer; received ${totalPages}.`,
-    );
-  }
-  if (!Number.isInteger(siblingCount) || siblingCount < 0) {
-    throw new RangeError(
-      `Pagination siblingCount must be a non-negative integer; received ${siblingCount}.`,
-    );
-  }
-  if (!Number.isInteger(boundaryCount) || boundaryCount < 0) {
-    throw new RangeError(
-      `Pagination boundaryCount must be a non-negative integer; received ${boundaryCount}.`,
-    );
-  }
+  const totalPages = validCount("totalPages", totalPagesProp, 1, 1);
+  const siblingCount = validCount("siblingCount", siblingCountProp, 0, 1);
+  const boundaryCount = validCount("boundaryCount", boundaryCountProp, 0, 1);
 
   const [unclampedPage, setUnclampedPage] = useControllableState({
     value,
@@ -88,8 +77,9 @@ export function Pagination({
     for (let current = lastBoundary; current <= totalPages; current += 1) pages.push(current);
   }
 
-  let content = children;
+  let content: ReactNode;
   if (typeof children === "function") content = children({ value: page, pages, totalPages });
+  else content = children;
 
   const Part = partElement(as, "nav");
   return (
@@ -113,4 +103,14 @@ export function Pagination({
       </Part>
     </PaginationContext>
   );
+}
+
+function validCount(name: string, count: number, minimum: number, fallback: number) {
+  if (Number.isInteger(count) && count >= minimum) return count;
+  const kind = minimum > 0 ? "a positive" : "a non-negative";
+  warnOnce(
+    `Pagination:${name}:${count}`,
+    `Pagination ${name} must be ${kind} integer; received ${count}. Using ${fallback}.`,
+  );
+  return fallback;
 }

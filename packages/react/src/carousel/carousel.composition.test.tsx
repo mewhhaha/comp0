@@ -1,6 +1,6 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../../test/render.js";
+import { fireClick, render, setup } from "../../test/render.js";
 import { Carousel, type CarouselProps } from "./Carousel.js";
 import { CarouselAutoplayToggle } from "./CarouselAutoplayToggle.js";
 import { CarouselNext } from "./CarouselNext.js";
@@ -40,7 +40,7 @@ function App(props: Partial<CarouselProps> = {}) {
 }
 
 function renderCarousel(props: Partial<CarouselProps> = {}) {
-  const result = render(<App {...props} />);
+  const result = setup(<App {...props} />);
   const root = result.container.querySelector<HTMLElement>("section")!;
   const viewport = result.container.querySelector<HTMLElement>("[aria-live]")!;
   const slides = [
@@ -94,52 +94,52 @@ describe("carousel composition", () => {
     expect(slides[1]!.getAttribute("aria-label")).toBe("2 of 2");
   });
 
-  it("moves with next and previous and disables them at the bounds", () => {
-    const { slides, previous, next, viewport } = renderCarousel();
+  it("moves with next and previous and disables them at the bounds", async () => {
+    const { slides, previous, next, viewport, user } = renderCarousel();
     expect(previous.disabled).toBe(true);
     expect(next.disabled).toBe(false);
 
-    fireClick(next);
+    await user.click(next);
     expect(currentLabels(slides)).toEqual([false, true, false]);
     expect(slides.map((slide) => slide.hasAttribute("inert"))).toEqual([true, false, true]);
     expect(viewport.style.getPropertyValue("--comp0-carousel-index")).toBe("1");
     expect(previous.disabled).toBe(false);
 
-    fireClick(next);
+    await user.click(next);
     expect(currentLabels(slides)).toEqual([false, false, true]);
     expect(next.disabled).toBe(true);
 
-    fireClick(previous);
+    await user.click(previous);
     expect(currentLabels(slides)).toEqual([false, true, false]);
   });
 
-  it("wraps around the bounds with loop and never disables the buttons", () => {
-    const { slides, previous, next } = renderCarousel({ loop: true });
+  it("wraps around the bounds with loop and never disables the buttons", async () => {
+    const { slides, previous, next, user } = renderCarousel({ loop: true });
     expect(previous.disabled).toBe(false);
     expect(next.disabled).toBe(false);
 
-    fireClick(previous);
+    await user.click(previous);
     expect(currentLabels(slides)).toEqual([false, false, true]);
 
-    fireClick(next);
+    await user.click(next);
     expect(currentLabels(slides)).toEqual([true, false, false]);
   });
 
-  it("starts on defaultValue and reports changes when uncontrolled", () => {
+  it("starts on defaultValue and reports changes when uncontrolled", async () => {
     const onChange = vi.fn();
-    const { slides, next } = renderCarousel({ defaultValue: 1, onChange });
+    const { slides, next, user } = renderCarousel({ defaultValue: 1, onChange });
     expect(currentLabels(slides)).toEqual([false, true, false]);
 
-    fireClick(next);
+    await user.click(next);
     expect(onChange).toHaveBeenLastCalledWith(2);
     expect(currentLabels(slides)).toEqual([false, false, true]);
   });
 
-  it("respects a controlled value", () => {
+  it("respects a controlled value", async () => {
     const onChange = vi.fn();
-    const { slides, next, rerender } = renderCarousel({ value: 0, onChange });
+    const { slides, next, rerender, user } = renderCarousel({ value: 0, onChange });
 
-    fireClick(next);
+    await user.click(next);
     expect(onChange).toHaveBeenLastCalledWith(1);
     expect(currentLabels(slides)).toEqual([true, false, false]);
 
@@ -225,6 +225,7 @@ describe("carousel composition", () => {
       const { container, slides, viewport } = renderCarousel({ autoplay: 500 });
       const toggle = container.querySelector<HTMLButtonElement>("[aria-label='Pause carousel']")!;
 
+      // oxlint-disable-next-line comp0/no-synthetic-events -- userEvent waits on timers that fake timers freeze
       fireClick(toggle);
       expect(toggle.getAttribute("aria-label")).toBe("Play carousel");
       expect(toggle.hasAttribute("data-stopped")).toBe(true);
@@ -234,6 +235,7 @@ describe("carousel composition", () => {
       });
       expect(currentLabels(slides)).toEqual([true, false, false]);
 
+      // oxlint-disable-next-line comp0/no-synthetic-events -- userEvent waits on timers that fake timers freeze
       fireClick(toggle);
       expect(toggle.getAttribute("aria-label")).toBe("Pause carousel");
       expect(viewport.getAttribute("aria-live")).toBe("off");

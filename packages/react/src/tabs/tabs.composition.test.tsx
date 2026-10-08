@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it } from "vitest";
-import { fireKeyDown, render } from "../../test/render.js";
+import { render, setup } from "../../test/render.js";
 import { Tab } from "./Tab.js";
 import { TabList } from "./TabList.js";
 import { TabPanel } from "./TabPanel.js";
@@ -52,8 +52,8 @@ describe("tabs composition", () => {
     unmount();
   });
 
-  it("forgets unmounted tabs instead of arrowing onto their stale keys", () => {
-    const { container, rerender, unmount } = render(
+  it("forgets unmounted tabs instead of arrowing onto their stale keys", async () => {
+    const { container, rerender, unmount, user } = setup(
       <Tabs defaultValue="one">
         <TabList aria-label="Project">
           <Tab value="one">One</Tab>
@@ -70,8 +70,8 @@ describe("tabs composition", () => {
         </TabList>
       </Tabs>,
     );
-    const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
-    fireKeyDown(tablist, "ArrowRight");
+    container.querySelector<HTMLElement>("[role='tab']")!.focus();
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement?.textContent).toBe("Three");
     unmount();
   });
@@ -105,8 +105,8 @@ describe("tabs composition", () => {
     expect(document.activeElement?.textContent).toBe("Two");
   });
 
-  it("moves from DOM focus when a controlled selection is not accepted", () => {
-    const { container } = render(
+  it("moves from DOM focus when a controlled selection is not accepted", async () => {
+    const { container, user } = setup(
       <Tabs value="one">
         <TabList aria-label="Project">
           <Tab value="one">One</Tab>
@@ -115,18 +115,17 @@ describe("tabs composition", () => {
         </TabList>
       </Tabs>,
     );
-    const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
     const tabs = container.querySelectorAll<HTMLButtonElement>("[role='tab']");
     tabs[0]!.focus();
 
-    fireKeyDown(tablist, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(tabs[1]);
-    fireKeyDown(tabs[1]!, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(tabs[2]);
   });
 
-  it("mirrors horizontal arrow navigation in right-to-left layouts", () => {
-    const { container } = render(
+  it("mirrors horizontal arrow navigation in right-to-left layouts", async () => {
+    const { container, user } = setup(
       <Tabs defaultValue="one">
         <TabList aria-label="Project" style={{ direction: "rtl" }}>
           <Tab value="one">One</Tab>
@@ -134,11 +133,46 @@ describe("tabs composition", () => {
         </TabList>
       </Tabs>,
     );
-    const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
     const tabs = container.querySelectorAll<HTMLButtonElement>("[role='tab']");
     tabs[0]!.focus();
 
-    fireKeyDown(tablist, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(tabs[1]);
+  });
+
+  it("selects a tab by click and by arrow key, showing only its panel", async () => {
+    const { container, user } = setup(
+      <Tabs defaultValue="one">
+        <TabList aria-label="Project">
+          <Tab value="one">One</Tab>
+          <Tab value="two">Two</Tab>
+          <Tab value="three" disabled>
+            Three
+          </Tab>
+        </TabList>
+        <TabPanel value="one">First panel</TabPanel>
+        <TabPanel value="two">Second panel</TabPanel>
+        <TabPanel value="three">Third panel</TabPanel>
+      </Tabs>,
+    );
+    const tabs = [...container.querySelectorAll<HTMLButtonElement>("[role='tab']")];
+    const panels = () =>
+      [...container.querySelectorAll<HTMLElement>("[role='tabpanel']")].map(
+        (panel) => panel.hidden,
+      );
+
+    expect(panels()).toEqual([false, true, true]);
+    await user.click(tabs[1]!);
+    expect(tabs[1]!.getAttribute("aria-selected")).toBe("true");
+    expect(panels()).toEqual([true, false, true]);
+
+    await user.click(tabs[2]!);
+    expect(tabs[2]!.disabled).toBe(true);
+    expect(tabs[1]!.getAttribute("aria-selected")).toBe("true");
+
+    tabs[1]!.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(tabs[0]);
+    expect(panels()).toEqual([false, true, true]);
   });
 });

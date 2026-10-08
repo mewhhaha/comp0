@@ -1,27 +1,21 @@
 import {
-  useLayoutEffect,
-  useRef,
   type ComponentProps,
   type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
-  type ToggleEvent,
 } from "react";
-import { dataAttr, useComposedRefs } from "@comp0/core";
+import { useComposedRefs } from "@comp0/core";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
+import { useOverlaySurface, type PopoverPlacementProps } from "../internal/overlay/index.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useOptionalContextMenuContext, useMenuRootContext } from "./menu-shared.js";
-import {
-  placementSurfaceStyle,
-  usePopoverSurface,
-  type PopoverPlacementProps,
-} from "../internal/overlay/index.js";
 
 export type MenuPopoverProps = ComponentProps<"div"> & AsProp & PopoverPlacementProps;
 
 export function MenuPopover({
   as,
+  id,
   ref,
   offset,
   onContextMenu,
@@ -37,46 +31,44 @@ export function MenuPopover({
   const menu = useMenuRootContext("MenuPopover");
   const contextMenu = useOptionalContextMenuContext();
   const ownContextMenu = contextMenu !== null && contextMenu.contentId === menu.contentId;
-  const { onNativeToggle, surfaceRef } = usePopoverSurface<HTMLDivElement>("auto");
-  const wasOpen = useRef(false);
-  const popoverRef = useComposedRefs(surfaceRef, ref, menu.setSurfaceElement);
+  const popoverRef = useComposedRefs(ref, menu.setSurfaceElement);
 
-  useLayoutEffect(() => {
-    if (menu.open && !wasOpen.current) menu.focusInitial();
-    wasOpen.current = Boolean(menu.open);
-  });
-
-  let surfaceStyle = placementSurfaceStyle(placement, offset, menu.triggerId, style);
+  let surfaceStyle = style;
   if (ownContextMenu) {
     // Positioning stays consumer CSS, for example:
     // position: fixed; left: var(--comp0-context-menu-x); top: var(--comp0-context-menu-y)
     surfaceStyle = {
       "--comp0-context-menu-x": `${contextMenu.position.x}px`,
       "--comp0-context-menu-y": `${contextMenu.position.y}px`,
-      ...surfaceStyle,
+      ...style,
     } as CSSProperties;
   }
+
+  const surface = useOverlaySurface<HTMLDivElement>({
+    popover: "auto",
+    offset,
+    onToggle,
+    placement,
+    ref: popoverRef,
+    style: surfaceStyle,
+    initialFocus() {
+      // The menu owns which item takes focus (first, last, or the input).
+      menu.focusInitial();
+      return null;
+    },
+  });
 
   const Part = partElement(as, "div");
   return (
     <Part
       {...props}
-      ref={popoverRef}
-      popover="auto"
-      hidden={!menu.open}
-      style={surfaceStyle}
-      data-open={dataAttr(menu.open)}
+      {...surface.props}
+      // The surface's context id is the list's id; the popover keeps only its own.
+      id={id}
       onContextMenu={onContextMenu}
       onContextMenuCapture={(event: MouseEvent<HTMLDivElement>) => {
         onContextMenuCapture?.(event);
         if (!event.defaultPrevented && ownContextMenu) event.preventDefault();
-      }}
-      onToggle={(event: ToggleEvent<HTMLDivElement>) => {
-        onToggle?.(event);
-        // Toggle events from nested popovers bubble in the React tree;
-        // only this surface's own toggles drive its state.
-        if (event.target !== event.currentTarget) return;
-        if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
       }}
       onBlur={(event: FocusEvent<HTMLDivElement>) => {
         onBlur?.(event);

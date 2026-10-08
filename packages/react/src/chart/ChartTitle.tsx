@@ -1,7 +1,6 @@
 import { useEffect, useRef, type ComponentProps } from "react";
 import { useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { dataSlot } from "../internal/shared.js";
 import { useChartMeta } from "./chart-meta.js";
 
 export type ChartTitleProps = ComponentProps<"figcaption"> & AsProp;
@@ -16,5 +15,5 @@ export function ChartTitle({ as, ref, ...props }: ChartTitleProps) {
   });
   useEffect(() => () => setTitle(null), [setTitle]);
   const Part = partElement(as, "figcaption");
-  return <Part {...props} ref={composedRef} data-slot={dataSlot(props, "chart-title")} />;
+  return <Part data-slot="chart-title" {...props} ref={composedRef} />;
 }

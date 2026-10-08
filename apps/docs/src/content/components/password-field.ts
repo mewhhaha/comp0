@@ -35,6 +35,11 @@ export default component({
       false,
       [
         prop("as", "ElementType", "Renders a wrapper element; there is no DOM without it."),
+        prop(
+          "id",
+          "string",
+          "Base id for the password input; the label, description, and error ids derive from it.",
+        ),
         prop("value / defaultValue", "string", "Controlled or initial password value."),
         prop("onChange", "(value: string) => void", "Receives the next password value."),
         prop(
@@ -88,6 +93,16 @@ export default component({
           "children",
           "ReactNode",
           "Optional visible content; defaults to the current action label. Style [data-visible] for the revealed state.",
+        ),
+        prop(
+          "command / commandfor",
+          "string",
+          "Invoker command and target id, forwarded to the native button.",
+        ),
+        prop(
+          "pending",
+          "boolean",
+          "Disables the button and sets aria-busy while work is in flight.",
         ),
         prop(
           "showLabel / hideLabel",

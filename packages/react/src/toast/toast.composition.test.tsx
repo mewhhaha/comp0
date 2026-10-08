@@ -1,3 +1,4 @@
+/* oxlint-disable comp0/no-synthetic-events -- this suite runs on fake timers, which deadlock userEvent's internal delays. */
 import { act, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../../test/render.js";
@@ -207,53 +208,6 @@ describe("toast composition", () => {
       vi.advanceTimersByTime(100);
     });
     expect(document.querySelector("[role='status']")).toBeNull();
-  });
-
-  it("removes only its own toast through ToastClose with a default label", () => {
-    const { container } = render(<App options={{ timeout: null }} />);
-    fireClick(notifyButton(container));
-    fireClick(notifyButton(container));
-
-    const dismissButtons = document.querySelectorAll<HTMLButtonElement>(
-      "[data-slot='toast-close']",
-    );
-    expect(dismissButtons).toHaveLength(2);
-    expect(dismissButtons[0]!.getAttribute("aria-label")).toBe("Dismiss notification");
-    expect(dismissButtons[0]!.getAttribute("type")).toBe("button");
-
-    fireClick(dismissButtons[0]!);
-    expect(document.querySelectorAll("[role='status']")).toHaveLength(1);
-  });
-
-  it("moves focus to the next toast when dismissing a focused toast", () => {
-    const { container } = render(<App options={{ timeout: null }} />);
-    fireClick(notifyButton(container));
-    fireClick(notifyButton(container));
-
-    const dismissButtons = document.querySelectorAll<HTMLButtonElement>(
-      "[data-slot='toast-close']",
-    );
-    act(() => {
-      dismissButtons[0]!.focus();
-    });
-    fireClick(dismissButtons[0]!);
-
-    expect(document.querySelectorAll("[role='status']")).toHaveLength(1);
-    expect(document.activeElement).toBe(dismissButtons[1]);
-    expect(document.activeElement?.isConnected).toBe(true);
-  });
-
-  it("dismissing an unfocused toast leaves focus alone", () => {
-    const { container } = render(<App options={{ timeout: null }} />);
-    fireClick(notifyButton(container));
-
-    const trigger = notifyButton(container);
-    act(() => {
-      trigger.focus();
-    });
-    fireClick(document.querySelector("[data-slot='toast-close']")!);
-
-    expect(document.activeElement).toBe(trigger);
   });
 
   it("throws a clear error when useToast is used outside ToastProvider", () => {

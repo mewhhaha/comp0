@@ -13,15 +13,18 @@ export type PasswordFieldProps = RootProps<
 
 export function PasswordField({
   children,
-  visibleAnnouncement = "Your password is visible.",
-  hiddenAnnouncement = "Your password is hidden.",
+  visibleAnnouncement,
+  hiddenAnnouncement,
   ...props
 }: PasswordFieldProps) {
+  const visibleText = visibleAnnouncement ?? "Your password is visible.";
+  const hiddenText = hiddenAnnouncement ?? "Your password is hidden.";
   const inputRef = useRef<HTMLInputElement>(null);
   const selectionRef = useRef<PasswordSelection | null>(null);
   const [mounted, setMounted] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [announcement, setAnnouncement] = useState("");
+  const [inputId, setInputId] = useState<string | undefined>(undefined);
 
   function captureSelection() {
     const input = inputRef.current;
@@ -43,7 +46,7 @@ export function PasswordField({
     if (!selectionRef.current) captureSelection();
     const nextPasswordVisible = !passwordVisible;
     setPasswordVisible(nextPasswordVisible);
-    setAnnouncement(nextPasswordVisible ? visibleAnnouncement : hiddenAnnouncement);
+    setAnnouncement(nextPasswordVisible ? visibleText : hiddenText);
   }
 
   const handlePageShow = useEffectEvent((event: PageTransitionEvent) => {
@@ -60,6 +63,8 @@ export function PasswordField({
   const context = {
     announcement,
     inputRef,
+    inputId,
+    setInputId,
     mounted,
     passwordVisible,
     selectionRef,
@@ -70,7 +75,7 @@ export function PasswordField({
 
   return (
     <PasswordFieldContext value={context}>
-      <TextField {...props} data-password="" data-visible={dataAttr(passwordVisible)}>
+      <TextField {...props} data-visible={dataAttr(passwordVisible)}>
         {children}
       </TextField>
     </PasswordFieldContext>

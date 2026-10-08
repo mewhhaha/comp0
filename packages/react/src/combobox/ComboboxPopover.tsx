@@ -1,6 +1,7 @@
 import { useLayoutEffect, type ComponentProps } from "react";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useOverlaySurface, type PopoverPlacementProps } from "../internal/overlay/index.js";
+import { useRenderedId } from "../internal/rendered-id.js";
 import { useComboboxContext } from "./combobox-shared.js";
 
 export type ComboboxPopoverProps = ComponentProps<"div"> & AsProp & PopoverPlacementProps;
@@ -28,10 +29,10 @@ export function ComboboxPopover({
   useLayoutEffect(() => {
     if (!popover.open) setActiveKey("");
   }, [popover.open, setActiveKey]);
-  // A consumer aria-label wins; falling back to the label id would point at
-  // nothing when no Label is rendered.
+  // Reference the label only when one is rendered; otherwise the input names the list.
+  const label = useRenderedId(surface.surfaceRef, combo.labelId, combo);
   let labelledBy = props["aria-labelledby"];
-  if (!props["aria-label"]) labelledBy = labelledBy ?? combo.labelId;
+  if (!props["aria-label"]) labelledBy = labelledBy ?? label ?? combo.inputId;
 
   const Part = partElement(as, "div");
   return (

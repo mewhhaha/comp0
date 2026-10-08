@@ -7,7 +7,7 @@ import {
 } from "react";
 import { composeRefs, useCollection, useCollectionNavigation } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { MenubarContext, type MenubarContextValue } from "./menubar-shared.js";
+import { MenubarContext, type MenubarContextValue, type MenubarItem } from "./menubar-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
 export type MenubarProps = ComponentProps<"div"> & AsProp;
@@ -20,9 +20,8 @@ export type MenubarProps = ComponentProps<"div"> & AsProp;
  * aria-labelledby) after the application area it commands.
  */
 export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps) {
-  const collection = useCollection();
+  const collection = useCollection<MenubarItem>();
   const navigate = useCollectionNavigation();
-  const menuMap = useRef(new Map<string, { open: boolean; setOpen: (open: boolean) => void }>());
   const tabStopKey = useRef("");
   const menubarRef = useRef<HTMLElement | null>(null);
 
@@ -45,18 +44,13 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
   });
 
   const context: MenubarContextValue = {
-    register: collection.register,
     collection,
-    reportMenu(key, open, setOpen) {
-      if (setOpen) menuMap.current.set(key, { open, setOpen });
-      else menuMap.current.delete(key);
-    },
     isAnyOpen() {
-      return [...menuMap.current.values()].some((menu) => menu.open);
+      return collection.items().some((item) => item.open);
     },
     closeOthers(key) {
-      for (const [menuKey, menu] of menuMap.current) {
-        if (menuKey !== key && menu.open) menu.setOpen(false);
+      for (const item of collection.items()) {
+        if (item.key !== key && item.open) item.setOpen(false);
       }
     },
     syncTabStops() {
@@ -72,7 +66,7 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
       if (!targetKey || targetKey === currentKey) return false;
       syncTabStops(targetKey);
       collection.get(targetKey)?.element?.focus();
-      if (options?.open) menuMap.current.get(targetKey)?.setOpen(true);
+      if (options?.open) collection.get(targetKey)?.setOpen(true);
       return true;
     },
   };

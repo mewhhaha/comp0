@@ -12,7 +12,7 @@ export default component({
     supporting:
       "Nest a TreeGroup of child TreeItems inside an item to make it an expandable branch.",
     behavior:
-      "Read the selection from onChange; pass defaultOpen, or open with onToggle, to manage the open branches. Clicking an expandable row selects it and toggles its branch.",
+      "Read the selection from onChange; pass defaultOpen, or open with onOpenChange, to manage the open branches. Clicking an expandable row selects it and toggles its branch.",
     code: '<Tree aria-label="Files" defaultOpen={["src"]}>\n  <TreeItem value="src">\n    src\n    <TreeGroup>\n      <TreeItem value="index">index.ts</TreeItem>\n    </TreeGroup>\n  </TreeItem>\n</Tree>;',
   },
   imports: ["Tree", "TreeGroup", "TreeItem"],
@@ -30,7 +30,7 @@ export default component({
         prop("value / defaultValue", "string", "Controlled or initial selected item."),
         prop("onChange", "(value: string) => void", "Receives the next selected item's value."),
         prop("open / defaultOpen", "string[]", "Controlled or initial open (expanded) items."),
-        prop("onToggle", "(open: string[]) => void", "Receives the next open item values."),
+        prop("onOpenChange", "(open: string[]) => void", "Receives the next open item values."),
       ],
     ),
     p(

@@ -2,8 +2,11 @@ import { useState } from "react";
 import { getRovingFocusTarget, type RovingFocusOrientation } from "./roving-focus.js";
 import { findTypeaheadMatch, useTypeaheadSearch } from "./typeahead.js";
 
-/** A registered collection entry, independent from the element used to render it. */
-export type CollectionItem = {
+/**
+ * A registered collection entry, independent from the element used to render it.
+ * `TElement` is the rendered element; SVG parts pass `CollectionItem<SVGElement>`.
+ */
+export type CollectionItem<TElement extends Element = HTMLElement> = {
   /** Stable application identity (the public `value`) used for selection, focus, and lookup. */
   key: string;
   /** The rendered element's DOM id, for aria-activedescendant and other id references. */
@@ -11,11 +14,11 @@ export type CollectionItem = {
   /** The text the item is known by for typeahead, filtering, and display. */
   textValue: string;
   disabled?: boolean | undefined;
-  element: HTMLElement | null;
+  element: TElement | null;
 };
 
 /** A registry of collection items read back in document order. */
-export type Collection<TItem extends CollectionItem = CollectionItem> = {
+export type Collection<TItem extends CollectionItem<Element> = CollectionItem> = {
   /**
    * Adds or updates the item stored under `item.key`; an item with a `null` element is
    * unregistered instead. Re-registering an unchanged item is a no-op, so parts may register
@@ -27,7 +30,7 @@ export type Collection<TItem extends CollectionItem = CollectionItem> = {
    * while that element is still the registered one, so a stale cleanup cannot remove a
    * replacement. Returns whether the registry changed.
    */
-  unregister: (key: string, element?: HTMLElement | null) => boolean;
+  unregister: (key: string, element?: TItem["element"]) => boolean;
   get: (key: string) => TItem | undefined;
   /** Every registered item in document order. */
   items: () => TItem[];
@@ -58,17 +61,20 @@ function inDocumentOrder(items: readonly { element: Element | null }[]) {
   return true;
 }
 
-function sameItem(a: CollectionItem, b: CollectionItem) {
+function sameItem(a: CollectionItem<Element>, b: CollectionItem<Element>) {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
   for (const key of keys) {
-    if (!Object.is(a[key as keyof CollectionItem], b[key as keyof CollectionItem])) return false;
+    if (
+      !Object.is(a[key as keyof CollectionItem<Element>], b[key as keyof CollectionItem<Element>])
+    )
+      return false;
   }
   return true;
 }
 
 /** Creates a collection registry outside React, e.g. for tests or non-component owners. */
 export function createCollection<
-  TItem extends CollectionItem = CollectionItem,
+  TItem extends CollectionItem<Element> = CollectionItem,
 >(): Collection<TItem> {
   const registry = new Map<string, TItem>();
   const listeners = new Set<() => void>();
@@ -123,7 +129,7 @@ export function createCollection<
  * Returns a collection registry whose identity is stable for the component's lifetime, so it
  * can be passed through context and used in effect dependencies.
  */
-export function useCollection<TItem extends CollectionItem = CollectionItem>() {
+export function useCollection<TItem extends CollectionItem<Element> = CollectionItem>() {
   const [collection] = useState(() => createCollection<TItem>());
   return collection;
 }
