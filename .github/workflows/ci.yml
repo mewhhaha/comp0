@@ -4,9 +4,57 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Release runs this workflow first and publishes only when every job passes.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # One place to bump when Playwright moves; the browser cache key follows the lockfile.
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
 
 jobs:
-  verify:
+  static:
+    name: Format, lint, typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  browser:
+    name: Browser tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -19,26 +67,75 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:browser
+
+  package:
+    name: Package and React Compiler
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm test:package
+      # Builds every workspace package and the docs app, then checks compiler coverage.
       - run: pnpm test:compiler-smoke
-      - name: Verify the production docs runtime
-        run: |
-          pnpm --filter @comp0/docs exec vite preview --host 127.0.0.1 --port 4173 &
-          preview_pid=$!
-          trap 'kill "$preview_pid"' EXIT
-          for attempt in {1..30}; do
-            if curl --fail --silent --output /dev/null http://127.0.0.1:4173/components/select; then
-              break
-            fi
-            sleep 1
-          done
-          DOCS_URL=http://127.0.0.1:4173 pnpm test:docs
-          DOCS_URL=http://127.0.0.1:4173 pnpm test:connect
-          DOCS_URL=http://127.0.0.1:4173 pnpm test:docs:mobile
-          DOCS_URL=http://127.0.0.1:4173 pnpm test:connect:touch
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-build
+          # Vite preview also needs Cloudflare's generated pointer to the built worker.
+          path: |
+            apps/docs/build
+            apps/docs/.wrangler/deploy/config.json
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
+
+  e2e:
+    name: Docs runtime (Playwright)
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: docs-build
+          path: apps/docs
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            .playwright/report
+            .playwright/results
+          retention-days: 7
+          if-no-files-found: ignore

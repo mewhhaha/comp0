@@ -1,0 +1,26 @@
+{
+  "$comment": "The global data-* vocabulary for @comp0/react parts. Any other data-* attribute a family emits must be documented in that family's docs entry stateHooks (apps/docs/src/content/components/<slug>.ts). Enforced by apps/docs/src/content/data-attributes.test.ts.",
+  "slot": ["data-slot"],
+  "identity": ["data-value", "data-label"],
+  "aria": [
+    "data-selected",
+    "data-checked",
+    "data-current",
+    "data-open",
+    "data-active",
+    "data-disabled",
+    "data-invalid",
+    "data-required",
+    "data-readonly",
+    "data-orientation",
+    "data-placeholder"
+  ],
+  "interaction": [
+    "data-focused",
+    "data-focus-visible",
+    "data-hovered",
+    "data-pressed",
+    "data-pending",
+    "data-dragging"
+  ]
+}

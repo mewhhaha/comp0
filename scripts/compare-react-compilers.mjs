@@ -1,32 +1,48 @@
 import assert from "node:assert/strict";
-import { glob, readFile } from "node:fs/promises";
-import { transformAsync } from "@babel/core";
-import babelReactCompiler from "babel-plugin-react-compiler";
+import { readFile } from "node:fs/promises";
 import { transform } from "oxc-transform-react";
+import { analyzeCompilerCoverage, exceptionsPath } from "./lib/compiler-coverage.mjs";
 
-const compiled = { babel: [], native: [] };
-for await (const file of glob("packages/{core,react}/src/**/*.{ts,tsx}")) {
-  if (/\.test\.tsx?$/.test(file)) continue;
-  const source = await readFile(file, "utf8");
-  const native = await transform(file, source);
-  assert(
-    !native.fatal && native.code,
-    `Native compiler failed for ${file}: ${JSON.stringify(native.errors)}`,
-  );
-  const babel = await transformAsync(source, {
-    filename: file,
-    configFile: false,
-    babelrc: false,
-    parserOpts: { plugins: ["typescript", "jsx"] },
-    plugins: [[babelReactCompiler, { target: "19", panicThreshold: "none" }]],
-  });
-  assert(babel?.code, `Babel compiler emitted no code for ${file}`);
-  if (babel.code.includes("react/compiler-runtime")) compiled.babel.push(file);
-  if (native.code.includes("react/compiler-runtime")) compiled.native.push(file);
-}
+const files = await analyzeCompilerCoverage();
+const compiled = {
+  babel: files.filter((f) => f.babel).map((f) => f.file),
+  native: files.filter((f) => f.native).map((f) => f.file),
+};
 
 const missing = compiled.babel.filter((file) => !compiled.native.includes(file));
 assert.deepEqual(missing, [], "Native compiler skipped files compiled by Babel");
+
+// Every component module must be compiled unless it is listed, with a reason, in the exceptions file.
+const exceptions = JSON.parse(await readFile(exceptionsPath, "utf8"));
+const componentFiles = files.filter((f) => f.component && f.file.startsWith("packages/react/src/"));
+const uncompiled = componentFiles.filter((f) => !f.native);
+const unlisted = uncompiled.filter((f) => !(f.file in exceptions));
+const stale = Object.keys(exceptions).filter((file) => {
+  const entry = files.find((f) => f.file === file);
+  return !entry || entry.native || !entry.component;
+});
+const problems = [];
+if (unlisted.length) {
+  problems.push(
+    `${unlisted.length} component file(s) are not compiled by oxc-transform-react:\n` +
+      unlisted
+        .map(
+          (f) =>
+            `  ${f.file}\n    bailout: ${f.bailouts.length ? f.bailouts.join("\n             ") : "none reported by babel-plugin-react-compiler (check for an unsupported pattern or no hook/JSX use)"}`,
+        )
+        .join("\n") +
+      `\nFix the component so the compiler accepts it, or add it to ${exceptionsPath} with a reason.`,
+  );
+}
+if (stale.length) {
+  problems.push(
+    `${stale.length} entr${stale.length === 1 ? "y" : "ies"} in ${exceptionsPath} no longer apply (file is compiled, removed, or not a component). Delete:\n  ${stale.join("\n  ")}`,
+  );
+}
+if (problems.length) {
+  console.error(problems.join("\n\n"));
+  process.exit(1);
+}
 
 // A recoverable ref bailout must still emit executable JSX, while malformed
 // source must fail instead of silently removing a module from the build.
@@ -49,5 +65,5 @@ assert(
 );
 
 console.log(
-  `Compiler conformance passed: ${compiled.babel.length} Babel files, ${compiled.native.length} native files; bailout fallback and fatal diagnostics verified.`,
+  `Compiler conformance passed: ${compiled.babel.length} Babel files, ${compiled.native.length} native files, ${componentFiles.length - uncompiled.length}/${componentFiles.length} component files compiled (${Object.keys(exceptions).length} listed exceptions); bailout fallback and fatal diagnostics verified.`,
 );

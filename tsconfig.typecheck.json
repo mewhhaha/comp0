@@ -16,6 +16,8 @@
     "apps/docs/src/**/*.ts",
     "apps/docs/src/**/*.tsx",
     "apps/docs/react-router.config.ts",
+    "e2e/**/*.ts",
+    "playwright.config.ts",
     "apps/docs/vite.config.ts",
     "vitest.config.ts",
     "vitest.browser.setup.ts",

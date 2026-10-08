@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
-import { Menu } from "./components/Menu.js";
-import { MenuItem } from "./components/MenuItem.js";
-import { MenuList } from "./components/MenuList.js";
-import { MenuPopover } from "./components/MenuPopover.js";
-import { MenuTrigger } from "./components/MenuTrigger.js";
-import { Select } from "./components/Select.js";
-import { SelectOption } from "./components/SelectOption.js";
-import { SelectPopover } from "./components/SelectPopover.js";
-import { SelectTrigger } from "./components/SelectTrigger.js";
-import { SelectValue } from "./components/SelectValue.js";
+import { fireKeyDown, render, setup } from "../test/render.js";
+import { Menu } from "./menu/Menu.js";
+import { MenuItem } from "./menu/MenuItem.js";
+import { MenuList } from "./menu/MenuList.js";
+import { MenuPopover } from "./menu/MenuPopover.js";
+import { MenuTrigger } from "./menu/MenuTrigger.js";
+import { Select } from "./select/Select.js";
+import { SelectOption } from "./select/SelectOption.js";
+import { SelectPopover } from "./select/SelectPopover.js";
+import { SelectTrigger } from "./select/SelectTrigger.js";
+import { SelectValue } from "./select/SelectValue.js";
 
 describe("collection item labels", () => {
   it("crawls markup children for typeahead text and honors the textValue override", () => {
@@ -35,20 +35,23 @@ describe("collection item labels", () => {
     const content = container.querySelector<HTMLElement>("[role='menu']")!;
     const items = container.querySelectorAll<HTMLElement>("[role='menuitem']");
 
+    // oxlint-disable-next-line comp0/no-synthetic-events -- userEvent cannot advance the typeahead timeout under fake timers
     fireKeyDown(content, "c");
     expect(document.activeElement).toBe(items[1]);
     // Rapid keystrokes extend one buffered search: "co" still matches Copy.
+    // oxlint-disable-next-line comp0/no-synthetic-events -- userEvent cannot advance the typeahead timeout under fake timers
     fireKeyDown(content, "o");
     expect(document.activeElement).toBe(items[1]);
     // After the buffer times out a new search starts.
     vi.advanceTimersByTime(700);
+    // oxlint-disable-next-line comp0/no-synthetic-events -- userEvent cannot advance the typeahead timeout under fake timers
     fireKeyDown(content, "z");
     expect(document.activeElement).toBe(items[2]);
     vi.useRealTimers();
   });
 
-  it("shows crawled option text in SelectValue for markup children", () => {
-    const { container } = render(
+  it("shows crawled option text in SelectValue for markup children", async () => {
+    const { container, user } = setup(
       <Select defaultValue="small">
         <SelectTrigger>
           <SelectValue />
@@ -64,7 +67,7 @@ describe("collection item labels", () => {
     expect(trigger.textContent).toContain("Small size");
 
     const option = container.querySelector<HTMLElement>("[role='option']")!;
-    fireClick(option);
+    await user.click(option);
     expect(trigger.textContent).toContain("Small size");
   });
 });

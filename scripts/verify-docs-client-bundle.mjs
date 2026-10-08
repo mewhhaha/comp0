@@ -6,6 +6,7 @@ const inspectedExtensions = new Set([".html", ".js", ".json", ".map", ".mjs"]);
 const forbiddenMarkers = [
   ["component catalog", "Wrap your Menu components in Menubar"],
   ["component catalog module", "content/catalog"],
+  ["component entry modules", "content/components/"],
   ["Shiki server highlighter", "ph-syntax"],
 ];
 const files = [];

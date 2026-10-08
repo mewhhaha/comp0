@@ -8,7 +8,7 @@ import {
   TextField,
   Tooltip,
   TooltipArrow,
-  TooltipPopover,
+  TooltipContent,
   TooltipTrigger,
 } from "@comp0/react";
 import { Fragment, useEffect, useRef, useState } from "react";
@@ -56,6 +56,23 @@ type SymbolHover = {
   top: number;
   width: number;
 };
+
+function tokenClass(text: string) {
+  if (text === "mesage")
+    return "text-zinc-100 underline decoration-red-400 decoration-wavy underline-offset-4";
+  if (text === "console")
+    return "text-blue-300 underline decoration-amber-400 decoration-wavy underline-offset-4";
+  if (["greet", "log"].includes(text)) return "text-blue-300";
+  if (text === "message")
+    return "text-zinc-100 underline decoration-sky-400 decoration-dashed underline-offset-4";
+  if (text === "User")
+    return "text-sky-300 underline decoration-sky-400 decoration-dashed underline-offset-4";
+  if (/^\d+$/.test(text)) return "text-amber-300";
+  if (text.startsWith("//")) return "text-zinc-500 italic";
+  if (text.startsWith("`") || text.startsWith('"')) return "text-emerald-300";
+  if (keywords.has(text)) return "text-fuchsia-300";
+  return "text-zinc-100";
+}
 
 export function Example() {
   const [source, setSource] = useState(initialCode);
@@ -175,30 +192,6 @@ export function Example() {
             {lines.map((tokens, lineIndex) => (
               <span className="block min-h-6" key={lineIndex}>
                 {tokens.map((token) => {
-                  let className = "text-zinc-100";
-                  if (keywords.has(token.text)) className = "text-fuchsia-300";
-                  if (token.text.startsWith("`") || token.text.startsWith('"')) {
-                    className = "text-emerald-300";
-                  }
-                  if (token.text.startsWith("//")) className = "text-zinc-500 italic";
-                  if (/^\d+$/.test(token.text)) className = "text-amber-300";
-                  if (token.text === "User") {
-                    className =
-                      "text-sky-300 underline decoration-sky-400 decoration-dashed underline-offset-4";
-                  }
-                  if (token.text === "message") {
-                    className =
-                      "text-zinc-100 underline decoration-sky-400 decoration-dashed underline-offset-4";
-                  }
-                  if (["greet", "log"].includes(token.text)) className = "text-blue-300";
-                  if (token.text === "console") {
-                    className =
-                      "text-blue-300 underline decoration-amber-400 decoration-wavy underline-offset-4";
-                  }
-                  if (token.text === "mesage") {
-                    className =
-                      "text-zinc-100 underline decoration-red-400 decoration-wavy underline-offset-4";
-                  }
                   const detail = symbolDetails.find((symbol) => symbol.name === token.text)?.detail;
                   return (
                     <span
@@ -207,7 +200,7 @@ export function Example() {
                         if (element) symbolElementsRef.current.set(token.start, element);
                         else symbolElementsRef.current.delete(token.start);
                       }}
-                      className={className}
+                      className={tokenClass(token.text)}
                       key={token.start}
                     >
                       {token.text}
@@ -307,7 +300,7 @@ export function Example() {
         <Tooltip
           id="code-editor-symbol"
           open={symbolHover !== null}
-          onToggle={(open) => {
+          onOpenChange={(open) => {
             if (!open) closeSymbolHover();
           }}
         >
@@ -323,7 +316,7 @@ export function Example() {
               }}
             />
           </TooltipTrigger>
-          <TooltipPopover
+          <TooltipContent
             as="span"
             placement="top"
             offset={6}
@@ -340,7 +333,7 @@ export function Example() {
               as="span"
               className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-zinc-800"
             />
-          </TooltipPopover>
+          </TooltipContent>
         </Tooltip>
       </div>
       <output className="sr-only" aria-live="polite">

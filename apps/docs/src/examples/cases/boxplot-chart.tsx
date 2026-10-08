@@ -82,31 +82,7 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         Write operations have the highest median and widest spread.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Response-time five-number summaries</caption>
-        <thead>
-          <tr>
-            <th scope="col">Operation</th>
-            <th scope="col">Min</th>
-            <th scope="col">Q1</th>
-            <th scope="col">Median</th>
-            <th scope="col">Q3</th>
-            <th scope="col">Max</th>
-          </tr>
-        </thead>
-        <tbody>
-          {responseTimes.map((item) => (
-            <tr key={item.label}>
-              <th scope="row">{item.label}</th>
-              <td>{formatMilliseconds(item.min)}</td>
-              <td>{formatMilliseconds(item.q1)}</td>
-              <td>{formatMilliseconds(item.median)}</td>
-              <td>{formatMilliseconds(item.q3)}</td>
-              <td>{formatMilliseconds(item.max)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </BoxPlotChart>
   );

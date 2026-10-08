@@ -1,13 +1,13 @@
 import { act } from "react";
 import { describe, expect, it } from "vitest";
 import { render } from "../test/render.js";
-import { Label } from "./components/Label.js";
-import { Meter } from "./components/Meter.js";
-import { ProgressBar } from "./components/ProgressBar.js";
-import { Separator } from "./components/Separator.js";
-import { SkipLink } from "./components/SkipLink.js";
-import { TextField } from "./components/TextField.js";
-import { VisuallyHidden } from "./components/VisuallyHidden.js";
+import { Label } from "./field/Label.js";
+import { Meter } from "./meter/Meter.js";
+import { ProgressBar } from "./progress-bar/ProgressBar.js";
+import { Separator } from "./separator/Separator.js";
+import { SkipLink } from "./skip-link/SkipLink.js";
+import { TextField } from "./text-field/TextField.js";
+import { VisuallyHidden } from "./visually-hidden/VisuallyHidden.js";
 
 function fireFocusOut(element: Element, relatedTarget: Element | null) {
   act(() => {

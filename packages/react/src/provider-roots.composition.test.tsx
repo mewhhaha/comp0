@@ -1,26 +1,26 @@
 import { Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
-import { Accordion } from "./components/Accordion.js";
-import { AccordionHeader } from "./components/AccordionHeader.js";
-import { AccordionItem } from "./components/AccordionItem.js";
-import { AccordionPanel } from "./components/AccordionPanel.js";
-import { AccordionTrigger } from "./components/AccordionTrigger.js";
-import { Input } from "./components/Input.js";
-import { SearchField } from "./components/SearchField.js";
-import { SearchFieldClear } from "./components/SearchFieldClear.js";
-import { SearchFieldInput } from "./components/SearchFieldInput.js";
-import { Tab } from "./components/Tab.js";
-import { TabList } from "./components/TabList.js";
-import { TabPanel } from "./components/TabPanel.js";
-import { Tabs } from "./components/Tabs.js";
-import { TextField } from "./components/TextField.js";
+import { setup } from "../test/render.js";
+import { Accordion } from "./accordion/Accordion.js";
+import { AccordionHeader } from "./accordion/AccordionHeader.js";
+import { AccordionItem } from "./accordion/AccordionItem.js";
+import { AccordionPanel } from "./accordion/AccordionPanel.js";
+import { AccordionTrigger } from "./accordion/AccordionTrigger.js";
+import { Input } from "./text-field/Input.js";
+import { SearchField } from "./search-field/SearchField.js";
+import { SearchFieldClear } from "./search-field/SearchFieldClear.js";
+import { SearchFieldInput } from "./search-field/SearchFieldInput.js";
+import { Tab } from "./tabs/Tab.js";
+import { TabList } from "./tabs/TabList.js";
+import { TabPanel } from "./tabs/TabPanel.js";
+import { Tabs } from "./tabs/Tabs.js";
+import { TextField } from "./text-field/TextField.js";
 
 describe("provider roots", () => {
-  it("keeps text and search field roots wrapper-free while their explicit parts own behavior", () => {
+  it("keeps text and search field roots wrapper-free while their explicit parts own behavior", async () => {
     const submitted = vi.fn();
     const cleared = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <>
         <TextField id="name">
           <Input />
@@ -43,16 +43,17 @@ describe("provider roots", () => {
     expect(search.type).toBe("search");
     expect(search.value).toBe("docs");
 
-    fireKeyDown(search, "Enter");
+    search.focus();
+    await user.keyboard("{Enter}");
     expect(submitted).toHaveBeenLastCalledWith("docs");
-    fireClick(container.querySelector("button")!);
+    await user.click(container.querySelector("button")!);
     expect(search.value).toBe("");
     expect(cleared).toHaveBeenCalledTimes(1);
   });
 
-  it("renders an opt-in root wrapper and keeps accordion and tabs interactions intact", () => {
+  it("renders an opt-in root wrapper and keeps accordion and tabs interactions intact", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <>
         <TextField as="section" data-testid="field">
           <Input />
@@ -90,12 +91,14 @@ describe("provider roots", () => {
     expect(accordionTriggers[0]!.id).toBe("shipping-trigger");
     expect(accordionTriggers[0]!.getAttribute("aria-controls")).toBe(firstPanel.id);
     expect(firstPanel.getAttribute("aria-labelledby")).toBe(accordionTriggers[0]!.id);
-    fireKeyDown(accordionTriggers[0]!, "ArrowDown");
+    accordionTriggers[0]!.focus();
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(accordionTriggers[1]);
-    fireClick(accordionTriggers[1]!);
+    await user.click(accordionTriggers[1]!);
     expect(container.querySelectorAll("[role='region']")[1]?.hasAttribute("hidden")).toBe(false);
 
-    fireKeyDown(tabs[0]!, "ArrowRight");
+    tabs[0]!.focus();
+    await user.keyboard("{ArrowRight}");
     expect(changed).toHaveBeenLastCalledWith("two");
   });
 });

@@ -3,7 +3,7 @@ import {
   MenuItem,
   MenuList,
   MenuPopover,
-  MenuSection,
+  MenuGroup,
   MenuSeparator,
   MenuTrigger,
 } from "@comp0/react";
@@ -21,7 +21,7 @@ export function Example() {
         className="w-44 rounded border-0 bg-white p-1 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:shadow-none dark:ring-white/10"
       >
         <MenuList>
-          <MenuSection aria-label="Document" className="grid">
+          <MenuGroup aria-label="Document" className="grid">
             <MenuItem
               className="w-full rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
               value="rename"
@@ -34,7 +34,7 @@ export function Example() {
             >
               Duplicate
             </MenuItem>
-          </MenuSection>
+          </MenuGroup>
           <MenuSeparator className="my-1 h-px bg-zinc-950/10 dark:bg-white/10" />
           <Menu>
             <MenuTrigger className="flex w-full items-center justify-between rounded px-3 py-2.5 text-left text-base text-zinc-800 select-none hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800">

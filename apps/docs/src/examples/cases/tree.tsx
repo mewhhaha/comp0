@@ -47,7 +47,7 @@ function FileItem({ node, expanded }: { node: FileNode; expanded: string[] }) {
 
 export function Example() {
   const [selected, setSelected] = useState("README.md");
-  const [expanded, setExpanded] = useState(["src"]);
+  const [open, setOpen] = useState(["src"]);
 
   return (
     <div className="flex max-w-xs flex-col gap-2">
@@ -56,11 +56,11 @@ export function Example() {
         className="grid gap-0.5 rounded border border-zinc-950/10 p-1 dark:border-white/10"
         value={selected}
         onChange={setSelected}
-        expanded={expanded}
-        onExpandedChange={setExpanded}
+        open={open}
+        onOpenChange={setOpen}
       >
         {files.map((node) => (
-          <FileItem key={node.name} node={node} expanded={expanded} />
+          <FileItem key={node.name} node={node} expanded={open} />
         ))}
       </Tree>
       <p className="text-base text-zinc-600 sm:text-sm dark:text-zinc-400">Selected: {selected}</p>

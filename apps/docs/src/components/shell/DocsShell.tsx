@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
-import { SkipLink, Toast, ToastDismiss, ToastProvider, ToastRegion } from "@comp0/react";
+import { SkipLink, Toast, ToastClose, ToastProvider, ToastRegion } from "@comp0/react";
 import { CommandPalette } from "./CommandPalette.js";
 import { DocsHeader } from "./DocsHeader.js";
 import { DocsNavigation } from "./DocsNavigation.js";
@@ -59,7 +59,7 @@ export function DocsShell({ children, className, navigation, paletteEntries }: D
           </div>
         </div>
       </div>
-      <CommandPalette entries={paletteEntries} open={paletteOpen} onToggle={setPaletteOpen} />
+      <CommandPalette entries={paletteEntries} open={paletteOpen} onOpenChange={setPaletteOpen} />
       <ToastRegion className="inset-auto right-4 bottom-4 m-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 border-0 bg-transparent p-0">
         {(toast) => (
           <Toast
@@ -67,9 +67,9 @@ export function DocsShell({ children, className, navigation, paletteEntries }: D
             toast={toast}
           >
             <span className="min-w-0">{toast.content}</span>
-            <ToastDismiss className="rounded p-1 text-zinc-500 outline-none hover:bg-zinc-950/10 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100 dark:focus-visible:outline-teal-400">
+            <ToastClose className="rounded p-1 text-zinc-500 outline-none hover:bg-zinc-950/10 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100 dark:focus-visible:outline-teal-400">
               <XMarkIcon aria-hidden="true" className="size-4 shrink-0" />
-            </ToastDismiss>
+            </ToastClose>
           </Toast>
         )}
       </ToastRegion>

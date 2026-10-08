@@ -56,25 +56,7 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         Search offers high impact for low effort; reporting is the least favorable tradeoff.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Initiative impact and effort values</caption>
-        <thead>
-          <tr>
-            <th scope="col">Initiative</th>
-            <th scope="col">Effort</th>
-            <th scope="col">Impact</th>
-          </tr>
-        </thead>
-        <tbody>
-          {initiatives.map((initiative) => (
-            <tr key={initiative.label}>
-              <th scope="row">{initiative.label}</th>
-              <td>{formatScore(initiative.x)}</td>
-              <td>{formatScore(initiative.y)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </ScatterChart>
   );

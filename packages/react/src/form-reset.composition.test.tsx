@@ -134,7 +134,7 @@ describe("form reset behavior", () => {
     );
     const form = container.querySelector("form")!;
     const checkboxControls = container.querySelectorAll<HTMLInputElement>(
-      "input[data-checkbox-group-control]",
+      "input[type=checkbox]:not([aria-hidden])",
     );
     const radioControls = container.querySelectorAll<HTMLInputElement>("input[type=radio]");
 

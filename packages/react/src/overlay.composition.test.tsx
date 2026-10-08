@@ -1,13 +1,13 @@
 import { act, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../test/render.js";
-import { Dialog } from "./components/Dialog.js";
-import { DialogContent } from "./components/DialogContent.js";
-import { DialogTrigger } from "./components/DialogTrigger.js";
-import { Popover } from "./components/Popover.js";
-import { PopoverOverlay } from "./components/PopoverOverlay.js";
-import { PopoverTrigger } from "./components/PopoverTrigger.js";
-import { placementSurfaceStyle, popoverAnchorName } from "./components/overlay-shared.js";
+import { render, setup } from "../test/render.js";
+import { Dialog } from "./dialog/Dialog.js";
+import { DialogContent } from "./dialog/DialogContent.js";
+import { DialogTrigger } from "./dialog/DialogTrigger.js";
+import { Popover } from "./popover/Popover.js";
+import { PopoverContent } from "./popover/PopoverContent.js";
+import { PopoverTrigger } from "./popover/PopoverTrigger.js";
+import { placementSurfaceStyle, popoverAnchorName } from "./internal/overlay/index.js";
 
 describe("popover placement styles", () => {
   it("derives matching css anchor names from ids React generates", () => {
@@ -43,15 +43,15 @@ describe("overlay composition", () => {
     const { container } = render(
       <Popover>
         <PopoverTrigger as="button">Open</PopoverTrigger>
-        <PopoverOverlay>Content</PopoverOverlay>
+        <PopoverContent>Content</PopoverContent>
       </Popover>,
     );
 
     expect(container.querySelector("button")?.getAttribute("type")).toBe("button");
   });
 
-  it("keeps provider roots wrapper-free and connects dialog parts with stable ids", () => {
-    const { container } = render(
+  it("keeps provider roots wrapper-free and connects dialog parts with stable ids", async () => {
+    const { container, user } = setup(
       <Dialog>
         <DialogTrigger>Open</DialogTrigger>
         <DialogContent portal={false}>Settings</DialogContent>
@@ -64,7 +64,7 @@ describe("overlay composition", () => {
     expect(trigger.getAttribute("aria-controls")).toBe(content.id);
     expect(content.open).toBe(false);
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(content.open).toBe(true);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
   });
@@ -72,21 +72,22 @@ describe("overlay composition", () => {
   it("supports element overrides on roots and leaf triggers", () => {
     const { container } = render(
       <Popover as="section">
-        <PopoverTrigger as="a" href="#content">
-          Open
-        </PopoverTrigger>
-        <PopoverOverlay id="content">Details</PopoverOverlay>
+        <PopoverTrigger as="div">Open</PopoverTrigger>
+        <PopoverContent id="content">Details</PopoverContent>
       </Popover>,
     );
 
     expect(container.querySelector("section")).not.toBeNull();
-    expect(container.querySelector("a")?.getAttribute("href")).toBe("#content");
+    const trigger = container.querySelector("[data-slot='popover-trigger']")!;
+    expect(trigger.tagName).toBe("DIV");
+    expect(trigger.hasAttribute("type")).toBe(false);
+    expect(trigger.getAttribute("aria-haspopup")).toBe("dialog");
   });
 
   it("deduplicates native cancel and close notifications for controlled dialogs", () => {
-    const onToggle = vi.fn();
+    const onOpenChange = vi.fn();
     const { container } = render(
-      <Dialog open onToggle={onToggle}>
+      <Dialog open onOpenChange={onOpenChange}>
         <DialogContent portal={false}>Settings</DialogContent>
       </Dialog>,
     );
@@ -97,14 +98,14 @@ describe("overlay composition", () => {
       content.dispatchEvent(new Event("close"));
     });
 
-    expect(onToggle).toHaveBeenCalledTimes(1);
-    expect(onToggle).toHaveBeenCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("keeps a controlled dialog open when its owner rejects a cancel request", () => {
-    const onToggle = vi.fn();
+    const onOpenChange = vi.fn();
     const { container } = render(
-      <Dialog open onToggle={onToggle}>
+      <Dialog open onOpenChange={onOpenChange}>
         <DialogContent portal={false}>Settings</DialogContent>
       </Dialog>,
     );
@@ -117,11 +118,11 @@ describe("overlay composition", () => {
 
     expect(cancel.defaultPrevented).toBe(true);
     expect(content.open).toBe(true);
-    expect(onToggle).toHaveBeenCalledOnce();
-    expect(onToggle).toHaveBeenCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledOnce();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("restores focus to the opener after a controlled dialog closes", () => {
+  it("restores focus to the opener after a controlled dialog closes", async () => {
     const originalClose = HTMLDialogElement.prototype.close;
     HTMLDialogElement.prototype.close = function closeDialog() {
       this.removeAttribute("open");
@@ -130,7 +131,7 @@ describe("overlay composition", () => {
     function Harness() {
       const [open, setOpen] = useState(false);
       return (
-        <Dialog open={open} onToggle={setOpen}>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger>Open</DialogTrigger>
           <DialogContent portal={false}>Settings</DialogContent>
         </Dialog>
@@ -138,10 +139,9 @@ describe("overlay composition", () => {
     }
 
     try {
-      const { container } = render(<Harness />);
+      const { container, user } = setup(<Harness />);
       const trigger = container.querySelector<HTMLButtonElement>("button")!;
-      trigger.focus();
-      fireClick(trigger);
+      await user.click(trigger);
       const content = container.querySelector("dialog")!;
 
       act(() => {
@@ -159,7 +159,7 @@ describe("overlay composition", () => {
     function Harness() {
       const [open, setOpen] = useState(false);
       return (
-        <Dialog open={open} onToggle={setOpen}>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger>Open</DialogTrigger>
           <DialogContent portal={false}>Settings</DialogContent>
         </Dialog>
@@ -187,5 +187,38 @@ describe("overlay composition", () => {
     expect(frameDocument.activeElement).toBe(trigger);
     unmount();
     frame.remove();
+  });
+
+  it("moves focus to the first focusable control when a popover opens", async () => {
+    const { getByText, user } = setup(
+      <Popover>
+        <PopoverTrigger>Open</PopoverTrigger>
+        <PopoverContent aria-label="Choices">
+          <button type="button">First</button>
+          <button type="button">Second</button>
+        </PopoverContent>
+      </Popover>,
+    );
+
+    await user.click(getByText("Open"));
+
+    expect(document.activeElement).toBe(getByText("First"));
+  });
+
+  it("closes a popover on Escape and returns focus to its trigger", async () => {
+    const { getByText, user } = setup(
+      <Popover>
+        <PopoverTrigger>Open</PopoverTrigger>
+        <PopoverContent aria-label="Choices">
+          <button type="button">First</button>
+        </PopoverContent>
+      </Popover>,
+    );
+
+    await user.click(getByText("Open"));
+    await user.keyboard("{Escape}");
+
+    expect(getByText("Open").getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(getByText("Open"));
   });
 });

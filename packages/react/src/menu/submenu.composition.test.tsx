@@ -1,0 +1,118 @@
+import { act } from "react";
+import { describe, expect, it } from "vitest";
+import { setup } from "../../test/render.js";
+import { Menu } from "./Menu.js";
+import { MenuItem } from "./MenuItem.js";
+import { MenuList } from "./MenuList.js";
+import { MenuPopover } from "./MenuPopover.js";
+import { MenuSeparator } from "./MenuSeparator.js";
+import { MenuTrigger } from "./MenuTrigger.js";
+
+function renderNested() {
+  const result = setup(
+    <Menu defaultOpen>
+      <MenuTrigger>Actions</MenuTrigger>
+      <MenuPopover>
+        <MenuList>
+          <MenuItem value="rename">Rename</MenuItem>
+          <MenuSeparator />
+          <Menu>
+            <MenuTrigger>Share to</MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                <MenuItem value="email">Email</MenuItem>
+                <MenuItem value="link">Copy link</MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        </MenuList>
+      </MenuPopover>
+    </Menu>,
+  );
+  const menus = [...result.container.querySelectorAll<HTMLElement>("[role='menu']")];
+  const popovers = [...result.container.querySelectorAll<HTMLElement>("[popover]")];
+  const subTrigger = result.container.querySelector<HTMLElement>(
+    "[role='menuitem'][aria-haspopup='menu']",
+  )!;
+  return { ...result, menus, popovers, subTrigger };
+}
+
+describe("submenu composition", () => {
+  it("renders the subtrigger as a menu item and the separator between items", () => {
+    const { container, menus, popovers, subTrigger } = renderNested();
+    expect(menus).toHaveLength(2);
+    expect(subTrigger.getAttribute("aria-expanded")).toBe("false");
+    expect(subTrigger.tabIndex).toBe(-1);
+    expect(container.querySelector("[role='separator']")).toBeTruthy();
+    expect(popovers[1]!.hidden).toBe(true);
+  });
+
+  it("participates in the parent's roving focus and opens with ArrowRight", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    const rename = container.querySelector<HTMLElement>("[data-value='rename']")!;
+    expect(document.activeElement).toBe(rename);
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(subTrigger);
+
+    await user.keyboard("{ArrowRight}");
+    expect(popovers[1]!.hidden).toBe(false);
+    const email = container.querySelector<HTMLElement>("[data-value='email']")!;
+    expect(document.activeElement).toBe(email);
+  });
+
+  it("closes only the submenu with ArrowLeft and with Escape", async () => {
+    const { popovers, subTrigger, user } = renderNested();
+    subTrigger.focus();
+    await user.keyboard("{ArrowRight}");
+
+    await user.keyboard("{ArrowLeft}");
+    expect(popovers[1]!.hidden).toBe(true);
+    expect(popovers[0]!.hidden).toBe(false);
+    expect(document.activeElement).toBe(subTrigger);
+
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Escape}");
+    expect(popovers[1]!.hidden).toBe(true);
+    expect(popovers[0]!.hidden).toBe(false);
+    expect(document.activeElement).toBe(subTrigger);
+  });
+
+  it("opens on click and keeps arrow navigation scoped per menu", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    await user.click(subTrigger);
+    expect(popovers[1]!.hidden).toBe(false);
+    const email = container.querySelector<HTMLElement>("[data-value='email']")!;
+    const link = container.querySelector<HTMLElement>("[data-value='link']")!;
+    email.focus();
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(link);
+    // The parent menu did not also move its own focus.
+    expect(popovers[0]!.hidden).toBe(false);
+  });
+});
+
+describe("submenu coordination", () => {
+  it("closes the submenu when focus moves to a different parent item", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    subTrigger.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(popovers[1]!.hidden).toBe(false);
+
+    const rename = container.querySelector<HTMLElement>("[data-value='rename']")!;
+    act(() => rename.focus());
+    expect(popovers[1]!.hidden).toBe(true);
+    expect(popovers[0]!.hidden).toBe(false);
+  });
+
+  it("closes the whole chain and refocuses the root trigger on activation", async () => {
+    const { container, popovers, subTrigger, user } = renderNested();
+    subTrigger.focus();
+    await user.keyboard("{ArrowRight}");
+    const email = container.querySelector<HTMLElement>("[data-value='email']")!;
+    await user.click(email);
+    expect(popovers[1]!.hidden).toBe(true);
+    expect(popovers[0]!.hidden).toBe(true);
+    const rootTrigger = container.querySelector<HTMLButtonElement>("button")!;
+    expect(document.activeElement).toBe(rootTrigger);
+  });
+});

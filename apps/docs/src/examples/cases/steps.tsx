@@ -17,24 +17,22 @@ export function Example() {
   return (
     <Steps as="div" className="w-full max-w-md" value={current} onChange={setCurrent}>
       <StepsList aria-label="Checkout" className="flex items-center gap-3">
-        {checkout.map((entry) => (
+        {checkout.map((entry, index) => (
           <StepsItem
             key={entry.value}
             value={entry.value}
             className="group flex items-center gap-3 not-last:flex-1 not-last:after:h-px not-last:after:flex-1 not-last:after:bg-zinc-950/10 dark:not-last:after:bg-white/10"
           >
-            {({ step }) => (
-              <StepsTrigger className="flex min-h-11 flex-col items-center gap-2 text-base sm:flex-row text-zinc-500 data-completed:text-zinc-700 data-current:text-zinc-950 sm:text-sm dark:text-zinc-400 dark:data-completed:text-zinc-300 dark:data-current:text-white">
-                <span className="grid size-6 place-items-center rounded-full border border-zinc-950/20 text-xs group-data-completed:border-teal-700 group-data-completed:bg-teal-700 group-data-completed:text-white group-data-current:border-teal-700 group-data-current:text-teal-700 dark:border-white/20 dark:group-data-completed:border-teal-400 dark:group-data-completed:bg-teal-400 dark:group-data-completed:text-zinc-950 dark:group-data-current:border-teal-400 dark:group-data-current:text-teal-300">
-                  <CheckIcon
-                    className="hidden size-4 group-data-completed:block"
-                    aria-hidden="true"
-                  />
-                  <span className="group-data-completed:hidden">{step}</span>
-                </span>
-                {entry.title}
-              </StepsTrigger>
-            )}
+            <StepsTrigger className="flex min-h-11 flex-col items-center gap-2 text-base sm:flex-row text-zinc-500 data-completed:text-zinc-700 data-current:text-zinc-950 sm:text-sm dark:text-zinc-400 dark:data-completed:text-zinc-300 dark:data-current:text-white">
+              <span className="grid size-6 place-items-center rounded-full border border-zinc-950/20 text-xs group-data-completed:border-teal-700 group-data-completed:bg-teal-700 group-data-completed:text-white group-data-current:border-teal-700 group-data-current:text-teal-700 dark:border-white/20 dark:group-data-completed:border-teal-400 dark:group-data-completed:bg-teal-400 dark:group-data-completed:text-zinc-950 dark:group-data-current:border-teal-400 dark:group-data-current:text-teal-300">
+                <CheckIcon
+                  className="hidden size-4 group-data-completed:block"
+                  aria-hidden="true"
+                />
+                <span className="group-data-completed:hidden">{index + 1}</span>
+              </span>
+              {entry.title}
+            </StepsTrigger>
           </StepsItem>
         ))}
       </StepsList>

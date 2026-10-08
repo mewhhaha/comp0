@@ -138,7 +138,7 @@ export function Example() {
         aria-labelledby="activity-title"
         value={selected}
         onChange={setSelected}
-        defaultExpanded={["release", "verify"]}
+        defaultOpen={["release", "verify"]}
         className="mt-4 grid gap-1 rounded-xl border border-zinc-950/10 bg-white p-2 dark:border-white/10 dark:bg-zinc-900"
       >
         {workflow.map((task) => (

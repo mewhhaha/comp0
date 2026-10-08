@@ -74,29 +74,7 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         The price reached its highest close on day three before falling on day four.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Daily open, high, low, and close share prices</caption>
-        <thead>
-          <tr>
-            <th scope="col">Trading day</th>
-            <th scope="col">Open</th>
-            <th scope="col">High</th>
-            <th scope="col">Low</th>
-            <th scope="col">Close</th>
-          </tr>
-        </thead>
-        <tbody>
-          {prices.map((price) => (
-            <tr key={price.x}>
-              <th scope="row">{formatDay(price.x)}</th>
-              <td>{formatPrice(price.open)}</td>
-              <td>{formatPrice(price.high)}</td>
-              <td>{formatPrice(price.low)}</td>
-              <td>{formatPrice(price.close)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </CandlestickChart>
   );

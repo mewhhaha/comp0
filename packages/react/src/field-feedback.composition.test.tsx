@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { render } from "../test/render.js";
-import { Description } from "./components/Description.js";
-import { CharacterCount } from "./components/CharacterCount.js";
-import { FieldError } from "./components/FieldError.js";
-import { Input } from "./components/Input.js";
-import { Label } from "./components/Label.js";
-import { TextField } from "./components/TextField.js";
+import { Description } from "./field/Description.js";
+import { CharacterCount } from "./character-count/CharacterCount.js";
+import { FieldError } from "./field/FieldError.js";
+import { Input } from "./text-field/Input.js";
+import { Label } from "./field/Label.js";
+import { TextField } from "./text-field/TextField.js";
 
 describe("field feedback wiring", () => {
   it("renders feedback relationships in server markup", () => {

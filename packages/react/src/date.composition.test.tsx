@@ -12,25 +12,18 @@ import {
   DatePickerPopover,
   DatePickerTrigger,
   TimeField,
-} from "./date.js";
-import { fireClick, fireKeyDown, render } from "../test/render.js";
-
-function fireInput(element: HTMLInputElement, value: string) {
-  act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    setter?.call(element, value);
-    element.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-    element.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
-  });
-}
+} from "./index.js";
+import { render, setup } from "../test/render.js";
 
 function dayButton(container: HTMLElement, iso: string) {
   return container.querySelector<HTMLButtonElement>(`td[data-value='${iso}'] button`)!;
 }
 
-function renderCalendar(props: Partial<Parameters<typeof Calendar>[0]> = {}) {
+function renderCalendar(
+  props: { defaultValue?: string; value?: string; min?: string; max?: string } = {},
+) {
   const onChange = vi.fn();
-  const result = render(
+  const result = setup(
     <Calendar defaultValue="2024-02-15" locale="en-GB" onChange={onChange} {...props}>
       <CalendarHeader />
       <CalendarGrid />
@@ -42,9 +35,9 @@ function renderCalendar(props: Partial<Parameters<typeof Calendar>[0]> = {}) {
 }
 
 describe("date and time fields", () => {
-  it("wires DateField into the field context and participates in the field value", () => {
+  it("wires DateField into the field context and participates in the field value", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <TextField id="departure" defaultValue="2024-05-10" onChange={changed} invalid>
         <Label>Departure</Label>
         <Description>Weekdays only.</Description>
@@ -65,14 +58,15 @@ describe("date and time fields", () => {
     expect(input.value).toBe("2024-05-10");
     expect(input.dataset["value"]).toBe("2024-05-10");
 
-    fireInput(input, "2024-05-11");
+    await user.clear(input);
+    await user.type(input, "2024-05-11");
     expect(changed).toHaveBeenLastCalledWith("2024-05-11");
     expect(input.value).toBe("2024-05-11");
   });
 
-  it("wires TimeField with a step passthrough and field value participation", () => {
+  it("wires TimeField with a step passthrough and field value participation", async () => {
     const changed = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <TextField id="alarm" defaultValue="08:30" onChange={changed}>
         <Label>Alarm</Label>
         <TimeField step={1} required />
@@ -86,14 +80,15 @@ describe("date and time fields", () => {
     expect(input.getAttribute("step")).toBe("1");
     expect(input.required).toBe(true);
     expect(input.value).toBe("08:30");
-    fireInput(input, "09:15");
+    await user.clear(input);
+    await user.type(input, "09:15");
     expect(changed).toHaveBeenLastCalledWith("09:15");
     expect(input.value).toBe("09:15");
   });
 });
 
 describe("calendar", () => {
-  it("renders a labelled grid with localized weekday headers and month label", () => {
+  it("renders a labelled grid with localized weekday headers and month label", async () => {
     const { container, grid, header } = renderCalendar();
 
     expect(header.textContent).toBe("February 2024");
@@ -122,50 +117,50 @@ describe("calendar", () => {
     ).toBe(true);
   });
 
-  it("moves the roving focus with arrows, Home, End, and page keys", () => {
-    const { container, header } = renderCalendar();
+  it("moves the roving focus with arrows, Home, End, and page keys", async () => {
+    const { container, header, user } = renderCalendar();
     const start = dayButton(container, "2024-02-15");
     act(() => {
       start.focus();
     });
 
-    fireKeyDown(document.activeElement!, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-16"));
     expect(dayButton(container, "2024-02-16").tabIndex).toBe(0);
     expect(dayButton(container, "2024-02-15").tabIndex).toBe(-1);
 
-    fireKeyDown(document.activeElement!, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-23"));
 
-    fireKeyDown(document.activeElement!, "Home");
+    await user.keyboard("{Home}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-19"));
 
-    fireKeyDown(document.activeElement!, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-25"));
 
-    fireKeyDown(document.activeElement!, "PageUp");
+    await user.keyboard("{PageUp}");
     expect(header.textContent).toBe("January 2024");
     expect(document.activeElement).toBe(dayButton(container, "2024-01-25"));
 
-    fireKeyDown(document.activeElement!, "PageDown", { shiftKey: true });
+    await user.keyboard("{Shift>}{PageDown}{/Shift}");
     expect(header.textContent).toBe("January 2025");
     expect(document.activeElement).toBe(dayButton(container, "2025-01-25"));
   });
 
-  it("shifts the visible month when focus crosses the month edge", () => {
-    const { container, header } = renderCalendar({ defaultValue: "2024-03-01" });
+  it("shifts the visible month when focus crosses the month edge", async () => {
+    const { container, header, user } = renderCalendar({ defaultValue: "2024-03-01" });
     const start = dayButton(container, "2024-03-01");
     act(() => {
       start.focus();
     });
 
-    fireKeyDown(document.activeElement!, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(header.textContent).toBe("February 2024");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-29"));
   });
 
-  it("disables dates outside min/max and clamps keyboard navigation to them", () => {
-    const { container } = renderCalendar({ min: "2024-02-10", max: "2024-02-20" });
+  it("disables dates outside min/max and clamps keyboard navigation to them", async () => {
+    const { container, user } = renderCalendar({ min: "2024-02-10", max: "2024-02-20" });
 
     expect(dayButton(container, "2024-02-09").disabled).toBe(true);
     expect(dayButton(container, "2024-02-10").disabled).toBe(false);
@@ -175,22 +170,22 @@ describe("calendar", () => {
     act(() => {
       dayButton(container, "2024-02-15").focus();
     });
-    fireKeyDown(document.activeElement!, "End");
+    await user.keyboard("{End}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-18"));
-    fireKeyDown(document.activeElement!, "ArrowDown");
+    await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-20"));
-    fireKeyDown(document.activeElement!, "ArrowRight");
+    await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-20"));
   });
 
-  it("selects the focused date with Enter when uncontrolled", () => {
-    const { container, onChange } = renderCalendar();
+  it("selects the focused date with Enter when uncontrolled", async () => {
+    const { container, onChange, user } = renderCalendar();
     act(() => {
       dayButton(container, "2024-02-15").focus();
     });
 
-    fireKeyDown(document.activeElement!, "ArrowRight");
-    fireKeyDown(document.activeElement!, "Enter");
+    await user.keyboard("{ArrowRight}");
+    await user.keyboard("{Enter}");
 
     expect(onChange).toHaveBeenLastCalledWith("2024-02-16");
     expect(
@@ -201,24 +196,23 @@ describe("calendar", () => {
     ).toBe(false);
   });
 
-  it("mirrors day arrows in right-to-left layouts", () => {
-    const { container } = render(
+  it("mirrors day arrows in right-to-left layouts", async () => {
+    const { container, user } = setup(
       <Calendar defaultValue="2024-02-15" locale="en-GB">
         <CalendarHeader />
         <CalendarGrid style={{ direction: "rtl" }} />
       </Calendar>,
     );
-    const grid = container.querySelector<HTMLTableElement>("[role='grid']")!;
-    dayButton(container, "2024-02-15").focus();
+    await user.click(dayButton(container, "2024-02-15"));
 
-    fireKeyDown(grid, "ArrowLeft");
+    await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(dayButton(container, "2024-02-16"));
   });
 
-  it("reports controlled selection without moving it until the owner updates", () => {
-    const { container, onChange } = renderCalendar({ value: "2024-02-15" });
+  it("reports controlled selection without moving it until the owner updates", async () => {
+    const { container, onChange, user } = renderCalendar({ value: "2024-02-15" });
 
-    fireClick(dayButton(container, "2024-02-16"));
+    await user.click(dayButton(container, "2024-02-16"));
 
     expect(onChange).toHaveBeenLastCalledWith("2024-02-16");
     expect(
@@ -229,9 +223,9 @@ describe("calendar", () => {
     ).toBe(false);
   });
 
-  it("steps months from the header buttons and disables them past min/max", () => {
+  it("steps months from the header buttons and disables them past min/max", async () => {
     const onChange = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Calendar
         defaultValue="2024-02-15"
         locale="en-GB"
@@ -249,16 +243,16 @@ describe("calendar", () => {
     const previous = container.querySelector<HTMLButtonElement>("[aria-label='Previous month']")!;
     const next = container.querySelector<HTMLButtonElement>("[aria-label='Next month']")!;
 
-    fireClick(previous);
+    await user.click(previous);
     expect(header.textContent).toBe("January 2024");
     expect(previous.disabled).toBe(true);
-    fireClick(next);
-    fireClick(next);
+    await user.click(next);
+    await user.click(next);
     expect(header.textContent).toBe("March 2024");
     expect(next.disabled).toBe(true);
   });
 
-  it("clamps keyboard focus when bounds change without a selection", () => {
+  it("clamps keyboard focus when bounds change without a selection", async () => {
     const view = (min?: string) => (
       <Calendar locale="en-GB" min={min}>
         <CalendarHeader />
@@ -279,7 +273,7 @@ describe("calendar", () => {
 describe("date picker composition", () => {
   function renderPicker() {
     const onChange = vi.fn();
-    const result = render(
+    const result = setup(
       <DatePicker id="trip" defaultValue="2024-02-15" onChange={onChange}>
         <Label>Trip date</Label>
         <DateField />
@@ -300,8 +294,8 @@ describe("date picker composition", () => {
     return { ...result, input, onChange, surface, trigger };
   }
 
-  it("labels the parts and opens onto the focused calendar date", () => {
-    const { container, input, surface, trigger } = renderPicker();
+  it("labels the parts and opens onto the focused calendar date", async () => {
+    const { container, input, surface, trigger, user } = renderPicker();
 
     expect(input.value).toBe("2024-02-15");
     expect(input.id).toBe("trip");
@@ -312,14 +306,14 @@ describe("date picker composition", () => {
     expect(surface.getAttribute("aria-label")).toBe("Calendar");
     expect(surface.hidden).toBe(true);
 
-    fireClick(trigger);
+    await user.click(trigger);
     expect(surface.hidden).toBe(false);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
     expect(trigger.hasAttribute("data-open")).toBe(true);
     expect(document.activeElement).toBe(dayButton(container, "2024-02-15"));
   });
 
-  it("keeps the explicit id on the field when the picker renders a wrapper", () => {
+  it("keeps the explicit id on the field when the picker renders a wrapper", async () => {
     const { container } = render(
       <DatePicker as="div" id="trip">
         <DateField />
@@ -331,9 +325,9 @@ describe("date picker composition", () => {
     expect(container.querySelector("#trip")?.tagName).toBe("INPUT");
   });
 
-  it("disables the open calendar from the picker root", () => {
+  it("disables the open calendar from the picker root", async () => {
     const onChange = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <DatePicker disabled defaultOpen defaultValue="2024-02-15" onChange={onChange}>
         <DatePickerTrigger />
         <DatePickerPopover>
@@ -351,15 +345,15 @@ describe("date picker composition", () => {
     expect(
       container.querySelector<HTMLButtonElement>("[aria-label='Previous month']")?.disabled,
     ).toBe(true);
-    fireClick(selectedDay);
+    await user.click(selectedDay);
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("closes on selection, updates the DateField, and restores trigger focus", () => {
-    const { container, input, onChange, surface, trigger } = renderPicker();
+  it("closes on selection, updates the DateField, and restores trigger focus", async () => {
+    const { container, input, onChange, surface, trigger, user } = renderPicker();
 
-    fireClick(trigger);
-    fireClick(dayButton(container, "2024-02-16"));
+    await user.click(trigger);
+    await user.click(dayButton(container, "2024-02-16"));
 
     expect(onChange).toHaveBeenLastCalledWith("2024-02-16");
     expect(surface.hidden).toBe(true);
@@ -368,7 +362,7 @@ describe("date picker composition", () => {
   });
 
   it("serializes and resets an uncontrolled date picker", async () => {
-    const { container } = render(
+    const { container, user } = setup(
       <form>
         <DatePicker name="trip" defaultValue="2024-02-15">
           <DateField />
@@ -383,7 +377,7 @@ describe("date picker composition", () => {
     const form = container.querySelector("form")!;
     const field = container.querySelector<HTMLInputElement>("input:not([aria-hidden])")!;
 
-    fireClick(dayButton(container, "2024-02-16"));
+    await user.click(dayButton(container, "2024-02-16"));
     expect(new FormData(form).get("trip")).toBe("2024-02-16");
 
     await act(async () => {
@@ -394,11 +388,11 @@ describe("date picker composition", () => {
     expect(new FormData(form).get("trip")).toBe("2024-02-15");
   });
 
-  it("closes on Escape without changing the value", () => {
-    const { input, onChange, surface, trigger } = renderPicker();
+  it("closes on Escape without changing the value", async () => {
+    const { input, onChange, surface, trigger, user } = renderPicker();
 
-    fireClick(trigger);
-    fireKeyDown(document.activeElement!, "Escape");
+    await user.click(trigger);
+    await user.keyboard("{Escape}");
 
     expect(surface.hidden).toBe(true);
     expect(onChange).not.toHaveBeenCalled();
@@ -406,15 +400,52 @@ describe("date picker composition", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("follows a date typed into the DateField when the calendar opens", () => {
-    const { container, input, onChange, trigger } = renderPicker();
+  it("follows a date typed into the DateField when the calendar opens", async () => {
+    const { container, input, onChange, trigger, user } = renderPicker();
     const liveHeader = container.querySelector<HTMLElement>("[aria-live='polite']")!;
 
-    fireInput(input, "2024-03-05");
+    await user.clear(input);
+    await user.type(input, "2024-03-05");
     expect(onChange).toHaveBeenLastCalledWith("2024-03-05");
-    fireClick(trigger);
+    await user.click(trigger);
 
     expect(liveHeader.textContent).toBe("March 2024");
     expect(document.activeElement).toBe(dayButton(container, "2024-03-05"));
+  });
+
+  it("reports open state through onOpenChange and ignores a disabled trigger", async () => {
+    const onOpenChange = vi.fn();
+    const { container, user } = setup(
+      <DatePicker onOpenChange={onOpenChange}>
+        <DateField />
+        <DatePickerTrigger />
+        <DatePickerPopover>
+          <Calendar locale="en-GB">
+            <CalendarGrid />
+          </Calendar>
+        </DatePickerPopover>
+      </DatePicker>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>("button[aria-haspopup='dialog']")!;
+
+    await user.click(trigger);
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not open from a trigger disabled by the picker", async () => {
+    const onOpenChange = vi.fn();
+    const { container, user } = setup(
+      <DatePicker disabled onOpenChange={onOpenChange}>
+        <DatePickerTrigger />
+      </DatePicker>,
+    );
+    const trigger = container.querySelector("button")!;
+
+    await user.click(trigger);
+    expect(trigger.disabled).toBe(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 });

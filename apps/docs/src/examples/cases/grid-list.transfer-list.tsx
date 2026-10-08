@@ -11,8 +11,8 @@ import {
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/16/solid";
 
 const collections = [
-  { name: "available", label: "Available", destination: "chosen" },
-  { name: "chosen", label: "Chosen", destination: "available" },
+  { name: "available", label: "Available", destination: "chosen", MoveIcon: ArrowRightIcon },
+  { name: "chosen", label: "Chosen", destination: "available", MoveIcon: ArrowLeftIcon },
 ] as const;
 
 const frameworkById: Record<string, { name: string; description: string }> = {
@@ -127,11 +127,7 @@ export function Example() {
                         aria-label={`Move ${framework.name} to ${collection.destination}`}
                         className="cursor-pointer rounded p-1 text-zinc-400 outline-teal-600 hover:bg-zinc-950/5 hover:text-zinc-700 focus-visible:outline-2 dark:outline-teal-400 dark:hover:bg-white/5 dark:hover:text-zinc-200"
                       >
-                        {collection.name === "available" ? (
-                          <ArrowRightIcon className="size-4" aria-hidden="true" />
-                        ) : (
-                          <ArrowLeftIcon className="size-4" aria-hidden="true" />
-                        )}
+                        <collection.MoveIcon className="size-4" aria-hidden="true" />
                       </GridListMoveButton>
                     </GridListItem>
                   );

@@ -32,10 +32,10 @@ export function fuzzyMatch(textValue: string, inputValue: string): boolean {
 export type CommandPaletteProps = {
   entries: PaletteEntry[];
   open: boolean;
-  onToggle: (open: boolean) => void;
+  onOpenChange: (open: boolean) => void;
 };
 
-export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps) {
+export function CommandPalette({ entries, open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
@@ -48,7 +48,7 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
 
   const goto = (route: string) => {
     if (!route) return;
-    onToggle(false);
+    onOpenChange(false);
     void navigate(route);
   };
 
@@ -61,7 +61,7 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
   };
 
   return (
-    <Dialog open={open} onToggle={onToggle}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         aria-label="Search documentation"
         className="mx-auto mt-[12vh] w-[min(38rem,calc(100vw-2rem))] rounded-2xl border border-zinc-950/10 bg-white p-0 text-zinc-950 shadow-2xl backdrop:bg-zinc-950/40 dark:border-white/10 dark:bg-zinc-900 dark:text-white dark:backdrop:bg-black/60"
@@ -74,7 +74,7 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
           onInputChange={setQuery}
           value=""
           open={open}
-          onToggle={keepResultsOpen}
+          onOpenChange={keepResultsOpen}
         >
           <div className="flex items-center gap-2 pr-2">
             <ComboboxInput
@@ -87,13 +87,13 @@ export function CommandPalette({ entries, open, onToggle }: CommandPaletteProps)
                   // to close, which an always-open panel ignores; close the
                   // whole dialog in one press instead.
                   event.preventDefault();
-                  onToggle(false);
+                  onOpenChange(false);
                 }
               }}
             />
             <Button
               aria-label="Close search"
-              onClick={() => onToggle(false)}
+              onClick={() => onOpenChange(false)}
               className="min-h-11 min-w-11 shrink-0 rounded-lg px-2 text-sm text-zinc-600 outline-teal-600 focus-visible:outline-2 dark:text-zinc-400 dark:outline-teal-400"
             >
               Close

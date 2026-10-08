@@ -2,9 +2,9 @@ import { useState } from "react";
 import {
   Label,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   Popover,
-  PopoverOverlay,
+  PopoverContent,
   PopoverTrigger,
   TimeField,
 } from "@comp0/react";
@@ -40,14 +40,14 @@ export function Example() {
             className="w-[calc(100%+2.5rem)] border-0 bg-transparent px-3 py-2.5 text-base text-zinc-950 outline-none sm:py-2 sm:text-sm dark:text-zinc-50 [&::-webkit-calendar-picker-indicator]:hidden"
           />
         </div>
-        <Popover open={open} onToggle={setOpen}>
+        <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger
             aria-label="Choose time"
             className="rounded border border-zinc-950/10 bg-white px-3 text-zinc-700 outline-teal-600 focus-visible:outline-2 data-open:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:outline-teal-400 dark:data-open:bg-zinc-800"
           >
             <ClockIcon className="size-4" aria-hidden="true" />
           </PopoverTrigger>
-          <PopoverOverlay
+          <PopoverContent
             aria-label="Available times"
             placement="bottom end"
             offset={4}
@@ -63,16 +63,16 @@ export function Example() {
               }}
             >
               {times.map(([value, label]) => (
-                <ListBoxItem
+                <ListBoxOption
                   key={value}
                   value={value}
                   className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 focus-visible:bg-teal-200 data-selected:focus-visible:bg-teal-200 focus-visible:outline-2 focus-visible:outline-teal-600 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50 dark:focus-visible:bg-teal-800 dark:data-selected:focus-visible:bg-teal-800 dark:focus-visible:outline-teal-400"
                 >
                   {label}
-                </ListBoxItem>
+                </ListBoxOption>
               ))}
             </ListBox>
-          </PopoverOverlay>
+          </PopoverContent>
         </Popover>
       </div>
     </div>

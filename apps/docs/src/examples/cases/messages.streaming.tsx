@@ -66,14 +66,15 @@ export function Example() {
         )}
       </Messages>
       <div className="flex items-center gap-2">
-        {streaming ? (
+        {streaming && (
           <Button
             className="rounded-lg border border-zinc-950/15 px-3 py-2 text-sm font-medium text-zinc-800 outline-teal-600 focus-visible:outline-2 dark:border-white/15 dark:text-zinc-100 dark:outline-teal-400"
             onClick={() => setResponseState("interrupted")}
           >
             Stop generating
           </Button>
-        ) : (
+        )}
+        {!streaming && (
           <Button
             className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white outline-teal-600 focus-visible:outline-2 dark:bg-teal-400 dark:text-zinc-950 dark:outline-teal-300"
             onClick={startResponse}

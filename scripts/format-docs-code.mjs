@@ -1,36 +1,64 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { components } from "../apps/docs/src/content/catalog.ts";
-import { learnDocs } from "../apps/docs/src/content/learn.ts";
+import { registerHooks } from "node:module";
+import { pathToFileURL } from "node:url";
+import { format } from "oxfmt";
+
+// Entry files import siblings as "./define.js" for the bundler; map those to the .ts source so
+// Node's native type stripping can load them without starting Vite.
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    try {
+      return nextResolve(specifier, context);
+    } catch (error) {
+      if (error?.code === "ERR_MODULE_NOT_FOUND" && /^\.\.?\/.*\.js$/.test(specifier)) {
+        return nextResolve(specifier.replace(/\.js$/, ".ts"), context);
+      }
+      throw error;
+    }
+  },
+});
+
+const contentDirectory = "apps/docs/src/content/components";
+const entryPath = (slug) => `${contentDirectory}/${slug}.ts`;
+const components = await Promise.all(
+  readdirSync(contentDirectory)
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".test.ts"))
+    .sort()
+    .map(async (file) => {
+      const module = await import(pathToFileURL(`${contentDirectory}/${file}`).href);
+      return module.default;
+    }),
+);
+const { learnDocs } = await import(pathToFileURL("apps/docs/src/content/learn.ts").href);
 
 const check = process.argv.includes("--check");
 const oxfmt =
   process.platform === "win32" ? "node_modules/.bin/oxfmt.cmd" : "node_modules/.bin/oxfmt";
 
-function runOxfmt(args, input) {
-  return spawnSync(oxfmt, args, {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    input,
-  });
+// The oxfmt CLI reads .oxfmtrc.json; the API takes the same options directly.
+const {
+  ignorePatterns: _ignored,
+  $schema: _schema,
+  ...formatOptions
+} = JSON.parse(readFileSync(".oxfmtrc.json", "utf8"));
+
+function runOxfmt(args) {
+  return spawnSync(oxfmt, args, { cwd: process.cwd(), encoding: "utf8" });
 }
 
-function formatSnippet(source, language, name) {
+async function formatSnippet(source, language, name) {
   if (language === "bash") return source;
   const extension = language === "css" ? "css" : "tsx";
-  let result = runOxfmt([`--stdin-filepath=code-block.${extension}`], source);
-  if (result.status !== 0 && extension === "tsx") {
-    result = runOxfmt(
-      ["--stdin-filepath=code-block.tsx"],
-      `<>
-${source}
-</>`,
-    );
+  let result = await format(`code-block.${extension}`, source, formatOptions);
+  if (result.errors.length > 0 && extension === "tsx") {
+    result = await format("code-block.tsx", `<>\n${source}\n</>`, formatOptions);
   }
-  if (result.status !== 0) {
-    throw new Error(`oxfmt could not parse ${name}:\n${result.stderr.trim()}`);
+  if (result.errors.length > 0) {
+    const reasons = result.errors.map((error) => error.message).join("\n");
+    throw new Error(`oxfmt could not parse ${name}:\n${reasons}`);
   }
-  return result.stdout.trimEnd();
+  return result.code.trimEnd();
 }
 
 function singleQuoted(source) {
@@ -44,20 +72,25 @@ function singleQuoted(source) {
 function backtickQuoted(source) {
   return `\`${source
     .replaceAll("\\", "\\\\")
-    .replaceAll("\`", "\\\`")
+    .replaceAll("`", "\\`")
     .replaceAll("${", "\\${")
     .replaceAll("\r", "\\r")
     .replaceAll("\n", "\\n")}\``;
 }
 
-function replaceCodeBlocks(path, blocks) {
+async function replaceCodeBlocks(path, blocks) {
   const original = readFileSync(path, "utf8");
   let next = original;
   const changes = [];
   const uniqueBlocks = new Map(blocks.map((block) => [block.source, block]));
 
-  for (const block of uniqueBlocks.values()) {
-    const formatted = formatSnippet(block.source, block.language, block.name);
+  const unique = [...uniqueBlocks.values()];
+  const formattedBlocks = await Promise.all(
+    unique.map((block) => formatSnippet(block.source, block.language, block.name)),
+  );
+
+  for (const [index, block] of unique.entries()) {
+    const formatted = formattedBlocks[index];
     if (formatted === block.source.trimEnd()) continue;
     const replacement = JSON.stringify(formatted);
     const candidates = [
@@ -78,55 +111,47 @@ function replaceCodeBlocks(path, blocks) {
   return changes;
 }
 
+function codeBlock(name, source, language) {
+  if (!source) return [];
+  return [{ name, source, language: language ?? "tsx" }];
+}
+
 const learnBlocks = learnDocs.flatMap((document) =>
   document.sections.flatMap((section) =>
-    section.code
-      ? [
-          {
-            name: `learn/${document.slug}/${section.id}`,
-            source: section.code,
-            language: section.language ?? "tsx",
-          },
-        ]
-      : [],
+    codeBlock(`learn/${document.slug}/${section.id}`, section.code, section.language),
   ),
 );
-const catalogBlocks = components.flatMap((component) =>
-  component.steps.flatMap((step, index) =>
-    step.code
-      ? [
-          {
-            name: `components/${component.slug}/step-${index + 1}`,
-            source: step.code,
-            language: step.language ?? "tsx",
-          },
-        ]
-      : [],
-  ),
-);
+const catalogChanges = (
+  await Promise.all(
+    components.map((component) =>
+      replaceCodeBlocks(
+        entryPath(component.slug),
+        component.steps.flatMap((step, index) =>
+          codeBlock(`components/${component.slug}/step-${index + 1}`, step.code, step.language),
+        ),
+      ),
+    ),
+  )
+).flat();
 
 const changedBlocks = [
-  ...replaceCodeBlocks("apps/docs/src/content/learn.ts", learnBlocks),
-  ...replaceCodeBlocks("apps/docs/src/content/catalog.ts", catalogBlocks),
+  ...(await replaceCodeBlocks("apps/docs/src/content/learn.ts", learnBlocks)),
+  ...catalogChanges,
 ];
-const exampleResult = runOxfmt([check ? "--check" : "--write", "apps/docs/src/examples/cases"]);
-if (exampleResult.status !== 0) process.stderr.write(exampleResult.stderr || exampleResult.stdout);
-
 if (check && changedBlocks.length > 0) {
   process.stderr.write(`Unformatted inline docs code:\n${changedBlocks.join("\n")}\n`);
+  process.exit(1);
 }
-if (exampleResult.status !== 0 || (check && changedBlocks.length > 0)) process.exit(1);
 
-if (!check) {
-  const contentResult = runOxfmt([
-    "--write",
-    "apps/docs/src/content/catalog.ts",
-    "apps/docs/src/content/learn.ts",
-  ]);
-  if (contentResult.status !== 0) {
-    process.stderr.write(contentResult.stderr || contentResult.stdout);
-    process.exit(1);
-  }
+// One oxfmt run covers the example files and (after inline edits) the entry files.
+const result = runOxfmt([
+  check ? "--check" : "--write",
+  "apps/docs/src/examples/cases",
+  ...(check ? [] : [contentDirectory, "apps/docs/src/content/learn.ts"]),
+]);
+if (result.status !== 0) {
+  process.stderr.write(result.stderr || result.stdout);
+  process.exit(1);
 }
 
 console.log(

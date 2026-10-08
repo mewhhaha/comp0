@@ -12,7 +12,7 @@ import {
 
 export function Example() {
   return (
-    <Pagination defaultPage={6} totalPages={20}>
+    <Pagination defaultValue={6} totalPages={20}>
       {({ pages }) => (
         <PaginationList className="flex flex-wrap items-center gap-1">
           <PaginationItem>
@@ -27,14 +27,15 @@ export function Example() {
           </PaginationItem>
           {pages.map((entry) => (
             <PaginationItem key={entry}>
-              {typeof entry === "number" ? (
+              {typeof entry === "number" && (
                 <PaginationPage
-                  page={entry}
+                  value={entry}
                   className="size-9 rounded text-sm hover:bg-zinc-100 data-current:bg-zinc-900 data-current:text-white dark:hover:bg-zinc-800 dark:data-current:bg-zinc-100 dark:data-current:text-zinc-950"
                 >
                   {entry}
                 </PaginationPage>
-              ) : (
+              )}
+              {typeof entry !== "number" && (
                 <PaginationEllipsis className="grid size-9 place-items-center text-zinc-500" />
               )}
             </PaginationItem>

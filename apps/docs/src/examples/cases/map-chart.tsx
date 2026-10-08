@@ -201,25 +201,7 @@ export function Example() {
         Every state uses its own path from the CC0 Wikimedia Commons map; party assignments are
         illustrative, and the table keeps each state&apos;s electoral-vote weight available.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Illustrative state electoral vote totals</caption>
-        <thead>
-          <tr>
-            <th scope="col">State</th>
-            <th scope="col">Party</th>
-            <th scope="col">Electoral votes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {electionStates.map((state) => (
-            <tr key={state.id}>
-              <th scope="row">{state.label.split(" — ")[0]}</th>
-              <td>{state.label.split(" — ")[1]}</td>
-              <td>{formatVotes(state.value)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </MapChart>
   );

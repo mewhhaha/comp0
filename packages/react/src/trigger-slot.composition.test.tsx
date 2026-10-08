@@ -1,12 +1,12 @@
 import { Fragment } from "react";
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireClick, render } from "../test/render.js";
-import { Dialog } from "./components/Dialog.js";
-import { DialogTrigger } from "./components/DialogTrigger.js";
-import { Tooltip } from "./components/Tooltip.js";
-import { TooltipPopover } from "./components/TooltipPopover.js";
-import { TooltipTrigger } from "./components/TooltipTrigger.js";
+import { render, setup } from "../test/render.js";
+import { Dialog } from "./dialog/Dialog.js";
+import { DialogTrigger } from "./dialog/DialogTrigger.js";
+import { Tooltip } from "./tooltip/Tooltip.js";
+import { TooltipContent } from "./tooltip/TooltipContent.js";
+import { TooltipTrigger } from "./tooltip/TooltipTrigger.js";
 
 describe("fragment triggers", () => {
   it("merges tooltip trigger behavior onto the supplied child element", () => {
@@ -18,7 +18,7 @@ describe("fragment triggers", () => {
             i
           </button>
         </TooltipTrigger>
-        <TooltipPopover>Helpful detail</TooltipPopover>
+        <TooltipContent>Helpful detail</TooltipContent>
       </Tooltip>,
     );
     const buttons = container.querySelectorAll("button");
@@ -34,9 +34,9 @@ describe("fragment triggers", () => {
     expect(popover.hasAttribute("hidden")).toBe(false);
   });
 
-  it("keeps the child's own click handler while toggling the dialog", () => {
+  it("keeps the child's own click handler while toggling the dialog", async () => {
     const ownClick = vi.fn();
-    const { container } = render(
+    const { container, user } = setup(
       <Dialog>
         <DialogTrigger as={Fragment}>
           <button type="button" onClick={ownClick}>
@@ -46,7 +46,7 @@ describe("fragment triggers", () => {
       </Dialog>,
     );
     const trigger = container.querySelector("button")!;
-    fireClick(trigger);
+    await user.click(trigger);
     expect(ownClick).toHaveBeenCalledOnce();
     expect(trigger.dataset["open"]).toBe("");
   });

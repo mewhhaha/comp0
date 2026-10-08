@@ -1,6 +1,6 @@
 import {
   NavigationMenu,
-  NavigationMenuContent,
+  NavigationMenuPanel,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
@@ -23,7 +23,7 @@ export function Example() {
               aria-hidden="true"
             />
           </NavigationMenuTrigger>
-          <NavigationMenuContent className="absolute inset-x-1 top-full z-10 mt-1 grid gap-1 rounded border-0 bg-white p-1 opacity-100 shadow-lg ring-1 ring-zinc-950/10 transition-opacity duration-150 ease-out starting:opacity-0 motion-reduce:transition-none dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+          <NavigationMenuPanel className="absolute inset-x-1 top-full z-10 mt-1 grid gap-1 rounded border-0 bg-white p-1 opacity-100 shadow-lg ring-1 ring-zinc-950/10 transition-opacity duration-150 ease-out starting:opacity-0 motion-reduce:transition-none dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
             <NavigationMenuLink
               href="#analytics"
               className="rounded px-3 py-2.5 text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
@@ -36,7 +36,7 @@ export function Example() {
             >
               Dashboards
             </NavigationMenuLink>
-          </NavigationMenuContent>
+          </NavigationMenuPanel>
         </NavigationMenuItem>
         <NavigationMenuItem value="resources">
           <NavigationMenuTrigger className="group flex items-center gap-1 rounded px-3 py-2.5 text-base text-zinc-800 select-none hover:bg-zinc-100 data-open:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800 dark:data-open:bg-zinc-800">
@@ -46,7 +46,7 @@ export function Example() {
               aria-hidden="true"
             />
           </NavigationMenuTrigger>
-          <NavigationMenuContent className="absolute inset-x-1 top-full z-10 mt-1 grid gap-1 rounded border-0 bg-white p-1 opacity-100 shadow-lg ring-1 ring-zinc-950/10 transition-opacity duration-150 ease-out starting:opacity-0 motion-reduce:transition-none dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
+          <NavigationMenuPanel className="absolute inset-x-1 top-full z-10 mt-1 grid gap-1 rounded border-0 bg-white p-1 opacity-100 shadow-lg ring-1 ring-zinc-950/10 transition-opacity duration-150 ease-out starting:opacity-0 motion-reduce:transition-none dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
             <NavigationMenuLink
               href="#docs"
               className="rounded px-3 py-2.5 text-base text-zinc-800 hover:bg-zinc-100 sm:py-2 sm:text-sm dark:text-zinc-100 dark:hover:bg-zinc-800"
@@ -59,7 +59,7 @@ export function Example() {
             >
               Guides
             </NavigationMenuLink>
-          </NavigationMenuContent>
+          </NavigationMenuPanel>
         </NavigationMenuItem>
         <NavigationMenuItem value="pricing">
           <NavigationMenuLink

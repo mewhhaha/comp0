@@ -13,4 +13,4 @@ pnpm --filter @comp0/docs run preview
 pnpm --filter @comp0/docs run deploy
 ```
 
-The production build verifies that the catalog and Shiki do not enter client assets, examples remain lazy, and every component page plus its variants stays below the former SPA JavaScript budget. With a dev or preview server running, run `DOCS_URL=http://127.0.0.1:4173 pnpm test:docs` to verify hydration and live Select interaction. The public Worker is [comp0-docs.horrible.workers.dev](https://comp0-docs.horrible.workers.dev).
+The production build verifies that the catalog and Shiki do not enter client assets, examples remain lazy, and every component page plus its variants stays below the former SPA JavaScript budget. `pnpm test:e2e` builds nothing itself: after `pnpm build`, it starts the docs preview and runs the Playwright suite in `e2e/` (hydration, live Select interaction, Connect, and mobile layout); set `DOCS_URL` to point it at an already running server instead. The public Worker is [comp0-docs.horrible.workers.dev](https://comp0-docs.horrible.workers.dev).
