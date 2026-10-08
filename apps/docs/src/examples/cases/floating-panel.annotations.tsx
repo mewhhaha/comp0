@@ -92,16 +92,17 @@ export function Example() {
               ))}
             </Messages>
             <div className="border-t border-zinc-950/10 p-3 dark:border-white/10">
-              {resolved ? (
+              {resolved && (
                 <Button
                   className="rounded-lg border border-zinc-950/15 px-3 py-2 text-sm font-medium outline-teal-600 focus-visible:outline-2 dark:border-white/15 dark:outline-teal-400"
                   onClick={() => setResolved(false)}
                 >
                   Reopen thread
                 </Button>
-              ) : (
+              )}
+              {!resolved && (
                 <form className="grid gap-2" onSubmit={submitReply}>
-                  <TextField value={reply} onChange={setReply} className="grid gap-1">
+                  <TextField as="div" value={reply} onChange={setReply} className="grid gap-1">
                     <Label className="text-sm font-medium text-zinc-950 dark:text-white">
                       Reply
                     </Label>

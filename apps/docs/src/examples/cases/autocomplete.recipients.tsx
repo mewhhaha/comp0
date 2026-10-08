@@ -3,7 +3,7 @@ import {
   Autocomplete,
   Label,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   SearchField,
   SearchFieldInput,
 } from "@comp0/react";
@@ -55,7 +55,7 @@ export function Example() {
           onChange={addRecipient}
         >
           {contacts.map((contact) => (
-            <ListBoxItem
+            <ListBoxOption
               key={contact.email}
               className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-active:bg-teal-100 data-active:text-teal-950 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-active:bg-teal-950 dark:data-active:text-teal-50 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
               textValue={`${contact.name} ${contact.email}`}
@@ -65,7 +65,7 @@ export function Example() {
               <span className="block text-sm text-zinc-500 dark:text-zinc-400">
                 {contact.email}
               </span>
-            </ListBoxItem>
+            </ListBoxOption>
           ))}
         </ListBox>
       </SearchField>

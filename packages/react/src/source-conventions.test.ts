@@ -30,13 +30,6 @@ function matchingLines(source: string, pattern: RegExp) {
     .flatMap((line, index) => (pattern.test(line) ? [`${index + 1}: ${line.trim()}`] : []));
 }
 
-function sourceForTernaryScan(source: string) {
-  return source
-    .replaceAll("?.", "__")
-    .replaceAll("??", "__")
-    .replace(/\b([\w$]+)\?:/g, "$1__:");
-}
-
 describe("source conventions", () => {
   const sources = readSources([
     ...sourceFiles(resolve(root, "packages/react/src")),
@@ -61,16 +54,6 @@ describe("source conventions", () => {
     expect(generatedArtifacts).toEqual([]);
   });
 
-  it("keeps boolean data attributes presence-based", () => {
-    const directBooleanDataAttributes = conventionSources.flatMap(({ relativePath, source }) =>
-      [...source.matchAll(/\bdata-[\w-]+=\{(?:true|false)\}/g)].map(
-        (match) => `${relativePath}: ${match[0]}`,
-      ),
-    );
-
-    expect(directBooleanDataAttributes).toEqual([]);
-  });
-
   it("uses provider-backed user interactions in browser tests", () => {
     const browserTests = conventionSources.filter(({ relativePath }) =>
       relativePath.endsWith(".browser.test.tsx"),
@@ -84,112 +67,77 @@ describe("source conventions", () => {
     expect(syntheticInteractionHelpers).toEqual([]);
   });
 
-  it("keeps removed compatibility aliases out of docs and the public barrel", () => {
-    const publicBarrel = readFileSync(resolve(root, "packages/react/src/index.ts"), "utf8");
-    const docsSources = sources.filter(({ relativePath }) => relativePath.startsWith("apps/docs/"));
-    const aliasReferences = docsSources.flatMap(({ relativePath, source }) =>
-      [...source.matchAll(/\b(?:ComboBox|ComboBoxOption)\b|<\/?ComboBox\b/g)]
-        .filter((match) => match[0] !== "ComboBoxValue")
-        .map((match) => `${relativePath}: ${match[0]}`),
+  it("keeps public React modules in family folders behind one root barrel", () => {
+    const reactSourceRoot = resolve(root, "packages/react/src");
+    const folders = readdirSync(reactSourceRoot).filter((entry) =>
+      statSync(resolve(reactSourceRoot, entry)).isDirectory(),
+    );
+    const families = folders.filter((folder) => folder !== "internal").sort();
+    const rootModules = readdirSync(reactSourceRoot).filter(
+      (entry) =>
+        statSync(resolve(reactSourceRoot, entry)).isFile() &&
+        /\.(ts|tsx)$/.test(entry) &&
+        !/\.test\.tsx?$/.test(entry),
+    );
+    const rootIndexLines = readFileSync(resolve(reactSourceRoot, "index.ts"), "utf8")
+      .trim()
+      .split("\n");
+
+    expect(rootModules).toEqual(["index.ts"]);
+    expect(rootIndexLines).toEqual(
+      families.map((family) => `export * from "./${family}/index.js";`),
+    );
+    expect(statSync(resolve(reactSourceRoot, "internal/index.ts"), { throwIfNoEntry: false })).toBe(
+      undefined,
     );
 
-    expect(publicBarrel).not.toContain("./compat.js");
-    expect(publicBarrel).not.toMatch(/export\s+\*\s+from\s+["']\.\/compat\.js["']/);
-    expect(aliasReferences).toEqual([]);
-  });
-
-  it("keeps React component props as exported type aliases", () => {
-    const exportedPropInterfaces = conventionSources.flatMap(({ relativePath, source }) =>
-      matchingLines(source, /\bexport\s+interface\s+\w+Props\b/).map(
-        (line) => `${relativePath}:${line}`,
+    const familyIndexProblems = families.flatMap((family) => {
+      const indexPath = resolve(reactSourceRoot, family, "index.ts");
+      const relativePath = relative(root, indexPath);
+      const source = readFileSync(indexPath, "utf8");
+      const implementations = matchingLines(source, /\bexport\s+(?:function|const)\s+/).map(
+        (line) => `${relativePath}:${line} defines an implementation`,
+      );
+      const foreignSpecifiers = [...source.matchAll(/from\s+"([^"]+)"/g)]
+        .map((match) => match[1]!)
+        .filter(
+          (specifier) =>
+            !/^\.\/[\w-]+\.js$/.test(specifier) ||
+            !["ts", "tsx"].some((extension) =>
+              statSync(
+                resolve(reactSourceRoot, family, specifier.replace(/\.js$/, `.${extension}`)),
+                {
+                  throwIfNoEntry: false,
+                },
+              ),
+            ),
+        )
+        .map((specifier) => `${relativePath}: re-exports ${specifier} from outside the folder`);
+      return [...implementations, ...foreignSpecifiers];
+    });
+    const internalStarExports = sourceFiles(reactSourceRoot)
+      .filter((path) => !path.includes("/internal/"))
+      .flatMap((path) =>
+        matchingLines(readFileSync(path, "utf8"), /export\s+\*\s+from\s+"[^"]*internal\//).map(
+          (line) => `${relative(root, path)}:${line}`,
+        ),
+      );
+    const sharedImplementations = sourceFiles(reactSourceRoot)
+      .filter((path) => path.endsWith("-shared.tsx"))
+      .flatMap((path) =>
+        matchingLines(
+          readFileSync(path, "utf8"),
+          /\bexport\s+(?:function|const)\s+[A-Z]\w*Impl\b/,
+        ).map((line) => `${relative(root, path)}:${line}`),
+      );
+    const componentAliases = sourceFiles(reactSourceRoot).flatMap((path) =>
+      matchingLines(readFileSync(path, "utf8"), /\bexport\s+\{\s+[A-Z]\w*Impl\s+as\s+[A-Z]\w*/).map(
+        (line) => `${relative(root, path)}:${line}`,
       ),
     );
 
-    expect(exportedPropInterfaces).toEqual([]);
-  });
-
-  it("keeps ternaries shallow and compact", () => {
-    const nestedTernaries = conventionSources.flatMap(({ relativePath, source }) => {
-      const normalized = sourceForTernaryScan(source);
-      return matchingLines(normalized, /\?[^:\n]+:[^?\n]*\?|\s:\s+.*\n\s+\?/).map(
-        (line) => `${relativePath}:${line}`,
-      );
-    });
-    const longTernaries = conventionSources.flatMap(({ relativePath, source }) => {
-      const lines = sourceForTernaryScan(source).split("\n");
-      return lines.flatMap((line, index) => {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("?")) return [`${relativePath}:${index + 1}: ${trimmed}`];
-        if (!trimmed.includes("? (")) return [];
-        const closeLineOffset = lines
-          .slice(index + 1, index + 6)
-          .findIndex((nextLine) => nextLine.trim().startsWith(":") || nextLine.includes(") :"));
-        if (closeLineOffset < 3) return [];
-        return [`${relativePath}:${index + 1}: ${trimmed}`];
-      });
-    });
-
-    expect(nestedTernaries).toEqual([]);
-    expect(longTernaries).toEqual([]);
-  });
-
-  it("keeps class name composition inline", () => {
-    const extractedClassNames = conventionSources.flatMap(({ relativePath, source }) =>
-      matchingLines(
-        source,
-        /\b(?:const|let)\s+\w*(?:ClassName|ClassNames|Classes|Class)\b\s*=\s*(?:["'`]|\[[^\]]*["'`]|(?:clsx|cn|resolveClassName)\()/,
-      ).map((line) => `${relativePath}:${line}`),
-    );
-
-    expect(extractedClassNames).toEqual([]);
-  });
-
-  it("keeps public React component modules as root barrels over individual component files", () => {
-    const reactSourceRoot = resolve(root, "packages/react/src");
-    const componentRoot = resolve(reactSourceRoot, "components");
-    const rootBarrels = sourceFiles(reactSourceRoot).filter((path) => {
-      const relativePath = relative(reactSourceRoot, path);
-      return (
-        !relativePath.includes("/") &&
-        relativePath !== "shared.tsx" &&
-        relativePath !== "source-conventions.test.ts"
-      );
-    });
-    const componentBarrelExports = rootBarrels.flatMap((path) => {
-      const relativePath = relative(root, path);
-      const source = readFileSync(path, "utf8");
-      const implementations = matchingLines(source, /\bexport\s+(?:function|const)\s+[A-Z]/).map(
-        (line) => `${relativePath}:${line}`,
-      );
-      expect(implementations).toEqual([]);
-
-      return [...source.matchAll(/export\s+\*\s+from\s+"\.\/components\/([A-Z][\w]*)\.js";/g)]
-        .map((match) => match[1])
-        .filter((name) => name !== undefined);
-    });
-    const missingComponentFiles = componentBarrelExports
-      .filter((name) => !statSync(resolve(componentRoot, `${name}.tsx`), { throwIfNoEntry: false }))
-      .map((name) => `packages/react/src/components/${name}.tsx`);
-    const sharedImplementations = sourceFiles(componentRoot)
-      .filter((path) => path.endsWith("-shared.tsx"))
-      .flatMap((path) => {
-        const relativePath = relative(root, path);
-        return matchingLines(
-          readFileSync(path, "utf8"),
-          /\bexport\s+(?:function|const)\s+[A-Z]\w*Impl\b/,
-        ).map((line) => `${relativePath}:${line}`);
-      });
-    const componentAliases = sourceFiles(componentRoot)
-      .filter((path) => !path.endsWith("-shared.tsx"))
-      .flatMap((path) => {
-        const relativePath = relative(root, path);
-        return matchingLines(
-          readFileSync(path, "utf8"),
-          /\bexport\s+\{\s+[A-Z]\w*Impl\s+as\s+[A-Z]\w*/,
-        ).map((line) => `${relativePath}:${line}`);
-      });
-
-    expect(missingComponentFiles).toEqual([]);
+    expect(familyIndexProblems).toEqual([]);
+    expect(internalStarExports).toEqual([]);
     expect(sharedImplementations).toEqual([]);
     expect(componentAliases).toEqual([]);
   });

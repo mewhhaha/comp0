@@ -2,11 +2,11 @@ import { Fragment } from "react";
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
-import { Dialog } from "./components/Dialog.js";
-import { DialogTrigger } from "./components/DialogTrigger.js";
-import { Tooltip } from "./components/Tooltip.js";
-import { TooltipPopover } from "./components/TooltipPopover.js";
-import { TooltipTrigger } from "./components/TooltipTrigger.js";
+import { Dialog } from "./dialog/Dialog.js";
+import { DialogTrigger } from "./dialog/DialogTrigger.js";
+import { Tooltip } from "./tooltip/Tooltip.js";
+import { TooltipContent } from "./tooltip/TooltipContent.js";
+import { TooltipTrigger } from "./tooltip/TooltipTrigger.js";
 
 describe("fragment triggers", () => {
   it("merges tooltip trigger behavior onto the supplied child element", () => {
@@ -18,7 +18,7 @@ describe("fragment triggers", () => {
             i
           </button>
         </TooltipTrigger>
-        <TooltipPopover>Helpful detail</TooltipPopover>
+        <TooltipContent>Helpful detail</TooltipContent>
       </Tooltip>,
     );
     const buttons = container.querySelectorAll("button");

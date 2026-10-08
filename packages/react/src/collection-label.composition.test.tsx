@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
-import { Menu } from "./components/Menu.js";
-import { MenuItem } from "./components/MenuItem.js";
-import { MenuList } from "./components/MenuList.js";
-import { MenuPopover } from "./components/MenuPopover.js";
-import { MenuTrigger } from "./components/MenuTrigger.js";
-import { Select } from "./components/Select.js";
-import { SelectOption } from "./components/SelectOption.js";
-import { SelectPopover } from "./components/SelectPopover.js";
-import { SelectTrigger } from "./components/SelectTrigger.js";
-import { SelectValue } from "./components/SelectValue.js";
+import { Menu } from "./menu/Menu.js";
+import { MenuItem } from "./menu/MenuItem.js";
+import { MenuList } from "./menu/MenuList.js";
+import { MenuPopover } from "./menu/MenuPopover.js";
+import { MenuTrigger } from "./menu/MenuTrigger.js";
+import { Select } from "./select/Select.js";
+import { SelectOption } from "./select/SelectOption.js";
+import { SelectPopover } from "./select/SelectPopover.js";
+import { SelectTrigger } from "./select/SelectTrigger.js";
+import { SelectValue } from "./select/SelectValue.js";
 
 describe("collection item labels", () => {
   it("crawls markup children for typeahead text and honors the textValue override", () => {

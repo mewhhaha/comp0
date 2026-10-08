@@ -11,7 +11,7 @@
     "format:check": "oxfmt --check --ignore-path .oxfmtignore \"**/*.{ts,tsx,js,json,css,html,md,yaml}\" && pnpm docs:check-code",
     "docs:format-code": "node scripts/format-docs-code.mjs",
     "docs:check-code": "node scripts/format-docs-code.mjs --check",
-    "lint": "oxlint -c oxlint.config.ts packages/core/src packages/react/src packages/react/test apps/docs/src apps/docs/vite.config.ts apps/docs/react-router.config.ts vitest.config.ts vitest.browser.setup.ts vitest.setup.ts --no-ignore --deny-warnings --report-unused-disable-directives",
+    "lint": "oxlint -c oxlint.config.ts packages/core/src packages/react/src packages/react/test apps/docs/src apps/docs/vite.config.ts apps/docs/react-router.config.ts vitest.config.ts vitest.browser.setup.ts vitest.setup.ts scripts/oxlint-comp0.ts scripts/oxlint-comp0.test.ts --no-ignore --deny-warnings --report-unused-disable-directives",
     "test": "vitest run --project unit",
     "test:all": "vitest run",
     "test:browser": "vitest run --project browser",

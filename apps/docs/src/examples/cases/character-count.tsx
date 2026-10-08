@@ -2,7 +2,7 @@ import { CharacterCount, Label, TextArea, TextField } from "@comp0/react";
 
 export function Example() {
   return (
-    <TextField defaultValue="" className="block w-full max-w-md text-base sm:text-sm">
+    <TextField as="div" defaultValue="" className="block w-full max-w-md text-base sm:text-sm">
       <Label className="mb-1 block font-medium text-zinc-950 dark:text-white">
         Short biography
       </Label>

@@ -1,4 +1,4 @@
-import { Tooltip, TooltipArrow, TooltipPopover, TooltipTrigger } from "@comp0/react";
+import { Tooltip, TooltipArrow, TooltipContent, TooltipTrigger } from "@comp0/react";
 
 export function Example() {
   return (
@@ -12,7 +12,7 @@ export function Example() {
           <TooltipTrigger className="cursor-help rounded-sm border-0 bg-transparent p-0 font-mono text-sky-300 underline decoration-sky-400 decoration-dashed underline-offset-4 outline-teal-400 focus-visible:outline-2 focus-visible:outline-offset-2">
             message
           </TooltipTrigger>
-          <TooltipPopover
+          <TooltipContent
             as="span"
             placement="top"
             offset={6}
@@ -23,7 +23,7 @@ export function Example() {
               as="span"
               className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-zinc-800"
             />
-          </TooltipPopover>
+          </TooltipContent>
         </Tooltip>
         {" = getGreeting();"}
       </pre>

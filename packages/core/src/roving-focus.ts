@@ -2,10 +2,10 @@
 export type RovingFocusOrientation = "horizontal" | "vertical" | "both";
 
 /** The identity and enabled state needed for roving focus navigation. */
-export interface RovingFocusItem {
+export type RovingFocusItem = {
   key: string;
   disabled?: boolean | undefined;
-}
+};
 
 function isForwardKey(key: string, orientation: RovingFocusOrientation, dir: "ltr" | "rtl") {
   if (orientation !== "vertical" && key === "ArrowRight") return dir === "ltr";
@@ -23,10 +23,14 @@ function isBackwardKey(key: string, orientation: RovingFocusOrientation, dir: "l
 
 /** Resolves the next enabled item for an APG-style roving-focus key press. */
 export function getRovingFocusTarget(
-  items: RovingFocusItem[],
+  items: readonly RovingFocusItem[],
   currentKey: string | undefined,
   key: string,
-  options: { orientation?: RovingFocusOrientation; dir?: "ltr" | "rtl"; loop?: boolean } = {},
+  options: {
+    orientation?: RovingFocusOrientation | undefined;
+    dir?: "ltr" | "rtl" | undefined;
+    loop?: boolean | undefined;
+  } = {},
 ) {
   const orientation = options.orientation ?? "both";
   const dir = options.dir ?? "ltr";
@@ -36,11 +40,9 @@ export function getRovingFocusTarget(
   if (key === "Home") return enabledItems[0]?.key;
   if (key === "End") return enabledItems.at(-1)?.key;
 
-  const direction = isForwardKey(key, orientation, dir)
-    ? 1
-    : isBackwardKey(key, orientation, dir)
-      ? -1
-      : 0;
+  let direction = 0;
+  if (isForwardKey(key, orientation, dir)) direction = 1;
+  else if (isBackwardKey(key, orientation, dir)) direction = -1;
   if (direction === 0) return undefined;
 
   const currentIndex = enabledItems.findIndex((item) => item.key === currentKey);

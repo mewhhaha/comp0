@@ -91,30 +91,7 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         Total signups peaked in the fourth quarter, with Pro accounting for a growing share.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Quarterly signups by plan</caption>
-        <thead>
-          <tr>
-            <th scope="col">Quarter</th>
-            <th scope="col">Free</th>
-            <th scope="col">Pro</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {signups.map((quarter) => (
-            <tr key={quarter.label}>
-              <th scope="row">{quarter.label}</th>
-              {quarter.segments.map((segment) => (
-                <td key={segment.label}>{formatSignups(segment.value)}</td>
-              ))}
-              <td>
-                {formatSignups(quarter.segments.reduce((sum, segment) => sum + segment.value, 0))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </StackedColumnChart>
   );

@@ -1,20 +1,20 @@
 import { Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
-import { Accordion } from "./components/Accordion.js";
-import { AccordionHeader } from "./components/AccordionHeader.js";
-import { AccordionItem } from "./components/AccordionItem.js";
-import { AccordionPanel } from "./components/AccordionPanel.js";
-import { AccordionTrigger } from "./components/AccordionTrigger.js";
-import { Input } from "./components/Input.js";
-import { SearchField } from "./components/SearchField.js";
-import { SearchFieldClear } from "./components/SearchFieldClear.js";
-import { SearchFieldInput } from "./components/SearchFieldInput.js";
-import { Tab } from "./components/Tab.js";
-import { TabList } from "./components/TabList.js";
-import { TabPanel } from "./components/TabPanel.js";
-import { Tabs } from "./components/Tabs.js";
-import { TextField } from "./components/TextField.js";
+import { Accordion } from "./accordion/Accordion.js";
+import { AccordionHeader } from "./accordion/AccordionHeader.js";
+import { AccordionItem } from "./accordion/AccordionItem.js";
+import { AccordionPanel } from "./accordion/AccordionPanel.js";
+import { AccordionTrigger } from "./accordion/AccordionTrigger.js";
+import { Input } from "./text-field/Input.js";
+import { SearchField } from "./search-field/SearchField.js";
+import { SearchFieldClear } from "./search-field/SearchFieldClear.js";
+import { SearchFieldInput } from "./search-field/SearchFieldInput.js";
+import { Tab } from "./tabs/Tab.js";
+import { TabList } from "./tabs/TabList.js";
+import { TabPanel } from "./tabs/TabPanel.js";
+import { Tabs } from "./tabs/Tabs.js";
+import { TextField } from "./text-field/TextField.js";
 
 describe("provider roots", () => {
   it("keeps text and search field roots wrapper-free while their explicit parts own behavior", () => {

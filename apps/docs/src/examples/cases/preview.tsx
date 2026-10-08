@@ -1,4 +1,4 @@
-import { Preview, PreviewPopover, PreviewTrigger } from "@comp0/react";
+import { Preview, PreviewContent, PreviewTrigger } from "@comp0/react";
 
 export function Example() {
   return (
@@ -9,7 +9,7 @@ export function Example() {
       >
         @comp0/react on npm
       </PreviewTrigger>
-      <PreviewPopover
+      <PreviewContent
         placement="bottom start"
         offset={8}
         className="flex w-64 flex-col gap-2 rounded border-0 bg-white p-3 opacity-100 shadow-lg ring-1 ring-zinc-950/10 transition-opacity duration-150 ease-out starting:opacity-0 motion-reduce:transition-none dark:bg-zinc-900 dark:shadow-none dark:ring-white/10"
@@ -30,7 +30,7 @@ export function Example() {
             <dd className="font-medium text-zinc-900 dark:text-zinc-100">12k</dd>
           </div>
         </dl>
-      </PreviewPopover>
+      </PreviewContent>
     </Preview>
   );
 }

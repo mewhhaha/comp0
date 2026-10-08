@@ -69,11 +69,19 @@ export function PlanSelect() {
 }
 ```
 
-Provider-only roots render their children directly by default. Pass `as` when a root should own a layout or styling element, as the `Select` above does.
+Provider-only roots render their children directly by default. Pass `as` when a root should own a layout or styling element, as the `Select` above does; DOM props such as `className` are only accepted together with `as`, so they can never be silently dropped.
+
+Every part that renders an element accepts `as` to swap that element, and `as={Fragment}` renders no element of its own and merges the part's props into its single child:
+
+```tsx
+<DialogTrigger as={Fragment}>
+  <MyButton>Open settings</MyButton>
+</DialogTrigger>
+```
 
 ## Styling and state attributes
 
-comp0 emits no component CSS or default class names. Pass `className` to the part that owns the DOM element and use its native attributes or presence-based state attributes such as `data-hovered`, `data-focused`, `data-selected`, `data-open`, and `data-disabled`.
+comp0 emits no component CSS or default class names. Pass a `className` string to the part that owns the DOM element and use its native attributes or presence-based state attributes such as `data-hovered`, `data-focused`, `data-selected`, `data-open`, and `data-disabled`. State attributes mirror the ARIA state they reflect, so there are no render props for interaction state.
 
 ```tsx
 <Button className="rounded-lg bg-teal-700 px-3 py-2 text-white data-hovered:bg-teal-800 data-disabled:opacity-50">
@@ -135,7 +143,7 @@ comp0 is router-agnostic. It does not currently provide a navigation provider or
 
 ## Core hooks
 
-`@comp0/core` includes controlled-state, collection registry, roving-focus, typeahead, focus-ring, hover, press, prop-merging, ref-composition, and presence-data-attribute utilities.
+`@comp0/core` includes controllable state (`useControllableState`), a DOM-ordered collection registry with arrow-key and typeahead navigation (`useCollection`, `useCollectionNavigation`), focus-ring, hover, and press hooks, prop merging (`mergeProps`), ref composition, and presence data attributes (`dataAttr`).
 
 ```tsx
 import { dataAttr, usePress } from "@comp0/core";

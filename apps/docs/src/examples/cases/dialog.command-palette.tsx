@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogTrigger,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   SearchField,
   SearchFieldInput,
 } from "@comp0/react";
@@ -56,7 +56,7 @@ export function Example() {
               />
               <ListBox aria-label="Commands" className="max-h-60 overflow-y-auto">
                 {commands.map((command) => (
-                  <ListBoxItem
+                  <ListBoxOption
                     key={command}
                     className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-active:bg-teal-100 data-active:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-active:bg-teal-950 dark:data-active:text-teal-50"
                     onClick={(event) => {
@@ -66,7 +66,7 @@ export function Example() {
                     value={command}
                   >
                     {command}
-                  </ListBoxItem>
+                  </ListBoxOption>
                 ))}
               </ListBox>
             </SearchField>

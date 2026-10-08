@@ -55,8 +55,8 @@ describe("Anatomy", () => {
     const lollipopChart = renderChart("lollipop-chart");
     const stackedBarChart = renderChart("stacked-bar-chart");
     const stackedColumnChart = renderChart("stacked-column-chart");
-    const histogram = renderChart("histogram");
-    const heatmap = renderChart("heatmap");
+    const histogram = renderChart("histogram-chart");
+    const heatmap = renderChart("heatmap-chart");
     const sankeyChart = renderChart("sankey-chart");
     const mapChart = renderChart("map-chart");
 

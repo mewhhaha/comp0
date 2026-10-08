@@ -1,6 +1,12 @@
 import * as api from "@comp0/react";
 import { describe, expect, it } from "vitest";
-import { componentBySlug, componentGroups, components } from "./catalog.js";
+import {
+  componentBySlug,
+  componentEntries,
+  componentGroups,
+  components,
+  groupOrder,
+} from "./catalog.js";
 import { learnDocs } from "./learn.js";
 import { getExample, exampleRegistry } from "../examples/registry.js";
 import { getExampleSource } from "../examples/sources.js";
@@ -8,9 +14,28 @@ import { getExampleSource } from "../examples/sources.js";
 const publicComponents = Object.keys(api).sort();
 
 describe("docs content catalog", () => {
-  it("contains 97 unique component slugs", () => {
-    expect(components).toHaveLength(97);
-    expect(new Set(components.map((component) => component.slug)).size).toBe(97);
+  it("pairs every unique component slug with exactly one primary example", () => {
+    const slugs = components.map((component) => component.slug);
+    const primaryExamples = Object.keys(exampleRegistry).filter((key) => !key.includes("."));
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect([...slugs].sort()).toEqual(primaryExamples.sort());
+  });
+
+  it("lists every entry file in exactly one group, under the group it declares", () => {
+    const listed = Object.entries(groupOrder).flatMap(([group, slugs]) =>
+      slugs.map((slug) => ({ group, slug })),
+    );
+    expect(new Set(listed.map(({ slug }) => slug)).size).toBe(listed.length);
+    expect(listed.map(({ slug }) => slug).sort()).toEqual([...componentEntries.keys()].sort());
+    for (const { group, slug } of listed) {
+      expect(componentEntries.get(slug)?.group, slug).toBe(group);
+    }
+  });
+
+  it("names each entry file after its slug", () => {
+    for (const [fileSlug, entry] of componentEntries) {
+      expect(entry.slug, `components/${fileSlug}.ts`).toBe(fileSlug);
+    }
   });
 
   it("resolves every related component link", () => {
@@ -37,8 +62,8 @@ describe("docs content catalog", () => {
       "lollipop-chart",
       "stacked-bar-chart",
       "stacked-column-chart",
-      "histogram",
-      "heatmap",
+      "histogram-chart",
+      "heatmap-chart",
       "sankey-chart",
       "map-chart",
     ]);

@@ -12,7 +12,7 @@ import {
   DatePickerPopover,
   DatePickerTrigger,
   TimeField,
-} from "./date.js";
+} from "./index.js";
 import { fireClick, fireKeyDown, render } from "../test/render.js";
 
 function fireInput(element: HTMLInputElement, value: string) {
@@ -28,7 +28,9 @@ function dayButton(container: HTMLElement, iso: string) {
   return container.querySelector<HTMLButtonElement>(`td[data-value='${iso}'] button`)!;
 }
 
-function renderCalendar(props: Partial<Parameters<typeof Calendar>[0]> = {}) {
+function renderCalendar(
+  props: { defaultValue?: string; value?: string; min?: string; max?: string } = {},
+) {
   const onChange = vi.fn();
   const result = render(
     <Calendar defaultValue="2024-02-15" locale="en-GB" onChange={onChange} {...props}>

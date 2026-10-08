@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Button, PopoverArrow, Tour, TourOverlay, TourTrigger } from "@comp0/react";
+import { Button, PopoverArrow, Tour, TourContent, TourTrigger } from "@comp0/react";
 
 const projectTour = [
   {
@@ -61,7 +61,7 @@ export function Example() {
             New project
           </Button>
         </div>
-        <TourOverlay
+        <TourContent
           offset={12}
           className="z-20 w-72 rounded-lg border-0 bg-white p-4 text-sm shadow-xl ring-1 ring-zinc-950/10 backdrop:bg-transparent dark:bg-zinc-900 dark:ring-white/10"
         >
@@ -99,7 +99,7 @@ export function Example() {
               </div>
             </>
           )}
-        </TourOverlay>
+        </TourContent>
       </div>
     </Tour>
   );

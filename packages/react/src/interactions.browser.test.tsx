@@ -18,14 +18,14 @@ import {
   GridListMoveButton,
   GridListReorderGroup,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   Menu,
   MenuItem,
   MenuList,
   MenuPopover,
   MenuTrigger,
   Popover,
-  PopoverOverlay,
+  PopoverContent,
   PopoverTrigger,
   Select,
   SelectPopover,
@@ -254,21 +254,21 @@ describe("real-browser interaction contracts", () => {
       <div>
         <Popover open>
           <PopoverTrigger>Parent trigger</PopoverTrigger>
-          <PopoverOverlay data-testid="parent-popover" popover="auto">
+          <PopoverContent data-testid="parent-popover" popover="auto">
             Parent content
             <Popover open>
               <PopoverTrigger>Child trigger</PopoverTrigger>
-              <PopoverOverlay data-testid="child-popover" popover="auto">
+              <PopoverContent data-testid="child-popover" popover="auto">
                 Child content
-              </PopoverOverlay>
+              </PopoverContent>
             </Popover>
-          </PopoverOverlay>
+          </PopoverContent>
         </Popover>
         <Popover open={unrelatedOpen}>
           <PopoverTrigger>Unrelated trigger</PopoverTrigger>
-          <PopoverOverlay data-testid="unrelated-popover" popover="auto">
+          <PopoverContent data-testid="unrelated-popover" popover="auto">
             Unrelated content
-          </PopoverOverlay>
+          </PopoverContent>
         </Popover>
       </div>
     );
@@ -367,9 +367,9 @@ describe("real-browser interaction contracts", () => {
             <SearchFieldInput aria-label="Destination" name="destination" />
           </SearchField>
           <ListBox aria-label="Destination suggestions">
-            <ListBoxItem value="logical-warsaw" id="warsaw-suggestion">
+            <ListBoxOption value="logical-warsaw" id="warsaw-suggestion">
               Warsaw
-            </ListBoxItem>
+            </ListBoxOption>
           </ListBox>
         </Autocomplete>
       </form>,

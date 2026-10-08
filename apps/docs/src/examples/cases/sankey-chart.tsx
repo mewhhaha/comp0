@@ -119,25 +119,7 @@ export function Example() {
         Search visitors reach the cart at a higher rate, while 43 thousand people complete a
         purchase.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Customer journey flows</caption>
-        <thead>
-          <tr>
-            <th scope="col">From</th>
-            <th scope="col">To</th>
-            <th scope="col">People</th>
-          </tr>
-        </thead>
-        <tbody>
-          {journeyLinks.map((link) => (
-            <tr key={`${link.source}-${link.target}`}>
-              <th scope="row">{journeyNodes.find((node) => node.id === link.source)?.label}</th>
-              <td>{journeyNodes.find((node) => node.id === link.target)?.label}</td>
-              <td>{formatPeople(link.value)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip
         placement="right"
         className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950"

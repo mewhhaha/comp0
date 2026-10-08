@@ -113,7 +113,7 @@ function graphicShape(name: string): GraphicShape {
   if (/dumbbell/i.test(name)) return "dumbbell";
   if (/open.?to.?close/i.test(name)) return "open-to-close";
   if (/lollipop/i.test(name)) return "lollipop";
-  if (/mapchart/i.test(name)) return "map";
+  if (/^mapchart/i.test(name)) return "map";
   if (/candlestick/i.test(name)) return "candlestick";
   if (/stackedbar/i.test(name)) return "stacked-bar";
   if (/stackedcolumn/i.test(name)) return "stacked-column";
@@ -638,9 +638,8 @@ function ItemsNode({ node }: { node: Extract<DiagramNode, { type: "items" }> }) 
               )}
             </span>
           )}
-          {index === 0 ? (
-            <PartName>{owner.part.name}</PartName>
-          ) : (
+          {index === 0 && <PartName>{owner.part.name}</PartName>}
+          {index !== 0 && (
             <Skeleton
               className={index === 1 ? "w-20 bg-teal-700/40 dark:bg-teal-300/40" : "w-12"}
             />
@@ -1141,9 +1140,10 @@ function DiagramNodes({ nodes }: { nodes: DiagramNode[] }) {
                     )}
                   >
                     <Pin number={button.number} />
-                    {buttonIndex === 0 ? (
+                    {buttonIndex === 0 && (
                       <PlusIcon className="size-3 text-zinc-500 dark:text-zinc-400" />
-                    ) : (
+                    )}
+                    {buttonIndex !== 0 && (
                       <MinusIcon className="size-3 text-zinc-500 dark:text-zinc-400" />
                     )}
                   </span>

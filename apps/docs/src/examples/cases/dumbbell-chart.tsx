@@ -66,25 +66,7 @@ export function Example() {
       <ChartDescription className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
         Express delivery spans the widest range of promised hours.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Delivery-time ranges</caption>
-        <thead>
-          <tr>
-            <th scope="col">Service</th>
-            <th scope="col">Start</th>
-            <th scope="col">End</th>
-          </tr>
-        </thead>
-        <tbody>
-          {delivery.map((item) => (
-            <tr key={item.label}>
-              <th scope="row">{item.label}</th>
-              <td>{formatHours(item.start)}</td>
-              <td>{formatHours(item.end)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </DumbbellChart>
   );

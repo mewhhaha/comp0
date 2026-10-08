@@ -11,7 +11,7 @@ import {
   FieldError,
   Label,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   Select,
   SelectOptGroup,
   SelectPopover,
@@ -388,16 +388,16 @@ describe("picker composition", () => {
     expect(input.hasAttribute("aria-activedescendant")).toBe(false);
   });
 
-  it("keeps generic ListBox and ListBoxItem selection functional", () => {
+  it("keeps generic ListBox and ListBoxOption selection functional", () => {
     const changed = vi.fn();
     const { container } = render(
       <ListBox aria-label="Libraries" onChange={changed}>
-        <ListBoxItem id="react" value="react">
+        <ListBoxOption id="react" value="react">
           React
-        </ListBoxItem>
-        <ListBoxItem id="solid" value="solid">
+        </ListBoxOption>
+        <ListBoxOption id="solid" value="solid">
           Solid
-        </ListBoxItem>
+        </ListBoxOption>
       </ListBox>,
     );
     const items = container.querySelectorAll<HTMLElement>("[role='option']");
@@ -412,8 +412,8 @@ describe("picker composition", () => {
   it("keeps an enabled option reachable when the selected value is missing or disabled", () => {
     const { container, rerender } = render(
       <ListBox aria-label="Libraries" value="missing">
-        <ListBoxItem value="react">React</ListBoxItem>
-        <ListBoxItem value="solid">Solid</ListBoxItem>
+        <ListBoxOption value="react">React</ListBoxOption>
+        <ListBoxOption value="solid">Solid</ListBoxOption>
       </ListBox>,
     );
     let options = container.querySelectorAll<HTMLElement>("[role='option']");
@@ -421,10 +421,10 @@ describe("picker composition", () => {
 
     rerender(
       <ListBox aria-label="Libraries" value="react">
-        <ListBoxItem value="react" disabled>
+        <ListBoxOption value="react" disabled>
           React
-        </ListBoxItem>
-        <ListBoxItem value="solid">Solid</ListBoxItem>
+        </ListBoxOption>
+        <ListBoxOption value="solid">Solid</ListBoxOption>
       </ListBox>,
     );
     options = container.querySelectorAll<HTMLElement>("[role='option']");

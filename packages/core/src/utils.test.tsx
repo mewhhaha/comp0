@@ -3,16 +3,15 @@ import { createRef, type ReactElement, useEffect, useRef, useState } from "react
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  type ControllableStateControls,
   composeRefs,
   dataAttr,
-  dataAttributes,
   getRovingFocusTarget,
   mergeProps,
   sortByDocumentPosition,
   useControllableState,
   useComposedRefs,
   useFocusRing,
-  useTypeahead,
   useTypeaheadSearch,
 } from "./index.js";
 import { findTypeaheadMatch } from "./typeahead.js";
@@ -50,6 +49,37 @@ describe("shared utilities", () => {
     expect(props.style).toEqual({ color: "red", background: "blue" });
     expect(first).toHaveBeenCalledOnce();
     expect(second).toHaveBeenCalledOnce();
+  });
+
+  it("stops later handlers once an earlier one prevents default", () => {
+    const later = vi.fn();
+    const props = mergeProps(
+      {
+        onClick: (event: { defaultPrevented?: boolean }) =>
+          Object.assign(event, { defaultPrevented: true }),
+      },
+      { onClick: later },
+    );
+
+    props.onClick({ defaultPrevented: false });
+
+    expect(later).not.toHaveBeenCalled();
+  });
+
+  it("composes refs and skips undefined values", () => {
+    const objectRef = createRef<HTMLButtonElement>();
+    const callbackRef = vi.fn();
+    const props = mergeProps(
+      { ref: objectRef, title: "kept" },
+      { ref: callbackRef, title: undefined as string | undefined },
+    );
+    const element = document.createElement("button");
+
+    (props.ref as (value: HTMLButtonElement | null) => void)(element);
+
+    expect(props.title).toBe("kept");
+    expect(objectRef.current).toBe(element);
+    expect(callbackRef).toHaveBeenCalledWith(element);
   });
 
   it("composes callback and object refs", () => {
@@ -130,7 +160,6 @@ describe("shared utilities", () => {
   it("creates presence-based data attributes", () => {
     expect(dataAttr(true)).toBe("");
     expect(dataAttr(false)).toBeUndefined();
-    expect(dataAttributes({ selected: true, disabled: false })).toEqual({ "data-selected": "" });
   });
 });
 
@@ -252,6 +281,48 @@ describe("state utilities", () => {
     expect(button?.textContent).toBe("b");
     expect(changed).toHaveBeenCalledWith("c");
   });
+
+  it("resets and restores uncontrolled state without notifying onChange", () => {
+    const changed = vi.fn();
+    const seen: ControllableStateControls<number>[] = [];
+    function Counter() {
+      const [value, setValue, stateControls] = useControllableState({
+        defaultValue: 1,
+        onChange: changed,
+      });
+      seen.push(stateControls);
+      return <button onClick={() => setValue(value + 1)}>{value}</button>;
+    }
+
+    const { container } = render(<Counter />);
+    const button = container.querySelector("button");
+    act(() => button?.click());
+    expect(button?.textContent).toBe("2");
+    expect(seen.at(-1)?.controlled).toBe(false);
+
+    act(() => seen.at(-1)?.reset());
+    expect(button?.textContent).toBe("1");
+    act(() => seen.at(-1)?.restore(7));
+    expect(button?.textContent).toBe("7");
+    expect(changed.mock.calls).toEqual([[2]]);
+  });
+
+  it("ignores reset and restore while controlled", () => {
+    const seen: ControllableStateControls<number>[] = [];
+    function Counter() {
+      const [value, , stateControls] = useControllableState({ value: 4, defaultValue: 1 });
+      seen.push(stateControls);
+      return <output>{value}</output>;
+    }
+
+    const { container } = render(<Counter />);
+    act(() => {
+      seen.at(-1)?.reset();
+      seen.at(-1)?.restore(9);
+    });
+    expect(seen.at(-1)?.controlled).toBe(true);
+    expect(container.querySelector("output")?.textContent).toBe("4");
+  });
 });
 
 describe("focus navigation primitives", () => {
@@ -305,16 +376,11 @@ describe("focus navigation primitives", () => {
     vi.useFakeTimers();
     function Typeahead() {
       const search = useTypeaheadSearch();
-      const onKeyDown = useTypeahead({
-        items: [{ key: "alpha", textValue: "Alpha" }],
-        onMatch() {},
-      });
       return (
         <button
           type="button"
           onClick={() => {
             search("a");
-            onKeyDown(new KeyboardEvent("keydown", { key: "a" }));
           }}
         >
           Search
@@ -325,7 +391,7 @@ describe("focus navigation primitives", () => {
     try {
       const result = render(<Typeahead />);
       act(() => result.container.querySelector("button")?.click());
-      expect(vi.getTimerCount()).toBe(2);
+      expect(vi.getTimerCount()).toBe(1);
 
       result.unmount();
 

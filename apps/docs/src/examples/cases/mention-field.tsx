@@ -1,7 +1,7 @@
 import {
   Label,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   MentionField,
   MentionFieldInput,
   MentionFieldPopover,
@@ -37,7 +37,7 @@ export function Example() {
       <MentionFieldPopover className="w-56 rounded border-0 bg-white shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:shadow-none dark:ring-white/10">
         <ListBox aria-label="Teammates" className="max-h-52 overflow-y-auto p-1 outline-none">
           {teammates.map((teammate) => (
-            <ListBoxItem
+            <ListBoxOption
               key={teammate.name}
               className="cursor-pointer rounded px-3 py-2 text-zinc-800 select-none data-active:bg-teal-100 data-active:text-teal-950 dark:text-zinc-100 dark:data-active:bg-teal-950 dark:data-active:text-teal-50"
               textValue={teammate.name}
@@ -47,7 +47,7 @@ export function Example() {
               <span className="block text-xs text-zinc-500 dark:text-zinc-400">
                 {teammate.role}
               </span>
-            </ListBoxItem>
+            </ListBoxOption>
           ))}
         </ListBox>
       </MentionFieldPopover>

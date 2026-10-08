@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Button, Tooltip, TooltipArrow, TooltipPopover, TooltipTrigger } from "@comp0/react";
+import { Button, Tooltip, TooltipArrow, TooltipContent, TooltipTrigger } from "@comp0/react";
 
 export function Example() {
   const [saved, setSaved] = useState(false);
@@ -25,14 +25,14 @@ export function Example() {
             </svg>
           </Button>
         </TooltipTrigger>
-        <TooltipPopover
+        <TooltipContent
           placement="top"
           offset={6}
           className="w-max translate-y-0 overflow-visible rounded border-0 bg-zinc-900 px-2 py-1 text-sm text-white opacity-100 shadow-lg transition-[opacity,translate] duration-150 starting:translate-y-1 starting:opacity-0 motion-reduce:transition-none dark:bg-zinc-100 dark:text-zinc-900"
         >
           Save draft
           <TooltipArrow className="absolute -bottom-1 left-1/2 size-2 -translate-x-1/2 rotate-45 bg-zinc-900 dark:bg-zinc-100" />
-        </TooltipPopover>
+        </TooltipContent>
       </Tooltip>
       <output className="min-h-5 text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
         {saved ? "Draft saved." : ""}

@@ -17,7 +17,7 @@ import {
   ConnectLines,
   ConnectOutput,
   Popover,
-  PopoverOverlay,
+  PopoverContent,
   PopoverTrigger,
   Inventory,
   InventoryItem,
@@ -91,7 +91,7 @@ export function Example() {
       >
         <legend className="sr-only">{card.label}</legend>
         <div className="mb-3 flex h-11 items-center justify-center" title={card.label}>
-          {view === "canvas" ? (
+          {view === "canvas" && (
             <InventoryMoveHandle
               title={`Move ${card.label}`}
               className="grid size-11 cursor-grab touch-none place-items-center rounded-lg text-zinc-500 outline-teal-600 focus-visible:outline-2 dark:outline-teal-400"
@@ -100,7 +100,8 @@ export function Example() {
                 {card.symbol}
               </span>
             </InventoryMoveHandle>
-          ) : (
+          )}
+          {view !== "canvas" && (
             <span aria-hidden="true" className="text-2xl text-zinc-500">
               {card.symbol}
             </span>
@@ -132,7 +133,7 @@ export function Example() {
                     >
                       <EllipsisHorizontalIcon aria-hidden="true" className="size-5" />
                     </PopoverTrigger>
-                    <PopoverOverlay
+                    <PopoverContent
                       aria-label={`${card.label}: ${port.label} source`}
                       placement="bottom"
                       offset={4}
@@ -146,7 +147,7 @@ export function Example() {
                       >
                         <XMarkIcon aria-hidden="true" className="size-5" />
                       </ConnectDisconnect>
-                    </PopoverOverlay>
+                    </PopoverContent>
                   </Popover>
                 </ConnectInput>
               ))}
@@ -253,11 +254,8 @@ export function Example() {
             onClick={() => setView(choice)}
             className="grid size-11 place-items-center rounded-lg border border-zinc-200 text-sm outline-teal-600 aria-pressed:border-teal-600 aria-pressed:bg-teal-50 focus-visible:outline-2 dark:border-zinc-700 dark:outline-teal-400 dark:aria-pressed:bg-teal-950"
           >
-            {choice === "cards" ? (
-              <Squares2X2Icon aria-hidden="true" className="size-5" />
-            ) : (
-              <ArrowsPointingOutIcon aria-hidden="true" className="size-5" />
-            )}
+            {choice === "cards" && <Squares2X2Icon aria-hidden="true" className="size-5" />}
+            {choice !== "cards" && <ArrowsPointingOutIcon aria-hidden="true" className="size-5" />}
           </button>
         ))}
       </fieldset>

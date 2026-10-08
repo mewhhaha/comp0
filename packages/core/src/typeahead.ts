@@ -1,14 +1,18 @@
 import { useEffect, useRef } from "react";
 
 /** The search fields needed to match a collection item by typed text. */
-export interface TypeaheadItem {
+export type TypeaheadItem = {
   key: string;
   textValue: string;
   disabled?: boolean | undefined;
-}
+};
 
 /** Finds the next enabled item whose text begins with the search string. */
-export function findTypeaheadMatch(items: TypeaheadItem[], search: string, currentKey?: string) {
+export function findTypeaheadMatch(
+  items: readonly TypeaheadItem[],
+  search: string,
+  currentKey?: string,
+) {
   const enabled = items.filter((item) => !item.disabled);
   if (!search || !enabled.length) return undefined;
 
@@ -37,33 +41,5 @@ export function useTypeaheadSearch(timeout = 700) {
     }, timeout);
     bufferRef.current += key;
     return bufferRef.current;
-  };
-}
-
-/** Returns a keyboard handler that buffers printable characters for typeahead navigation. */
-export function useTypeahead(options: {
-  items: TypeaheadItem[];
-  currentKey?: string | undefined;
-  timeout?: number;
-  onMatch: (key: string) => void;
-}) {
-  const bufferRef = useRef("");
-  const timeoutRef = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
-
-  return (event: Pick<KeyboardEvent, "key" | "preventDefault">) => {
-    if (event.key.length !== 1 || event.key.trim() === "") return;
-
-    window.clearTimeout(timeoutRef.current);
-    bufferRef.current += event.key;
-    timeoutRef.current = window.setTimeout(() => {
-      bufferRef.current = "";
-    }, options.timeout ?? 700);
-
-    const match = findTypeaheadMatch(options.items, bufferRef.current, options.currentKey);
-    if (match) {
-      event.preventDefault();
-      options.onMatch(match);
-    }
   };
 }

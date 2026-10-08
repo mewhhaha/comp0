@@ -55,7 +55,7 @@ const projectFiles: ProjectFile[] = [
 
 export function Example() {
   const [selected, setSelected] = useState("tree-grid");
-  const [expanded, setExpanded] = useState(["src", "components"]);
+  const [open, setOpen] = useState(["src", "components"]);
 
   return (
     <div className="flex max-w-xl flex-col gap-2">
@@ -65,8 +65,8 @@ export function Example() {
           className="w-full border-collapse overflow-hidden rounded border border-zinc-950/10 text-left text-base sm:text-sm dark:border-white/10"
           value={selected}
           onChange={setSelected}
-          expanded={expanded}
-          onExpandedChange={setExpanded}
+          open={open}
+          onToggle={setOpen}
         >
           <TreeGridRowGroup as="thead" className="bg-zinc-50 dark:bg-zinc-900/50">
             <TreeGridRow>
@@ -84,7 +84,9 @@ export function Example() {
           <TreeGridRowGroup>
             {projectFiles.map((file) => {
               const isFolder = file.kind === "Folder";
-              const isExpanded = expanded.includes(file.value);
+              const isExpanded = open.includes(file.value);
+              let chevron = "";
+              if (isFolder) chevron = isExpanded ? "▾" : "▸";
 
               return (
                 <TreeGridRow
@@ -99,7 +101,7 @@ export function Example() {
                   >
                     <span className="flex items-center gap-1.5 px-2 py-1.5">
                       <span className="w-3 text-zinc-400 dark:text-zinc-500" aria-hidden="true">
-                        {isFolder ? (isExpanded ? "▾" : "▸") : ""}
+                        {chevron}
                       </span>
                       <span aria-hidden="true">{isFolder ? "📁" : "📄"}</span>
                       {file.name}

@@ -1,7 +1,15 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { components } from "../apps/docs/src/content/catalog.ts";
-import { learnDocs } from "../apps/docs/src/content/learn.ts";
+import { runnerImport } from "vite";
+
+// The catalog collects its entry files with import.meta.glob, so load it through Vite.
+const { module: catalog } = await runnerImport("./apps/docs/src/content/catalog.ts", {
+  configFile: false,
+  logLevel: "error",
+});
+const { components } = catalog;
+const { learnDocs } = await import("../apps/docs/src/content/learn.ts");
+const entryPath = (slug) => `apps/docs/src/content/components/${slug}.ts`;
 
 const check = process.argv.includes("--check");
 const oxfmt =
@@ -91,23 +99,26 @@ const learnBlocks = learnDocs.flatMap((document) =>
       : [],
   ),
 );
-const catalogBlocks = components.flatMap((component) =>
-  component.steps.flatMap((step, index) =>
-    step.code
-      ? [
-          {
-            name: `components/${component.slug}/step-${index + 1}`,
-            source: step.code,
-            language: step.language ?? "tsx",
-          },
-        ]
-      : [],
+const catalogChanges = components.flatMap((component) =>
+  replaceCodeBlocks(
+    entryPath(component.slug),
+    component.steps.flatMap((step, index) =>
+      step.code
+        ? [
+            {
+              name: `components/${component.slug}/step-${index + 1}`,
+              source: step.code,
+              language: step.language ?? "tsx",
+            },
+          ]
+        : [],
+    ),
   ),
 );
 
 const changedBlocks = [
   ...replaceCodeBlocks("apps/docs/src/content/learn.ts", learnBlocks),
-  ...replaceCodeBlocks("apps/docs/src/content/catalog.ts", catalogBlocks),
+  ...catalogChanges,
 ];
 const exampleResult = runOxfmt([check ? "--check" : "--write", "apps/docs/src/examples/cases"]);
 if (exampleResult.status !== 0) process.stderr.write(exampleResult.stderr || exampleResult.stdout);
@@ -120,7 +131,7 @@ if (exampleResult.status !== 0 || (check && changedBlocks.length > 0)) process.e
 if (!check) {
   const contentResult = runOxfmt([
     "--write",
-    "apps/docs/src/content/catalog.ts",
+    "apps/docs/src/content/components",
     "apps/docs/src/content/learn.ts",
   ]);
   if (contentResult.status !== 0) {

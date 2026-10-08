@@ -1,16 +1,16 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render } from "../test/render.js";
-import { Alert } from "./components/Alert.js";
-import { CharacterCount } from "./components/CharacterCount.js";
-import { ErrorSummary } from "./components/ErrorSummary.js";
-import { ErrorSummaryLink } from "./components/ErrorSummaryLink.js";
-import { ErrorSummaryList } from "./components/ErrorSummaryList.js";
-import { ErrorSummaryTitle } from "./components/ErrorSummaryTitle.js";
-import { Input } from "./components/Input.js";
-import { KeybindingHint } from "./components/KeybindingHint.js";
-import { Status } from "./components/Status.js";
-import { TextField } from "./components/TextField.js";
+import { Alert } from "./alert/Alert.js";
+import { CharacterCount } from "./character-count/CharacterCount.js";
+import { ErrorSummary } from "./error-summary/ErrorSummary.js";
+import { ErrorSummaryLink } from "./error-summary/ErrorSummaryLink.js";
+import { ErrorSummaryList } from "./error-summary/ErrorSummaryList.js";
+import { ErrorSummaryTitle } from "./error-summary/ErrorSummaryTitle.js";
+import { Input } from "./text-field/Input.js";
+import { KeybindingHint } from "./keybinding-hint/KeybindingHint.js";
+import { Status } from "./status/Status.js";
+import { TextField } from "./text-field/TextField.js";
 
 describe("accessibility feedback primitives", () => {
   it("distinguishes urgent alerts from polite status messages", () => {

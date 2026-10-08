@@ -85,30 +85,7 @@ export function Example() {
         Online orders lead both customer groups, and returning customers are the larger segment in
         every channel.
       </ChartDescription>
-      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800">
-        <caption className="sr-only">Orders by channel and customer type</caption>
-        <thead>
-          <tr>
-            <th scope="col">Channel</th>
-            <th scope="col">New</th>
-            <th scope="col">Returning</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((channel) => (
-            <tr key={channel.label}>
-              <th scope="row">{channel.label}</th>
-              {channel.segments.map((segment) => (
-                <td key={segment.label}>{formatOrders(segment.value)}</td>
-              ))}
-              <td>
-                {formatOrders(channel.segments.reduce((sum, segment) => sum + segment.value, 0))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </ChartTable>
+      <ChartTable className="mt-4 w-full border-collapse text-left text-sm [&_td]:border-t [&_td]:border-zinc-200 [&_td]:py-2 [&_th]:border-zinc-200 [&_th]:py-2 dark:[&_td]:border-zinc-800 dark:[&_th]:border-zinc-800 [&_caption]:sr-only" />
       <ChartTooltip className="pointer-events-none z-50 rounded-md bg-zinc-950 px-2 py-1 text-sm text-white shadow-lg dark:bg-zinc-50 dark:text-zinc-950" />
     </StackedBarChart>
   );

@@ -2,9 +2,9 @@ import { useState } from "react";
 import {
   Label,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   Popover,
-  PopoverOverlay,
+  PopoverContent,
   PopoverTrigger,
   TimeField,
 } from "@comp0/react";
@@ -47,7 +47,7 @@ export function Example() {
           >
             <ClockIcon className="size-4" aria-hidden="true" />
           </PopoverTrigger>
-          <PopoverOverlay
+          <PopoverContent
             aria-label="Available times"
             placement="bottom end"
             offset={4}
@@ -63,16 +63,16 @@ export function Example() {
               }}
             >
               {times.map(([value, label]) => (
-                <ListBoxItem
+                <ListBoxOption
                   key={value}
                   value={value}
                   className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-selected:bg-teal-100 data-selected:text-teal-950 focus-visible:bg-teal-200 data-selected:focus-visible:bg-teal-200 focus-visible:outline-2 focus-visible:outline-teal-600 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50 dark:focus-visible:bg-teal-800 dark:data-selected:focus-visible:bg-teal-800 dark:focus-visible:outline-teal-400"
                 >
                   {label}
-                </ListBoxItem>
+                </ListBoxOption>
               ))}
             </ListBox>
-          </PopoverOverlay>
+          </PopoverContent>
         </Popover>
       </div>
     </div>

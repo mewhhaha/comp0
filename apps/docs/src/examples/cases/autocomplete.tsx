@@ -2,7 +2,7 @@ import {
   Autocomplete,
   Label,
   ListBox,
-  ListBoxItem,
+  ListBoxOption,
   SearchField,
   SearchFieldInput,
 } from "@comp0/react";
@@ -31,13 +31,13 @@ export function Example() {
           className="max-h-60 overflow-y-auto rounded border border-zinc-950/10 bg-white p-1 dark:border-white/10 dark:bg-zinc-900"
         >
           {destinations.map((destination) => (
-            <ListBoxItem
+            <ListBoxOption
               key={destination}
               className="cursor-pointer rounded px-3 py-2.5 text-base text-zinc-800 data-active:bg-teal-100 data-active:text-teal-950 data-selected:bg-teal-100 data-selected:text-teal-950 sm:py-2 sm:text-sm dark:text-zinc-100 dark:data-active:bg-teal-950 dark:data-active:text-teal-50 dark:data-selected:bg-teal-950 dark:data-selected:text-teal-50"
               value={destination.toLocaleLowerCase()}
             >
               {destination}
-            </ListBoxItem>
+            </ListBoxOption>
           ))}
         </ListBox>
       </SearchField>

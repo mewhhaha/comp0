@@ -1,13 +1,13 @@
 import { act, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireClick, render } from "../test/render.js";
-import { Dialog } from "./components/Dialog.js";
-import { DialogContent } from "./components/DialogContent.js";
-import { DialogTrigger } from "./components/DialogTrigger.js";
-import { Popover } from "./components/Popover.js";
-import { PopoverOverlay } from "./components/PopoverOverlay.js";
-import { PopoverTrigger } from "./components/PopoverTrigger.js";
-import { placementSurfaceStyle, popoverAnchorName } from "./components/overlay-shared.js";
+import { Dialog } from "./dialog/Dialog.js";
+import { DialogContent } from "./dialog/DialogContent.js";
+import { DialogTrigger } from "./dialog/DialogTrigger.js";
+import { Popover } from "./popover/Popover.js";
+import { PopoverContent } from "./popover/PopoverContent.js";
+import { PopoverTrigger } from "./popover/PopoverTrigger.js";
+import { placementSurfaceStyle, popoverAnchorName } from "./internal/overlay/index.js";
 
 describe("popover placement styles", () => {
   it("derives matching css anchor names from ids React generates", () => {
@@ -43,7 +43,7 @@ describe("overlay composition", () => {
     const { container } = render(
       <Popover>
         <PopoverTrigger as="button">Open</PopoverTrigger>
-        <PopoverOverlay>Content</PopoverOverlay>
+        <PopoverContent>Content</PopoverContent>
       </Popover>,
     );
 
@@ -75,7 +75,7 @@ describe("overlay composition", () => {
         <PopoverTrigger as="a" href="#content">
           Open
         </PopoverTrigger>
-        <PopoverOverlay id="content">Details</PopoverOverlay>
+        <PopoverContent id="content">Details</PopoverContent>
       </Popover>,
     );
 

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type HTMLAttributes } from "react";
-import { chainHandlers } from "./utils.js";
 
 type FocusVisibleDocumentState = {
   hadKeyboardEvent: boolean;
@@ -146,25 +145,4 @@ export function usePress<TElement extends HTMLElement = HTMLElement>(
   };
 
   return { pressProps, isPressed };
-}
-
-/** Merges interaction props, chaining event handlers in declaration order. */
-export function mergeInteractionProps<T extends HTMLAttributes<HTMLElement>>(...propsList: T[]) {
-  return propsList.reduce((acc, props) => {
-    for (const [key, value] of Object.entries(props)) {
-      if (
-        /^on[A-Z]/.test(key) &&
-        typeof value === "function" &&
-        typeof acc[key as keyof T] === "function"
-      ) {
-        acc[key as keyof T] = chainHandlers(
-          acc[key as keyof T] as never,
-          value as never,
-        ) as T[keyof T];
-      } else {
-        acc[key as keyof T] = value as T[keyof T];
-      }
-    }
-    return acc;
-  }, {} as T);
 }

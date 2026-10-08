@@ -1,0 +1,89 @@
+import { Fragment, type ComponentProps, type KeyboardEvent, type ReactNode } from "react";
+import { addDays, addMonths, monthMatrix, type MonthMatrixCell } from "@comp0/core";
+import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { dataSlot } from "../internal/shared.js";
+import { CalendarCell } from "./CalendarCell.js";
+import { isoWeekday, useCalendarContext, weekdayName, weekdayOrder } from "./calendar-shared.js";
+import { writingDirection } from "../internal/writing-direction.js";
+
+export type CalendarGridProps = Omit<ComponentProps<"table">, "children"> &
+  AsProp & {
+    /** Custom day cell renderer, called for each matrix cell in row order. */
+    children?: ((cell: MonthMatrixCell) => ReactNode) | undefined;
+  };
+
+export function CalendarGrid({ as, children, onKeyDown, ...props }: CalendarGridProps) {
+  const calendar = useCalendarContext("CalendarGrid");
+  const weeks = monthMatrix(calendar.visibleMonth, calendar.weekStart);
+  const renderCell =
+    children ??
+    ((cell: MonthMatrixCell) => <CalendarCell date={cell.iso} outsideMonth={cell.outsideMonth} />);
+  let labelledBy = props["aria-labelledby"];
+  if (labelledBy === undefined && props["aria-label"] === undefined) {
+    labelledBy = calendar.headerId;
+  }
+
+  const Part = partElement(as, "table");
+  return (
+    <Part
+      {...props}
+      role="grid"
+      aria-labelledby={labelledBy}
+      data-slot={dataSlot(props, "calendar-grid")}
+      onKeyDown={(event: KeyboardEvent<HTMLTableElement>) => {
+        onKeyDown?.(event);
+        if (event.defaultPrevented || calendar.disabled) return;
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        const { focusedDate } = calendar;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          calendar.selectDate(focusedDate);
+          return;
+        }
+        // APG grid pattern for dates: arrows move by day and week, Home/End
+        // travel the visible week, PageUp/PageDown shift a month (a year with
+        // Shift); focus crossing the month edge shifts the visible month.
+        const offsetFromWeekStart = (isoWeekday(focusedDate) - calendar.weekStart + 7) % 7;
+        let next: string | undefined;
+        const horizontalStep = writingDirection(event.currentTarget) === "rtl" ? -1 : 1;
+        if (event.key === "ArrowRight") next = addDays(focusedDate, horizontalStep);
+        else if (event.key === "ArrowLeft") next = addDays(focusedDate, -horizontalStep);
+        else if (event.key === "ArrowDown") next = addDays(focusedDate, 7);
+        else if (event.key === "ArrowUp") next = addDays(focusedDate, -7);
+        else if (event.key === "Home") next = addDays(focusedDate, -offsetFromWeekStart);
+        else if (event.key === "End") next = addDays(focusedDate, 6 - offsetFromWeekStart);
+        else if (event.key === "PageUp") next = addMonths(focusedDate, event.shiftKey ? -12 : -1);
+        else if (event.key === "PageDown") next = addMonths(focusedDate, event.shiftKey ? 12 : 1);
+        if (!next) return;
+        event.preventDefault();
+        calendar.focusDate(next);
+      }}
+    >
+      <>
+        <thead>
+          <tr>
+            {weekdayOrder(calendar.weekStart).map((weekday) => (
+              <th
+                key={weekday}
+                scope="col"
+                abbr={weekdayName(calendar.locale, weekday, "long")}
+                aria-label={weekdayName(calendar.locale, weekday, "long")}
+              >
+                {weekdayName(calendar.locale, weekday, "narrow")}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {weeks.map((week) => (
+            <tr key={week[0]?.iso}>
+              {week.map((cell) => (
+                <Fragment key={cell.iso}>{renderCell(cell)}</Fragment>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </>
+    </Part>
+  );
+}
