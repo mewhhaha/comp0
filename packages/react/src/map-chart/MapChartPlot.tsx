@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce, type Warn } from "../internal/dev.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
 import {
@@ -49,13 +49,13 @@ export function MapChartRegion({ region, ref, ...props }: MapChartRegionProps) {
 const fallbackViewBox = "0 0 100 100";
 
 /** Returns `viewBox` when it holds x, y, and a positive width and height; otherwise a unit square. */
-function validViewBox(viewBox: string) {
+function validViewBox(warn: Warn, viewBox: string) {
   const parts = viewBox.trim().split(/\s+/).map(Number);
   const [, , width, height] = parts;
   if (parts.length === 4 && parts.every(Number.isFinite) && width! > 0 && height! > 0) {
     return viewBox;
   }
-  warnOnce(
+  warn(
     `MapChartPlot:view-box:${viewBox}`,
     `MapChartPlot viewBox must contain x, y, width, and height with positive dimensions; received "${viewBox}". "${fallbackViewBox}" was used instead.`,
   );
@@ -104,14 +104,15 @@ export type MapChartPlotProps = Omit<
 
 export function MapChartPlot({ children, regions, ref, viewBox, ...props }: MapChartPlotProps) {
   const context = useChartKind("MapChartPlot", "MapChart", "map");
-  const safeViewBox = validViewBox(viewBox);
+  const warn = useWarnOnce();
+  const safeViewBox = validViewBox(warn, viewBox);
   const valuesById = new Map(context.values.map((value) => [value.id, value]));
   const regionIds = new Set<string>();
   const regionStates: MapChartRegionState[] = [];
   for (const [index, region] of regions.entries()) {
     const problem = regionProblem(region, index, regionIds, valuesById);
     if (problem) {
-      warnOnce(`MapChartPlot:${problem.key}`, `MapChartPlot ${problem.message} It was skipped.`);
+      warn(`MapChartPlot:${problem.key}`, `MapChartPlot ${problem.message} It was skipped.`);
       continue;
     }
     regionIds.add(region.id);
@@ -119,7 +120,7 @@ export function MapChartPlot({ children, regions, ref, viewBox, ...props }: MapC
   }
   for (const value of context.values) {
     if (!regionIds.has(value.id)) {
-      warnOnce(
+      warn(
         `MapChartPlot:no-region:${value.id}`,
         `MapChart value "${value.id}" has no matching MapChartPlot region. It was not drawn.`,
       );

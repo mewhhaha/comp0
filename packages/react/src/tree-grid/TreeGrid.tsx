@@ -22,7 +22,7 @@ import {
   type TreeGridRowItem,
   type TreeGridRowMetadata,
 } from "./tree-grid-shared.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
 type MountedRow = TreeGridRowItem & { element: HTMLTableRowElement };
@@ -55,6 +55,7 @@ export function TreeGrid({
   ref,
   ...props
 }: TreeGridProps) {
+  const warn = useWarnOnce();
   const [selected, setSelected] = useControllableState({
     value,
     defaultValue: defaultValue ?? "",
@@ -177,7 +178,7 @@ export function TreeGrid({
     for (const row of rows) {
       let parent = row.parentValue;
       if (parent !== undefined && !rowByValue.has(parent)) {
-        warnOnce(
+        warn(
           `TreeGridRow:missing-parent:${row.key}`,
           `TreeGridRow value "${row.key}" references missing parentValue "${parent}". It was treated as a root row.`,
         );
@@ -191,7 +192,7 @@ export function TreeGrid({
       while (ancestor !== undefined) {
         if (seen.has(ancestor)) {
           if (ancestor === row.key) {
-            warnOnce(
+            warn(
               `TreeGridRow:cyclic-parent:${row.key}`,
               `TreeGridRow value "${row.key}" has a cyclic parentValue chain. It was treated as a root row.`,
             );

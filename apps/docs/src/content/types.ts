@@ -1,6 +1,6 @@
 type ComponentGroupId = "actions" | "charts" | "fields" | "navigation" | "pickers";
 
-export type CodeLanguage = "bash" | "css" | "tsx";
+export type CodeLanguage = "bash" | "css" | "json" | "tsx";
 
 type AnatomyKind =
   | "root"
@@ -112,6 +112,8 @@ type LearnSection = {
   code?: string | undefined;
   language?: CodeLanguage | undefined;
   note?: string | undefined;
+  /** A live demo rendered after the explanation, by name. */
+  demo?: "intelligent-ui" | undefined;
 };
 
 export type LearnDoc = {

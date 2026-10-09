@@ -1,4 +1,5 @@
 import { Fragment, useEffect, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -76,17 +77,19 @@ export function HistogramChartPlot({
 }: HistogramChartPlotProps) {
   const { setHistogramBins } = useChartMeta("HistogramChartPlot");
   const context = useChartKind("HistogramChartPlot", "HistogramChart", "histogram");
+  const warn = useWarnOnce();
   const {
     bins: binValues,
     binCount: resolvedBinCount,
     xScale,
-  } = binHistogram("HistogramChartPlot", context.values, { binCount, xMin, xMax });
+  } = binHistogram(warn, "HistogramChartPlot", context.values, { binCount, xMin, xMax });
   // Tells the default ChartTable how this plot grouped the observations.
   useEffect(() => {
     setHistogramBins({ binCount, xMin, xMax });
     return () => setHistogramBins(null);
   }, [binCount, setHistogramBins, xMax, xMin]);
   const yScale = createChartScale(
+    warn,
     "HistogramChartPlot y axis",
     binValues.map((bin, index) => ({ label: String(index), value: bin.count })),
     {
@@ -95,8 +98,8 @@ export function HistogramChartPlot({
       max: Math.max(1, ...binValues.map((bin) => bin.count)),
     },
   );
-  const resolvedXTickCount = chartTickCount("HistogramChartPlot", xTickCount, "xTickCount");
-  const resolvedYTickCount = chartTickCount("HistogramChartPlot", yTickCount);
+  const resolvedXTickCount = chartTickCount(warn, "HistogramChartPlot", xTickCount, "xTickCount");
+  const resolvedYTickCount = chartTickCount(warn, "HistogramChartPlot", yTickCount);
   const { bottom, left, right, top } = chartPlotBounds;
   const plotWidth = right - left;
   const plotHeight = bottom - top;

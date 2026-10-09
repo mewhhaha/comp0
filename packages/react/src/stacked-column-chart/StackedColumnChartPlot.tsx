@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -76,16 +77,17 @@ export function StackedColumnChartPlot({
   ...props
 }: StackedColumnChartPlotProps) {
   const context = useChartKind("StackedColumnChartPlot", "StackedColumnChart", "stacked-column");
+  const warn = useWarnOnce();
   const totals = context.values.map((value) => ({
     label: value.label,
     value: value.segments.reduce((sum, segment) => sum + segment.value, 0),
   }));
-  const scale = createChartScale("StackedColumnChartPlot", totals, {
+  const scale = createChartScale(warn, "StackedColumnChartPlot", totals, {
     domain: "include-zero",
     min: 0,
     max: yMax ?? Math.max(1, ...totals.map((total) => total.value)),
   });
-  const resolvedTickCount = chartTickCount("StackedColumnChartPlot", yTickCount);
+  const resolvedTickCount = chartTickCount(warn, "StackedColumnChartPlot", yTickCount);
   const { bottom, left, right, top } = chartPlotBounds;
   const plotWidth = right - left;
   const plotHeight = bottom - top;

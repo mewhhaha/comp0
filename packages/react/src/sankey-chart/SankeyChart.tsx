@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { sankeyChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -22,6 +23,7 @@ export function SankeyChart({
   ref,
   ...props
 }: SankeyChartProps) {
-  const context = sankeyChartContext(nodes, links, nodeLabel, valueLabel, formatValue);
+  const warn = useWarnOnce();
+  const context = sankeyChartContext(warn, nodes, links, nodeLabel, valueLabel, formatValue);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

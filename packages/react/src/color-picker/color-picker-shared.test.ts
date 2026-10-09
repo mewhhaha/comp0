@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { warnOnce } from "../internal/dev.js";
 import {
   colorCoordinatesForValue,
   hexToHsv,
@@ -57,9 +58,9 @@ describe("hex color helpers", () => {
   it("warns once per bad prop value and returns undefined", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-    expect(normalizeHexColorProp("Swatch", "color", "bad-shared")).toBeUndefined();
-    expect(normalizeHexColorProp("Swatch", "color", "bad-shared")).toBeUndefined();
-    expect(normalizeHexColorProp("Swatch", "color", "#abc")).toBe("#aabbcc");
+    expect(normalizeHexColorProp(warnOnce, "Swatch", "color", "bad-shared")).toBeUndefined();
+    expect(normalizeHexColorProp(warnOnce, "Swatch", "color", "bad-shared")).toBeUndefined();
+    expect(normalizeHexColorProp(warnOnce, "Swatch", "color", "#abc")).toBe("#aabbcc");
 
     expect(error.mock.calls).toEqual([
       ['Swatch color "bad-shared" must be a three- or six-digit hex color. It was ignored.'],

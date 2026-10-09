@@ -6,13 +6,14 @@ import react from "@vitejs/plugin-react";
 const aliases = {
   "@comp0/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
   "@comp0/react": fileURLToPath(new URL("./packages/react/src/index.ts", import.meta.url)),
+  "@comp0/genui": fileURLToPath(new URL("./packages/genui/src/index.ts", import.meta.url)),
 };
 
 export default defineConfig({
   plugins: [
     react({
       compiler: true,
-      include: /packages\/(core|react)\/src\/.*\.tsx?$/,
+      include: /packages\/(core|react|genui)\/src\/.*\.tsx?$/,
       exclude: [/node_modules/, /\.test\.[tj]sx?$/],
     }),
   ],
@@ -25,7 +26,7 @@ export default defineConfig({
       {
         test: {
           environment: "jsdom",
-          exclude: ["**/*.browser.test.tsx"],
+          exclude: ["**/node_modules/**", "**/*.browser.test.tsx"],
           globals: true,
           include: [
             "packages/**/*.test.ts",
@@ -48,6 +49,7 @@ export default defineConfig({
             "react/jsx-runtime",
             "react/compiler-runtime",
             "axe-core",
+            "packages/genui/node_modules/zod",
             "react-dom",
             "react-dom/client",
           ],
@@ -61,6 +63,7 @@ export default defineConfig({
           },
           include: [
             "packages/react/src/**/*.browser.test.tsx",
+            "packages/genui/src/**/*.browser.test.tsx",
             "apps/docs/src/**/*.browser.test.tsx",
           ],
           name: "browser",

@@ -48,7 +48,7 @@ function runOxfmt(args) {
 }
 
 async function formatSnippet(source, language, name) {
-  if (language === "bash") return source;
+  if (language === "bash" || language === "json") return source;
   const extension = language === "css" ? "css" : "tsx";
   let result = await format(`code-block.${extension}`, source, formatOptions);
   if (result.errors.length > 0 && extension === "tsx") {

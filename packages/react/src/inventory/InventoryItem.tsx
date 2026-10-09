@@ -6,7 +6,7 @@ import {
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
   inventoryItemFocusables,
@@ -31,6 +31,7 @@ export function InventoryItem({
   ref,
   ...props
 }: InventoryItemProps) {
+  const warn = useWarnOnce();
   const inventory = useInventoryContext("InventoryItem");
   const itemRef = useRef<HTMLLIElement | null>(null);
   const composedRef = useComposedRefs(itemRef, ref);
@@ -47,7 +48,7 @@ export function InventoryItem({
   });
 
   if (!entry) {
-    warnOnce(
+    warn(
       `InventoryItem:missing:${value}`,
       `InventoryItem value "${value}" is missing from Inventory layout. It was skipped.`,
     );

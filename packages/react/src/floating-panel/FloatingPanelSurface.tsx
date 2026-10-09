@@ -8,6 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import { mayMoveFocus, useBusy } from "../internal/busy.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useFloatingPanelContext } from "./floating-panel-shared.js";
 import { placementSurfaceStyle, type PopoverPlacement } from "../internal/overlay/placement.js";
@@ -36,6 +37,7 @@ export function FloatingPanelSurface({
 }: FloatingPanelSurfaceProps) {
   const panel = useFloatingPanelContext("FloatingPanelSurface");
   const wasOpen = useRef(false);
+  const busy = useBusy();
   const composedRef = useComposedRefs(panel.setSurfaceElement, ref);
 
   useLayoutEffect(() => {
@@ -44,7 +46,7 @@ export function FloatingPanelSurface({
       wasOpen.current = panel.open;
       return;
     }
-    if (!surface.contains(surface.ownerDocument.activeElement)) {
+    if (mayMoveFocus(busy) && !surface.contains(surface.ownerDocument.activeElement)) {
       const target = surface.querySelector<HTMLElement>("[autofocus]") ?? surface;
       target.focus();
     }

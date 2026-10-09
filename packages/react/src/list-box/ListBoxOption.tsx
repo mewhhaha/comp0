@@ -9,7 +9,7 @@ import {
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
@@ -41,6 +41,7 @@ export function ListBoxOption({
   ref,
   ...props
 }: ListBoxOptionProps) {
+  const warn = useWarnOnce();
   const autocomplete = useAutocompleteContext();
   const listBox = useListBoxContext("ListBoxOption");
   const generatedId = useId().replace(/:/g, "");
@@ -72,7 +73,7 @@ export function ListBoxOption({
     renderedText.hasElement &&
     !ariaLabel
   ) {
-    warnOnce(
+    warn(
       `ListBoxOption:missing-text-value:${value}`,
       `ListBoxOption with value "${value}" requires textValue when Autocomplete filters child content that cannot be read before render. Its value was used as its text.`,
     );

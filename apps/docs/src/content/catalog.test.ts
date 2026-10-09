@@ -113,9 +113,10 @@ describe("docs content catalog", () => {
     }
   });
 
-  it("contains seven learn docs with unique, valid section IDs", () => {
-    expect(learnDocs).toHaveLength(7);
-    expect(new Set(learnDocs.map((doc) => doc.slug)).size).toBe(7);
+  it("contains learn docs with unique slugs, consecutive orders, and valid section IDs", () => {
+    expect(learnDocs.length).toBeGreaterThan(0);
+    expect(new Set(learnDocs.map((doc) => doc.slug)).size).toBe(learnDocs.length);
+    expect(learnDocs.map((doc) => doc.order)).toEqual(learnDocs.map((_, index) => index + 1));
     for (const doc of learnDocs) {
       const ids = doc.sections.map((section) => section.id);
       expect(ids.length, doc.slug).toBeGreaterThan(0);
@@ -124,7 +125,9 @@ describe("docs content catalog", () => {
       for (const section of doc.sections) {
         if (!section.code) continue;
         expect(section.language, `${doc.slug}/${section.id}`).toBeDefined();
-        expect(["bash", "css", "tsx"], `${doc.slug}/${section.id}`).toContain(section.language);
+        expect(["bash", "css", "json", "tsx"], `${doc.slug}/${section.id}`).toContain(
+          section.language,
+        );
       }
     }
   });

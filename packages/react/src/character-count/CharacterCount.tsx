@@ -1,7 +1,7 @@
 import { type ComponentProps, type ReactNode } from "react";
 import { dataAttr } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { fieldFeedbackPart, useFieldContext } from "../field/field-shared.js";
 
 export type CharacterCountState = {
@@ -19,23 +19,24 @@ export type CharacterCountProps = Omit<ComponentProps<"output">, "children"> &
   };
 
 export function CharacterCount({ as, children, maxLength, ...props }: CharacterCountProps) {
+  const warn = useWarnOnce();
   const field = useFieldContext();
   if (!Number.isFinite(maxLength)) {
-    warnOnce(
+    warn(
       `CharacterCount:maxLength:${maxLength}`,
       `CharacterCount maxLength must be a non-negative integer; received ${maxLength}. It was not rendered.`,
     );
     return null;
   }
   if (!field?.textControl) {
-    warnOnce(
+    warn(
       "CharacterCount:outside-text-field",
       "CharacterCount must be rendered inside TextField. It was not rendered.",
     );
     return null;
   }
   if (field.value === undefined) {
-    warnOnce(
+    warn(
       "CharacterCount:unobserved-text",
       "CharacterCount requires TextField value, defaultValue, or onChange so it can observe the text. It was not rendered.",
     );
@@ -44,7 +45,7 @@ export function CharacterCount({ as, children, maxLength, ...props }: CharacterC
   let limit = maxLength;
   if (!Number.isInteger(maxLength) || maxLength < 0) {
     limit = Math.max(0, Math.trunc(maxLength));
-    warnOnce(
+    warn(
       `CharacterCount:maxLength:${maxLength}`,
       `CharacterCount maxLength must be a non-negative integer; received ${maxLength}. It was rounded to ${limit}.`,
     );

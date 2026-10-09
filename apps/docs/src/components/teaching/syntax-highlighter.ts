@@ -1,5 +1,6 @@
 import bash from "@shikijs/langs/bash";
 import css from "@shikijs/langs/css";
+import json from "@shikijs/langs/json";
 import tsx from "@shikijs/langs/tsx";
 import { createHighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
@@ -109,7 +110,7 @@ const phSyntaxTheme = {
 
 const highlighterPromise = createHighlighterCore({
   engine: createJavaScriptRegexEngine(),
-  langs: [...bash, ...css, ...tsx],
+  langs: [...bash, ...css, ...json, ...tsx],
   themes: [phSyntaxTheme],
 });
 

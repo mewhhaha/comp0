@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import { type Collection, type CollectionItem } from "@comp0/core";
 import { createRequiredContext } from "../internal/context.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 
 export type ConnectConnection = { from: string; to: string };
 
@@ -66,12 +66,13 @@ export function useConnectPort(
   element: HTMLElement | null,
   anchor: HTMLElement | null,
 ) {
+  const warn = useWarnOnce();
   const { portCollection } = useConnectContext("Connect port");
   const { value, label, kind, card, cardLabel, direction, disabled } = port;
   useLayoutEffect(() => {
     if (!element) return;
     if (!value || !kind || !label || !card || !cardLabel) {
-      warnOnce(
+      warn(
         `Connect:port:${direction}:${value}:${label}`,
         `Connect ${direction} "${value}" requires a nonempty value, label, kind, and labelled card. It was skipped.`,
       );
@@ -100,7 +101,19 @@ export function useConnectPort(
     return () => {
       portCollection.unregister(key, element);
     };
-  }, [portCollection, value, label, kind, card, cardLabel, direction, disabled, element, anchor]);
+  }, [
+    portCollection,
+    value,
+    label,
+    kind,
+    card,
+    cardLabel,
+    direction,
+    disabled,
+    element,
+    anchor,
+    warn,
+  ]);
 }
 
 export function compatiblePorts(output: ConnectPort, input: ConnectPort) {

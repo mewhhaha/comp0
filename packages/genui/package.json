@@ -1,0 +1,63 @@
+{
+  "name": "@comp0/genui",
+  "version": "0.1.0-next.25",
+  "description": "Generative UI for comp0: a JSON format models write, a streaming-tolerant parser, validator, store, expression evaluator, and an accessible renderer built on @comp0/react.",
+  "keywords": [
+    "accessibility",
+    "generative-ui",
+    "headless",
+    "intelligent-ui",
+    "json-schema",
+    "react",
+    "structured-output"
+  ],
+  "homepage": "https://comp0-docs.horrible.workers.dev",
+  "bugs": {
+    "url": "https://github.com/mewhhaha/comp0/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mewhhaha/comp0.git",
+    "directory": "packages/genui"
+  },
+  "files": [
+    "dist",
+    "genui.prompt.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./genui.prompt.md": "./genui.prompt.md",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist tsconfig.build.tsbuildinfo && node ../../scripts/build-package.mjs && tsgo -p tsconfig.build.json && node scripts/generate-prompt.mjs",
+    "prompt": "node scripts/generate-prompt.mjs",
+    "prepack": "pnpm run build",
+    "typecheck": "tsgo -p tsconfig.json"
+  },
+  "dependencies": {
+    "@comp0/core": "workspace:*",
+    "@comp0/react": "workspace:*"
+  },
+  "devDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.0.0"
+  }
+}

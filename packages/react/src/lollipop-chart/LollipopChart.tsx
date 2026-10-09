@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { categoricalChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -20,7 +21,9 @@ export function LollipopChart({
   ref,
   ...props
 }: LollipopChartProps) {
+  const warn = useWarnOnce();
   const context = categoricalChartContext(
+    warn,
     "LollipopChart",
     "lollipop",
     values,

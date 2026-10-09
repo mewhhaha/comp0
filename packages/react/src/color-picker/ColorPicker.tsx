@@ -1,3 +1,4 @@
+import { useWarnOnce } from "../internal/dev.js";
 import { useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { fieldFeedback, useFieldIds } from "../field/field-shared.js";
@@ -48,11 +49,14 @@ export function ColorPicker({
   required,
   ...props
 }: ColorPickerProps) {
+  const warn = useWarnOnce();
   const ids = useFieldIds(id);
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
   const [normalizedValue, setColorValue, colorState] = useControllableState({
-    value: value === undefined ? undefined : normalizeHexColorProp("ColorPicker", "value", value),
-    defaultValue: normalizeHexColorProp("ColorPicker", "defaultValue", defaultValue) ?? "#000000",
+    value:
+      value === undefined ? undefined : normalizeHexColorProp(warn, "ColorPicker", "value", value),
+    defaultValue:
+      normalizeHexColorProp(warn, "ColorPicker", "defaultValue", defaultValue) ?? "#000000",
     onChange,
   });
   const [colorCoordinates, setColorCoordinates] = useState(() => hexToHsv(normalizedValue));

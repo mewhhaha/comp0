@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -64,12 +65,14 @@ export function LollipopChartPlot({
   ...props
 }: LollipopChartPlotProps) {
   const context = useChartKind("LollipopChartPlot", "LollipopChart", "lollipop");
+  const warn = useWarnOnce();
   const scale = createChartScale(
+    warn,
     "LollipopChartPlot",
     context.values.map((value) => ({ label: value.label, value: value.value })),
     { domain: "include-zero", min: xMin, max: xMax },
   );
-  const tickCount = chartTickCount("LollipopChartPlot", xTickCount, "xTickCount");
+  const tickCount = chartTickCount(warn, "LollipopChartPlot", xTickCount, "xTickCount");
   const bounds = { ...chartPlotBounds, left: 32 };
   const { bottom, left, right, top } = bounds;
   const plotWidth = right - left;

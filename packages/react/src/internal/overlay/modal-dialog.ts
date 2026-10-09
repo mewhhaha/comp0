@@ -1,5 +1,6 @@
 import { useEffect, useRef, type Ref, type SyntheticEvent } from "react";
 import { useComposedRefs } from "@comp0/core";
+import { mayMoveFocus, useBusy } from "../busy.js";
 
 type ModalDialogOptions = {
   open: boolean;
@@ -13,6 +14,10 @@ type ModalDialogOptions = {
  * Keeps a native `<dialog>` in sync with an owner's open state (Dialog, Drawer, Tour):
  * `showModal()` on open, `close()` on close, focus restored to the previously focused
  * element, and Escape / native close routed back through `setOpen(false)`.
+
+ * Inside a busy region the native modal waits unless the user just asked for it:
+ * `showModal()` always moves focus, so a dialog that opens on its own stays unshown
+ * until the region settles, then opens and takes focus as usual.
  * Spread the returned `ref`, `onCancel` and `onClose` on the dialog element.
  */
 export function useModalDialog({ onCancel, onClose, open, ref, setOpen }: ModalDialogOptions) {
@@ -21,12 +26,14 @@ export function useModalDialog({ onCancel, onClose, open, ref, setOpen }: ModalD
   const dismissingRef = useRef(false);
   const wasOpenRef = useRef(false);
   const composedRef = useComposedRefs(dialogRef, ref);
+  const busy = useBusy();
 
   useEffect(() => {
     const element = dialogRef.current;
     if (!element) return;
     if (open) {
       if (!wasOpenRef.current) {
+        if (!mayMoveFocus(busy)) return;
         const activeElement = element.ownerDocument.activeElement;
         const ownerWindow = element.ownerDocument.defaultView;
         restoreFocusRef.current =
@@ -42,7 +49,7 @@ export function useModalDialog({ onCancel, onClose, open, ref, setOpen }: ModalD
     if (element.open && typeof element.close === "function") element.close();
     else element.removeAttribute("open");
     restoreFocusRef.current?.focus();
-  }, [open]);
+  }, [open, busy]);
 
   return {
     ref: composedRef,

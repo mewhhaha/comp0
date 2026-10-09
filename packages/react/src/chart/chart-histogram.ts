@@ -1,10 +1,11 @@
-import { warnOnce } from "../internal/dev.js";
+import { type Warn } from "../internal/dev.js";
 import { createChartScale } from "./chart-scale.js";
 import { type HistogramBinValue } from "./chart-shared.js";
 import { type HistogramBinOptions } from "./chart-meta.js";
 
 /** Groups observations into equal-width bins; the plot and the default table share it. */
 export function binHistogram(
+  warn: Warn,
   chartName: string,
   values: readonly number[],
   { binCount, xMin, xMax }: HistogramBinOptions,
@@ -12,14 +13,14 @@ export function binHistogram(
   const defaultBinCount = Math.max(1, Math.ceil(Math.sqrt(values.length)));
   let resolvedBinCount = binCount ?? defaultBinCount;
   if (!Number.isInteger(resolvedBinCount) || resolvedBinCount < 1) {
-    warnOnce(
+    warn(
       `${chartName}:bin-count:${resolvedBinCount}`,
       `${chartName} binCount must be a positive integer; received ${resolvedBinCount}. It was replaced by ${defaultBinCount}.`,
     );
     resolvedBinCount = defaultBinCount;
   }
   const observations = values.map((value, index) => ({ label: String(index), value }));
-  const xScale = createChartScale(`${chartName} x axis`, observations, {
+  const xScale = createChartScale(warn, `${chartName} x axis`, observations, {
     domain: "extent",
     min: xMin,
     max: xMax,

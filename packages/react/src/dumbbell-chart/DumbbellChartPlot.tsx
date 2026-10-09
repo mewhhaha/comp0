@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -67,7 +68,9 @@ export function DumbbellChartPlot({
   ...props
 }: DumbbellChartPlotProps) {
   const context = useChartKind("DumbbellChartPlot", "DumbbellChart", "dumbbell");
+  const warn = useWarnOnce();
   const scale = createChartScale(
+    warn,
     "DumbbellChartPlot",
     context.values.flatMap((value) => [
       { label: value.label, value: value.start },
@@ -75,7 +78,7 @@ export function DumbbellChartPlot({
     ]),
     { domain: "extent", min: xMin, max: xMax },
   );
-  const tickCount = chartTickCount("DumbbellChartPlot", xTickCount, "xTickCount");
+  const tickCount = chartTickCount(warn, "DumbbellChartPlot", xTickCount, "xTickCount");
   const bounds = { ...chartPlotBounds, left: 32 };
   const { bottom, left, right, top } = bounds;
   const plotWidth = right - left;

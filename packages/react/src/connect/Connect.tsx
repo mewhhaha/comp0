@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useState, type ComponentProps, type KeyboardEvent } from "react";
 import { composeRefs, useCollection, useControllableState } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce, type Warn } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
   ConnectContext,
@@ -28,6 +28,7 @@ export function Connect({
   ref,
   ...props
 }: ConnectProps) {
+  const warn = useWarnOnce();
   const instructionsId = useId();
   const [element, setElement] = useState<HTMLElement | null>(null);
   const [requestedConnections, setConnections] = useControllableState<readonly ConnectConnection[]>(
@@ -37,7 +38,7 @@ export function Connect({
       onChange,
     },
   );
-  const connections = validConnections(requestedConnections);
+  const connections = validConnections(warn, requestedConnections);
   const portCollection = useCollection<ConnectPort>();
   const cards = useCollection();
   const [ports, setPorts] = useState<readonly ConnectPort[]>([]);
@@ -150,12 +151,12 @@ export function Connect({
 }
 
 /** Drops connections with an empty endpoint or a second source for the same input. */
-function validConnections(connections: readonly ConnectConnection[]) {
+function validConnections(warn: Warn, connections: readonly ConnectConnection[]) {
   const connectedInputs = new Set<string>();
   const valid: ConnectConnection[] = [];
   for (const connection of connections) {
     if (!connection.from || !connection.to || connectedInputs.has(connection.to)) {
-      warnOnce(
+      warn(
         `Connect:connection:${connection.from}:${connection.to}`,
         `Connect requires nonempty endpoints and one source per input; received ${JSON.stringify(connection)}. It was skipped.`,
       );

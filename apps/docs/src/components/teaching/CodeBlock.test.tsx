@@ -6,6 +6,7 @@ import { CodeBlock } from "./CodeBlock.js";
 const examples = [
   ["bash", "pnpm add @comp0/react"],
   ["css", ".button { color: rebeccapurple; }"],
+  ["json", '{ "type": "Text", "text": "Hello" }'],
   [
     "tsx",
     `import { Button } from "./Button";

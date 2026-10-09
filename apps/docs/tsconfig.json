@@ -12,10 +12,15 @@
     "noEmit": true,
     "types": ["vite/client", "@vitejs/plugin-rsc/types"],
     "paths": {
+      "@comp0/genui": ["../../packages/genui/src/index.ts"],
       "@comp0/react": ["../../packages/react/src/index.ts"],
       "@comp0/core": ["../../packages/core/src/index.ts"]
     }
   },
-  "references": [{ "path": "../../packages/core" }, { "path": "../../packages/react" }],
+  "references": [
+    { "path": "../../packages/core" },
+    { "path": "../../packages/react" },
+    { "path": "../../packages/genui" }
+  ],
   "include": ["src", ".react-router/types"]
 }

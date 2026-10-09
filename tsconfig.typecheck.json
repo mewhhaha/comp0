@@ -4,7 +4,8 @@
     "noEmit": true,
     "paths": {
       "@comp0/core": ["./packages/core/src/index.ts"],
-      "@comp0/react": ["./packages/react/src/index.ts"]
+      "@comp0/react": ["./packages/react/src/index.ts"],
+      "@comp0/genui": ["./packages/genui/src/index.ts"]
     }
   },
   "include": [
@@ -13,6 +14,10 @@
     "packages/react/src/**/*.ts",
     "packages/react/src/**/*.tsx",
     "packages/react/test/**/*.tsx",
+    "packages/genui/src/**/*.ts",
+    "packages/genui/src/**/*.tsx",
+    "packages/genui/test/**/*.ts",
+    "packages/genui/test/**/*.tsx",
     "apps/docs/src/**/*.ts",
     "apps/docs/src/**/*.tsx",
     "apps/docs/react-router.config.ts",

@@ -1,7 +1,7 @@
 import { useId, type ComponentProps, type PointerEvent } from "react";
 import { dataAttr, useFocusRing } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { visuallyHiddenInputStyle } from "../internal/visually-hidden-input.js";
 import { useRatingContext } from "./rating-shared.js";
 
@@ -25,6 +25,7 @@ export function RatingItem({
   onPointerEnter,
   ...props
 }: RatingItemProps) {
+  const warn = useWarnOnce();
   const id = useId();
   const rating = useRatingContext("RatingItem");
   const { focusProps, isFocused, isFocusVisible } = useFocusRing<HTMLInputElement>({
@@ -34,7 +35,7 @@ export function RatingItem({
   const active = value <= (rating.highlight ?? rating.value);
 
   if (!Number.isFinite(value) || value <= 0) {
-    warnOnce(
+    warn(
       `RatingItem:value:${value}`,
       `RatingItem value must be a positive finite number; received ${value}. It was skipped.`,
     );

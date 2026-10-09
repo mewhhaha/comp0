@@ -1,6 +1,6 @@
 import { type ComponentProps } from "react";
 import { disabledProps } from "../internal/disabled.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
   useOptionalGridListItemContext,
@@ -21,11 +21,12 @@ export function GridListMoveButton({
   onKeyDown,
   ...props
 }: GridListMoveButtonProps) {
+  const warn = useWarnOnce();
   const group = useOptionalGridListReorderGroupContext();
   const row = useOptionalGridListItemContext();
   if (!group || !row?.listName) return null;
   if (!group.hasList(to)) {
-    warnOnce(
+    warn(
       `GridListMoveButton:missing-destination:${to}`,
       `GridListMoveButton destination "${to}" is missing from GridListReorderGroup.value. It was not rendered.`,
     );

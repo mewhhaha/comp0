@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -80,6 +81,7 @@ export function CandlestickChartPlot({
   ...props
 }: CandlestickChartPlotProps) {
   const context = useChartKind("CandlestickChartPlot", "CandlestickChart", "candlestick");
+  const warn = useWarnOnce();
   const xScaleValues = context.values.map((value) => ({
     label: context.formatX(value.x),
     value: numberOf(value.x),
@@ -88,15 +90,15 @@ export function CandlestickChartPlot({
     { label: context.formatX(value.x), value: value.low },
     { label: context.formatX(value.x), value: value.high },
   ]);
-  const xScale = createChartScale("CandlestickChartPlot x axis", xScaleValues, {
+  const xScale = createChartScale(warn, "CandlestickChartPlot x axis", xScaleValues, {
     domain: "extent",
   });
-  const yScale = createChartScale("CandlestickChartPlot", yScaleValues, {
+  const yScale = createChartScale(warn, "CandlestickChartPlot", yScaleValues, {
     domain: "extent",
     max: yMax,
     min: yMin,
   });
-  const tickCount = chartTickCount("CandlestickChartPlot", yTickCount);
+  const tickCount = chartTickCount(warn, "CandlestickChartPlot", yTickCount);
   const bounds = { ...chartPlotBounds, left: 32, right: 112 };
   const { bottom, left, right, top } = bounds;
   const plotWidth = right - left;

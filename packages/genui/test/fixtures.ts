@@ -1,0 +1,295 @@
+import { type JsonValue } from "../src/json/parse.js";
+
+/** A response that uses every component of the catalog at least once. */
+export const kitchenSink: JsonValue = {
+  type: "Stack",
+  children: [
+    {
+      type: "Stack",
+      children: [
+        { type: "Heading", text: "Quarterly review", level: 1 },
+        { type: "Text", text: "Revenue grew every quarter.", tone: "muted", size: "lg" },
+        {
+          type: "Image",
+          src: "/chart.png",
+          alt: "Revenue climbing from 18k to 57k",
+          caption: "Revenue by quarter",
+        },
+        { type: "List", items: ["Strong Q4", "Steady Q2"], ordered: false },
+        { type: "Link", label: "Read the report", href: "https://example.com/report" },
+      ],
+    },
+    {
+      type: "Card",
+      title: "Highlights",
+      description: "What stood out",
+      tone: "accent",
+      children: [
+        { type: "Text", text: "Best quarter: Q4." },
+        { type: "Separator", orientation: "horizontal" },
+      ],
+    },
+    {
+      type: "Grid",
+      columns: 2,
+      gap: "lg",
+      children: [
+        { type: "Card", title: "Revenue", children: [{ type: "Text", text: "$57k" }] },
+        { type: "Card", title: "Growth", children: [{ type: "Text", text: "+36%" }] },
+      ],
+    },
+    {
+      type: "Form",
+      name: "signup",
+      title: "Sign up",
+      submitLabel: "Create account",
+      children: [
+        {
+          type: "TextField",
+          label: "Email",
+          name: "email",
+          value: "ada@example.com",
+          required: true,
+          placeholder: "you@example.com",
+          inputType: "email",
+          description: "We only send receipts.",
+        },
+        {
+          type: "TextArea",
+          label: "Notes",
+          name: "notes",
+          value: "Hello",
+          placeholder: "Anything else?",
+          description: "Optional.",
+        },
+        {
+          type: "NumberField",
+          label: "Seats",
+          name: "seats",
+          value: 5,
+          min: 1,
+          max: 100,
+          step: 1,
+          required: true,
+          description: "How many people.",
+        },
+        {
+          type: "Select",
+          label: "Region",
+          name: "region",
+          options: [
+            "North",
+            { value: "south", label: "South" },
+            "East",
+            "West",
+            "Central",
+            "Remote",
+          ],
+          value: "south",
+          required: true,
+          description: "Where you are.",
+        },
+        {
+          type: "RadioGroup",
+          label: "Plan",
+          name: "plan",
+          options: [
+            { value: "free", label: "Free" },
+            { value: "pro", label: "Pro" },
+          ],
+          value: "pro",
+          required: true,
+          description: "Billed monthly.",
+        },
+        {
+          type: "CheckboxGroup",
+          label: "Extras",
+          name: "extras",
+          options: ["Support", "Training"],
+          value: ["Support"],
+          description: "Pick any.",
+        },
+        { type: "Checkbox", label: "Accept terms", name: "terms", checked: false, required: true },
+        { type: "Switch", label: "Email alerts", name: "alerts", checked: true },
+        { type: "Slider", label: "Volume", name: "volume", min: 0, max: 10, value: 4, step: 1 },
+        {
+          type: "DatePicker",
+          label: "Start date",
+          name: "start",
+          value: "2026-07-14",
+          required: true,
+          description: "Your first day.",
+        },
+        { type: "Button", label: "Cancel", variant: "secondary", message: "Cancel the signup" },
+      ],
+    },
+    {
+      type: "Stack",
+      children: [
+        {
+          type: "Tabs",
+          label: "Sections",
+          tabs: [
+            { label: "Overview", children: [{ type: "Text", text: "Overview text" }] },
+            { label: "Details", children: [{ type: "Text", text: "Details text" }] },
+          ],
+        },
+        {
+          type: "Accordion",
+          items: [
+            {
+              title: "Shipping",
+              open: true,
+              children: [{ type: "Text", text: "Two days." }],
+            },
+            { title: "Returns", children: [{ type: "Text", text: "Thirty days." }] },
+          ],
+          multiple: false,
+        },
+        {
+          type: "Disclosure",
+          summary: "More info",
+          open: false,
+          children: [{ type: "Text", text: "Hidden details." }],
+        },
+      ],
+    },
+    {
+      type: "Stack",
+      children: [
+        {
+          type: "BarChart",
+          title: "Revenue by region",
+          data: [
+            { label: "North", value: 40 },
+            { label: "South", value: 25 },
+          ],
+          description: "North leads.",
+          categoryLabel: "Region",
+          valueLabel: "Revenue",
+          unit: "k",
+        },
+        {
+          type: "ColumnChart",
+          title: "Revenue by quarter",
+          data: [
+            { label: "Q1", value: 18 },
+            { label: "Q2", value: 31 },
+          ],
+          description: "Rising.",
+          categoryLabel: "Quarter",
+          valueLabel: "Revenue",
+          unit: "k",
+        },
+        {
+          type: "LineChart",
+          title: "Signups",
+          data: [
+            { x: 1, y: 10 },
+            { x: 2, y: 14 },
+            { x: 3, y: 9 },
+          ],
+          description: "Dipped in week 3.",
+          xLabel: "Week",
+          yLabel: "Signups",
+        },
+        {
+          type: "AreaChart",
+          title: "Users",
+          data: [
+            { x: 1, y: 5 },
+            { x: 2, y: 9 },
+          ],
+          description: "Growing.",
+          xLabel: "Month",
+          yLabel: "Users",
+          unit: "k",
+        },
+        {
+          type: "PieChart",
+          title: "Traffic",
+          data: [
+            { label: "Direct", value: 60 },
+            { label: "Search", value: 40 },
+          ],
+          description: "Mostly direct.",
+          categoryLabel: "Source",
+          valueLabel: "Share",
+          unit: "%",
+        },
+        {
+          type: "Table",
+          caption: "Revenue",
+          columns: ["Quarter", "Revenue", "Growth"],
+          rows: [
+            ["Q1", 18, true],
+            ["Q2", 31, false],
+          ],
+        },
+        {
+          type: "Meter",
+          label: "Disk used",
+          value: 64,
+          min: 0,
+          max: 100,
+          low: 50,
+          high: 85,
+          optimum: 25,
+        },
+        { type: "ProgressBar", label: "Upload", value: 40 },
+        { type: "ProgressBar", label: "Preparing" },
+      ],
+    },
+    {
+      type: "Stack",
+      children: [
+        { type: "Alert", message: "Saved.", tone: "success", title: "Done" },
+        { type: "Alert", message: "Payment failed.", tone: "danger" },
+        { type: "Alert", message: "Heads up." },
+      ],
+    },
+    {
+      type: "Stack",
+      children: [
+        {
+          type: "Slider",
+          label: "Seat count",
+          name: "seat-count",
+          min: 1,
+          max: 10,
+          value: { $bind: "seats", initial: 3 },
+        },
+        { type: "Output", label: "Yearly cost", value: { $expr: "seats * 12" }, unit: " USD" },
+        {
+          type: "Comparison",
+          caption: "Plans compared",
+          options: ["Free", "Pro"],
+          features: [
+            { name: "Projects", values: [3, "Unlimited"] },
+            { name: "Priority support", values: [false, true] },
+            { name: "Notes", values: ["Basic", null] },
+          ],
+          recommended: "Pro",
+        },
+        {
+          type: "CitedText",
+          text: "Pro suits growing teams [1]. Free is enough to try it [2].",
+          sources: [
+            { title: "Pricing page", href: "https://example.com/pricing", note: "Updated 2026" },
+            { title: "Product FAQ" },
+          ],
+        },
+        {
+          type: "Suggestions",
+          label: "Next steps",
+          items: ["Compare with Team", "Show annual billing"],
+        },
+        {
+          type: "CopyButton",
+          label: "Copy install command",
+          value: "npm install @comp0/react",
+        },
+      ],
+    },
+  ],
+};

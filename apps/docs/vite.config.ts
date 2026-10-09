@@ -37,6 +37,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@comp0/core": fileURLToPath(new URL("../../packages/core/src/index.ts", import.meta.url)),
+      "@comp0/genui": fileURLToPath(new URL("../../packages/genui/src/index.ts", import.meta.url)),
       "@comp0/react": fileURLToPath(new URL("../../packages/react/src/index.ts", import.meta.url)),
     },
   },

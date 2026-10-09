@@ -1,9 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { componentBySlug } from "../../content/catalog.js";
-import { Anatomy } from "./Anatomy.js";
+import { Anatomy, itemShape } from "./Anatomy.js";
 
 describe("Anatomy", () => {
+  it("sketches Comparison options and values like table columns and cells", () => {
+    expect(itemShape("ComparisonOption")).toBe(itemShape("TableColumn"));
+    expect(itemShape("ComparisonValue")).toBe(itemShape("TableCell"));
+    expect(itemShape("SelectOption")).toBe("row");
+  });
+
   it("nests GridList row controls inside GridListItem", () => {
     const gridList = componentBySlug.get("grid-list");
     if (!gridList) throw new Error("Grid List documentation is missing.");

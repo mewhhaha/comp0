@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -70,13 +71,14 @@ export function BarChartPlot({
   ...props
 }: BarChartPlotProps) {
   const context = useChartKind("BarChartPlot", "BarChart", "bar");
+  const warn = useWarnOnce();
   const scaleValues = context.values.map((value) => ({ label: value.label, value: value.value }));
-  const scale = createChartScale("BarChartPlot", scaleValues, {
+  const scale = createChartScale(warn, "BarChartPlot", scaleValues, {
     domain: "include-zero",
     max: xMax,
     min: xMin,
   });
-  const tickCount = chartTickCount("BarChartPlot", xTickCount, "xTickCount");
+  const tickCount = chartTickCount(warn, "BarChartPlot", xTickCount, "xTickCount");
   const bounds = { ...chartPlotBounds, left: 32 };
   const { bottom, left, right, top } = bounds;
   const plotWidth = right - left;

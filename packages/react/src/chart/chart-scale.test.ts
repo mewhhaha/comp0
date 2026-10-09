@@ -1,3 +1,4 @@
+import { warnOnce } from "../internal/dev.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { chartTickCount, createChartScale } from "./chart-scale.js";
 
@@ -15,7 +16,7 @@ describe("createChartScale", () => {
   });
 
   it("includes zero for include-zero domains and maps values onto 0..1", () => {
-    const scale = createChartScale("ScaleA", values(10, 30), { domain: "include-zero" });
+    const scale = createChartScale(warnOnce, "ScaleA", values(10, 30), { domain: "include-zero" });
     expect([scale.min, scale.max]).toEqual([0, 30]);
     expect(scale.position(0)).toBe(0);
     expect(scale.position(15)).toBe(0.5);
@@ -23,23 +24,26 @@ describe("createChartScale", () => {
   });
 
   it("uses the measured extent for extent domains", () => {
-    const scale = createChartScale("ScaleB", values(10, 30), { domain: "extent" });
+    const scale = createChartScale(warnOnce, "ScaleB", values(10, 30), { domain: "extent" });
     expect([scale.min, scale.max]).toEqual([10, 30]);
     expect(scale.position(20)).toBe(0.5);
   });
 
   it("honours explicit bounds and derives the missing one for empty data", () => {
-    expect(createChartScale("ScaleC", [], { domain: "extent" })).toMatchObject({ min: 0, max: 1 });
-    expect(createChartScale("ScaleC", [], { domain: "extent", min: 5 })).toMatchObject({
+    expect(createChartScale(warnOnce, "ScaleC", [], { domain: "extent" })).toMatchObject({
+      min: 0,
+      max: 1,
+    });
+    expect(createChartScale(warnOnce, "ScaleC", [], { domain: "extent", min: 5 })).toMatchObject({
       min: 5,
       max: 6,
     });
-    expect(createChartScale("ScaleC", [], { domain: "extent", max: 5 })).toMatchObject({
+    expect(createChartScale(warnOnce, "ScaleC", [], { domain: "extent", max: 5 })).toMatchObject({
       min: 4,
       max: 5,
     });
     expect(
-      createChartScale("ScaleC", values(1, 2), { domain: "extent", min: 0, max: 10 }),
+      createChartScale(warnOnce, "ScaleC", values(1, 2), { domain: "extent", min: 0, max: 10 }),
     ).toMatchObject({
       min: 0,
       max: 10,
@@ -47,13 +51,13 @@ describe("createChartScale", () => {
   });
 
   it("widens a zero-width domain around its single value", () => {
-    const scale = createChartScale("ScaleD", values(4), { domain: "extent" });
+    const scale = createChartScale(warnOnce, "ScaleD", values(4), { domain: "extent" });
     expect([scale.min, scale.max]).toEqual([3.5, 4.5]);
     expect(scale.position(4)).toBe(0.5);
   });
 
   it("returns evenly spaced ticks and labelled axis ticks", () => {
-    const scale = createChartScale("ScaleE", values(0, 100), { domain: "extent" });
+    const scale = createChartScale(warnOnce, "ScaleE", values(0, 100), { domain: "extent" });
     expect(scale.ticks(3)).toEqual([0, 50, 100]);
     expect(scale.axisTicks(3, (value) => `${value}%`)).toEqual([
       { label: "0%", position: 0 },
@@ -64,7 +68,7 @@ describe("createChartScale", () => {
 
   it("ignores non-finite bounds with a warning", () => {
     const error = spyOnErrors();
-    const scale = createChartScale("ScaleF", values(2, 6), {
+    const scale = createChartScale(warnOnce, "ScaleF", values(2, 6), {
       domain: "extent",
       min: Number.NaN,
       max: Number.POSITIVE_INFINITY,
@@ -78,7 +82,11 @@ describe("createChartScale", () => {
 
   it("derives bounds from the values when max does not exceed min", () => {
     const error = spyOnErrors();
-    const scale = createChartScale("ScaleG", values(1, 5), { domain: "extent", min: 9, max: 3 });
+    const scale = createChartScale(warnOnce, "ScaleG", values(1, 5), {
+      domain: "extent",
+      min: 9,
+      max: 3,
+    });
     expect([scale.min, scale.max]).toEqual([1, 5]);
     expect(error).toHaveBeenCalledWith(
       "ScaleG max must be greater than min; received min=9, max=3. The bounds were derived from the values instead.",
@@ -87,7 +95,7 @@ describe("createChartScale", () => {
 
   it("clamps values outside the bounds onto the nearest edge with a warning", () => {
     const error = spyOnErrors();
-    const scale = createChartScale("ScaleH", values(-5, 20), {
+    const scale = createChartScale(warnOnce, "ScaleH", values(-5, 20), {
       domain: "extent",
       min: 0,
       max: 10,
@@ -107,15 +115,15 @@ describe("chartTickCount", () => {
   });
 
   it("defaults to five and accepts integers of at least two", () => {
-    expect(chartTickCount("TickA", undefined)).toBe(5);
-    expect(chartTickCount("TickA", 2)).toBe(2);
-    expect(chartTickCount("TickA", 9)).toBe(9);
+    expect(chartTickCount(warnOnce, "TickA", undefined)).toBe(5);
+    expect(chartTickCount(warnOnce, "TickA", 2)).toBe(2);
+    expect(chartTickCount(warnOnce, "TickA", 9)).toBe(9);
   });
 
   it("falls back to five with a warning for anything else", () => {
     const error = spyOnErrors();
-    expect(chartTickCount("TickB", 1, "xTickCount")).toBe(5);
-    expect(chartTickCount("TickB", 2.5)).toBe(5);
+    expect(chartTickCount(warnOnce, "TickB", 1, "xTickCount")).toBe(5);
+    expect(chartTickCount(warnOnce, "TickB", 2.5)).toBe(5);
     expect(error.mock.calls.map(([message]) => message)).toEqual([
       "TickB xTickCount must be an integer of at least 2; received 1. It was replaced by 5.",
       "TickB yTickCount must be an integer of at least 2; received 2.5. It was replaced by 5.",

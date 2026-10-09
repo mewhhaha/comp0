@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useRef, type ComponentProps } from "react";
 import { useComposedRefs } from "@comp0/core";
+import { mayMoveFocus, useBusy } from "../internal/busy.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { ErrorSummaryContext } from "./error-summary-shared.js";
 
@@ -23,8 +24,11 @@ export function ErrorSummary({
   const summaryId = id ?? `comp0-${reactId}`;
   const titleId = `${summaryId}-title`;
 
+  // Mounting on its own inside a busy region never claims focus, now or when the region settles.
+  const focusAtMount = useRef(mayMoveFocus(useBusy()));
+
   useLayoutEffect(() => {
-    if (autoFocus) summaryRef.current?.focus();
+    if (autoFocus && focusAtMount.current) summaryRef.current?.focus();
   }, [autoFocus]);
 
   const Part = partElement(as, "div");

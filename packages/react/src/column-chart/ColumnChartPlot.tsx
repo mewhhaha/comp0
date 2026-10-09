@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -70,13 +71,14 @@ export function ColumnChartPlot({
   ...props
 }: ColumnChartPlotProps) {
   const context = useChartKind("ColumnChartPlot", "ColumnChart", "column");
+  const warn = useWarnOnce();
   const scaleValues = context.values.map((value) => ({ label: value.label, value: value.value }));
-  const scale = createChartScale("ColumnChartPlot", scaleValues, {
+  const scale = createChartScale(warn, "ColumnChartPlot", scaleValues, {
     domain: "include-zero",
     max: yMax,
     min: yMin,
   });
-  const tickCount = chartTickCount("ColumnChartPlot", yTickCount);
+  const tickCount = chartTickCount(warn, "ColumnChartPlot", yTickCount);
   const { bottom, left, right, top } = chartPlotBounds;
   const plotWidth = right - left;
   const plotHeight = bottom - top;

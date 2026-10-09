@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
 import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { inventoryItemFocusables, InventoryContext } from "./inventory-shared.js";
 import { sanitizeInventoryLayout, type InventoryLayout } from "./inventory-layout.js";
@@ -40,6 +40,7 @@ export function Inventory({
   ref,
   ...props
 }: InventoryProps) {
+  const warn = useWarnOnce();
   const [rawLayout, setLayout] = useControllableState<InventoryLayout>({
     value,
     defaultValue: defaultValue ?? [],
@@ -50,7 +51,7 @@ export function Inventory({
     columnsProp,
     rowsProp,
   );
-  for (const problem of problems) warnOnce(problem.key, problem.message);
+  for (const problem of problems) warn(problem.key, problem.message);
   const rootRef = useRef<HTMLOListElement | null>(null);
   const composedRef = useComposedRefs(rootRef, ref);
   const [focusedValue, setFocusedValue] = useState(layout[0]?.value ?? "");

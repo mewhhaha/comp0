@@ -1,4 +1,4 @@
-import { warnOnce } from "../internal/dev.js";
+import { type Warn } from "../internal/dev.js";
 
 type ChartScaleValue = {
   label: string;
@@ -18,9 +18,14 @@ type ChartAxisTick = {
 
 type ScaleBounds = { min: number; max: number };
 
-function finiteBound(chartName: string, name: "min" | "max", bound: number | undefined) {
+function finiteBound(
+  warn: Warn,
+  chartName: string,
+  name: "min" | "max",
+  bound: number | undefined,
+) {
   if (bound === undefined || Number.isFinite(bound)) return bound;
-  warnOnce(
+  warn(
     `${chartName}:${name}-bound`,
     `${chartName} ${name} must be finite; received ${bound}. It was ignored.`,
   );
@@ -65,12 +70,13 @@ function measuredBounds(
  * clamped onto the edge, each with a development warning, so a bad prop never blanks the chart.
  */
 export function createChartScale(
+  warn: Warn,
   chartName: string,
   values: readonly ChartScaleValue[],
   options: ChartScaleOptions,
 ) {
-  let min = finiteBound(chartName, "min", options.min);
-  let max = finiteBound(chartName, "max", options.max);
+  let min = finiteBound(warn, chartName, "min", options.min);
+  let max = finiteBound(warn, chartName, "max", options.max);
   let bounds = measuredBounds(values, options.domain, min, max);
   if (
     !Number.isFinite(bounds.min) ||
@@ -78,7 +84,7 @@ export function createChartScale(
     bounds.max < bounds.min ||
     (bounds.max === bounds.min && (min !== undefined || max !== undefined))
   ) {
-    warnOnce(
+    warn(
       `${chartName}:bounds:${bounds.min}:${bounds.max}`,
       `${chartName} max must be greater than min; received min=${bounds.min}, max=${bounds.max}. The bounds were derived from the values instead.`,
     );
@@ -98,7 +104,7 @@ export function createChartScale(
   }
   for (const value of values) {
     if (value.value < scaleMin || value.value > scaleMax) {
-      warnOnce(
+      warn(
         `${chartName}:outside:${value.label}`,
         `${chartName} value "${value.label}" (${value.value}) is outside min=${scaleMin}, max=${scaleMax}. It was drawn at the nearest edge.`,
       );
@@ -122,13 +128,14 @@ export function createChartScale(
 
 /** Resolves a tick count prop; anything but an integer of at least 2 falls back to 5. */
 export function chartTickCount(
+  warn: Warn,
   chartName: string,
   count: number | undefined,
   propName = "yTickCount",
 ) {
   const resolved = count ?? 5;
   if (!Number.isInteger(resolved) || resolved < 2) {
-    warnOnce(
+    warn(
       `${chartName}:${propName}:${resolved}`,
       `${chartName} ${propName} must be an integer of at least 2; received ${resolved}. It was replaced by 5.`,
     );

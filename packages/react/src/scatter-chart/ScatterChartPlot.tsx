@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -70,18 +71,21 @@ export function ScatterChartPlot({
   ...props
 }: ScatterChartPlotProps) {
   const context = useChartKind("ScatterChartPlot", "ScatterChart", "scatter");
+  const warn = useWarnOnce();
   const xScale = createChartScale(
+    warn,
     "ScatterChartPlot x axis",
     context.values.map((value) => ({ label: value.label, value: numberOf(value.x) })),
     { domain: "extent", min: xMin, max: xMax },
   );
   const yScale = createChartScale(
+    warn,
     "ScatterChartPlot y axis",
     context.values.map((value) => ({ label: value.label, value: value.y })),
     { domain: "extent", min: yMin, max: yMax },
   );
-  const resolvedXTickCount = chartTickCount("ScatterChartPlot", xTickCount, "xTickCount");
-  const resolvedYTickCount = chartTickCount("ScatterChartPlot", yTickCount);
+  const resolvedXTickCount = chartTickCount(warn, "ScatterChartPlot", xTickCount, "xTickCount");
+  const resolvedYTickCount = chartTickCount(warn, "ScatterChartPlot", yTickCount);
   const { bottom, left, right, top } = chartPlotBounds;
   const width = right - left;
   const height = bottom - top;

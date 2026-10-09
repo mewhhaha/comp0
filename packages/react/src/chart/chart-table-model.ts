@@ -1,3 +1,4 @@
+import { type Warn } from "../internal/dev.js";
 import { binHistogram } from "./chart-histogram.js";
 import { type HistogramBinOptions } from "./chart-meta.js";
 import { type ChartContextValue } from "./chart-shared.js";
@@ -18,6 +19,7 @@ export type ChartTableModel = {
 
 /** Describes the accessible data table every chart kind renders by default. */
 export function chartTableModel(
+  warn: Warn,
   context: ChartContextValue,
   histogramOptions: HistogramBinOptions | null,
 ): ChartTableModel {
@@ -77,6 +79,7 @@ export function chartTableModel(
     }
     case "histogram": {
       const { bins } = binHistogram(
+        warn,
         "ChartTable",
         context.values,
         histogramOptions ?? {

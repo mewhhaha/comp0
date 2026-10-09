@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { pieChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -24,6 +25,7 @@ export function PieChart({
   ref,
   ...props
 }: PieChartProps) {
-  const context = pieChartContext(values, categoryLabel, valueLabel, formatValue);
+  const warn = useWarnOnce();
+  const context = pieChartContext(warn, values, categoryLabel, valueLabel, formatValue);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

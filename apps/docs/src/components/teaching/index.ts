@@ -9,3 +9,4 @@ export { LiveExample } from "./LiveExample.js";
 export { PageIntro } from "./PageIntro.js";
 export { StateHooks } from "./StateHooks.js";
 export { StepList } from "./StepList.js";
+export { IntelligentUiDemo } from "./IntelligentUiDemo.js";

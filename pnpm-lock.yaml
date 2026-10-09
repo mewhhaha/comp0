@@ -134,6 +134,9 @@ catalogs:
     vite:
       specifier: 8.2.2
       version: 8.2.2
+    zod:
+      specifier: 4.6.5
+      version: 4.6.5
 
 importers:
 
@@ -211,6 +214,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@comp0/genui':
+        specifier: workspace:*
+        version: link:../../packages/genui
       '@comp0/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -232,6 +238,9 @@ importers:
       shiki:
         specifier: 4.4.3
         version: 4.4.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: 1.54.4
@@ -269,6 +278,25 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+
+  packages/genui:
+    dependencies:
+      '@comp0/core':
+        specifier: workspace:*
+        version: link:../core
+      '@comp0/react':
+        specifier: workspace:*
+        version: link:../react
+    devDependencies:
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.8(react@19.2.8)
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
 
   packages/react:
     dependencies:
@@ -2721,6 +2749,9 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -4732,5 +4763,7 @@ snapshots:
       '@speed-highlight/core': 1.2.24
       cookie: 1.1.1
       youch-core: 0.3.3
+
+  zod@4.6.5: {}
 
   zwitch@2.0.4: {}

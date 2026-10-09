@@ -1,5 +1,11 @@
 import { Link } from "react-router";
-import { Callout, CodeBlock, LessonPager, PageIntro } from "../../components/teaching/index.js";
+import {
+  Callout,
+  CodeBlock,
+  IntelligentUiDemo,
+  LessonPager,
+  PageIntro,
+} from "../../components/teaching/index.js";
 import { learnBySlug, learnDocs } from "../../content/index.js";
 
 type LearnRouteProps = {
@@ -137,6 +143,7 @@ export function ServerComponent({ params }: LearnRouteProps) {
                   title="Add this"
                 />
               )}
+              {section.demo === "intelligent-ui" && <IntelligentUiDemo className="mt-6" />}
               {section.note && (
                 <Callout className="mt-6" title="Keep in mind">
                   <p>{section.note}</p>

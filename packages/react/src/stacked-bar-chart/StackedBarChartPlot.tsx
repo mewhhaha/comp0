@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -72,16 +73,17 @@ export function StackedBarChartPlot({
   ...props
 }: StackedBarChartPlotProps) {
   const context = useChartKind("StackedBarChartPlot", "StackedBarChart", "stacked-bar");
+  const warn = useWarnOnce();
   const totals = context.values.map((value) => ({
     label: value.label,
     value: value.segments.reduce((sum, segment) => sum + segment.value, 0),
   }));
-  const scale = createChartScale("StackedBarChartPlot", totals, {
+  const scale = createChartScale(warn, "StackedBarChartPlot", totals, {
     domain: "include-zero",
     min: 0,
     max: xMax ?? Math.max(1, ...totals.map((total) => total.value)),
   });
-  const resolvedTickCount = chartTickCount("StackedBarChartPlot", xTickCount, "xTickCount");
+  const resolvedTickCount = chartTickCount(warn, "StackedBarChartPlot", xTickCount, "xTickCount");
   const bounds = { ...chartPlotBounds, left: 32 };
   const { bottom, left, right, top } = bounds;
   const plotWidth = right - left;

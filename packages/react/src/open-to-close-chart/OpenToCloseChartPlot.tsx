@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -71,12 +72,15 @@ export function OpenToCloseChartPlot({
   ...props
 }: OpenToCloseChartPlotProps) {
   const context = useChartKind("OpenToCloseChartPlot", "OpenToCloseChart", "open-to-close");
+  const warn = useWarnOnce();
   const xScale = createChartScale(
+    warn,
     "OpenToCloseChartPlot x axis",
     context.values.map((value) => ({ label: context.formatX(value.x), value: numberOf(value.x) })),
     { domain: "extent" },
   );
   const yScale = createChartScale(
+    warn,
     "OpenToCloseChartPlot y axis",
     context.values.flatMap((value) => [
       { label: context.formatX(value.x), value: value.open },
@@ -84,7 +88,7 @@ export function OpenToCloseChartPlot({
     ]),
     { domain: "extent", min: yMin, max: yMax },
   );
-  const resolvedYTickCount = chartTickCount("OpenToCloseChartPlot", yTickCount);
+  const resolvedYTickCount = chartTickCount(warn, "OpenToCloseChartPlot", yTickCount);
   const bounds = { ...chartPlotBounds, left: 28, right: 112 };
   const { bottom, left, right, top } = bounds;
   const plotWidth = right - left;

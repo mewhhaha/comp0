@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { scatterChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -27,6 +28,7 @@ export function ScatterChart({
   ref,
   ...props
 }: ScatterChartProps) {
-  const context = scatterChartContext(values, xLabel, yLabel, formatX, formatY);
+  const warn = useWarnOnce();
+  const context = scatterChartContext(warn, values, xLabel, yLabel, formatX, formatY);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

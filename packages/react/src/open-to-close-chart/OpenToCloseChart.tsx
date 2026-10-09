@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { openToCloseChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -26,7 +27,9 @@ export function OpenToCloseChart({
   ref,
   ...props
 }: OpenToCloseChartProps) {
+  const warn = useWarnOnce();
   const context = openToCloseChartContext(
+    warn,
     values,
     xLabel,
     yLabel,

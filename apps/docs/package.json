@@ -4,21 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build && node ../../scripts/verify-docs-client-bundle.mjs",
-    "dev": "react-router dev --host 0.0.0.0",
+    "build": "node ../../scripts/generate-llms-txt.mjs && react-router build && node ../../scripts/verify-docs-client-bundle.mjs",
+    "dev": "node ../../scripts/generate-llms-txt.mjs && react-router dev --host 0.0.0.0",
     "preview": "pnpm run build && vite preview --host 0.0.0.0",
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "react-router typegen && tsgo -p tsconfig.json"
   },
   "dependencies": {
+    "@comp0/genui": "workspace:*",
     "@comp0/react": "workspace:*",
     "@heroicons/react": "^2.2.0",
     "@shikijs/langs": "4.4.3",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "8.3.1",
-    "shiki": "4.4.3"
+    "shiki": "4.4.3",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.4",

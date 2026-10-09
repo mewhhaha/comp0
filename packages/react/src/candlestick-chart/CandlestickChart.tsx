@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { candlestickChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -39,7 +40,9 @@ export function CandlestickChart({
   ref,
   ...props
 }: CandlestickChartProps) {
+  const warn = useWarnOnce();
   const context = candlestickChartContext(
+    warn,
     values,
     xLabel,
     yLabel,

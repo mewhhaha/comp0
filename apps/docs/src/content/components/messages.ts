@@ -63,8 +63,14 @@ export default component({
     "Append completed messages at the end; when prepending older history, temporarily set aria-live to off so old messages are not announced as new.",
     "Keep the message composer outside Messages, and do not move focus when a message arrives.",
   ],
-  related: ["feed", "text-area", "toast"],
+  related: ["message", "composer", "feed", "toast"],
   moreExamples: [
+    {
+      id: "assistant",
+      title: "Assistant chat",
+      description:
+        "Messages, Message, Reasoning, Suggestions, Composer, Feedback, and CopyButton working together on a fake streamed reply.",
+    },
     {
       id: "streaming",
       title: "Streaming response",

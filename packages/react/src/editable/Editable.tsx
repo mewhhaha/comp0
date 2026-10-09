@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
+import { mayMoveFocus, useBusy } from "../internal/busy.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
 import { EditableContext } from "./editable-shared.js";
 
@@ -43,12 +44,14 @@ export function Editable({
     onChange: onOpenChange,
   });
   const [draft, setDraft] = useState(value);
+  const busy = useBusy();
 
   useEffect(() => {
     const wasOpen = previousOpenRef.current;
     previousOpenRef.current = open;
     if (open) {
       if (wasOpen) return;
+      if (!mayMoveFocus(busy)) return;
       inputRef.current?.focus();
       inputRef.current?.select();
       return;
@@ -60,7 +63,7 @@ export function Editable({
     const activeElement = ownerDocument?.activeElement;
     if (activeElement !== inputRef.current && activeElement !== ownerDocument?.body) return;
     viewRef.current?.focus();
-  }, [open]);
+  }, [open, busy]);
 
   const context = {
     value,

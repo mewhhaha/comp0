@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { heatmapChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -22,6 +23,7 @@ export function HeatmapChart({
   ref,
   ...props
 }: HeatmapChartProps) {
-  const context = heatmapChartContext(values, xLabel, yLabel, valueLabel, formatValue);
+  const warn = useWarnOnce();
+  const context = heatmapChartContext(warn, values, xLabel, yLabel, valueLabel, formatValue);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

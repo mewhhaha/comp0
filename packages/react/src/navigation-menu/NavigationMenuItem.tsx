@@ -1,6 +1,6 @@
 import { useId, type ComponentProps } from "react";
 import { dataAttr } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { NavigationMenuItemContext, useNavigationMenuContext } from "./navigation-menu-shared.js";
 
@@ -11,11 +11,12 @@ export type NavigationMenuItemProps = Omit<ComponentProps<"li">, "value"> &
   };
 
 export function NavigationMenuItem({ as, value, id, ...props }: NavigationMenuItemProps) {
+  const warn = useWarnOnce();
   const menu = useNavigationMenuContext("NavigationMenuItem");
   const generatedId = useId();
   const itemId = id ?? `${generatedId}-${value}`;
   if (!value) {
-    warnOnce(
+    warn(
       `NavigationMenuItem:empty-value:${itemId}`,
       `NavigationMenuItem requires a non-empty value; received ${JSON.stringify(value)}. It stays closed.`,
     );

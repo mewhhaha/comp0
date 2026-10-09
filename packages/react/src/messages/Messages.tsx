@@ -1,5 +1,6 @@
 import { type ComponentProps } from "react";
 import { dataAttr } from "@comp0/core";
+import { BusyContext, useBusyRegion } from "../internal/busy.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 
 export type MessagesProps = ComponentProps<"div"> &
@@ -13,15 +14,17 @@ export type MessagesProps = ComponentProps<"div"> &
  * complete messages at the end so its implicit polite live region stays useful.
  */
 export function Messages({ as, busy, ...props }: MessagesProps) {
-  const resolvedBusy = Boolean(busy);
+  const resolvedBusy = useBusyRegion(busy);
 
   const Part = partElement(as, "div");
   return (
-    <Part
-      {...props}
-      role="log"
-      aria-busy={resolvedBusy || undefined}
-      data-busy={dataAttr(resolvedBusy)}
-    />
+    <BusyContext value={resolvedBusy}>
+      <Part
+        {...props}
+        role="log"
+        aria-busy={Boolean(busy) || undefined}
+        data-busy={dataAttr(resolvedBusy)}
+      />
+    </BusyContext>
   );
 }

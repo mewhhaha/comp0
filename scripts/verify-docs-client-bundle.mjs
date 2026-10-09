@@ -48,9 +48,12 @@ function collectImports(key, chunks) {
   for (const imported of chunk.imports ?? []) collectImports(imported, chunks);
 }
 
+// Lazily loaded example modules: component examples and the Intelligent UI demo runtime, which
+// pulls in the GenUI renderer. Each group is measured as a page on top of the shared graph.
+const lazyExamplePattern = /\/examples\/(?:cases|demos)\//;
 const exampleGroups = new Map();
 for (const [key, chunk] of Object.entries(manifest)) {
-  if (chunk.src?.includes("/examples/cases/")) {
+  if (lazyExamplePattern.test(chunk.src ?? "")) {
     const slug = path.basename(chunk.src).split(".")[0];
     const examples = exampleGroups.get(slug) ?? [];
     examples.push(key);
@@ -63,7 +66,7 @@ if (sharedChunks.size === 0 || exampleGroups.size === 0) {
   throw new Error("Client manifest must contain entry chunks and lazily loaded component examples");
 }
 for (const key of sharedChunks) {
-  if (manifest[key].src?.includes("/examples/cases/")) {
+  if (lazyExamplePattern.test(manifest[key].src ?? "")) {
     throw new Error(`Example is eagerly imported by the shared client graph: ${key}`);
   }
 }

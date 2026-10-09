@@ -6,7 +6,7 @@ import {
   type MentionCaretRect,
   type MentionMatch,
 } from "./mention-field-shared.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { PopoverContext, usePopoverState } from "../internal/overlay/index.js";
 import { TextField, type TextFieldOwnProps, type TextFieldProps } from "../text-field/TextField.js";
 import { type RootProps } from "../internal/polymorphic.js";
@@ -118,9 +118,10 @@ export function MentionField({
   value,
   ...props
 }: MentionFieldProps) {
+  const warn = useWarnOnce();
   const validTriggers = triggers.filter((trigger) => {
     if (trigger && !/\s/u.test(trigger)) return true;
-    warnOnce(
+    warn(
       `MentionField:invalid-trigger:${JSON.stringify(trigger)}`,
       `MentionField trigger ${JSON.stringify(trigger)} must be non-empty and contain no whitespace. It was ignored.`,
     );

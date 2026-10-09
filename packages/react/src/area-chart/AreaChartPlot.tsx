@@ -1,4 +1,5 @@
 import { type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -68,6 +69,7 @@ export function AreaChartPlot({
   ...props
 }: AreaChartPlotProps) {
   const context = useChartKind("AreaChartPlot", "AreaChart", "area");
+  const warn = useWarnOnce();
   const xScaleValues = context.values.map((value) => ({
     label: context.formatX(value.x),
     value: numberOf(value.x),
@@ -76,13 +78,13 @@ export function AreaChartPlot({
     label: context.formatX(value.x),
     value: value.y,
   }));
-  const xScale = createChartScale("AreaChartPlot x axis", xScaleValues, { domain: "extent" });
-  const yScale = createChartScale("AreaChartPlot", yScaleValues, {
+  const xScale = createChartScale(warn, "AreaChartPlot x axis", xScaleValues, { domain: "extent" });
+  const yScale = createChartScale(warn, "AreaChartPlot", yScaleValues, {
     domain: "include-zero",
     max: yMax,
     min: yMin,
   });
-  const tickCount = chartTickCount("AreaChartPlot", yTickCount);
+  const tickCount = chartTickCount(warn, "AreaChartPlot", yTickCount);
   const { bottom, left, right, top } = chartPlotBounds;
   const plotWidth = right - left;
   const plotHeight = bottom - top;

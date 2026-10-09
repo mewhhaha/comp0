@@ -1,6 +1,6 @@
 import type { LearnDoc } from "./types.js";
 
-export const learnDocs = [
+export const learnDocs: LearnDoc[] = [
   {
     slug: "installation",
     order: 1,
@@ -252,6 +252,94 @@ export const learnDocs = [
       },
     ],
   },
-] satisfies LearnDoc[];
+  {
+    slug: "intelligent-ui",
+    order: 8,
+    title: "Intelligent UI",
+    summary:
+      "Let a model answer with real, accessible interfaces: charts, forms, and buttons that stream in safely.",
+    sections: [
+      {
+        id: "what-it-is",
+        title: "What Intelligent UI is",
+        explanation:
+          "Chat assistants are moving past walls of text. OpenAI's Intelligent UI in ChatGPT mixes prose with charts, forms, buttons, and small tools that appear while the answer streams, and a button press becomes the next turn of the conversation. Other efforts, from structured-output component catalogs to generative UI toolkits, share the idea: the model may only compose components your app registered, and your app renders them. The interface becomes part of the answer, and the model never ships code.",
+        note: "Think of it as the model filling in a worksheet you designed. It can choose and arrange the boxes, but it cannot invent new kinds of box.",
+      },
+      {
+        id: "how-comp0-fits",
+        title: "How comp0 fits",
+        explanation:
+          "A model is a poor judge of accessibility, so comp0 makes it part of the contract. @comp0/genui is a model-facing layer on top of comp0 with no third-party runtime and no provider lock-in. Its catalog is a set of Zod schemas that are the single source of the validator, the JSON Schema for structured outputs, and the system prompt. Every control, chart, table, and image requires its accessible name, and a component without everything it requires is not drawn. Components render only the props their schema declares, so no model-provided style, event handler, or unsafe URL reaches the DOM.",
+        code: 'import { catalog, genuiPrompt, responseJsonSchema } from "@comp0/genui";\n\ncatalog.map((entry) => entry.name); // Stack, Card, Select, BarChart, Table, ...\ngenuiPrompt(); // the system prompt that teaches a model the catalog\nresponseJsonSchema(); // the JSON Schema for structured outputs',
+        language: "tsx",
+      },
+      {
+        id: "install",
+        title: "Install the packages",
+        explanation:
+          "Add the integration next to comp0 and the peers it asks you to own. Nothing here needs an API key: you bring your own model provider, and comp0 never calls one.",
+        code: "pnpm add @comp0/genui @comp0/react zod react react-dom",
+        language: "bash",
+      },
+      {
+        id: "format",
+        title: "The format the model writes",
+        explanation:
+          'A response is one JSON object, normally a Stack. Every component is an object with a type and its props inline, containers take children, and data such as options, chart points, or table rows is plain JSON. A control that other parts depend on writes a binding, { "$bind": "seats", "initial": 5 }, and a computed value writes an expression, { "$expr": "seats * 12" }, over the bound names. Expressions run in a small whitelisted evaluator with arithmetic, comparisons, and a few functions such as round and sum: there is no eval, no property access, and no way to reach globals.',
+        code: '{\n  "type": "Stack",\n  "children": [\n    {\n      "type": "Slider",\n      "label": "Seats",\n      "name": "seats",\n      "min": 1,\n      "max": 25,\n      "value": { "$bind": "seats", "initial": 5 }\n    },\n    {\n      "type": "Output",\n      "label": "Cost for a year",\n      "value": { "$expr": "seats * 12 * 12" },\n      "unit": " USD"\n    }\n  ]\n}',
+        language: "json",
+      },
+      {
+        id: "system-prompt",
+        title: "Teach the model the catalog",
+        explanation:
+          "genuiPrompt returns the format rules, the binding and expression rules, every component with its props, comp0's accessibility and safety rules, and worked JSON examples. Send it as the system message to any provider. Add your own rules with the rules option. The same text ships pre-generated as @comp0/genui/genui.prompt.md, and it is linked from llms.txt so coding assistants can read it too.",
+        code: 'import { genuiPrompt } from "@comp0/genui";\n\nconst system = genuiPrompt({\n  preamble: "You are a travel assistant.",\n  rules: ["Prices are in euros."],\n});\n\n// Pass `system` as the system message to your provider\'s chat API.',
+        language: "tsx",
+      },
+      {
+        id: "structured-outputs",
+        title: "Or constrain the model with a schema",
+        explanation:
+          "Providers that support structured outputs or tool calls can be held to the format. responseJsonSchema returns the recursive JSON Schema of one root component, where every component has its own definition so containers nest each other. Pass strict: true for strict structured outputs: every property becomes required, optional ones become nullable, and the keywords strict mode rejects are removed. The renderer treats null as left out, so a strict response renders as is. Rules a schema cannot express, such as unsafe URLs or unknown binding names, are still checked by the validator.",
+        code: 'const response = await client.chat.completions.create({\n  model,\n  messages,\n  response_format: {\n    type: "json_schema",\n    json_schema: { name: "ui", strict: true, schema: responseJsonSchema({ strict: true }) },\n  },\n});',
+        language: "tsx",
+      },
+      {
+        id: "render-stream",
+        title: "Render the stream",
+        explanation:
+          "Append each chunk your provider streams to a string and hand it to GenUI with streaming. The renderer parses the growing text on every update, so the interface appears top-down: the shell first, then the details. Any provider that can stream text works, so the loop below is yours to fill in. A model may wrap the JSON in a Markdown code fence; the parser skips it.",
+        code: 'import { GenUI } from "@comp0/genui";\nimport { useEffect, useState } from "react";\n\nexport function Answer({ stream }: { stream: AsyncIterable<string> }) {\n  const [response, setResponse] = useState("");\n  const [streaming, setStreaming] = useState(true);\n\n  useEffect(() => {\n    (async () => {\n      for await (const chunk of stream) setResponse((text) => text + chunk);\n      setStreaming(false);\n    })();\n  }, [stream]);\n\n  return <GenUI response={response} streaming={streaming} />;\n}',
+        language: "tsx",
+        demo: "intelligent-ui",
+      },
+      {
+        id: "actions",
+        title: "Turn actions into the next turn",
+        explanation:
+          "A pressed button, chosen suggestion, or submitted form calls onAction with a message built from the visible labels, such as Plan: Pro; Seats: 5, and a form also reports its values by control name. Send the message as the next user message and the conversation continues. onStateChange and initialState let you save what the person typed and restore it later. When the finished response has problems, onError receives structured errors, and formatErrors turns them into a message you can send back to the model for a repair.",
+        code: '<GenUI\n  response={response}\n  streaming={streaming}\n  onAction={(action) => ask([...history, { role: "user", text: action.message }])}\n  onStateChange={(state) => saveWithMessage(state)}\n  initialState={savedState}\n  onError={(errors) => ask([...history, { role: "user", text: formatErrors(errors) }])}\n/>;',
+        language: "tsx",
+      },
+      {
+        id: "guarantees",
+        title: "What it guarantees",
+        explanation:
+          "Streaming: every prefix of a response renders without errors, warnings, or exceptions, components keep their identity as the response grows, and typed text and focus survive. While streaming, output sits in a BusyRegion marked aria-busy, partial data does not warn, focus never moves, and buttons and submits wait. When streaming ends the full response is validated once. Safety: only catalog components and declared props render, links accept http(s), mailto, tel, relative, and fragment URLs, images accept http(s) and relative URLs, and text is always text, never Markdown or HTML. Accessibility: names are required by schema, charts include a data table, and warnings and errors are announced at once.",
+        note: "The renderer shows everything that is valid even when other parts are not: unknown components and props are left out and a prop of the wrong type is dropped.",
+      },
+      {
+        id: "style-output",
+        title: "Style the headless output",
+        explanation:
+          "comp0 ships no CSS. The layout components carry plain token attributes such as data-direction, data-gap, data-columns, and data-tone, and every part keeps its data-slot, so one stylesheet themes everything a model can compose. This page's demo does exactly that in Tailwind, in light and dark.",
+        code: '[data-slot="stack"] {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n\n[data-slot="grid"][data-columns="3"] {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n[data-slot="card"][data-tone="accent"] {\n  border-color: teal;\n}',
+        language: "css",
+      },
+    ],
+  },
+];
 
 export const learnBySlug = new Map(learnDocs.map((page) => [page.slug, page]));

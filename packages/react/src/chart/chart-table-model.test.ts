@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { warnOnce } from "../internal/dev.js";
 import { chartTableModel } from "./chart-table-model.js";
 import { type HistogramBinOptions } from "./chart-meta.js";
 import { type ChartContextValue } from "./chart-shared.js";
@@ -8,7 +9,7 @@ const dollars = (value: number) => `$${value}`;
 const day = (value: number | Date) => `Day ${String(value)}`;
 
 function model(context: ChartContextValue, options: HistogramBinOptions = none) {
-  const { caption, columns, rows } = chartTableModel(context, options);
+  const { caption, columns, rows } = chartTableModel(warnOnce, context, options);
   return { caption, columns, rows: rows.map((row) => [row.header, ...row.cells]) };
 }
 

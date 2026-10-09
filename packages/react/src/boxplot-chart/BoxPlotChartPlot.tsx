@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { ChartAxes, chartPlotBounds } from "../chart/ChartAxes.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
 import { ChartValue } from "../chart/ChartValue.js";
@@ -80,7 +81,9 @@ export function BoxPlotChartPlot({
   ...props
 }: BoxPlotChartPlotProps) {
   const context = useChartKind("BoxPlotChartPlot", "BoxPlotChart", "boxplot");
+  const warn = useWarnOnce();
   const scale = createChartScale(
+    warn,
     "BoxPlotChartPlot",
     context.values.flatMap((value) => [
       { label: value.label, value: value.min },
@@ -88,7 +91,7 @@ export function BoxPlotChartPlot({
     ]),
     { domain: "extent", min: yMin, max: yMax },
   );
-  const tickCount = chartTickCount("BoxPlotChartPlot", yTickCount);
+  const tickCount = chartTickCount(warn, "BoxPlotChartPlot", yTickCount);
   const { bottom, left, right, top } = chartPlotBounds;
   const plotWidth = right - left;
   const plotHeight = bottom - top;

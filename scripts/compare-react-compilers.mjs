@@ -14,7 +14,9 @@ assert.deepEqual(missing, [], "Native compiler skipped files compiled by Babel")
 
 // Every component module must be compiled unless it is listed, with a reason, in the exceptions file.
 const exceptions = JSON.parse(await readFile(exceptionsPath, "utf8"));
-const componentFiles = files.filter((f) => f.component && f.file.startsWith("packages/react/src/"));
+const componentFiles = files.filter(
+  (f) => f.component && /^packages\/(react|genui)\/src\//.test(f.file),
+);
 const uncompiled = componentFiles.filter((f) => !f.native);
 const unlisted = uncompiled.filter((f) => !(f.file in exceptions));
 const stale = Object.keys(exceptions).filter((file) => {

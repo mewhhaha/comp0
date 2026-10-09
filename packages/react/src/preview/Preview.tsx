@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { PopoverContext, useEscapeDismiss } from "../internal/overlay/index.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
 import { PreviewContext } from "./preview-shared.js";
@@ -30,8 +30,9 @@ export function Preview({
   openDelay = 600,
   ...props
 }: PreviewProps) {
+  const warn = useWarnOnce();
   if (openDelay < 0 || closeDelay < 0) {
-    warnOnce(
+    warn(
       `Preview:negative-delay:${openDelay}:${closeDelay}`,
       `Preview delays must be non-negative; received openDelay ${openDelay} and closeDelay ${closeDelay}. Negative delays were treated as 0.`,
     );

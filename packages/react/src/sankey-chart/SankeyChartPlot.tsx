@@ -1,5 +1,5 @@
 import { dataAttr } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { type ReactNode, type ComponentProps } from "react";
 import { useActiveChartValue } from "../chart/chart-interaction-context.js";
 import { ChartNavigationProvider } from "../chart/chart-navigation.js";
@@ -110,6 +110,7 @@ export type SankeyChartPlotProps = Omit<
 
 export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProps) {
   const context = useChartKind("SankeyChartPlot", "SankeyChart", "sankey");
+  const warn = useWarnOnce();
   const incomingByNode = new Map(
     context.nodes.map((node) => [node.id, context.links.filter((link) => link.target === node.id)]),
   );
@@ -140,7 +141,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
         0,
       );
       if (!Number.isFinite(incoming) || !Number.isFinite(outgoing)) {
-        warnOnce(
+        warn(
           `SankeyChartPlot:node-flow:${node.id}`,
           `SankeyChartPlot node "${node.id}" aggregate flow must be finite; received incoming=${incoming}, outgoing=${outgoing}. The node was drawn at its minimum size.`,
         );
@@ -160,7 +161,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
     .map((nodes) => {
       const total = nodes.reduce((sum, node) => sum + (nodeTotals.get(node.id) ?? 0), 0);
       if (!Number.isFinite(total)) {
-        warnOnce(
+        warn(
           `SankeyChartPlot:layer-flow:${total}`,
           `SankeyChartPlot layer flow must be finite; received ${total}. The layer was ignored when sizing flows.`,
         );
@@ -178,7 +179,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
     let groupHeight =
       heights.reduce((sum, height) => sum + height, 0) + Math.max(0, nodes.length - 1) * layerGap;
     if (groupHeight > availableHeight) {
-      warnOnce(
+      warn(
         `SankeyChartPlot:layer-height:${layer}:${nodes.length}`,
         `SankeyChartPlot layer ${layer} with ${nodes.length} nodes exceeds the available height of ${availableHeight}. Its nodes and gaps were shrunk to fit.`,
       );

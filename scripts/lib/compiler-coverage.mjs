@@ -24,7 +24,9 @@ export function exportsComponent(source) {
  * Compile every package source file with oxc-transform-react (what ships) and with
  * babel-plugin-react-compiler (the reference, which also reports why it bails out).
  */
-export async function analyzeCompilerCoverage(pattern = "packages/{core,react}/src/**/*.{ts,tsx}") {
+export async function analyzeCompilerCoverage(
+  pattern = "packages/{core,react,genui}/src/**/*.{ts,tsx}",
+) {
   const files = [];
   for await (const file of glob(pattern)) {
     if (/\.test\.tsx?$/.test(file)) continue;
@@ -100,7 +102,7 @@ export function assertBaselineMatches(actual, expected) {
 /** Files under the built packages whose output uses the compiler runtime. */
 export async function compiledDistFiles() {
   const compiled = [];
-  for (const root of ["packages/core/dist", "packages/react/dist"]) {
+  for (const root of ["packages/core/dist", "packages/react/dist", "packages/genui/dist"]) {
     for await (const file of glob(`${root}/**/*.js`)) {
       const source = await readFile(file, "utf8");
       if (source.includes("jsxDEV")) {

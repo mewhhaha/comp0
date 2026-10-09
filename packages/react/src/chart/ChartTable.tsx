@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useChartMeta } from "./chart-meta.js";
 import { useChartContext } from "./chart-shared.js";
@@ -14,9 +15,10 @@ export type ChartTableProps = ComponentProps<"table"> & AsProp;
 export function ChartTable({ as, children, ...props }: ChartTableProps) {
   const context = useChartContext("ChartTable");
   const meta = useChartMeta("ChartTable");
+  const warn = useWarnOnce();
   let content = children;
   if (children === undefined) {
-    const model = chartTableModel(context, meta.histogramBins);
+    const model = chartTableModel(warn, context, meta.histogramBins);
     content = (
       <>
         <caption data-slot="chart-table-caption">{meta.title ?? model.caption}</caption>

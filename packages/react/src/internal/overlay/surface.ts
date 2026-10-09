@@ -7,6 +7,7 @@ import {
   type ToggleEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import { mayMoveFocus, useBusy } from "../busy.js";
 import { usePopoverContext } from "./context.js";
 import {
   noteAutoPopoverToggle,
@@ -191,9 +192,12 @@ export function useOverlaySurface<TElement extends HTMLElement = HTMLElement>({
   const triggerId = context?.triggerId;
   const open = Boolean(owner?.open);
   const wasOpen = useRef(false);
+  const busy = useBusy();
   useLayoutEffect(() => {
     // Runs after the show/hide effect above, so the surface is already visible.
-    if (open && !wasOpen.current) {
+    // A surface that opens on its own inside a busy region leaves focus alone for good:
+    // the content is still arriving, and focus must not jump to something that may change.
+    if (open && !wasOpen.current && mayMoveFocus(busy)) {
       const surface = surfaceRef.current;
       if (surface && initialFocus !== undefined) {
         let target: HTMLElement | null | undefined;
@@ -209,7 +213,7 @@ export function useOverlaySurface<TElement extends HTMLElement = HTMLElement>({
       }
     }
     wasOpen.current = open;
-  }, [open, initialFocus, surfaceRef]);
+  }, [open, busy, initialFocus, surfaceRef]);
   return {
     open,
     popover: context,

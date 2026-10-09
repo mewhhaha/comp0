@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { boxPlotChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -20,6 +21,7 @@ export function BoxPlotChart({
   ref,
   ...props
 }: BoxPlotChartProps) {
-  const context = boxPlotChartContext(values, categoryLabel, valueLabel, formatValue);
+  const warn = useWarnOnce();
+  const context = boxPlotChartContext(warn, values, categoryLabel, valueLabel, formatValue);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

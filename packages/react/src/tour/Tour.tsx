@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { DialogContext, popoverAnchorName } from "../internal/overlay/index.js";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
 import { TourContext, type TourState, type TourStep } from "./tour-shared.js";
 export type { TourState, TourStep } from "./tour-shared.js";
@@ -24,21 +24,19 @@ export function Tour({
   children,
   ...props
 }: TourProps) {
+  const warn = useWarnOnce();
   if (steps.length === 0) {
-    warnOnce(
-      "Tour:no-steps",
-      "Tour requires at least one step; received 0. The tour stays closed.",
-    );
+    warn("Tour:no-steps", "Tour requires at least one step; received 0. The tour stays closed.");
   }
   const seenTargets = new Set<string>();
   for (const tourStep of steps) {
     if (!tourStep.target) {
-      warnOnce(
+      warn(
         `Tour:empty-target:${String(tourStep.title)}`,
         "Tour step targets must not be empty. The step has no target to anchor to.",
       );
     } else if (seenTargets.has(tourStep.target)) {
-      warnOnce(
+      warn(
         `Tour:duplicate-target:${tourStep.target}`,
         `Tour target "${tourStep.target}" is used by more than one step.`,
       );
@@ -58,7 +56,7 @@ export function Tour({
   const stepInRange =
     stepIndex !== null && Number.isInteger(stepIndex) && stepIndex >= 0 && stepIndex < steps.length;
   if (stepIndex !== null && !stepInRange) {
-    warnOnce(
+    warn(
       `Tour:step-out-of-range:${stepIndex}:${steps.length}`,
       `Tour step must be null or an index from 0 to ${steps.length - 1}; received ${stepIndex}. The tour stays closed.`,
     );
@@ -81,7 +79,7 @@ export function Tour({
     if (matches.length !== 1) {
       let outcome = "The first match was used.";
       if (matches.length === 0) outcome = "The step stays hidden.";
-      warnOnce(
+      warn(
         `Tour:target-matches:${targetName}:${matches.length}`,
         `Tour target "${targetName}" must match exactly one element; found ${matches.length}. ${outcome}`,
       );
@@ -115,7 +113,7 @@ export function Tour({
         target.removeAttribute("data-tour-active");
       }
     };
-  }, [anchorName, targetName]);
+  }, [anchorName, targetName, warn]);
 
   useLayoutEffect(() => {
     const active = stepIndex !== null;

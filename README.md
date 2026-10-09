@@ -168,6 +168,28 @@ The JavaScript published to npm is already transformed by the React Compiler for
 
 If you alias directly to this repository's source, vendor the source, or otherwise bypass the published output, apply the same React Compiler setup used by the repository. See [CONTRIBUTING.md](./CONTRIBUTING.md#react-compiler) for the exact configuration and maintenance constraints.
 
+## Intelligent UI
+
+Let a model answer with real interfaces instead of walls of text. [`@comp0/genui`](packages/genui) is a JSON format, a streaming-tolerant parser and validator, and a renderer for a catalog of compact, accessible comp0 components (forms, tables, charts, buttons) that render progressively while a response streams, with any provider:
+
+```tsx
+import { GenUI, genuiPrompt, responseJsonSchema } from "@comp0/genui";
+
+const system = genuiPrompt({ preamble: "You are a travel assistant." });
+const schema = responseJsonSchema({ strict: true }); // for structured outputs
+
+<GenUI
+  response={response}
+  streaming={streaming}
+  onAction={(action) => ask(action.message)}
+  onError={(errors) => ask(formatErrors(errors))}
+/>;
+```
+
+Every control, chart, and table requires its accessible name in the schema, components render only the props the schema declares, and output sits in a `BusyRegion` so nothing warns or steals focus until the answer is complete. The same text the model reads ships as `@comp0/genui/genui.prompt.md`, and the docs publish `llms.txt` and `llms-full.txt` for coding assistants.
+
+`@comp0/react` also has the general-purpose pieces conversational interfaces need, useful with or without a model: `BusyRegion`, `Output`, `Comparison`, `Citation`, `Message`, `Composer`, `Suggestions`, `Reasoning`, `Feedback`, and `CopyButton`.
+
 ## Contributing
 
 Development setup, verification commands, and repository architecture are documented in [CONTRIBUTING.md](./CONTRIBUTING.md).

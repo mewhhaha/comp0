@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce, type Warn } from "../internal/dev.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
 import {
   FloatingPanelContext,
@@ -26,10 +26,14 @@ type PointerMove = {
 };
 
 /** Returns the position when valid; otherwise warns and returns null so the panel falls back to its anchored placement. */
-function validPosition(position: FloatingPanelPosition | null | undefined, name: string) {
+function validPosition(
+  warn: Warn,
+  position: FloatingPanelPosition | null | undefined,
+  name: string,
+) {
   if (!position) return null;
   if (Number.isFinite(position.x) && Number.isFinite(position.y)) return position;
-  warnOnce(
+  warn(
     `FloatingPanel:position:${position.x}:${position.y}`,
     `${name} must contain finite x and y coordinates. It was ignored.`,
   );
@@ -37,17 +41,17 @@ function validPosition(position: FloatingPanelPosition | null | undefined, name:
 }
 
 /** Returns the size when valid; otherwise warns and returns null so the panel keeps its natural size. */
-function validSize(size: FloatingPanelSize | null | undefined, name: string) {
+function validSize(warn: Warn, size: FloatingPanelSize | null | undefined, name: string) {
   if (!size) return null;
   if (!Number.isFinite(size.width) || !Number.isFinite(size.height)) {
-    warnOnce(
+    warn(
       `FloatingPanel:size-finite:${size.width}:${size.height}`,
       `${name} must contain finite width and height values. It was ignored.`,
     );
     return null;
   }
   if (size.width <= 0 || size.height <= 0) {
-    warnOnce(
+    warn(
       `FloatingPanel:size-positive:${size.width}:${size.height}`,
       `${name} width and height must be greater than 0. It was ignored.`,
     );
@@ -86,13 +90,19 @@ export function FloatingPanel({
   onSizeChange,
   ...props
 }: FloatingPanelProps) {
+  const warn = useWarnOnce();
   const positionProp =
     positionInput === undefined
       ? undefined
-      : validPosition(positionInput, "FloatingPanel position");
-  const defaultPosition = validPosition(defaultPositionInput, "FloatingPanel defaultPosition");
-  const sizeProp = sizeInput === undefined ? undefined : validSize(sizeInput, "FloatingPanel size");
-  const defaultSize = validSize(defaultSizeInput, "FloatingPanel defaultSize");
+      : validPosition(warn, positionInput, "FloatingPanel position");
+  const defaultPosition = validPosition(
+    warn,
+    defaultPositionInput,
+    "FloatingPanel defaultPosition",
+  );
+  const sizeProp =
+    sizeInput === undefined ? undefined : validSize(warn, sizeInput, "FloatingPanel size");
+  const defaultSize = validSize(warn, defaultSizeInput, "FloatingPanel defaultSize");
   const group = useFloatingPanelGroupContext("FloatingPanel");
   const { activeId, activate, boundary, register, stack, unregister } = group;
   const generatedId = useId();

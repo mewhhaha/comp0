@@ -12,6 +12,7 @@ catalog:
   react: 19.2.8
   react-dom: 19.2.8
   vite: 8.2.2
+  zod: 4.6.5
 
 allowBuilds:
   esbuild: true

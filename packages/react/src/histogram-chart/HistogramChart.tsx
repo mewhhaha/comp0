@@ -1,4 +1,5 @@
 import { type ComponentProps } from "react";
+import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp } from "../internal/polymorphic.js";
 import { histogramChartContext } from "../chart/chart-context.js";
 import { ChartFigure } from "../chart/chart-root.js";
@@ -23,6 +24,7 @@ export function HistogramChart({
   ref,
   ...props
 }: HistogramChartProps) {
-  const context = histogramChartContext(values, valueLabel, frequencyLabel, formatValue);
+  const warn = useWarnOnce();
+  const context = histogramChartContext(warn, values, valueLabel, frequencyLabel, formatValue);
   return <ChartFigure {...props} ref={ref} context={context} />;
 }

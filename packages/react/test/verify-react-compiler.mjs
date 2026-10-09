@@ -17,6 +17,7 @@ async function javascriptFiles(directory) {
 const distFiles = [
   ...(await javascriptFiles("packages/core/dist")),
   ...(await javascriptFiles("packages/react/dist")),
+  ...(await javascriptFiles("packages/genui/dist")),
 ];
 const compiledFiles = [];
 
@@ -33,6 +34,7 @@ const expectedFiles = JSON.parse(
 assertBaselineMatches(compiledFiles, expectedFiles);
 
 await import("../dist/index.js");
+await import("../../genui/dist/index.js");
 
 console.log(
   `React Compiler smoke test passed: ${compiledFiles.length} files match the reviewed baseline.`,

@@ -1,5 +1,6 @@
 import { type CSSProperties } from "react";
 import { Radio, type RadioProps } from "../radio/Radio.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { normalizeHexColorProp } from "../color-picker/color-picker-shared.js";
 
 type ColorSwatchPickerItemOwnProps = {
@@ -16,7 +17,8 @@ export function ColorSwatchPickerItem({
   style,
   ...props
 }: ColorSwatchPickerItemProps) {
-  const value = normalizeHexColorProp("ColorSwatchPickerItem", "color", color);
+  const warn = useWarnOnce();
+  const value = normalizeHexColorProp(warn, "ColorSwatchPickerItem", "color", color);
   // An invalid color has no value to submit, so the item is skipped.
   if (!value) return null;
 

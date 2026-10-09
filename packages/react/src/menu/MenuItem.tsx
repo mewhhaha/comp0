@@ -7,7 +7,7 @@ import {
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce } from "../internal/dev.js";
 import { disabledProps } from "../internal/disabled.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import {
@@ -41,6 +41,7 @@ export function MenuItem({
   ref,
   ...props
 }: MenuItemProps) {
+  const warn = useWarnOnce();
   const autocomplete = useAutocompleteContext();
   const menu = useMenuListContext("MenuItem");
   const generatedId = useId().replace(/:/g, "");
@@ -66,7 +67,7 @@ export function MenuItem({
     renderedText.hasElement &&
     !ariaLabel
   ) {
-    warnOnce(
+    warn(
       `MenuItem:unreadable-text:${value}`,
       `MenuItem with value "${value}" requires textValue when Autocomplete filters child content that cannot be read before render. It is filtered by its aria-label or value instead.`,
     );

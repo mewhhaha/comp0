@@ -97,10 +97,12 @@ function loneRootShape(name: string): ControlShape {
   return "block";
 }
 
-function itemShape(name: string): ItemShape {
+export function itemShape(name: string): ItemShape {
   if (/radio/i.test(name)) return "radio";
   if (/slide/i.test(name)) return "slide";
-  if (/cell/i.test(name)) return "cell";
+  // A comparison is a table whose columns are options and whose cells are values.
+  if (/cell|^ComparisonValue$/i.test(name)) return "cell";
+  if (/^ComparisonOption$/.test(name)) return "tab";
   if (/^ta[bg](?![a-z])/i.test(name)) return "tab";
   if (/button|column/i.test(name)) return "tab";
   if (/breadcrumb/i.test(name)) return "crumb";

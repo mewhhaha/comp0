@@ -1,6 +1,6 @@
 import { type ComponentProps, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
-import { warnOnce } from "../internal/dev.js";
+import { useWarnOnce, type Warn } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { PaginationContext } from "./pagination-shared.js";
 
@@ -42,9 +42,10 @@ export function Pagination({
   totalPages: totalPagesProp,
   ...props
 }: PaginationProps) {
-  const totalPages = validCount("totalPages", totalPagesProp, 1, 1);
-  const siblingCount = validCount("siblingCount", siblingCountProp, 0, 1);
-  const boundaryCount = validCount("boundaryCount", boundaryCountProp, 0, 1);
+  const warn = useWarnOnce();
+  const totalPages = validCount(warn, "totalPages", totalPagesProp, 1, 1);
+  const siblingCount = validCount(warn, "siblingCount", siblingCountProp, 0, 1);
+  const boundaryCount = validCount(warn, "boundaryCount", boundaryCountProp, 0, 1);
 
   const [unclampedPage, setUnclampedPage] = useControllableState({
     value,
@@ -105,10 +106,10 @@ export function Pagination({
   );
 }
 
-function validCount(name: string, count: number, minimum: number, fallback: number) {
+function validCount(warn: Warn, name: string, count: number, minimum: number, fallback: number) {
   if (Number.isInteger(count) && count >= minimum) return count;
   const kind = minimum > 0 ? "a positive" : "a non-negative";
-  warnOnce(
+  warn(
     `Pagination:${name}:${count}`,
     `Pagination ${name} must be ${kind} integer; received ${count}. Using ${fallback}.`,
   );
