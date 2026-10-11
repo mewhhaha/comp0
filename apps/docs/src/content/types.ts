@@ -1,3 +1,5 @@
+import type { CatalogEntryDescription } from "@comp0/genui";
+
 type ComponentGroupId = "actions" | "charts" | "fields" | "navigation" | "pickers";
 
 export type CodeLanguage = "bash" | "css" | "json" | "tsx";
@@ -105,6 +107,13 @@ export type ComponentGroup = {
   components: ComponentDoc[];
 };
 
+/** A link at the end of a section; paths with a file extension are files, not routes. */
+export type DocLink = {
+  label: string;
+  to: string;
+  description?: string | undefined;
+};
+
 type LearnSection = {
   id: string;
   title: string;
@@ -114,6 +123,7 @@ type LearnSection = {
   note?: string | undefined;
   /** A live demo rendered after the explanation, by name. */
   demo?: "intelligent-ui" | undefined;
+  links?: DocLink[] | undefined;
 };
 
 export type LearnDoc = {
@@ -122,4 +132,53 @@ export type LearnDoc = {
   title: string;
   summary: string;
   sections: LearnSection[];
+};
+
+export type ReferenceRow = {
+  name: string;
+  type?: string | undefined;
+  description: string;
+};
+
+export type ReferenceTable = {
+  caption: string;
+  /** Column headings; with two, the type column is left out. Defaults to Prop, Type, Description. */
+  headings?: readonly [string, string] | readonly [string, string, string] | undefined;
+  rows: ReferenceRow[];
+};
+
+/** A GenUI reference section. Text in backticks renders as code. */
+export type GenUISection = {
+  id: string;
+  title: string;
+  paragraphs: string[];
+  code?: string | undefined;
+  language?: CodeLanguage | undefined;
+  /** The code block's caption; defaults to Example. */
+  codeTitle?: string | undefined;
+  tables?: ReferenceTable[] | undefined;
+  list?: string[] | undefined;
+  /** A list generated from `@comp0/genui` into `genui-reference.json`. */
+  generated?: "expression-functions" | "prompt-rules" | undefined;
+  /** The catalog group whose components this section lists, generated from `@comp0/genui`. */
+  catalogGroup?: string | undefined;
+  note?: string | undefined;
+  links?: DocLink[] | undefined;
+};
+
+export type GenUIDoc = {
+  slug: string;
+  title: string;
+  summary: string;
+  sections: GenUISection[];
+};
+
+/**
+ * What the GenUI reference pages show from `@comp0/genui` itself. Server components cannot load
+ * the renderer, so a test writes this data to `genui-reference.json` and fails when it is stale.
+ */
+export type GenUIReference = {
+  catalog: CatalogEntryDescription[];
+  expressionFunctions: { name: string; summary: string }[];
+  promptRules: string[];
 };

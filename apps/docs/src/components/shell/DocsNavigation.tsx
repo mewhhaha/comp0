@@ -40,6 +40,19 @@ export function DocsNavigation({ className, navigation, onNavigate }: DocsNaviga
       </div>
 
       <div className="mt-8">
+        <p className="px-3 text-sm/6 font-semibold text-zinc-950 dark:text-white">GenUI</p>
+        <ul className="mt-2 grid gap-0.5" role="list">
+          {navigation.genui.map((page) => (
+            <li key={page.slug}>
+              <NavLink className={navLinkClass} onClick={onNavigate} to={`/genui/${page.slug}`}>
+                {page.title}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-8">
         <p className="px-3 text-sm/6 font-semibold text-zinc-950 dark:text-white">Components</p>
         <ul className="mt-2 grid gap-0.5" role="list">
           <li>

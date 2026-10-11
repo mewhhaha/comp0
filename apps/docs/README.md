@@ -2,7 +2,7 @@
 
 The docs app runs React Router RSC Framework Mode on Cloudflare Workers. Route content and Shiki highlighting are server components; the shell, live examples, copy button, previews, and lesson pager are client islands. The server sends only a compact navigation and search index to the shell.
 
-Component pages are generated from `src/content/catalog.ts`. The live and displayed example for a component is the same source file under `src/examples/cases`. Each live example loads on demand, so visiting one component page does not fetch the whole example catalog.
+Component pages are generated from `src/content/catalog.ts`, and the GenUI reference under `/genui` from `src/content/genui.ts` plus the catalog data in `src/content/genui-reference.json`. The live and displayed example for a component is the same source file under `src/examples/cases`. Each live example loads on demand, so visiting one component page does not fetch the whole example catalog.
 
 The preview stack is pinned exactly in `package.json`. React Router, the Vite React/RSC and Cloudflare plugins, the native compiler, and Wrangler are upgraded as one tested set. Repeat cold-cache, bundle-boundary, Worker preview, and browser checks when updating them.
 

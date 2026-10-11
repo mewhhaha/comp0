@@ -1,4 +1,11 @@
-import type { ComponentDoc, ComponentGroup, LearnDoc } from "./types.js";
+import type {
+  ComponentDoc,
+  ComponentGroup,
+  GenUIDoc,
+  GenUIReference,
+  GenUISection,
+  LearnDoc,
+} from "./types.js";
 
 export const docsOrigin = "https://comp0-docs.horrible.workers.dev";
 export const promptFile = "genui.prompt.md";
@@ -6,6 +13,8 @@ export const promptFile = "genui.prompt.md";
 export type LlmsInput = {
   groups: ComponentGroup[];
   learn: LearnDoc[];
+  genui: GenUIDoc[];
+  genuiReference: GenUIReference;
   /** The displayed example source for a slug, as the docs page shows it. */
   exampleSource: (slug: string) => string | undefined;
 };
@@ -23,6 +32,7 @@ const conventions = [
 
 const learnUrl = (slug: string) => `${docsOrigin}/learn/${slug}`;
 const componentUrl = (slug: string) => `${docsOrigin}/components/${slug}`;
+const genuiUrl = (slug: string) => `${docsOrigin}/genui/${slug}`;
 const promptUrl = `${docsOrigin}/${promptFile}`;
 
 function fence(code: string, language: string) {
@@ -35,15 +45,15 @@ function oneLine(text: string) {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function intelligentUiBlock() {
+function genuiBlock(genui: GenUIDoc[]) {
   return [
+    ...genui.map((page) => `- [${page.title}](${genuiUrl(page.slug)}): ${oneLine(page.summary)}`),
     `- [@comp0/genui system prompt](${promptUrl}): the generated JSON-format prompt that tells a model which comp0 components it may compose and the accessibility, safety, and streaming rules (ships as \`@comp0/genui/genui.prompt.md\`).`,
-    `- [Intelligent UI guide](${learnUrl("intelligent-ui")}): wire GenUI and genuiPrompt into a chat app.`,
   ];
 }
 
 /** The short index: H1, summary, and sections of links. */
-export function renderLlmsTxt({ groups, learn }: LlmsInput): string {
+export function renderLlmsTxt({ groups, learn, genui }: LlmsInput): string {
   const lines = ["# comp0", "", `> ${summaryLine}`, ""];
   lines.push(...conventions.map((line) => `- ${line}`), "");
   lines.push("## Learn", "");
@@ -56,12 +66,12 @@ export function renderLlmsTxt({ groups, learn }: LlmsInput): string {
       lines.push(`- [${item.title}](${componentUrl(item.slug)}): ${oneLine(item.summary)}`);
     }
   }
-  lines.push("", "## Intelligent UI", "", ...intelligentUiBlock());
+  lines.push("", "## GenUI", "", ...genuiBlock(genui));
   lines.push(
     "",
     "## Optional",
     "",
-    `- [Full documentation for language models](${docsOrigin}/llms-full.txt): every lesson and component page inlined.`,
+    `- [Full documentation for language models](${docsOrigin}/llms-full.txt): every lesson, component, and GenUI page inlined.`,
     "",
   );
   return lines.join("\n");
@@ -105,9 +115,44 @@ function renderComponent(item: ComponentDoc, source: string | undefined) {
   return lines;
 }
 
-/** The full file: every lesson and component page inlined. */
+function renderGenUISection(section: GenUISection, reference: GenUIReference) {
+  const lines = [`#### ${section.title}`, ""];
+  for (const paragraph of section.paragraphs) lines.push(oneLine(paragraph), "");
+  if (section.code) lines.push(fence(section.code, section.language ?? "tsx"), "");
+  for (const table of section.tables ?? []) {
+    lines.push(`${table.caption}:`, "");
+    for (const row of table.rows) {
+      const type = row.type ? ` (\`${row.type}\`)` : "";
+      lines.push(`- \`${row.name}\`${type}: ${oneLine(row.description)}`);
+    }
+    lines.push("");
+  }
+  const list = [...(section.list ?? [])];
+  if (section.generated === "expression-functions") {
+    list.push(...reference.expressionFunctions.map((item) => item.summary));
+  }
+  if (section.generated === "prompt-rules") list.push(...reference.promptRules);
+  if (list.length > 0) lines.push(...list.map((item) => `- ${oneLine(item)}`), "");
+  for (const entry of reference.catalog.filter((item) => item.group === section.catalogGroup)) {
+    lines.push(`##### ${entry.name}`, "", oneLine(entry.description), "");
+    for (const prop of entry.props) {
+      const required = prop.required ? " (required)" : "";
+      lines.push(`- \`${prop.name}\`${required}: \`${prop.type}\`. ${prop.description}`.trimEnd());
+    }
+    lines.push("");
+  }
+  if (section.note) lines.push(`Note: ${oneLine(section.note)}`, "");
+  for (const link of section.links ?? []) {
+    const description = link.description ? `: ${oneLine(link.description)}` : "";
+    lines.push(`- [${link.label}](${docsOrigin}${link.to})${description}`);
+  }
+  if (section.links) lines.push("");
+  return lines;
+}
+
+/** The full file: every lesson, component, and GenUI page inlined. */
 export function renderLlmsFullTxt(input: LlmsInput): string {
-  const { groups, learn, exampleSource } = input;
+  const { groups, learn, genui, genuiReference, exampleSource } = input;
   const lines = ["# comp0", "", `> ${summaryLine}`, ""];
   lines.push("## Conventions", "", ...conventions.map((line) => `- ${line}`), "");
   lines.push("## Learn", "");
@@ -124,6 +169,17 @@ export function renderLlmsFullTxt(input: LlmsInput): string {
     for (const item of group.components)
       lines.push(...renderComponent(item, exampleSource(item.slug)));
   }
-  lines.push("## Intelligent UI", "", ...intelligentUiBlock(), "");
+  lines.push("## GenUI", "", ...genuiBlock(genui), "");
+  for (const page of genui) {
+    lines.push(
+      `### ${page.title}`,
+      "",
+      `URL: ${genuiUrl(page.slug)}`,
+      "",
+      oneLine(page.summary),
+      "",
+    );
+    for (const section of page.sections) lines.push(...renderGenUISection(section, genuiReference));
+  }
   return lines.join("\n");
 }

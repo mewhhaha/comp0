@@ -55,6 +55,7 @@ Do not break class name expressions out into separate variables just to shorten 
 - Form values and bindings live in the external store (`createGenUIStore`) read with `useSyncExternalStore`, so the React Compiler memoizes every facade and there is no compiler exception. Never read the store through a getter during render.
 - Computed values go through the whitelisted evaluator (`parseExpression`/`evaluateExpression`); never add `eval`, `Function`, property access, or an unlisted function.
 - `genui.prompt.md` is generated from the catalog; run `pnpm --filter @comp0/genui prompt` after catalog changes (a test fails when it is stale; it is excluded from oxfmt because its exact bytes are the prompt).
+- The GenUI reference (`/genui/<slug>`) renders from `apps/docs/src/content/genui.ts`. Server components cannot load the renderer, so the catalog, expression functions, and prompt rules come from `genui-reference.json`, written from `describeCatalog()`; run `pnpm test -u` after catalog changes (`genui.test.ts` fails when it is stale). Option and type tables go through `rows<Type>()`, so an added or renamed key fails typecheck, and the test fails when a runtime export of `@comp0/genui` is not mentioned in backticks.
 - Marker schemas (`nodes`, `bindable`, `computed`, `url`) are identified by the schema definition object, so `.describe()` and `.optional()` keep them.
 
 ## Tests

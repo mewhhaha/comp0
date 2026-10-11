@@ -334,13 +334,15 @@ export default defineConfig({
       files: [
         "apps/docs/src/components/shell/DocsNavigation.tsx",
         "apps/docs/src/components/teaching/Anatomy.tsx",
+        "apps/docs/src/components/teaching/PageOutline.tsx",
+        "apps/docs/src/components/teaching/SectionLinks.tsx",
         "apps/docs/src/components/teaching/StepList.tsx",
         "apps/docs/src/routes/_index/ComponentDirectory.tsx",
         "apps/docs/src/routes/_index/LearningPath.tsx",
         "apps/docs/src/routes/components-index/route.tsx",
         "apps/docs/src/routes/components/ComponentOutline.tsx",
         "apps/docs/src/routes/components/route.tsx",
-        "apps/docs/src/routes/learn/route.tsx",
+        "apps/docs/src/routes/genui/CatalogGroup.tsx",
       ],
       rules: {
         // Tailwind's reset removes list markers; the explicit role preserves

@@ -84,7 +84,7 @@ describe("CommandPalette", () => {
       expect(document.activeElement).toBe(paletteInput());
       expect(visibleOptionTitles().length).toBeGreaterThan(47);
 
-      await act(async () => userEvent.fill(paletteInput()!, "clnd"));
+      await act(async () => userEvent.fill(paletteInput()!, "cldr"));
       expect(visibleOptionTitles()).toEqual(["Calendar", "Range Calendar"]);
     } finally {
       app.unmount();
@@ -96,7 +96,7 @@ describe("CommandPalette", () => {
     try {
       await openFromHeaderButton();
       const input = paletteInput()!;
-      await act(async () => userEvent.fill(input, "clnd"));
+      await act(async () => userEvent.fill(input, "cldr"));
       await act(async () => userEvent.keyboard("{ArrowDown}"));
       const activeId = input.getAttribute("aria-activedescendant");
       expect(document.getElementById(activeId!)?.textContent).toContain("Range Calendar");
@@ -132,7 +132,7 @@ describe("CommandPalette", () => {
     const app = mount();
     try {
       await openFromHeaderButton();
-      await act(async () => userEvent.fill(paletteInput()!, "clnd"));
+      await act(async () => userEvent.fill(paletteInput()!, "cldr"));
       const option = page.getByRole("option", { name: /^Calendar/ });
       expect(option.element().textContent).toContain("Calendar");
       await act(async () => option.click());

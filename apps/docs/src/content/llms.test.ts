@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { componentGroups, components } from "./catalog.js";
+import { genuiDocs } from "./genui.js";
+import genuiReference from "./genui-reference.json" with { type: "json" };
 import { learnDocs } from "./learn.js";
 import { getExampleSource } from "../examples/sources.js";
 import { docsOrigin, promptFile, renderLlmsFullTxt, renderLlmsTxt } from "./llms.js";
 
-const input = { groups: componentGroups, learn: learnDocs, exampleSource: getExampleSource };
+const input = {
+  groups: componentGroups,
+  learn: learnDocs,
+  genui: genuiDocs,
+  genuiReference,
+  exampleSource: getExampleSource,
+};
 
 describe("llms.txt", () => {
   const index = renderLlmsTxt(input);
@@ -37,6 +45,16 @@ describe("llms.txt", () => {
       expect(full, item.slug).toContain(source!.split("\n")[0]!);
     }
     for (const doc of learnDocs) expect(full, doc.slug).toContain(`### ${doc.title}`);
+  });
+
+  it("links every GenUI page and inlines the catalog in the full file", () => {
+    for (const page of genuiDocs) {
+      expect(index, page.slug).toContain(`(${docsOrigin}/genui/${page.slug})`);
+      expect(full, page.slug).toContain(`URL: ${docsOrigin}/genui/${page.slug}`);
+    }
+    for (const entry of genuiReference.catalog) {
+      expect(full, entry.name).toContain(`##### ${entry.name}\n\n`);
+    }
   });
 
   it("links the shipped @comp0/genui prompt", () => {

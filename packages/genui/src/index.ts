@@ -1,5 +1,10 @@
 export { catalog } from "./catalog/catalog.js";
 export {
+  describeCatalog,
+  type CatalogEntryDescription,
+  type CatalogPropDescription,
+} from "./catalog/describe-catalog.js";
+export {
   bindable,
   computed,
   nodes,

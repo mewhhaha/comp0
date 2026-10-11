@@ -1,6 +1,5 @@
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
-import { describeType, isOptional } from "../catalog/describe-schema.js";
-import { type ZodType } from "zod";
+import { describeCatalog, type CatalogEntryDescription } from "../catalog/describe-catalog.js";
 import { type CatalogEntry } from "../catalog/types.js";
 import { expressionFunctions } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
@@ -202,12 +201,10 @@ const groupNotes: Record<string, string[]> = {
   ],
 };
 
-function propLines(entry: CatalogEntry): string[] {
-  const shape = entry.props.shape as Record<string, ZodType>;
-  return Object.entries(shape).map(([key, schema]) => {
-    const required = isOptional(schema) ? "" : " (required)";
-    const description = (schema as { description?: string }).description ?? "";
-    return `- \`${key}\`${required}: \`${describeType(schema)}\`. ${description}`.trimEnd();
+function propLines(entry: CatalogEntryDescription): string[] {
+  return entry.props.map((prop) => {
+    const required = prop.required ? " (required)" : "";
+    return `- \`${prop.name}\`${required}: \`${prop.type}\`. ${prop.description}`.trimEnd();
   });
 }
 
@@ -215,9 +212,11 @@ function section(title: string, lines: readonly string[]): string {
   return [`## ${title}`, ...lines, ""].join("\n");
 }
 
-function groupsOf(catalog: readonly CatalogEntry[]): [string, CatalogEntry[]][] {
-  const groups = new Map<string, CatalogEntry[]>();
-  for (const entry of catalog) {
+function groupsOf(
+  entries: readonly CatalogEntryDescription[],
+): [string, CatalogEntryDescription[]][] {
+  const groups = new Map<string, CatalogEntryDescription[]>();
+  for (const entry of entries) {
     const list = groups.get(entry.group) ?? [];
     list.push(entry);
     groups.set(entry.group, list);
@@ -255,7 +254,7 @@ export function genuiPrompt(options: GenUIPromptOptions = {}): string {
     ]),
   );
   const componentLines: string[] = [];
-  for (const [group, entries] of groupsOf(catalog)) {
+  for (const [group, entries] of groupsOf(describeCatalog(catalog))) {
     componentLines.push(`### ${group}`, "");
     for (const note of groupNotes[group] ?? []) componentLines.push(`- ${note}`);
     if ((groupNotes[group] ?? []).length > 0) componentLines.push("");

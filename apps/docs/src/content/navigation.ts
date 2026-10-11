@@ -1,9 +1,11 @@
 import type { DocsNavigationData, PaletteEntry } from "../components/shell/types.js";
 import { componentGroups } from "./catalog.js";
+import { genuiDocs } from "./genui.js";
 import { learnDocs } from "./learn.js";
 
 export const docsNavigation: DocsNavigationData = {
   lessons: learnDocs.map(({ slug, title }) => ({ slug, title })),
+  genui: genuiDocs.map(({ slug, title }) => ({ slug, title })),
   componentGroups: componentGroups.map(({ id, title, components }) => ({
     id,
     title,
@@ -26,5 +28,10 @@ export const paletteEntries: PaletteEntry[] = [
     route: `/learn/${lesson.slug}`,
     title: lesson.title,
     group: "Learn",
+  })),
+  ...docsNavigation.genui.map((page) => ({
+    route: `/genui/${page.slug}`,
+    title: page.slug === "overview" ? "GenUI overview" : page.title,
+    group: "GenUI",
   })),
 ];

@@ -2,6 +2,8 @@
 
 Let a model compose accessible comp0 interfaces. `@comp0/genui` is a model-facing layer on top of [`@comp0/react`](../react): a JSON format a model writes, a parser that renders every prefix of it while it streams, a validator that sanitizes it against a catalog and tells the model what to fix, a small state store, a safe expression evaluator, and a renderer. No third-party runtime and no provider lock-in: it works with any model that can write JSON.
 
+Documentation: [comp0-docs.horrible.workers.dev/genui/overview](https://comp0-docs.horrible.workers.dev/genui/overview), with the full component catalog generated from the schemas.
+
 - **One JSON format**: `{ "type": "Select", "label": "Plan", "name": "plan", "options": ["Basic", "Pro"] }`. A Zod schema per component is the single source of the validator, the JSON Schema for structured outputs, and the prompt.
 - **Streams**: any prefix of a response renders. Components keep their identity (and typed text and focus) as the response grows; nothing warns, moves focus, or acts until the response is complete.
 - **Safe by construction**: components render only the props their schema declares, only safe URLs, and text as text. Computed values run in a small whitelisted evaluator, never `eval`.
@@ -226,6 +228,7 @@ evaluateExpression("round(seats * 1.5, 2)", { seats: 3 }); // 4.5
 - **`parsePartialJson(text, { final? })`** parses any prefix of a JSON document into the best complete tree: open strings, arrays, and objects are closed, a key without a value is dropped, half-written escapes, numbers, and literals are not guessed at. It also returns `open`, the JSON Pointers of everything that may still grow, and `issues` for syntax it cannot recover from (everything before an issue is still returned). Nesting deeper than 100 levels and text beyond 2 MB are cut off, numbers beyond the double range become `null`, lone surrogates are repaired, and `__proto__` is an ordinary key. It never throws.
 - **`validateResponse(text | parsed | object, { catalog?, complete?, known? })`** validates against the catalog and returns the component tree to render (`root`, with every node keyed by its JSON Pointer), `errors`, and the declared `bindings`. `validateNode` is the same for one finished object.
 - **`createGenUIStore(initialState?)`** is the external store the controls and results read with `useSyncExternalStore`.
+- **`describeCatalog(catalog?)`** describes a catalog as plain JSON (every component with its group, description, and props with readable types), for documentation or a component picker that should not load the schemas. The prompt is written from it.
 
 ### Streaming contract
 

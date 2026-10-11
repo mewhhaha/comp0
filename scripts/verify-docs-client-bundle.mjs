@@ -7,6 +7,7 @@ const forbiddenMarkers = [
   ["component catalog", "Wrap your Menu components in Menubar"],
   ["component catalog module", "content/catalog"],
   ["component entry modules", "content/components/"],
+  ["GenUI reference content", "content/genui"],
   ["Shiki server highlighter", "ph-syntax"],
 ];
 const files = [];

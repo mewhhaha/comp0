@@ -337,6 +337,14 @@ export const learnDocs: LearnDoc[] = [
           "comp0 ships no CSS. The layout components carry plain token attributes such as data-direction, data-gap, data-columns, and data-tone, and every part keeps its data-slot, so one stylesheet themes everything a model can compose. This page's demo does exactly that in Tailwind, in light and dark.",
         code: '[data-slot="stack"] {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n\n[data-slot="grid"][data-columns="3"] {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n[data-slot="card"][data-tone="accent"] {\n  border-color: teal;\n}',
         language: "css",
+        links: [
+          {
+            label: "GenUI reference",
+            to: "/genui/overview",
+            description:
+              "the format, every catalog component, the renderer, and the utilities in full.",
+          },
+        ],
       },
     ],
   },

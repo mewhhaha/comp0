@@ -31,6 +31,7 @@ const components = await Promise.all(
     }),
 );
 const { learnDocs } = await import(pathToFileURL("apps/docs/src/content/learn.ts").href);
+const { genuiDocs } = await import(pathToFileURL("apps/docs/src/content/genui.ts").href);
 
 const check = process.argv.includes("--check");
 const oxfmt =
@@ -121,6 +122,11 @@ const learnBlocks = learnDocs.flatMap((document) =>
     codeBlock(`learn/${document.slug}/${section.id}`, section.code, section.language),
   ),
 );
+const genuiBlocks = genuiDocs.flatMap((page) =>
+  page.sections.flatMap((section) =>
+    codeBlock(`genui/${page.slug}/${section.id}`, section.code, section.language),
+  ),
+);
 const catalogChanges = (
   await Promise.all(
     components.map((component) =>
@@ -136,6 +142,7 @@ const catalogChanges = (
 
 const changedBlocks = [
   ...(await replaceCodeBlocks("apps/docs/src/content/learn.ts", learnBlocks)),
+  ...(await replaceCodeBlocks("apps/docs/src/content/genui.ts", genuiBlocks)),
   ...catalogChanges,
 ];
 if (check && changedBlocks.length > 0) {
@@ -147,7 +154,9 @@ if (check && changedBlocks.length > 0) {
 const result = runOxfmt([
   check ? "--check" : "--write",
   "apps/docs/src/examples/cases",
-  ...(check ? [] : [contentDirectory, "apps/docs/src/content/learn.ts"]),
+  ...(check
+    ? []
+    : [contentDirectory, "apps/docs/src/content/learn.ts", "apps/docs/src/content/genui.ts"]),
 ]);
 if (result.status !== 0) {
   process.stderr.write(result.stderr || result.stdout);

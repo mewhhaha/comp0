@@ -44,6 +44,9 @@ export function DocsHeader({ className, navigation, onOpenSearch }: DocsHeaderPr
           <NavLink className={headerLinkClass} to="/components">
             Components
           </NavLink>
+          <NavLink className={headerLinkClass} to="/genui/overview">
+            GenUI
+          </NavLink>
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
           <Button

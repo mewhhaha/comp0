@@ -37,6 +37,8 @@ for (const file of readdirSync(`${content}/components`).sort()) {
 
 const { groupMeta, groupOrder } = await load("group-order.ts");
 const { learnDocs } = await load("learn.ts");
+const { genuiDocs } = await load("genui.ts");
+const genuiReference = JSON.parse(readFileSync(`${content}/genui-reference.json`, "utf8"));
 const { renderLlmsFullTxt, renderLlmsTxt, promptFile } = await load("llms.ts");
 
 const groups = groupMeta.map((meta) => ({
@@ -52,7 +54,7 @@ const exampleSource = (slug) => {
   return existsSync(file) ? readFileSync(file, "utf8").trimEnd() : undefined;
 };
 
-const input = { groups, learn: learnDocs, exampleSource };
+const input = { groups, learn: learnDocs, genui: genuiDocs, genuiReference, exampleSource };
 const outputDirectory = "apps/docs/public";
 mkdirSync(outputDirectory, { recursive: true });
 writeFileSync(`${outputDirectory}/llms.txt`, renderLlmsTxt(input));

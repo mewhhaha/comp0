@@ -16,6 +16,7 @@ type NavigationGroup = {
 
 export type DocsNavigationData = {
   lessons: NavigationLesson[];
+  genui: NavigationLesson[];
   componentGroups: NavigationGroup[];
 };
 
