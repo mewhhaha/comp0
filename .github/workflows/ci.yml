@@ -97,9 +97,7 @@ jobs:
         with:
           name: docs-build
           # Vite preview serves the Cloudflare Build Output (worker bundle and assets).
-          path: |
-            apps/docs/build
-            apps/docs/.cloudflare/output
+          path: apps/docs/.cloudflare/output
           include-hidden-files: true
           retention-days: 1
           if-no-files-found: error

@@ -1,7 +1,11 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-const clientDirectory = path.resolve(import.meta.dirname, "../apps/docs/build/client");
+// The Cloudflare Vite plugin writes the client build as the Worker's static assets.
+const clientDirectory = path.resolve(
+  import.meta.dirname,
+  "../apps/docs/.cloudflare/output/v0/workers/default/assets",
+);
 const inspectedExtensions = new Set([".html", ".js", ".json", ".map", ".mjs"]);
 const forbiddenMarkers = [
   ["component catalog", "Wrap your Menu components in Menubar"],
