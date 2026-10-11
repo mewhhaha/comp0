@@ -4,7 +4,18 @@ import { unstable_reactRouterRSC } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
+
+// @vitejs/plugin-rsc 0.5.36 writes the client assets manifest in an `order: "post"` generateBundle
+// hook. React Router's client-version plugin reads it in another post hook, and post hooks run in
+// plugin order with React Router required before rsc(), so the read came first and the build
+// failed with "Vite RSC assets manifest not found". Only that reader moves after rsc().
+const reactRouterPlugins = unstable_reactRouterRSC();
+const readsAssetsManifest = (plugin: PluginOption) =>
+  typeof plugin === "object" &&
+  plugin !== null &&
+  "name" in plugin &&
+  plugin.name === "react-router/rsc/virtual-client-version";
 
 export default defineConfig({
   plugins: [
@@ -15,9 +26,10 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
-    unstable_reactRouterRSC(),
+    reactRouterPlugins.filter((plugin) => !readsAssetsManifest(plugin)),
     react({ compiler: true }),
     rsc({ serverHandler: false }),
+    reactRouterPlugins.filter(readsAssetsManifest),
   ],
   environments: {
     client: {
