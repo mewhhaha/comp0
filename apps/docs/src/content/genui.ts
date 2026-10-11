@@ -11,6 +11,7 @@ import type {
   ValidatedResponse,
   ValidateOptions,
 } from "@comp0/genui";
+import type { GenUIRootProps, GenUIViewProps } from "@comp0/genui/rsc";
 import type { GenUIDoc, ReferenceRow } from "./types.js";
 
 type Documented<TObject> = {
@@ -51,21 +52,34 @@ export const genuiDocs: GenUIDoc[] = [
     slug: "overview",
     title: "Overview",
     summary:
-      "Let a model answer with real comp0 interfaces: one JSON format it can stream, checked against a catalog of accessible components.",
+      "Let a model compose real comp0 interfaces: it writes layout as JSON from a catalog of accessible components, and your server streams it to the browser as React Server Components.",
     sections: [
       {
         id: "what-it-is",
         title: "What @comp0/genui is",
         paragraphs: [
-          "`@comp0/genui` is a model-facing layer on top of `@comp0/react`. A model writes one JSON tree, and the package parses every prefix of it while it streams, checks it against a catalog, and renders comp0 components. It has no third-party runtime and no provider lock-in: any model that can write JSON works.",
+          "`@comp0/genui` lets a model compose interfaces from `@comp0/react`. The model writes layout: one JSON tree that names components from a catalog. Your server validates it as it streams and renders it as React Server Components, and the browser receives HTML for the layout and predefined client components for everything interactive. It has no third-party runtime and no provider lock-in: any model that can write JSON works.",
         ],
         list: [
-          'One format: `{ "type": "Select", "label": "Plan", "name": "plan", "options": ["Basic", "Pro"] }`. Each prop is a Standard Schema, the single source of the validator, the JSON Schema for structured outputs, and the prompt; the built-ins are written with ArkType and ship precompiled to plain JSON Schema, and your own components can use ArkType, zod, or any library that implements the standard.',
-          "Streams: any prefix of a response renders. Components keep their identity, typed text, and focus as the response grows, and nothing warns, moves focus, or acts until it is complete.",
+          'Layout, not code: the model can only name catalog components, such as `{ "type": "Select", "label": "Plan", "name": "plan", "options": ["Basic", "Pro"] }`, and pass the props their schemas declare. Each prop is a Standard Schema, the single source of the validator, the JSON Schema for structured outputs, and the prompt; the built-ins are written with ArkType and ship precompiled to plain JSON Schema, and your own components can use ArkType, zod, or any library that implements the standard.',
+          "Streams: the page fills in top-down while the model writes. Components keep their identity, typed text, and focus as the response grows, and nothing warns, moves focus, or acts until it is complete.",
+          "Connected: tools you define run on your server for `Query` nodes and for button and form actions, and your own views, placed with `Slot`, follow the values the model's controls set, live, without a round trip.",
           "Safe by construction: components render only the props their schema declares, only safe URLs, and text as text. Computed values run in a small whitelisted evaluator, never `eval`.",
           "Accessible by schema: every control, chart, table, and image requires its accessible name, and a component without everything it requires is not drawn.",
           "Repairable: a finished response with problems yields structured errors you can send back to the model.",
         ],
+      },
+      {
+        id: "pipeline",
+        title: "From model to browser",
+        paragraphs: [
+          "A response passes through three hands. The model writes JSON, because that is what it can stream and what a schema can hold it to. Your server turns the JSON into React Server Components with `@comp0/genui/rsc`. The browser receives the RSC stream: layout and text as HTML, with no JavaScript, and controls, charts, tabs, and your own views as client components it already has.",
+          "Here the server streams the heading as HTML and the select as a client component with its props, each in its own Suspense boundary, so each appears as soon as the model has written it.",
+        ],
+        code: '// What the model writes\nconst response = {\n  type: "Stack",\n  children: [\n    { type: "Heading", text: "Your trip" },\n    { type: "Select", label: "Seat", name: "seat", options: ["Aisle", "Window"] },\n  ],\n};\n\n// What the server streams, as React Server Components\n<div data-slot="stack">\n  <Suspense>\n    <h2 data-slot="heading">Your trip</h2>\n  </Suspense>\n  <Suspense>\n    {/* A client component: its code is already in the browser; only the props travel. */}\n    <GenUIClientNode node={response.children[1]} />\n  </Suspense>\n</div>;',
+        codeTitle: "The same response on both sides",
+        note: "Apps without server components render the same JSON in the browser with `GenUI`. The format, the catalog, the prompt, tools, and the safety rules are the same either way.",
+        links: [{ label: "Server components", to: "/genui/server" }],
       },
       {
         id: "install",
@@ -81,7 +95,21 @@ export const genuiDocs: GenUIDoc[] = [
         id: "quick-start",
         title: "Render a model's answer",
         paragraphs: [
-          "Send `genuiPrompt()` as the system message, append each streamed chunk to a string, and hand the text to `GenUI`. Actions and repair requests come back as the next user message, so the conversation keeps going.",
+          "On a server that renders React Server Components, send `genuiPrompt()` as the system message and hand the model's text stream to a `GenUIView`. This is a React Router route; any RSC framework works the same way.",
+        ],
+        code: 'import { GenUIRoot, GenUIView, genuiPrompt } from "@comp0/genui/rsc";\nimport { tools } from "./tools.js";\n\nconst system = genuiPrompt({ preamble: "You are a travel assistant.", tools });\n\nexport function loader({ request }: { request: Request }) {\n  return { message: new URL(request.url).searchParams.get("q") ?? "Plan a weekend in Lisbon" };\n}\n\nexport function ServerComponent({ loaderData }: { loaderData: { message: string } }) {\n  return (\n    <GenUIRoot call="/api/genui/tools">\n      <GenUIView stream={streamFromYourProvider(system, loaderData.message)} />\n    </GenUIRoot>\n  );\n}',
+        codeTitle: "routes/assistant.tsx",
+        note: "`streamFromYourProvider` stands for any model API that streams text, as an `AsyncIterable<string>`. The lab streams several responses into one root, and its ask page streams Claude's answer this way.",
+        links: [
+          { label: "Server components", to: "/genui/server" },
+          { label: "GenUI lab", to: "/labs/genui-rsc" },
+        ],
+      },
+      {
+        id: "browser-quick-start",
+        title: "Without server components",
+        paragraphs: [
+          "In the browser, append each streamed chunk to a string and hand the text to `GenUI`. Actions and repair requests come back as the next user message, so the conversation keeps going.",
         ],
         code: 'import { formatErrors, GenUI, genuiPrompt } from "@comp0/genui";\nimport { useState } from "react";\n\nconst system = genuiPrompt({ preamble: "You are a travel assistant." });\n\nexport function Assistant() {\n  const [response, setResponse] = useState("");\n  const [streaming, setStreaming] = useState(false);\n\n  async function ask(message: string) {\n    setResponse("");\n    setStreaming(true);\n    for await (const chunk of streamFromYourProvider(system, message)) {\n      setResponse((text) => text + chunk);\n    }\n    setStreaming(false);\n  }\n\n  return (\n    <GenUI\n      response={response}\n      streaming={streaming}\n      onAction={(action) => ask(action.message)}\n      onError={(errors) => ask(formatErrors(errors))}\n    />\n  );\n}',
         codeTitle: "Assistant.tsx",
@@ -109,9 +137,16 @@ export const genuiDocs: GenUIDoc[] = [
             description: "Teach the model the catalog, or hold it to the format with a schema.",
           },
           {
-            label: "Renderer",
+            label: "Server components",
+            to: "/genui/server",
+            description:
+              "Stream responses as React Server Components: roots, views, your components, and tools.",
+          },
+          {
+            label: "Browser renderer",
             to: "/genui/renderer",
-            description: "GenUI props, the streaming contract, actions, state, and errors.",
+            description:
+              "GenUI props, the streaming contract, tools and host views, actions, state, and errors.",
           },
           {
             label: "Parser, validator, and store",
@@ -394,10 +429,124 @@ export const genuiDocs: GenUIDoc[] = [
     ],
   },
   {
-    slug: "renderer",
-    title: "Renderer",
+    slug: "server",
+    title: "Server components",
     summary:
-      "GenUI renders a response while it streams, reports what the person does, and says what the model should fix.",
+      "`@comp0/genui/rsc` streams a model's response as React Server Components: layout renders on the server, and interactive parts are client components the browser already has.",
+    sections: [
+      {
+        id: "where",
+        title: "What renders where",
+        paragraphs: [
+          "The model only writes layout, so the server decides what each component becomes. The browser downloads code for the interactive components once, like any other client component, and every response reuses it.",
+        ],
+        list: [
+          "On the server: Stack, Grid, Card, Heading, Text, List, and Image render as plain HTML, and their text grows in place while the model writes it.",
+          "Streamed through client parts: Tabs and Accordion arrive one tab or section at a time, each with server-rendered content.",
+          "On the client: controls, Form, Button, charts, tables, `Query`, `Slot`, and the rest of the catalog are predefined client components. Their props travel in the RSC stream once the model has written them, and a Form's fields still stream in through the server.",
+          "A component with a bound (`$bind`) or computed (`$expr`) prop renders on the client, because those values live in the shared store.",
+          "Nothing the model writes becomes code: it can only name catalog entries, and the server checks every prop with the same validator as the browser renderer.",
+        ],
+      },
+      {
+        id: "root",
+        title: "A root and its views",
+        paragraphs: [
+          "`GenUIRoot` is a client component that holds what responses share: the values controls set, your host views, and the tool caller. Each `GenUIView` streams one response into it, such as one per turn of a conversation, so a later answer can read a choice made in an earlier one. Your own components can sit anywhere inside the root.",
+        ],
+        code: 'import { GenUIRoot, GenUIView } from "@comp0/genui/rsc";\nimport { TripMap, TripSummary } from "./trip.js";\n\nexport function Conversation({ turns }: { turns: AsyncIterable<string>[] }) {\n  return (\n    <GenUIRoot call="/api/genui/tools" slots={{ map: <TripMap /> }}>\n      <TripSummary />\n      {turns.map((turn, index) => (\n        <GenUIView key={index} stream={turn} />\n      ))}\n    </GenUIRoot>\n  );\n}',
+        tables: [
+          {
+            caption: "GenUIRoot props",
+            rows: rows<GenUIRootProps>({
+              children: {
+                type: "ReactNode",
+                description: "Views and your own components, which share the root's values.",
+              },
+              slots: {
+                type: "Record<string, ReactNode>",
+                description: "Host views the model can place by name with a `Slot`.",
+              },
+              call: {
+                type: "ToolCaller | string",
+                description:
+                  "Runs tools for `Query` nodes and `call` steps: the URL of an endpoint served by `handleToolRequest`, or a function.",
+              },
+              onAction: {
+                type: "(action: GenUIAction) => void",
+                description:
+                  "A button was pressed, a form submitted, or a suggestion chosen. Send `action.message` as the next user turn.",
+              },
+              initialState: {
+                type: "Readonly<Record<string, unknown>>",
+                description: "Values to start with, such as a saved state.",
+              },
+              store: {
+                type: "GenUIStore",
+                description:
+                  "A store from `createGenUIStore` kept outside, to share values beyond this root.",
+              },
+            }),
+          },
+          {
+            caption: "GenUIView props",
+            rows: rows<GenUIViewProps>({
+              stream: {
+                type: "AsyncIterable<string>",
+                description:
+                  "The model's response as it streams, such as the text deltas of a chat completion.",
+              },
+            }),
+          },
+        ],
+      },
+      {
+        id: "server-streaming",
+        title: "Streaming on the server",
+        paragraphs: [
+          "A server component renders once, so the server waits for what each component needs before it sends it.",
+        ],
+        list: [
+          "Every component renders in its own Suspense boundary as soon as its type and required props have arrived, so the page fills in top-down while the model writes.",
+          "Text, list items, children, tabs, and sections grow in place. Every other prop must be complete before its component appears, which is why the prompt asks the model to write props first and children last.",
+          "A prop the model has not written yet is pending, not empty: a component waits for it until the model closes the component's object.",
+          "Each view is `aria-busy` until its stream ends. Then the response is validated once, and buttons, submits, and suggestions start to work.",
+        ],
+      },
+      {
+        id: "host-components",
+        title: "Your components inside the root",
+        paragraphs: [
+          "Client components inside the root, and the views you place with `Slot`, read and write the same values as the model's controls through hooks from `@comp0/genui/rsc/client`: `useGenUIValue(name)`, `useGenUIState()`, `useGenUIStore()`, and `useGenUICall()`. A slider the model wrote can drive your canvas with no server round trip.",
+        ],
+        code: '"use client";\n\nimport { useGenUIValue } from "@comp0/genui/rsc/client";\n\nexport function TripSummary() {\n  const seat = useGenUIValue("seat");\n  return <p>Seat: {typeof seat === "string" ? seat : "not chosen yet"}</p>;\n}',
+        codeTitle: "trip.tsx",
+      },
+      {
+        id: "server-tools",
+        title: "Serve tools from an endpoint",
+        paragraphs: [
+          "Give the root the URL of an endpoint that answers with `handleToolRequest`. It is plain Fetch API, so it fits a React Router resource route, a Next.js route handler, or a Worker. In React Router, prefer it to a server function: a server function re-renders the route after every call, which would stream every view again.",
+        ],
+        code: '// routes/api.genui.tools.ts, a resource route\nimport { handleToolRequest } from "@comp0/genui/rsc";\nimport { tools } from "../tools.js";\n\nexport function action({ request }: { request: Request }) {\n  return handleToolRequest(tools, request);\n}',
+        links: [{ label: "Connect the interface to your app", to: "/genui/renderer" }],
+      },
+      {
+        id: "server-actions",
+        title: "Continue the conversation",
+        paragraphs: [
+          "Buttons, forms, and suggestions report to `onAction` on the root. Wrap the root in a client component and send `action.message` as the next turn from there, for example by navigating to a URL your server component reads.",
+        ],
+        code: '"use client";\n\nimport { GenUIRoot } from "@comp0/genui/rsc/client";\nimport { type ReactNode } from "react";\nimport { useNavigate } from "react-router";\n\nexport function AssistantRoot({ children }: { children: ReactNode }) {\n  const navigate = useNavigate();\n  return (\n    <GenUIRoot\n      call="/api/genui/tools"\n      onAction={(action) => navigate(`?${new URLSearchParams({ q: action.message })}`)}\n    >\n      {children}\n    </GenUIRoot>\n  );\n}',
+        codeTitle: "AssistantRoot.tsx",
+      },
+    ],
+  },
+  {
+    slug: "renderer",
+    title: "Browser renderer",
+    summary:
+      "GenUI renders a response in the browser while it streams, reports what the person does, and says what the model should fix. Tools, actions, and errors work the same with server components.",
     sections: [
       {
         id: "render",
@@ -483,7 +632,7 @@ export const genuiDocs: GenUIDoc[] = [
         paragraphs: [
           "The model composes layout; your app supplies what it can reach. A tool is a function with a schema for its input, declared with `defineTool`. The interface calls tools through one `call(name, args)` function you pass to the renderer, so the same tools work from an HTTP endpoint (`handleToolRequest` on the server, `httpToolCaller` or just the endpoint's URL in the browser), a function that calls `runTool` (which validates the arguments and keeps error details on the server), or an MCP `tools/call`.",
           "A `Query` node calls a tool and stores the result under a name, again whenever a bound argument changes, without another turn; a chart's `data`, a table's `rows`, or a list's `items` bound to that name follow it. A button's `action` runs steps in order: `call` a tool, `set` a value, or `send` a message. A `Slot` places one of your own views, which read the same values with hooks, so a slider the model wrote can drive your canvas live.",
-          "With React Server Components, `@comp0/genui/rsc` streams layout as server HTML: `GenUIRoot` holds the values, slots, and tool caller, and any number of `GenUIView` elements stream responses into it, sharing them.",
+          "With React Server Components, `@comp0/genui/rsc` streams layout as server HTML: `GenUIRoot` holds the values, slots, and tool caller, and any number of `GenUIView` elements stream responses into it, sharing them. Server components covers it in full.",
           "Inside an MCP Apps host, `@comp0/genui/mcp` renders a response the model writes as a tool call's arguments: `genuiAppTool` describes that tool on your MCP server, and `McpAppGenUI` renders it in the app's `ui://` resource while the arguments stream, with tools going through the host's `tools/call` and actions becoming the person's next message.",
         ],
         code: "<GenUI\n  response={response}\n  streaming={streaming}\n  call={callTool}\n  slots={{ shader: <ShaderCanvas /> }}\n/>;\n\n// With React Server Components\n<GenUIRoot call={callTool} slots={{ shader: <ShaderCanvas /> }}>\n  <GenUIView stream={modelStream} />\n</GenUIRoot>;",

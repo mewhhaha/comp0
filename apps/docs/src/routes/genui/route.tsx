@@ -151,7 +151,9 @@ export function ServerComponent({ params }: GenUIRouteProps) {
               )}
               {section.note && (
                 <Callout className="mt-6" title="Keep in mind">
-                  <p>{section.note}</p>
+                  <p>
+                    <InlineText text={section.note} />
+                  </p>
                 </Callout>
               )}
               {section.links && <SectionLinks className="mt-6" links={section.links} />}
