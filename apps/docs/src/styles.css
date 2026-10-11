@@ -558,10 +558,187 @@
         @apply text-sm/6;
       }
     }
+    /* Shown until the first datum arrives; it matches the chart that replaces it, so the title
+       stays put when the plot pops in. */
+    figure[data-slot="chart-empty"] {
+      @apply m-0 grid gap-2;
+      figcaption {
+        @apply font-semibold text-zinc-950 dark:text-white;
+      }
+      p {
+        @apply text-sm/6 text-zinc-500 dark:text-zinc-400;
+      }
+    }
 
     meter,
     progress {
       @apply h-2 w-full;
+    }
+
+    /* Entrance motion. GenUI keys every component by its JSON Pointer, so a component mounts
+       once, when the model first writes it, and these animations play exactly then: text
+       streaming into a component never replays them. Containers without a surface of their own
+       (stack, grid, list, accordion) stay still and their items move, so nothing compounds.
+       The easing is a damped spring that overshoots by about 9% before it settles. */
+    --genui-spring: linear(
+      0,
+      0.204,
+      0.568,
+      0.87,
+      1.038,
+      1.093,
+      1.083,
+      1.049,
+      1.018,
+      0.999,
+      0.992,
+      0.992,
+      1
+    );
+
+    /* Blocks and repeated rows rise into place from their top-left corner. */
+    [data-slot="heading"],
+    [data-slot="text"],
+    [data-slot="image"],
+    [data-slot="separator"],
+    [data-slot="list"] > li,
+    [data-slot="table"],
+    [data-slot="comparison-table"],
+    :is([data-slot="table"], [data-slot="comparison-table"], [data-slot="chart-table"])
+      > tbody
+      > tr,
+    [data-slot="cited-text"],
+    [data-slot="source"],
+    [data-slot="status"],
+    [data-slot="alert"],
+    [data-slot="form"],
+    [data-slot="text-field"],
+    [data-slot="text-area"],
+    [data-slot="number-field"],
+    [data-slot="select"],
+    [data-slot="date-picker"],
+    [data-slot="radio-group"],
+    [data-slot="checkbox-group"],
+    [data-slot="slider"],
+    [data-slot="meter-field"],
+    [data-slot="progress-bar-field"],
+    [data-slot="output-field"],
+    [data-slot="tabs"],
+    [data-slot="accordion-item"],
+    [data-slot="disclosure"],
+    [data-slot="chart-empty"],
+    figure[data-slot="chart"] > svg,
+    [data-slot="chart-description"],
+    [data-slot="chart-table"],
+    /* A link is plain text until its href is safe, then React swaps in an anchor. Only the
+       first element animates, so the link pops in once instead of blinking at the swap. */
+    span[data-slot="link"] {
+      transform-origin: 0 0;
+      animation: genui-rise 420ms var(--genui-spring);
+    }
+    /* A plot is centred in its figure, so it rises from its own baseline. */
+    figure[data-slot="chart"] > svg {
+      transform-origin: 50% 100%;
+    }
+
+    /* Cards and compact controls pop out from their centre. */
+    [data-slot="card"],
+    [data-slot="button"],
+    [data-slot="copy-button"],
+    [data-slot="suggestion"],
+    [data-slot="checkbox"],
+    [data-slot="switch"],
+    :is([data-slot="radio-group"], [data-slot="checkbox-group"]) > label {
+      animation: genui-pop 420ms var(--genui-spring);
+    }
+
+    /* Bars grow out of the baseline; negative values grow the other way. */
+    [data-slot="bar-chart-bar"] rect,
+    [data-slot="column-chart-column"] rect {
+      transform-box: fill-box;
+      animation: genui-grow-x 600ms var(--genui-spring);
+    }
+    [data-slot="bar-chart-bar"] rect {
+      transform-origin: left;
+    }
+    [data-slot="bar-chart-bar"][data-value^="-"] rect {
+      transform-origin: right;
+    }
+    [data-slot="column-chart-column"] rect {
+      transform-origin: bottom;
+      animation-name: genui-grow-y;
+    }
+    [data-slot="column-chart-column"][data-value^="-"] rect {
+      transform-origin: top;
+    }
+
+    /* Fills sweep up to their value: the fill is a hard-stop gradient, so its size scales it. */
+    [data-slot="meter"],
+    [data-slot="progress-bar"] {
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      animation: genui-fill 650ms var(--genui-spring);
+    }
+  }
+
+  /* Keyframes only set the starting state, so every element settles on its own style (a
+     disabled button at its dimmed opacity) and is fully shown if an animation never runs. */
+  @keyframes genui-rise {
+    from {
+      opacity: 0;
+      translate: 0 0.625rem;
+      scale: 0.96;
+    }
+  }
+  @keyframes genui-pop {
+    from {
+      opacity: 0;
+      translate: 0 0.25rem;
+      scale: 0.9;
+    }
+  }
+  @keyframes genui-grow-x {
+    from {
+      scale: 0 1;
+    }
+  }
+  @keyframes genui-grow-y {
+    from {
+      scale: 1 0;
+    }
+  }
+  @keyframes genui-fill {
+    from {
+      background-size: 0 100%;
+    }
+  }
+
+  /* Without motion, entrances are a plain fade and fills start at their value. */
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes genui-rise {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes genui-pop {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes genui-grow-x {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes genui-grow-y {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes genui-fill {
+      from {
+        background-size: 100% 100%;
+      }
     }
   }
 }
