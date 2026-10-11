@@ -4,7 +4,13 @@
 export { GenUIRoot, type GenUIRootProps } from "./client.js";
 export { GenUIView, type GenUIViewProps } from "./surface.js";
 export { readResponse, type ResponseStream } from "./stream.js";
-export { serverCatalog } from "./catalog.js";
+// Everything a server needs to talk to a model about the catalog, without loading any renderer.
+export { catalogSpecs } from "../catalog/specs.js";
+export { describeCatalog, type CatalogEntryDescription } from "../catalog/describe-catalog.js";
+export { genuiPrompt, type GenUIPromptOptions } from "../prompt/prompt.js";
+export { responseJsonSchema, type JsonSchema } from "../schema/json-schema.js";
+export { formatErrors, type GenUIError } from "../validate/errors.js";
+export { validateResponse } from "../validate/validate.js";
 export { handleToolRequest, httpToolCaller } from "../tools/http.js";
 export {
   defineTool,

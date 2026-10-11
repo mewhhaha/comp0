@@ -11,7 +11,7 @@ import {
   type PropShape,
 } from "../catalog/schema.js";
 import { type StandardIssue } from "../catalog/standard-schema.js";
-import { type CatalogEntry } from "../catalog/types.js";
+import { type CatalogSpec } from "../catalog/types.js";
 import { parseExpression } from "../expression/expression.js";
 import {
   childPointer,
@@ -30,7 +30,7 @@ export const maxNodeDepth = 40;
 
 export type ValidateOptions = {
   /** The components a response may use; defaults to the built-in catalog. */
-  catalog?: readonly CatalogEntry[] | undefined;
+  catalog?: readonly CatalogSpec[] | undefined;
   /**
    * Whether the response is finished. While it is not, nothing is reported as an error:
    * components that are still being written are expected to be incomplete. Defaults to true.
@@ -56,7 +56,7 @@ const failed: Checked = { ok: false };
 const accepted = (value: unknown): Checked => ({ ok: true, value });
 
 type Context = {
-  index: ReadonlyMap<string, CatalogEntry>;
+  index: ReadonlyMap<string, CatalogSpec>;
   open: ReadonlySet<string>;
   reporting: boolean;
   quiet: number;
@@ -70,9 +70,9 @@ type Context = {
   component: string | undefined;
 };
 
-const catalogIndexes = new WeakMap<readonly CatalogEntry[], Map<string, CatalogEntry>>();
+const catalogIndexes = new WeakMap<readonly CatalogSpec[], Map<string, CatalogSpec>>();
 
-function indexOf(catalog: readonly CatalogEntry[]): Map<string, CatalogEntry> {
+function indexOf(catalog: readonly CatalogSpec[]): Map<string, CatalogSpec> {
   let index = catalogIndexes.get(catalog);
   if (index === undefined) {
     index = new Map(catalog.map((entry) => [entry.name, entry]));
@@ -701,7 +701,7 @@ function toParse(input: unknown, complete: boolean): PartialParse {
  */
 export function validateWith(
   input: unknown,
-  options: ValidateOptions & { catalog: readonly CatalogEntry[] },
+  options: ValidateOptions & { catalog: readonly CatalogSpec[] },
 ): ValidatedResponse {
   const complete = options.complete ?? true;
   const { catalog } = options;

@@ -162,7 +162,7 @@ describe("catalog", () => {
     const names = (shape: PropShape) =>
       shapeEntries(shape).map((prop) => `${prop.name}${prop.optional ? "?" : ""}`);
     expect(names(listShape("Tabs", "tabs"))).toEqual(["label", "children"]);
-    expect(names(listShape("Accordion", "items"))).toEqual(["title", "children", "open?"]);
+    expect(names(listShape("Accordion", "items"))).toEqual(["title", "open?", "children"]);
     expect(describeType(propSchema("Select", "options"))).toBe(
       "(string | { value: string, label?: string })[]",
     );

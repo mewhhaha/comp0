@@ -14,7 +14,7 @@ import {
   Tabs,
 } from "@comp0/react";
 import { useHeadingLevel } from "../bridge/heading-level.js";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import { tabsProps, accordionProps, disclosureProps } from "./disclosure.props.js";
 import { asNode, asRecords, asText } from "../safe.js";
 
@@ -90,29 +90,9 @@ export function DisclosureFacade({
   );
 }
 
-export const disclosureEntries = [
-  defineEntry({
-    name: "Tabs",
-    group: "Disclosure",
-    description:
-      "Switches between parallel views of the same subject (for example per region or per plan). Requires tabs, each { label, children }; only one view is visible at a time.",
-    props: tabsProps,
-    component: TabsFacade,
-  }),
-  defineEntry({
-    name: "Accordion",
-    group: "Disclosure",
-    description:
-      "A list of sections that expand one at a time (or several with multiple). Use it for FAQs and long, skimmable content. Requires items, each { title, children, open? }.",
-    props: accordionProps,
-    component: AccordionFacade,
-  }),
-  defineEntry({
-    name: "Disclosure",
-    group: "Disclosure",
-    description:
-      "One show/hide section for optional details. Requires summary and children; use Accordion for several.",
-    props: disclosureProps,
-    component: DisclosureFacade,
-  }),
-];
+/** The facades that render the disclosure components, by component name. */
+export const disclosureComponents = {
+  Tabs: TabsFacade,
+  Accordion: AccordionFacade,
+  Disclosure: DisclosureFacade,
+};

@@ -1,14 +1,14 @@
-import { catalog as defaultCatalog } from "../catalog/catalog.js";
+import { catalogSpecs } from "../catalog/specs.js";
 import { describeCatalog, type CatalogEntryDescription } from "../catalog/describe-catalog.js";
 import { describeType } from "../catalog/describe-schema.js";
 import { type PropSchema } from "../catalog/schema.js";
-import { type CatalogEntry } from "../catalog/types.js";
+import { type CatalogSpec } from "../catalog/types.js";
 import { expressionFunctions } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
 
 export type GenUIPromptOptions = {
   /** The components a response may use; defaults to the built-in catalog. */
-  catalog?: readonly CatalogEntry[] | undefined;
+  catalog?: readonly CatalogSpec[] | undefined;
   /** The opening paragraph, such as "You are a travel assistant." */
   preamble?: string | undefined;
   /** Rules added after the built-in ones. */
@@ -39,7 +39,7 @@ export const genuiPromptRules: readonly string[] = [
   "Use Comparison for choosing between options (plans, products): one feature per row with a value per option, true or false for included or not, and recommended only when you can say why.",
   "Use CitedText when claims come from sources: put [1]-style markers after each claim and list every source once, in order. Never invent a source or a URL.",
   "End with Suggestions (two to four short follow-up replies) when the person would likely continue; use CopyButton only next to the visible text it copies.",
-  "Streaming: write type first, then the props, and put the content people read first at the top, so the interface appears top-down while you write.",
+  "Streaming: write type first, then every other prop, and children (or a list of items with children) last; a prop written after the children may be ignored. Put the content people read first at the top, so the interface appears top-down while you write.",
 ];
 
 /** Complete, valid example responses; tests validate them so they cannot rot. */
@@ -246,7 +246,7 @@ export function genuiPrompt(options: GenUIPromptOptions = {}): string {
   const tools = Object.entries(options.tools ?? {});
   const slots = Object.entries(options.slots ?? {});
   // Query and Slot only mean something when the host offers tools and views.
-  const catalog = (options.catalog ?? defaultCatalog).filter(
+  const catalog = (options.catalog ?? catalogSpecs).filter(
     (entry) =>
       (entry.name !== "Query" || tools.length > 0) && (entry.name !== "Slot" || slots.length > 0),
   );

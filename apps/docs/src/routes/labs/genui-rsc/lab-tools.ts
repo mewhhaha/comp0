@@ -7,7 +7,14 @@ const cities: Record<string, number> = { Oslo: 9, Lisbon: 21, Tokyo: 18, Nairobi
 const forecastInput = type({ city: "string" }).describe("The city to forecast.");
 
 /** The lab's host API: what the model's interface may call, with a schema for each input. */
+const subscribeInput = type({ email: "string.email" }).describe("Who to tell about releases.");
+
 export const labTools = {
+  subscribe: defineTool({
+    description: "Signs an email address up for release updates and confirms in one sentence.",
+    input: subscribeInput,
+    run: async ({ email }) => `Subscribed ${email} to release updates.`,
+  }),
   forecast: defineTool({
     description:
       "The daily high for the next seven days in a city, as points { x: day, y: degrees }.",

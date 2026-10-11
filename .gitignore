@@ -3,6 +3,8 @@ node_modules
 apps/docs/.react-router
 apps/docs/.cloudflare
 apps/docs/build
+apps/docs/.dev.vars
+apps/docs/.env
 packages/*/dist
 .agents
 .claude

@@ -27,28 +27,28 @@ Every prop of type `Binding` accepts `{"$bind": name, "initial"?: value}`, and e
 
 Lays out components in order, vertically by default or in a row. Use it for the root and to group related components. Requires children.
 
-- `children` (required): `Component[]`. Components to lay out, in order.
 - `direction`: `"column" | "row"`. "column" (default) stacks vertically.
 - `gap`: `"xs" | "sm" | "md" | "lg" | "xl"`. Space between children; "md" by default.
 - `align`: `"start" | "center" | "end" | "stretch"`. Cross-axis alignment.
 - `wrap`: `boolean`. Let a row wrap onto several lines.
+- `children` (required): `Component[]`. Components to lay out, in order.
 
 #### Grid
 
 Places components in equal columns, for dashboards and side-by-side cards. Requires children; columns defaults to 2.
 
-- `children` (required): `Component[]`. Components to place in grid cells, in order.
 - `columns`: `number`. Number of equal columns, 1 to 6; 2 by default.
 - `gap`: `"xs" | "sm" | "md" | "lg" | "xl"`. Space between cells; "md" by default.
+- `children` (required): `Component[]`. Components to place in grid cells, in order.
 
 #### Card
 
 A titled section that groups related content, such as one metric, one result, or one step. Requires a title and children.
 
 - `title` (required): `string`. Heading of the card; it also names the card for screen readers.
-- `children` (required): `Component[]`. Content of the card.
 - `description`: `string`. One short supporting sentence under the title.
 - `tone`: `"default" | "muted" | "accent"`. Visual emphasis.
+- `children` (required): `Component[]`. Content of the card.
 
 #### Heading
 
@@ -127,8 +127,9 @@ Groups form controls and a submit button. When the person submits, the assistant
 
 - `name` (required): `string`. Short identifier for the form, unique in the response.
 - `title` (required): `string`. Accessible name of the form. Add a Heading to show it.
-- `children` (required): `Component[]`. The form controls and any explanatory components.
 - `submitLabel`: `string`. Text of the submit button; "Submit" by default.
+- `action`: `{ call?: string, args?: object, into?: string, set?: string, value?: any, send?: string }[]`. Steps to run in order on submit instead of sending the answers to the assistant: a call step without args receives the form's values by control name. Stops at the first that fails.
+- `children` (required): `Component[]`. The form controls and any explanatory components.
 
 #### TextField
 
@@ -244,23 +245,23 @@ A calendar date. The value is "YYYY-MM-DD". A form control. Always give it a vis
 
 Switches between parallel views of the same subject (for example per region or per plan). Requires tabs, each { label, children }; only one view is visible at a time.
 
-- `tabs` (required): `{ label: string, children: Component[] }[]`. The tabs, each { label, children } where children are the components shown when the tab is selected.
 - `label`: `string`. Accessible name of the tab list.
+- `tabs` (required): `{ label: string, children: Component[] }[]`. The tabs, each { label, children } where children are the components shown when the tab is selected.
 
 #### Accordion
 
 A list of sections that expand one at a time (or several with multiple). Use it for FAQs and long, skimmable content. Requires items, each { title, children, open? }.
 
-- `items` (required): `{ title: string, children: Component[], open?: boolean }[]`. The sections, each { title, children, open? }.
 - `multiple`: `boolean`. Allow several sections open at once.
+- `items` (required): `{ title: string, open?: boolean, children: Component[] }[]`. The sections, each { title, open?, children }.
 
 #### Disclosure
 
 One show/hide section for optional details. Requires summary and children; use Accordion for several.
 
 - `summary` (required): `string`. Visible text that toggles the details.
-- `children` (required): `Component[]`. Details revealed when opened.
 - `open`: `boolean`. Starts open.
+- `children` (required): `Component[]`. Details revealed when opened.
 
 ### Data
 
@@ -404,7 +405,7 @@ A divider line between sections. Takes no required arguments.
 - Use Comparison for choosing between options (plans, products): one feature per row with a value per option, true or false for included or not, and recommended only when you can say why.
 - Use CitedText when claims come from sources: put [1]-style markers after each claim and list every source once, in order. Never invent a source or a URL.
 - End with Suggestions (two to four short follow-up replies) when the person would likely continue; use CopyButton only next to the visible text it copies.
-- Streaming: write type first, then the props, and put the content people read first at the top, so the interface appears top-down while you write.
+- Streaming: write type first, then every other prop, and children (or a list of items with children) last; a prop written after the children may be ignored. Put the content people read first at the top, so the interface appears top-down while you write.
 
 ## Examples
 The code fences below are only for reading; your reply is the bare JSON object.

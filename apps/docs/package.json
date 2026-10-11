@@ -12,6 +12,7 @@
     "typecheck": "react-router typegen && tsgo -p tsconfig.json"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
     "@comp0/genui": "workspace:*",
     "@comp0/react": "workspace:*",
     "@heroicons/react": "^2.2.0",

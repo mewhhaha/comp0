@@ -1,5 +1,5 @@
 import { Alert, Separator, Status } from "@comp0/react";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import { alertProps, separatorProps } from "./feedback.props.js";
 import { alertTones } from "./tokens.js";
 import { asText, asToken } from "../safe.js";
@@ -29,20 +29,8 @@ export function SeparatorFacade({ orientation }: CatalogProps<typeof separatorPr
   );
 }
 
-export const feedbackEntries = [
-  defineEntry({
-    name: "Alert",
-    group: "Feedback",
-    description:
-      "A highlighted message: confirmation, information, a warning, or an error. Requires message; tone is info by default. Warnings and errors are announced immediately.",
-    props: alertProps,
-    component: AlertFacade,
-  }),
-  defineEntry({
-    name: "Separator",
-    group: "Feedback",
-    description: "A divider line between sections. Takes no required arguments.",
-    props: separatorProps,
-    component: SeparatorFacade,
-  }),
-];
+/** The facades that render the feedback components, by component name. */
+export const feedbackComponents = {
+  Alert: AlertFacade,
+  Separator: SeparatorFacade,
+};

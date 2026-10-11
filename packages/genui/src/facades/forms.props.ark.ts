@@ -1,7 +1,8 @@
 // The forms facades' props, written with ArkType and precompiled into forms.props.ts.
 // Edit here, then run `pnpm test -u` to regenerate.
 import { type } from "arktype";
-import { bindable, nodes, oneOf } from "../catalog/schema.js";
+import { stepProps } from "./actions.props.ark.js";
+import { bindable, list, nodes, oneOf } from "../catalog/schema.js";
 import { textTypes } from "./tokens.js";
 
 const optionProps = type({
@@ -19,8 +20,12 @@ const optionList = type("string")
 export const formProps = {
   name: type("string").describe("Short identifier for the form, unique in the response."),
   title: type("string").describe("Accessible name of the form. Add a Heading to show it."),
-  children: nodes("The form controls and any explanatory components."),
   "submitLabel?": type("string").describe('Text of the submit button; "Submit" by default.'),
+  "action?": list(
+    stepProps,
+    "Steps to run in order on submit instead of sending the answers to the assistant: a call step without args receives the form's values by control name. Stops at the first that fails.",
+  ),
+  children: nodes("The form controls and any explanatory components."),
 };
 
 export const textFieldProps = {

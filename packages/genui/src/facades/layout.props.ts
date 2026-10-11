@@ -3,7 +3,6 @@
 import { bindable, computed, fromJsonSchema, nodes, oneOf, url } from "../catalog/schema.js";
 
 export const stackProps = {
-  children: nodes("Components to lay out, in order."),
   "direction?": oneOf(["column", "row"], '"column" (default) stacks vertically.'),
   "gap?": oneOf(["xs", "sm", "md", "lg", "xl"], 'Space between children; "md" by default.'),
   "align?": oneOf(["start", "center", "end", "stretch"], "Cross-axis alignment."),
@@ -11,26 +10,27 @@ export const stackProps = {
     type: "boolean",
     description: "Let a row wrap onto several lines.",
   }),
+  children: nodes("Components to lay out, in order."),
 };
 export const gridProps = {
-  children: nodes("Components to place in grid cells, in order."),
   "columns?": fromJsonSchema<number>({
     type: "number",
     description: "Number of equal columns, 1 to 6; 2 by default.",
   }),
   "gap?": oneOf(["xs", "sm", "md", "lg", "xl"], 'Space between cells; "md" by default.'),
+  children: nodes("Components to place in grid cells, in order."),
 };
 export const cardProps = {
   title: fromJsonSchema<string>({
     type: "string",
     description: "Heading of the card; it also names the card for screen readers.",
   }),
-  children: nodes("Content of the card."),
   "description?": fromJsonSchema<string>({
     type: "string",
     description: "One short supporting sentence under the title.",
   }),
   "tone?": oneOf(["default", "muted", "accent"], "Visual emphasis."),
+  children: nodes("Content of the card."),
 };
 export const headingProps = {
   text: fromJsonSchema<string>({ type: "string", description: "The heading text." }),

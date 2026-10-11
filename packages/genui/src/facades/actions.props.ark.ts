@@ -5,7 +5,7 @@ import { list, oneOf, url } from "../catalog/schema.js";
 import { variants } from "./tokens.js";
 
 /** One step of an action; a step does one of call, set, or send. */
-const stepProps = {
+export const stepProps = {
   "call?": type("string").describe("Name of a host tool to call, from the list of tools."),
   "args?": type("Record<string, unknown>").describe(
     'Arguments for the tool; any value may be {"$bind": name} or {"$expr": "..."}.',

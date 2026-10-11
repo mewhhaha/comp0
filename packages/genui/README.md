@@ -202,6 +202,108 @@ type GenUIError = {
 
 `formatErrors(errors)` turns them into a message such as `The response has 2 problems. Fix them and answer again with the complete corrected JSON: - /children/1 [Select]: required property label is missing`. Problems are never reported for a response that is still streaming, and never for the part of it that is still open. The renderer shows everything that is valid regardless: unknown components and props are left out, a prop of the wrong type is dropped, an unsafe URL is not used, and a component missing a required prop is not drawn. At most 50 problems are listed.
 
+## Connect it to your app
+
+The model composes; your app decides what it can reach.
+
+```tsx
+import { defineTool, handleToolRequest } from "@comp0/genui";
+import { type } from "arktype";
+
+const forecastInput = type({ city: "string" });
+export const tools = {
+  forecast: defineTool({
+    description: "Seven daily highs for a city, as points { x: day, y: degrees }.",
+    input: forecastInput,
+    run: async ({ city }) => fetchForecast(city),
+  }),
+};
+
+// Any Fetch API server: a React Router resource route, a Next.js route handler, a Worker.
+export const action = ({ request }: { request: Request }) => handleToolRequest(tools, request);
+```
+
+```tsx
+<GenUI
+  response={response}
+  streaming={streaming}
+  call="/api/genui/tools" // or httpToolCaller(url), or any (name, args) => Promise<ToolResult>
+  slots={{ shader: <ShaderCanvas /> }}
+/>;
+
+genuiPrompt({ tools, slots: { shader: "A live plasma preview; reads speed, scale, and hue." } });
+```
+
+- `{ "type": "Query", "tool": "forecast", "args": { "city": { "$bind": "city" } }, "into": "forecast" }` calls a tool and stores the result, again whenever a bound argument changes, with no turn to the model. Bind a chart's `data`, a table's `rows`, or a list's `items` to `forecast` to show it.
+- A Button's or Form's `action` runs steps in order: `{ "call", "args", "into" }`, `{ "set", "value" }`, `{ "send" }`. In a Form, a `call` without `args` sends the form's values.
+- `{ "type": "Slot", "name": "shader" }` places one of your views. Views read the values the model's controls bind with the hooks in `@comp0/genui/rsc/client` (`useGenUIValue`, `useGenUIState`, `useGenUIStore`, `useGenUICall`), so a slider the model wrote drives your canvas live.
+- `runTool` validates every call against the tool's input schema and reports failures without the error's details.
+
+## React Server Components
+
+`@comp0/genui/rsc` streams a response as server components: layout renders on the server with no JavaScript, and controls, charts, and your slots are client components that share one store.
+
+```tsx
+import { GenUIRoot, GenUIView } from "@comp0/genui/rsc";
+
+<GenUIRoot call="/api/genui/tools" slots={{ shader: <ShaderCanvas /> }}>
+  <LiveValues /> {/* your component, anywhere inside: reads the same values */}
+  <GenUIView stream={turn1} />
+  <GenUIView stream={turn2} />
+</GenUIRoot>;
+```
+
+`GenUIRoot` is the shared scope; each `GenUIView` streams one response (an `AsyncIterable<string>` of the model's text). The entry also exports the server-safe pieces (`catalogSpecs`, `genuiPrompt`, `responseJsonSchema`, `validateResponse`, `runTool`), so a route can prompt the model and render its answer without loading a renderer. On the server a node renders once, so the model must write a container's props before its children; the generated prompt says so. In React Router, serve tools from an endpoint rather than a server function, which re-renders the route after each call.
+
+## MCP Apps
+
+`@comp0/genui/mcp` renders a response inside an [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview) host (the `io.modelcontextprotocol/ui` extension, protocol `2026-01-26`). The model calls a tool whose arguments are a response; the host streams those arguments into your `ui://` resource, which renders them as they arrive.
+
+On the MCP server, describe the tool with `genuiAppTool` and serve the app's HTML as the resource:
+
+```ts
+import { genuiPrompt } from "@comp0/genui";
+import { genuiAppTool, mcpAppMimeType } from "@comp0/genui/mcp";
+
+const renderUi = genuiAppTool({
+  name: "render_ui",
+  description: genuiPrompt({ preamble: "Show the person an interface when it helps." }),
+  resourceUri: "ui://genui/app.html",
+});
+// tools/list → [renderUi]
+// resources/read "ui://genui/app.html" → { contents: [{ uri, mimeType: mcpAppMimeType, text: appHtml }] }
+```
+
+The tool's `inputSchema` is `responseJsonSchema()` and takes the same `catalog`, `root`, and `strict` options; `_meta.ui.resourceUri` links it to the app. In the `tools/call` handler, `validateResponse(args)` and `formatErrors` let you answer a broken response with `isError: true` so the model can fix it.
+
+In the app:
+
+```tsx
+import { createRoot } from "react-dom/client";
+import { createMcpAppBridge, McpAppGenUI } from "@comp0/genui/mcp";
+
+const bridge = createMcpAppBridge({ appInfo: { name: "Trips", version: "1.0.0" } });
+createRoot(document.getElementById("root")!).render(<McpAppGenUI bridge={bridge} />);
+```
+
+`McpAppGenUI` renders the arguments while the model writes them (`ui/notifications/tool-input-partial`), settles when they are final (`tool-input`), and withdraws them when the call is cancelled. Query nodes and `call` steps reach the MCP server through the host (`tools/call`), actions become the person's next message (`ui/message`), and every edit replaces the model's context with the stored values (`ui/update-model-context`). Any `GenUI` prop other than `response` and `streaming` can be passed and replaces the default. To compose your own, `useMcpAppResponse(bridge)` returns `{ response, streaming, cancelled }` for `<GenUI>`; while the arguments stream, `response` marks the part still being written as open, so half-written URLs, binding names, and expressions wait just as they do for streamed text.
+
+The bridge itself needs no React:
+
+| Member                                                         | Meaning                                                                                                                               |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `ready`                                                        | Settles after the `ui/initialize` handshake with the host's info, capabilities, and context.                                          |
+| `call(name, args)`                                             | A `ToolCaller` over `tools/call`: `structuredContent` first, else the text content (parsed when it is JSON). Errors carry no details. |
+| `sendMessage(text)`                                            | Sends the person's next turn (`ui/message`); resolves to whether the host accepted it.                                                |
+| `updateModelContext({ structuredContent })`                    | Replaces what the model reads on its next turn.                                                                                       |
+| `getToolInput()` / `onToolInput(listener)`                     | `{ arguments, final, cancelled, reason }` as the host streams the tool's arguments.                                                   |
+| `getHostContext()` / `onHostContext(listener)`                 | Theme, display mode, locale, and the rest, merged as the host reports changes.                                                        |
+| `notifySize({ width, height })`                                | Reports the app's size; sent automatically from a `ResizeObserver` unless `autoResize: false`.                                        |
+| `request(method, params)` / `onNotification(method, listener)` | Anything else, such as `ui/open-link`, `ui/request-display-mode`, or `ui/notifications/tool-result`.                                  |
+| `close()`                                                      | Stops listening and fails pending requests.                                                                                           |
+
+Options: `appInfo`, `displayModes`, `timeout` (one minute by default), `autoResize`, `onTeardown` (awaited before the host removes the app), and `targetOrigin` (`"*"` by default, because a sandboxed frame cannot know its parent's origin; set it when you do). Messages are read only from `window.parent`, and a page opened outside a host fails fast instead of talking to itself.
+
 ## The pieces on their own
 
 The renderer is built from parts you can use directly, for example to validate on the server or to unit-test prompts:

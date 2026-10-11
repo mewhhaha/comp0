@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { resolveStepValue } from "../bridge/steps.js";
 import { bindingNamePattern } from "../catalog/schema.js";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import { useGenUI } from "../render/context.js";
 import { asText } from "../safe.js";
 import { queryProps, slotProps } from "./host.props.js";
@@ -47,21 +47,8 @@ export function SlotFacade({ name }: CatalogProps<typeof slotProps>) {
   return Object.hasOwn(slots, key) ? slots[key] : null;
 }
 
-export const hostEntries = [
-  defineEntry({
-    name: "Query",
-    group: "Host",
-    description:
-      "Calls one of the host's tools and stores the result under a name, again whenever a bound argument changes, without asking the assistant. Draws nothing: bind a chart's data, a table's rows, or a list's items to the name to show the result. Requires tool and into.",
-    props: queryProps,
-    component: QueryFacade,
-  }),
-  defineEntry({
-    name: "Slot",
-    group: "Host",
-    description:
-      "Places one of the host's own views, such as a live preview, by name. The host's views read values bound by your controls. Requires name.",
-    props: slotProps,
-    component: SlotFacade,
-  }),
-];
+/** The facades that render the host components, by component name. */
+export const hostComponents = {
+  Query: QueryFacade,
+  Slot: SlotFacade,
+};

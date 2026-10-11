@@ -9,8 +9,20 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { BusyRegion } from "@comp0/react";
+import {
+  Accordion,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
+  BusyRegion,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+} from "@comp0/react";
 import { catalog } from "../catalog/catalog.js";
+import { type CatalogEntry } from "../catalog/types.js";
 import { type JsonValue } from "../json/parse.js";
 import { GenUIContext, type GenUIAction } from "../render/context.js";
 import { resolveProps } from "../render/node.js";
@@ -130,7 +142,8 @@ export function GenUIClientNode({ node, bindings, children }: GenUIClientNodePro
       if (!view.streaming) root.act(action);
     },
   };
-  const Facade = validated.root.entry.component;
+  if (!("component" in validated.root.entry)) return null;
+  const Facade = (validated.root.entry as CatalogEntry).component;
   const props = resolveProps(validated.root.props);
   if (children !== undefined) props.children = children;
   return (
@@ -174,4 +187,116 @@ export function useGenUIState(): GenUIState {
 /** The root's tool caller, for host components that call the same tools as the model. */
 export function useGenUICall(): ToolCaller | undefined {
   return useRoot().call;
+}
+
+/*
+ * Containers whose items hold nested components stream through the server: the server renders
+ * each item as it arrives inside one of these predefined parts, so a tab or a section appears
+ * while the model is still writing the next.
+ */
+
+export type GenUITabsRootProps = {
+  /** Accessible name of the tab list. */
+  label?: string | undefined;
+  /** The streamed `GenUITab` triggers. */
+  triggers?: ReactNode;
+  /** The streamed `GenUITabPanel` panels. */
+  children?: ReactNode;
+};
+
+/** A model's Tabs: the server streams the triggers and panels in as the model writes them. */
+export function GenUITabsRoot({ label, triggers, children }: GenUITabsRootProps) {
+  return (
+    <Tabs as="div" defaultValue="tab-0">
+      <TabList aria-label={label}>{triggers}</TabList>
+      {children}
+    </Tabs>
+  );
+}
+
+export function GenUITab({ value, children }: { value: string; children?: ReactNode }) {
+  return <Tab value={value}>{children}</Tab>;
+}
+
+export function GenUITabPanel({ value, children }: { value: string; children?: ReactNode }) {
+  return <TabPanel value={value}>{children}</TabPanel>;
+}
+
+type AccordionRoot = { declareOpen: (value: string) => void };
+
+const AccordionRootContext = createContext<AccordionRoot | null>(null);
+
+export type GenUIAccordionRootProps = {
+  /** Allow several sections open at once. */
+  multiple?: boolean | undefined;
+  /** The streamed `GenUIAccordionItem` sections. */
+  children?: ReactNode;
+};
+
+/** A model's Accordion: sections stream in, and the ones the model opened start open. */
+export function GenUIAccordionRoot({ multiple, children }: GenUIAccordionRootProps) {
+  // The model's `open` flags apply until the person opens or closes a section.
+  const [modelOpen, setModelOpen] = useState<string[]>([]);
+  const [chosen, setChosen] = useState<string[] | null>(null);
+  const root: AccordionRoot = {
+    declareOpen: (value) =>
+      setModelOpen((current) => (current.includes(value) ? current : [...current, value])),
+  };
+  const open = chosen ?? (multiple === true ? modelOpen : modelOpen.slice(0, 1));
+  if (multiple === true) {
+    return (
+      <AccordionRootContext value={root}>
+        <Accordion as="div" type="multiple" value={open} onChange={setChosen}>
+          {children}
+        </Accordion>
+      </AccordionRootContext>
+    );
+  }
+  return (
+    <AccordionRootContext value={root}>
+      <Accordion
+        as="div"
+        type="single"
+        collapsible
+        value={open[0] ?? ""}
+        onChange={(next) => setChosen(next === "" ? [] : [next])}
+      >
+        {children}
+      </Accordion>
+    </AccordionRootContext>
+  );
+}
+
+export type GenUIAccordionItemProps = {
+  value: string;
+  /** Heading level of the section's trigger, from where the accordion sits. */
+  level: 1 | 2 | 3 | 4 | 5 | 6;
+  /** Whether the model asked for the section to start open. */
+  open?: boolean | undefined;
+  /** The streamed title. */
+  title?: ReactNode;
+  /** The streamed content. */
+  children?: ReactNode;
+};
+
+export function GenUIAccordionItem({
+  value,
+  level,
+  open,
+  title,
+  children,
+}: GenUIAccordionItemProps) {
+  const root = use(AccordionRootContext);
+  const declareOpen = root?.declareOpen;
+  useEffect(() => {
+    if (open === true) declareOpen?.(value);
+  }, [open, value, declareOpen]);
+  return (
+    <AccordionItem value={value}>
+      <AccordionHeader level={level}>
+        <AccordionTrigger>{title}</AccordionTrigger>
+      </AccordionHeader>
+      <AccordionPanel>{children}</AccordionPanel>
+    </AccordionItem>
+  );
 }

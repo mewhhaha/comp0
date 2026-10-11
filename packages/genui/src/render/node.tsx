@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { type CatalogEntry } from "../catalog/types.js";
 import { Binding, Computed, ValidNode } from "../validate/values.js";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -34,6 +35,8 @@ type NodeViewProps = { node: ValidNode };
 
 /** Renders one validated component with its catalog entry's facade. */
 export function NodeView({ node }: NodeViewProps): ReactNode {
-  const Facade = node.entry.component;
+  // A node validated against specs alone has nothing to render with.
+  if (!("component" in node.entry)) return null;
+  const Facade = (node.entry as CatalogEntry).component;
   return <Facade {...resolveProps(node.props)} />;
 }

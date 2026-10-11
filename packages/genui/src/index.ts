@@ -1,4 +1,5 @@
-export { catalog } from "./catalog/catalog.js";
+export { builtInComponents, catalog } from "./catalog/catalog.js";
+export { catalogSpecs } from "./catalog/specs.js";
 export {
   describeCatalog,
   type CatalogEntryDescription,
@@ -19,7 +20,9 @@ export {
 export { type StandardJSONSchemaV1, type StandardSchemaV1 } from "./catalog/standard-schema.js";
 export {
   defineEntry,
+  withComponents,
   type CatalogEntry,
+  type CatalogSpec,
   type CatalogGroup,
   type CatalogProps,
 } from "./catalog/types.js";

@@ -3,6 +3,10 @@
 import { fromJsonSchema, list, nodes } from "../catalog/schema.js";
 
 export const tabsProps = {
+  "label?": fromJsonSchema<string>({
+    type: "string",
+    description: "Accessible name of the tab list.",
+  }),
   tabs: list(
     {
       label: fromJsonSchema<string>({ type: "string", description: "Visible text of the tab." }),
@@ -10,33 +14,29 @@ export const tabsProps = {
     },
     "The tabs, each { label, children } where children are the components shown when the tab is selected.",
   ),
-  "label?": fromJsonSchema<string>({
-    type: "string",
-    description: "Accessible name of the tab list.",
-  }),
 };
 export const accordionProps = {
+  "multiple?": fromJsonSchema<boolean>({
+    type: "boolean",
+    description: "Allow several sections open at once.",
+  }),
   items: list(
     {
       title: fromJsonSchema<string>({
         type: "string",
         description: "Visible heading of the section; it toggles the section.",
       }),
-      children: nodes("Content revealed when the section is open."),
       "open?": fromJsonSchema<boolean>({ type: "boolean", description: "Starts open." }),
+      children: nodes("Content revealed when the section is open."),
     },
-    "The sections, each { title, children, open? }.",
+    "The sections, each { title, open?, children }.",
   ),
-  "multiple?": fromJsonSchema<boolean>({
-    type: "boolean",
-    description: "Allow several sections open at once.",
-  }),
 };
 export const disclosureProps = {
   summary: fromJsonSchema<string>({
     type: "string",
     description: "Visible text that toggles the details.",
   }),
-  children: nodes("Details revealed when opened."),
   "open?": fromJsonSchema<boolean>({ type: "boolean", description: "Starts open." }),
+  children: nodes("Details revealed when opened."),
 };

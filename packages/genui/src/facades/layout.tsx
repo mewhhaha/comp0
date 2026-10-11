@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { HeadingLevelContext, useHeadingLevel } from "../bridge/heading-level.js";
 import { useBound, useComputed } from "../bridge/state.js";
-import { type CatalogProps, defineEntry } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import {
   stackProps,
   gridProps,
@@ -167,61 +167,13 @@ export function ListFacade({ items, ordered }: CatalogProps<typeof listProps>) {
   return <ul data-slot="list">{content}</ul>;
 }
 
-export const layoutEntries = [
-  defineEntry({
-    name: "Stack",
-    group: "Layout",
-    description:
-      "Lays out components in order, vertically by default or in a row. Use it for the root and to group related components. Requires children.",
-    props: stackProps,
-    component: StackFacade,
-  }),
-  defineEntry({
-    name: "Grid",
-    group: "Layout",
-    description:
-      "Places components in equal columns, for dashboards and side-by-side cards. Requires children; columns defaults to 2.",
-    props: gridProps,
-    component: GridFacade,
-  }),
-  defineEntry({
-    name: "Card",
-    group: "Layout",
-    description:
-      "A titled section that groups related content, such as one metric, one result, or one step. Requires a title and children.",
-    props: cardProps,
-    component: CardFacade,
-  }),
-  defineEntry({
-    name: "Heading",
-    group: "Layout",
-    description:
-      "A heading that titles the content below it. Use it to structure a long response. Requires text; keep levels in order.",
-    props: headingProps,
-    component: HeadingFacade,
-  }),
-  defineEntry({
-    name: "Text",
-    group: "Layout",
-    description:
-      "A paragraph of plain text. Use it for explanations around other components. Requires text.",
-    props: textProps,
-    component: TextFacade,
-  }),
-  defineEntry({
-    name: "Image",
-    group: "Layout",
-    description:
-      "An image from an http(s) or relative URL. Requires src and alt text that describes the image; add a caption when the image needs explaining.",
-    props: imageProps,
-    component: ImageFacade,
-  }),
-  defineEntry({
-    name: "List",
-    group: "Layout",
-    description:
-      "A bulleted or numbered list of short text items. Use it for steps, options, or highlights. Requires items.",
-    props: listProps,
-    component: ListFacade,
-  }),
-];
+/** The facades that render the layout components, by component name. */
+export const layoutComponents = {
+  Stack: StackFacade,
+  Grid: GridFacade,
+  Card: CardFacade,
+  Heading: HeadingFacade,
+  Text: TextFacade,
+  Image: ImageFacade,
+  List: ListFacade,
+};

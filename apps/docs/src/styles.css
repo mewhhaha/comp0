@@ -400,8 +400,56 @@
       @apply border-zinc-950/10 dark:border-white/10;
     }
 
+    /* Tabs: an underlined row of triggers that scrolls sideways on a narrow screen. */
+    [data-slot="tabs"] {
+      @apply grid min-w-0 gap-4;
+      [role="tablist"] {
+        @apply flex gap-1 overflow-x-auto border-b border-zinc-950/10 dark:border-white/10;
+      }
+      [role="tab"] {
+        @apply -mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 border-transparent px-3 py-2 font-medium whitespace-nowrap text-zinc-600 outline-none hover:text-zinc-950 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:min-h-9 dark:text-zinc-400 dark:hover:text-white dark:focus-visible:outline-teal-400;
+        &[data-selected] {
+          @apply border-teal-600 text-zinc-950 dark:border-teal-400 dark:text-white;
+        }
+      }
+      [role="tabpanel"] {
+        @apply grid gap-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-600 dark:focus-visible:outline-teal-400;
+      }
+    }
+
+    /* Accordion: full-width section triggers with a chevron that turns when the section opens. */
+    [data-slot="accordion"] {
+      @apply grid border-y border-zinc-950/10 dark:border-white/10;
+    }
+    [data-slot="accordion-item"] + [data-slot="accordion-item"] {
+      @apply border-t border-zinc-950/10 dark:border-white/10;
+    }
+    [data-slot="accordion-header"] {
+      @apply m-0 text-base/6 font-medium;
+    }
+    [data-slot="accordion-trigger"] {
+      @apply flex min-h-11 w-full items-center justify-between gap-3 py-3 text-left font-medium text-zinc-950 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 dark:text-white dark:focus-visible:outline-teal-400;
+      &::after {
+        content: "";
+        @apply size-2 shrink-0 -translate-y-0.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-current opacity-60 transition-transform motion-reduce:transition-none;
+      }
+    }
+    [data-slot="accordion-item"][data-open]
+      > [data-slot="accordion-header"]
+      [data-slot="accordion-trigger"]::after {
+      @apply translate-y-0.5 rotate-[225deg];
+    }
+    [data-slot="accordion-panel"] {
+      @apply grid gap-3 pb-4;
+    }
+
+    [data-slot="suggestions"] {
+      @apply flex flex-wrap gap-2;
+    }
+
     [data-slot="button"],
-    [data-slot="form-submit"] {
+    [data-slot="form-submit"],
+    [data-slot="suggestion"] {
       @apply inline-flex min-h-11 items-center justify-center rounded-lg px-3 py-2 font-medium ring-1 ring-zinc-950/15 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 aria-disabled:opacity-60 disabled:opacity-60 sm:min-h-9 dark:ring-white/20 dark:focus-visible:outline-teal-400;
       &[data-variant="primary"],
       &[data-slot="form-submit"] {
@@ -412,6 +460,10 @@
       }
       &[data-variant="danger"] {
         @apply bg-red-700 text-white ring-red-700 hover:bg-red-600 dark:bg-red-600 dark:ring-red-600;
+      }
+      /* Quick replies are pills, so a row of them reads as choices rather than commands. */
+      &[data-slot="suggestion"] {
+        @apply rounded-full hover:bg-zinc-950/5 dark:hover:bg-white/10;
       }
     }
 
@@ -439,8 +491,23 @@
     input:not([type="checkbox"], [type="radio"], [type="range"]),
     textarea,
     select,
-    [data-slot="select-trigger"] {
+    [data-slot="select"] > button {
       @apply min-h-11 w-full rounded-lg border border-zinc-950/20 bg-white px-3 py-2 text-zinc-950 outline-none placeholder:text-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600 sm:min-h-9 dark:border-white/20 dark:bg-zinc-800 dark:text-white dark:focus-visible:outline-teal-400;
+    }
+    /* A Select is a plain trigger button and a listbox popover beside it; neither part carries a
+       data-slot of its own, so they are reached through the select root. */
+    [data-slot="select"] > button {
+      @apply flex items-center justify-between gap-2 text-left;
+      &::after {
+        content: "";
+        @apply size-2 shrink-0 -translate-y-0.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-current opacity-60;
+      }
+    }
+    [data-slot="select"] > [role="listbox"] {
+      @apply max-h-60 min-w-[anchor-size(width)] overflow-y-auto rounded-lg border-0 bg-white p-1 text-zinc-800 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:text-zinc-100 dark:shadow-none dark:ring-white/15;
+    }
+    [data-slot="select"] [role="option"] {
+      @apply flex min-h-11 cursor-default items-center rounded-md px-3 py-2 outline-none hover:bg-zinc-950/5 focus-visible:bg-zinc-950/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 data-selected:font-semibold data-selected:text-teal-800 sm:min-h-9 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 dark:focus-visible:outline-teal-400 dark:data-selected:text-teal-300;
     }
     label,
     legend {
@@ -551,7 +618,7 @@
         @apply stroke-teal-600 stroke-2 dark:stroke-teal-400;
       }
       [data-slot="bar-chart-bar"] rect,
-      [data-slot="column-chart-bar"] rect {
+      [data-slot="column-chart-column"] rect {
         @apply fill-teal-600 dark:fill-teal-400;
       }
       [data-slot="chart-table"] {

@@ -1,7 +1,7 @@
-import { catalog as defaultCatalog } from "./catalog.js";
+import { catalogSpecs } from "./specs.js";
 import { describeType } from "./describe-schema.js";
 import { descriptionOf, shapeEntries } from "./schema.js";
-import { type CatalogEntry } from "./types.js";
+import { type CatalogSpec } from "./types.js";
 
 /** One prop of a catalog component as plain data. */
 export type CatalogPropDescription = {
@@ -27,7 +27,7 @@ export type CatalogEntryDescription = {
  * should not load the schemas or the renderer.
  */
 export function describeCatalog(
-  catalog: readonly CatalogEntry[] = defaultCatalog,
+  catalog: readonly CatalogSpec[] = catalogSpecs,
 ): CatalogEntryDescription[] {
   return catalog.map((entry) => ({
     name: entry.name,

@@ -1,25 +1,28 @@
-import { actionEntries } from "../facades/actions.js";
-import { dataEntries } from "../facades/data.js";
-import { disclosureEntries } from "../facades/disclosure.js";
-import { feedbackEntries } from "../facades/feedback.js";
-import { formEntries } from "../facades/forms.js";
-import { hostEntries } from "../facades/host.js";
-import { layoutEntries } from "../facades/layout.js";
-import { resultEntries } from "../facades/results.js";
-import { type CatalogEntry } from "./types.js";
+import { actionsComponents } from "../facades/actions.js";
+import { dataComponents } from "../facades/data.js";
+import { disclosureComponents } from "../facades/disclosure.js";
+import { feedbackComponents } from "../facades/feedback.js";
+import { formsComponents } from "../facades/forms.js";
+import { hostComponents } from "../facades/host.js";
+import { layoutComponents } from "../facades/layout.js";
+import { resultsComponents } from "../facades/results.js";
+import { catalogSpecs } from "./specs.js";
+import { withComponents, type CatalogEntry } from "./types.js";
+
+/** The React components that render the built-in specs, by component name. */
+export const builtInComponents = {
+  ...layoutComponents,
+  ...actionsComponents,
+  ...formsComponents,
+  ...disclosureComponents,
+  ...dataComponents,
+  ...resultsComponents,
+  ...feedbackComponents,
+  ...hostComponents,
+};
 
 /**
- * Every component a model may compose, as plain data: a name, a description written for a model,
- * a Zod schema of its props, and the React component that renders it. The catalog is the single
- * source of the validator, the JSON Schema, and the prompt.
+ * Every component a model may compose: the built-in specs with their React components. The specs
+ * alone (`catalogSpecs`) are the single source of the validator, the JSON Schema, and the prompt.
  */
-export const catalog: readonly CatalogEntry[] = [
-  ...layoutEntries,
-  ...actionEntries,
-  ...formEntries,
-  ...disclosureEntries,
-  ...dataEntries,
-  ...resultEntries,
-  ...feedbackEntries,
-  ...hostEntries,
-];
+export const catalog: readonly CatalogEntry[] = withComponents(catalogSpecs, builtInComponents);

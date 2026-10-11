@@ -41,7 +41,8 @@ import {
   useStateKey,
 } from "../bridge/fields.js";
 import { useField } from "../bridge/state.js";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { useActionSteps, type ActionStep } from "../bridge/steps.js";
+import { type CatalogProps } from "../catalog/types.js";
 import {
   formProps,
   textFieldProps,
@@ -59,7 +60,7 @@ import { textTypes } from "./tokens.js";
 import { describeFormValues, type FormFieldDescriptor } from "../describe.js";
 import { type JsonValue } from "../json/parse.js";
 import { useGenUI } from "../render/context.js";
-import { asBoolean, asNumber, asText, asToken, uniqueBy } from "../safe.js";
+import { asBoolean, asNumber, asRecords, asText, asToken, uniqueBy } from "../safe.js";
 
 type ChoiceOption = { value: string; label: string };
 
@@ -90,12 +91,22 @@ export function normalizeOptions(value: unknown): ChoiceOption[] {
   return uniqueBy(options, (option) => option.value);
 }
 
-export function FormFacade({ name, title, children, submitLabel }: CatalogProps<typeof formProps>) {
+export function FormFacade({
+  name,
+  title,
+  children,
+  submitLabel,
+  action,
+}: CatalogProps<typeof formProps>) {
   const formName = fieldKey(name, title);
   const { act, store, streaming } = useGenUI();
+  const runSteps = useActionSteps();
   const [registry] = useState(() => new FieldRegistry());
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   const enclosing = use(FieldRegistryContext);
   const submitText = asText(submitLabel).trim() === "" ? "Submit" : asText(submitLabel);
+  const steps = asRecords(action) as ActionStep[];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,12 +118,30 @@ export function FormFacade({ name, title, children, submitLabel }: CatalogProps<
       const value = store.get(field.key) ?? field.initial;
       if (value !== undefined) values[field.name] = value;
     }
+    if (steps.length > 0) {
+      setPending(true);
+      setError("");
+      void runSteps(steps, { type: "form", name: formName, values }).then((result) => {
+        setPending(false);
+        if (!result.ok) setError(result.error);
+      });
+      return;
+    }
     act({
       type: "form",
       name: formName,
       message: describeFormValues(fields, values) || submitText,
       values,
     });
+  }
+
+  let failure = null;
+  if (error !== "") {
+    failure = (
+      <p data-slot="form-error" role="alert">
+        {error}
+      </p>
+    );
   }
 
   // A form inside a form is invalid HTML. The inner one becomes a labelled group of the outer
@@ -129,7 +158,13 @@ export function FormFacade({ name, title, children, submitLabel }: CatalogProps<
       <FieldRegistryContext value={registry}>
         <form data-slot="form" aria-label={asText(title)} onSubmit={submit}>
           {children}
-          <Button type="submit" data-slot="form-submit" disabled={streaming}>
+          {failure}
+          <Button
+            type="submit"
+            data-slot="form-submit"
+            disabled={streaming || pending}
+            aria-busy={pending || undefined}
+          >
             {submitText}
           </Button>
         </form>
@@ -283,7 +318,9 @@ export function SelectFacade({
       <SelectTrigger>
         <SelectValue placeholder="Select an option" />
       </SelectTrigger>
-      <SelectPopover>
+      {/* Without a placement the popover is unanchored, and a page's margin reset pins it to
+          the viewport's corner. */}
+      <SelectPopover placement="bottom start" offset={4}>
         {choices.map((option) => (
           <SelectOption key={option.value} value={option.value}>
             {option.label}
@@ -455,7 +492,7 @@ export function DatePickerFacade({
       <Label>{asText(label)}</Label>
       <DateField />
       <DatePickerTrigger>Choose date</DatePickerTrigger>
-      <DatePickerPopover>
+      <DatePickerPopover placement="bottom start" offset={4}>
         <Calendar>
           <CalendarPreviousButton />
           <CalendarHeader />
@@ -468,88 +505,17 @@ export function DatePickerFacade({
   );
 }
 
-const labelledField =
-  "A form control. Always give it a visible label; it names the control for everyone.";
-
-export const formEntries = [
-  defineEntry({
-    name: "Form",
-    group: "Forms",
-    description:
-      "Groups form controls and a submit button. When the person submits, the assistant receives their answers, described with the controls' labels. Requires name, title, and children; put controls (TextField, Select, ...) inside, and a Button inside only for secondary actions.",
-    props: formProps,
-    component: FormFacade,
-  }),
-  defineEntry({
-    name: "TextField",
-    group: "Forms",
-    description: `A single-line text input (name, email, phone, URL). ${labelledField} Requires label and name.`,
-    props: textFieldProps,
-    component: TextFieldFacade,
-  }),
-  defineEntry({
-    name: "TextArea",
-    group: "Forms",
-    description: `A multi-line text input for longer answers. ${labelledField} Requires label and name.`,
-    props: textAreaProps,
-    component: TextAreaFacade,
-  }),
-  defineEntry({
-    name: "NumberField",
-    group: "Forms",
-    description: `A numeric input with increase and decrease buttons, for quantities and amounts. ${labelledField} Requires label and name; add min and max when there are limits.`,
-    props: numberFieldProps,
-    component: NumberFieldFacade,
-  }),
-  defineEntry({
-    name: "Select",
-    group: "Forms",
-    description: `A drop-down for choosing one of many options (more than five). ${labelledField} Requires label, name, and options.`,
-    props: selectProps,
-    component: SelectFacade,
-  }),
-  defineEntry({
-    name: "RadioGroup",
-    group: "Forms",
-    description: `Choose exactly one of a few visible options (five or fewer). ${labelledField} Requires label, name, and options.`,
-    props: radioGroupProps,
-    component: RadioGroupFacade,
-  }),
-  defineEntry({
-    name: "CheckboxGroup",
-    group: "Forms",
-    description: `Choose any number of a few visible options. ${labelledField} Requires label, name, and options; the value is the list of checked option values.`,
-    props: checkboxGroupProps,
-    component: CheckboxGroupFacade,
-  }),
-  defineEntry({
-    name: "Checkbox",
-    group: "Forms",
-    description:
-      "A single yes/no choice such as accepting terms. The label is the visible text next to the box. Requires label and name.",
-    props: checkboxProps,
-    component: CheckboxFacade,
-  }),
-  defineEntry({
-    name: "Switch",
-    group: "Forms",
-    description:
-      "An on/off setting that applies right away, such as notifications. The label names the setting. Requires label and name.",
-    props: switchProps,
-    component: SwitchFacade,
-  }),
-  defineEntry({
-    name: "Slider",
-    group: "Forms",
-    description: `A number chosen along a range, when the exact value matters less than the rough amount. ${labelledField} Requires label and name; min is 0 and max is 100 unless given.`,
-    props: sliderProps,
-    component: SliderFacade,
-  }),
-  defineEntry({
-    name: "DatePicker",
-    group: "Forms",
-    description: `A calendar date. The value is "YYYY-MM-DD". ${labelledField} Requires label and name.`,
-    props: datePickerProps,
-    component: DatePickerFacade,
-  }),
-];
+/** The facades that render the forms components, by component name. */
+export const formsComponents = {
+  Form: FormFacade,
+  TextField: TextFieldFacade,
+  TextArea: TextAreaFacade,
+  NumberField: NumberFieldFacade,
+  Select: SelectFacade,
+  RadioGroup: RadioGroupFacade,
+  CheckboxGroup: CheckboxGroupFacade,
+  Checkbox: CheckboxFacade,
+  Switch: SwitchFacade,
+  Slider: SliderFacade,
+  DatePicker: DatePickerFacade,
+};

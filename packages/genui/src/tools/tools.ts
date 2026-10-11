@@ -37,7 +37,8 @@ export function defineTool<TSchema extends PropSchema, TOutput>(tool: {
   return tool as unknown as ToolDefinition;
 }
 
-function isJson(value: unknown, depth = 0): value is JsonValue {
+/** Whether a tool's result is plain JSON, which is all the interface may store. */
+export function isJson(value: unknown, depth = 0): value is JsonValue {
   if (value === null || typeof value === "string" || typeof value === "boolean") return true;
   if (typeof value === "number") return Number.isFinite(value);
   if (depth > 32) return false;

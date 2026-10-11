@@ -17,7 +17,7 @@ import {
   VisuallyHidden,
 } from "@comp0/react";
 import { useComputed } from "../bridge/state.js";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import { outputProps, comparisonProps, citedTextProps } from "./results.props.js";
 import { asRecords, asResult, asStrings, asText, safeHref } from "../safe.js";
 
@@ -146,29 +146,9 @@ export function CitedTextFacade({ text, sources }: CatalogProps<typeof citedText
   );
 }
 
-export const resultEntries = [
-  defineEntry({
-    name: "Output",
-    group: "Data",
-    description:
-      'A computed result shown next to the controls it depends on, such as a price or a total. Bind controls with {"$bind": name} and write the value as {"$expr": "..."} over those names, and it updates live. Requires label and value.',
-    props: outputProps,
-    component: OutputFacade,
-  }),
-  defineEntry({
-    name: "Comparison",
-    group: "Data",
-    description:
-      "Sets options side by side, such as plans or products, with a recommended one. Requires caption, options, and features; each feature has one value per option, true or false for included or not.",
-    props: comparisonProps,
-    component: ComparisonFacade,
-  }),
-  defineEntry({
-    name: "CitedText",
-    group: "Data",
-    description:
-      "An answer whose claims point at numbered sources. Requires text with [1]-style markers and the list of sources ({ title, href?, note? }); the sources are listed under the text and each marker links to its source.",
-    props: citedTextProps,
-    component: CitedTextFacade,
-  }),
-];
+/** The facades that render the results components, by component name. */
+export const resultsComponents = {
+  Output: OutputFacade,
+  Comparison: ComparisonFacade,
+  CitedText: CitedTextFacade,
+};

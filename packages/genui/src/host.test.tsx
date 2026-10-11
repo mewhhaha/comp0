@@ -122,6 +122,37 @@ describe("Button actions", () => {
   });
 });
 
+describe("Form actions", () => {
+  it("sends the form's values to a call step without args and stores the result", async () => {
+    const call = vi.fn(async (_name: string, args: unknown) => ({
+      ok: true as const,
+      value: { confirmed: (args as { guests: number }).guests },
+    }));
+    const onAction = vi.fn();
+    const store = createGenUIStore();
+    const { user, getByRole } = renderStack(
+      [
+        {
+          type: "Form",
+          name: "booking",
+          title: "Book a table",
+          submitLabel: "Book",
+          action: [{ call: "bookTable", into: "booking" }, { send: "I booked the table." }],
+          children: [{ type: "NumberField", label: "Guests", name: "guests", value: 4 }],
+        },
+      ],
+      { call, store, onAction },
+    );
+    await user.click(getByRole("button", { name: "Book" }));
+    await vi.waitFor(() => expect(onAction).toHaveBeenCalled());
+    expect(call).toHaveBeenCalledWith("bookTable", { guests: 4 });
+    expect(store.get("booking")).toEqual({ confirmed: 4 });
+    expect(onAction).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "form", name: "booking", message: "I booked the table." }),
+    );
+  });
+});
+
 describe("Slot", () => {
   it("places a host view by name and nothing for other names", () => {
     const { getByTestId, container } = renderStack(

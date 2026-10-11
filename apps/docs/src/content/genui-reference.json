@@ -6,12 +6,6 @@
       "description": "Lays out components in order, vertically by default or in a row. Use it for the root and to group related components. Requires children.",
       "props": [
         {
-          "name": "children",
-          "type": "Component[]",
-          "required": true,
-          "description": "Components to lay out, in order."
-        },
-        {
           "name": "direction",
           "type": "\"column\" | \"row\"",
           "required": false,
@@ -34,6 +28,12 @@
           "type": "boolean",
           "required": false,
           "description": "Let a row wrap onto several lines."
+        },
+        {
+          "name": "children",
+          "type": "Component[]",
+          "required": true,
+          "description": "Components to lay out, in order."
         }
       ]
     },
@@ -42,12 +42,6 @@
       "group": "Layout",
       "description": "Places components in equal columns, for dashboards and side-by-side cards. Requires children; columns defaults to 2.",
       "props": [
-        {
-          "name": "children",
-          "type": "Component[]",
-          "required": true,
-          "description": "Components to place in grid cells, in order."
-        },
         {
           "name": "columns",
           "type": "number",
@@ -59,6 +53,12 @@
           "type": "\"xs\" | \"sm\" | \"md\" | \"lg\" | \"xl\"",
           "required": false,
           "description": "Space between cells; \"md\" by default."
+        },
+        {
+          "name": "children",
+          "type": "Component[]",
+          "required": true,
+          "description": "Components to place in grid cells, in order."
         }
       ]
     },
@@ -74,12 +74,6 @@
           "description": "Heading of the card; it also names the card for screen readers."
         },
         {
-          "name": "children",
-          "type": "Component[]",
-          "required": true,
-          "description": "Content of the card."
-        },
-        {
           "name": "description",
           "type": "string",
           "required": false,
@@ -90,6 +84,12 @@
           "type": "\"default\" | \"muted\" | \"accent\"",
           "required": false,
           "description": "Visual emphasis."
+        },
+        {
+          "name": "children",
+          "type": "Component[]",
+          "required": true,
+          "description": "Content of the card."
         }
       ]
     },
@@ -287,16 +287,22 @@
           "description": "Accessible name of the form. Add a Heading to show it."
         },
         {
-          "name": "children",
-          "type": "Component[]",
-          "required": true,
-          "description": "The form controls and any explanatory components."
-        },
-        {
           "name": "submitLabel",
           "type": "string",
           "required": false,
           "description": "Text of the submit button; \"Submit\" by default."
+        },
+        {
+          "name": "action",
+          "type": "{ call?: string, args?: object, into?: string, set?: string, value?: any, send?: string }[]",
+          "required": false,
+          "description": "Steps to run in order on submit instead of sending the answers to the assistant: a call step without args receives the form's values by control name. Stops at the first that fails."
+        },
+        {
+          "name": "children",
+          "type": "Component[]",
+          "required": true,
+          "description": "The form controls and any explanatory components."
         }
       ]
     },
@@ -712,16 +718,16 @@
       "description": "Switches between parallel views of the same subject (for example per region or per plan). Requires tabs, each { label, children }; only one view is visible at a time.",
       "props": [
         {
-          "name": "tabs",
-          "type": "{ label: string, children: Component[] }[]",
-          "required": true,
-          "description": "The tabs, each { label, children } where children are the components shown when the tab is selected."
-        },
-        {
           "name": "label",
           "type": "string",
           "required": false,
           "description": "Accessible name of the tab list."
+        },
+        {
+          "name": "tabs",
+          "type": "{ label: string, children: Component[] }[]",
+          "required": true,
+          "description": "The tabs, each { label, children } where children are the components shown when the tab is selected."
         }
       ]
     },
@@ -731,16 +737,16 @@
       "description": "A list of sections that expand one at a time (or several with multiple). Use it for FAQs and long, skimmable content. Requires items, each { title, children, open? }.",
       "props": [
         {
-          "name": "items",
-          "type": "{ title: string, children: Component[], open?: boolean }[]",
-          "required": true,
-          "description": "The sections, each { title, children, open? }."
-        },
-        {
           "name": "multiple",
           "type": "boolean",
           "required": false,
           "description": "Allow several sections open at once."
+        },
+        {
+          "name": "items",
+          "type": "{ title: string, open?: boolean, children: Component[] }[]",
+          "required": true,
+          "description": "The sections, each { title, open?, children }."
         }
       ]
     },
@@ -756,16 +762,16 @@
           "description": "Visible text that toggles the details."
         },
         {
-          "name": "children",
-          "type": "Component[]",
-          "required": true,
-          "description": "Details revealed when opened."
-        },
-        {
           "name": "open",
           "type": "boolean",
           "required": false,
           "description": "Starts open."
+        },
+        {
+          "name": "children",
+          "type": "Component[]",
+          "required": true,
+          "description": "Details revealed when opened."
         }
       ]
     },
@@ -1291,6 +1297,6 @@
     "Use Comparison for choosing between options (plans, products): one feature per row with a value per option, true or false for included or not, and recommended only when you can say why.",
     "Use CitedText when claims come from sources: put [1]-style markers after each claim and list every source once, in order. Never invent a source or a URL.",
     "End with Suggestions (two to four short follow-up replies) when the person would likely continue; use CopyButton only next to the visible text it copies.",
-    "Streaming: write type first, then the props, and put the content people read first at the top, so the interface appears top-down while you write."
+    "Streaming: write type first, then every other prop, and children (or a list of items with children) last; a prop written after the children may be ignored. Put the content people read first at the top, so the interface appears top-down while you write."
   ]
 }

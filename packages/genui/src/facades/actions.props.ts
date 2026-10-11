@@ -2,6 +2,29 @@
 // change the ArkType source and regenerate.
 import { fromJsonSchema, list, oneOf, url } from "../catalog/schema.js";
 
+export const stepProps = {
+  "call?": fromJsonSchema<string>({
+    type: "string",
+    description: "Name of a host tool to call, from the list of tools.",
+  }),
+  "args?": fromJsonSchema<Record<string, unknown>>({
+    type: "object",
+    description: 'Arguments for the tool; any value may be {"$bind": name} or {"$expr": "..."}.',
+    additionalProperties: {},
+  }),
+  "into?": fromJsonSchema<string>({
+    type: "string",
+    description: "Name to store the tool's result under, for bound props.",
+  }),
+  "set?": fromJsonSchema<string>({ type: "string", description: "Name of a value to set." }),
+  "value?": fromJsonSchema<unknown>({
+    description: 'The value to set; may be {"$bind": name} or {"$expr": "..."}.',
+  }),
+  "send?": fromJsonSchema<string>({
+    type: "string",
+    description: "A message to send to the assistant as the person's next turn.",
+  }),
+};
 export const buttonProps = {
   label: fromJsonSchema<string>({
     type: "string",

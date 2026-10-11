@@ -1,6 +1,8 @@
 import { GenUIRoot, GenUIView } from "@comp0/genui/rsc";
+import { Link } from "react-router";
 import { demoResponses, tokenize } from "../../../examples/demos/intelligent-ui-responses.js";
 import { forecastExplorer } from "./forecast-explorer.js";
+import { releaseNotes } from "./release-notes.js";
 import { LiveValues } from "./LiveValues.js";
 import { ShaderCanvas } from "./ShaderCanvas.js";
 import { shaderExplorer } from "./shader-explorer.js";
@@ -20,6 +22,7 @@ async function* replay(response: string): AsyncGenerator<string> {
 
 export function ServerComponent() {
   const dashboard = demoResponses.find((demo) => demo.title === "Dashboard")!;
+  const explainer = demoResponses.find((demo) => demo.title === "Explainer")!;
   return (
     <div className="mx-auto grid max-w-4xl gap-16 px-4 py-12 sm:px-6 lg:px-10">
       <header className="grid gap-2">
@@ -30,7 +33,14 @@ export function ServerComponent() {
         <p className="max-w-[60ch] text-base/7 text-zinc-600 dark:text-zinc-300">
           Each response below is replayed on the server and streamed as RSC. Layout renders on the
           server with no JavaScript; controls, charts, and the shader are predefined client
-          components that share one store.
+          components that share one store.{" "}
+          <Link
+            to="/labs/genui-rsc/ask"
+            className="font-medium text-zinc-950 underline dark:text-white"
+          >
+            Ask a model
+          </Link>{" "}
+          to compose one live.
         </p>
       </header>
       <GenUIRoot call="/labs/genui-rsc/tools" slots={{ shader: <ShaderCanvas /> }}>
@@ -48,6 +58,12 @@ export function ServerComponent() {
         </section>
         <section aria-label={dashboard.prompt} data-intelligent-ui="">
           <GenUIView stream={replay(dashboard.response)} />
+        </section>
+        <section aria-label="Release notes" data-intelligent-ui="">
+          <GenUIView stream={replay(releaseNotes)} />
+        </section>
+        <section aria-label={explainer.prompt} data-intelligent-ui="">
+          <GenUIView stream={replay(explainer.response)} />
         </section>
       </GenUIRoot>
     </div>

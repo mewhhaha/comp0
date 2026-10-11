@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, CopyButton, Link, Suggestion, Suggestions } from "@comp0/react";
 import { useFormSnapshot } from "../bridge/fields.js";
 import { useActionSteps, type ActionStep } from "../bridge/steps.js";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import { buttonProps, linkProps, suggestionsProps, copyButtonProps } from "./actions.props.js";
 import { variants } from "./tokens.js";
 import { useGenUI } from "../render/context.js";
@@ -110,37 +110,10 @@ export function CopyButtonFacade({ label, value }: CatalogProps<typeof copyButto
   );
 }
 
-export const actionEntries = [
-  defineEntry({
-    name: "Button",
-    group: "Actions",
-    description:
-      'A button that sends a message back to the assistant when pressed, for choices and next steps ("Show details", "Book it"). Inside a Form it sends that form\'s values. Requires a label that says what it does.',
-    props: buttonProps,
-    component: ButtonFacade,
-  }),
-  defineEntry({
-    name: "Link",
-    group: "Actions",
-    description:
-      "A link to a web page, email address, phone number, or section. Requires label text and an http(s), mailto:, tel:, relative, or #fragment href; other URLs are not linked.",
-    props: linkProps,
-    component: LinkFacade,
-  }),
-  defineEntry({
-    name: "Suggestions",
-    group: "Actions",
-    description:
-      "Quick replies for likely next steps. Pressing one sends its text as the person's next message. Requires a label for the group and the list of replies; keep them short and few.",
-    props: suggestionsProps,
-    component: SuggestionsFacade,
-  }),
-  defineEntry({
-    name: "CopyButton",
-    group: "Actions",
-    description:
-      "A button that copies text to the clipboard, such as a code snippet, command, or address. Show the text itself nearby, since the person cannot see what is copied. Requires a label that says what is copied and the value.",
-    props: copyButtonProps,
-    component: CopyButtonFacade,
-  }),
-];
+/** The facades that render the actions components, by component name. */
+export const actionsComponents = {
+  Button: ButtonFacade,
+  Link: LinkFacade,
+  Suggestions: SuggestionsFacade,
+  CopyButton: CopyButtonFacade,
+};

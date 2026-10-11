@@ -27,7 +27,7 @@ import {
   TableRowHeader,
 } from "@comp0/react";
 import { useBound, useComputed } from "../bridge/state.js";
-import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { type CatalogProps } from "../catalog/types.js";
 import {
   tableProps,
   barChartProps,
@@ -337,69 +337,14 @@ export function ProgressBarFacade({ label, value }: CatalogProps<typeof progress
   );
 }
 
-export const dataEntries = [
-  defineEntry({
-    name: "Table",
-    group: "Data",
-    description:
-      "A table for comparing items across attributes. Requires caption, columns, and rows; the first column should name each row. Use it instead of a chart when exact values matter. Large tables are cut off (24 columns, 800 cells).",
-    props: tableProps,
-    component: TableFacade,
-  }),
-  defineEntry({
-    name: "BarChart",
-    group: "Data",
-    description:
-      "Horizontal bars comparing a number across categories, best for long labels or rankings. Requires title and data ({ label, value } objects); add a description with the takeaway. A data table is included for screen readers.",
-    props: barChartProps,
-    component: BarChartFacade,
-  }),
-  defineEntry({
-    name: "ColumnChart",
-    group: "Data",
-    description:
-      "Vertical columns comparing a number across a few short categories. Requires title and data ({ label, value } objects); add a description with the takeaway.",
-    props: columnChartProps,
-    component: ColumnChartFacade,
-  }),
-  defineEntry({
-    name: "LineChart",
-    group: "Data",
-    description:
-      "A line showing how a number changes along an ordered axis such as time. Requires title and data ({ x, y } objects with increasing x); add a description with the takeaway.",
-    props: lineChartProps,
-    component: LineChartFacade,
-  }),
-  defineEntry({
-    name: "AreaChart",
-    group: "Data",
-    description:
-      "Like LineChart with the area below filled, for totals that accumulate. Requires title and data ({ x, y } objects with increasing x).",
-    props: areaChartProps,
-    component: AreaChartFacade,
-  }),
-  defineEntry({
-    name: "PieChart",
-    group: "Data",
-    description:
-      "Parts of a whole, for up to six slices that sum to a meaningful total. Requires title and data ({ label, value } objects with values >= 0). Prefer BarChart for more slices.",
-    props: pieChartProps,
-    component: PieChartFacade,
-  }),
-  defineEntry({
-    name: "Meter",
-    group: "Data",
-    description:
-      "A value within a known range, such as disk usage or a score. Requires label and value; min is 0 and max is 100 unless given. Use ProgressBar for task progress.",
-    props: meterProps,
-    component: MeterFacade,
-  }),
-  defineEntry({
-    name: "ProgressBar",
-    group: "Data",
-    description:
-      "Progress of a task from 0 to 100 percent. Requires label; omit value when the amount is unknown.",
-    props: progressBarProps,
-    component: ProgressBarFacade,
-  }),
-];
+/** The facades that render the data components, by component name. */
+export const dataComponents = {
+  Table: TableFacade,
+  BarChart: BarChartFacade,
+  ColumnChart: ColumnChartFacade,
+  LineChart: LineChartFacade,
+  AreaChart: AreaChartFacade,
+  PieChart: PieChartFacade,
+  Meter: MeterFacade,
+  ProgressBar: ProgressBarFacade,
+};

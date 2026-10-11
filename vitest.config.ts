@@ -3,11 +3,20 @@ import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
 
-const aliases = {
-  "@comp0/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
-  "@comp0/react": fileURLToPath(new URL("./packages/react/src/index.ts", import.meta.url)),
-  "@comp0/genui": fileURLToPath(new URL("./packages/genui/src/index.ts", import.meta.url)),
-};
+const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+
+// Exact matches, so a package's subpath entries resolve to their own source files.
+const aliases = [
+  { find: /^@comp0\/core$/, replacement: source("./packages/core/src/index.ts") },
+  { find: /^@comp0\/react$/, replacement: source("./packages/react/src/index.ts") },
+  { find: /^@comp0\/genui$/, replacement: source("./packages/genui/src/index.ts") },
+  { find: /^@comp0\/genui\/rsc$/, replacement: source("./packages/genui/src/rsc/index.ts") },
+  { find: /^@comp0\/genui\/mcp$/, replacement: source("./packages/genui/src/mcp/index.ts") },
+  {
+    find: /^@comp0\/genui\/rsc\/client$/,
+    replacement: source("./packages/genui/src/rsc/client.tsx"),
+  },
+];
 
 export default defineConfig({
   plugins: [

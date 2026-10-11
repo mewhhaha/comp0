@@ -34,6 +34,18 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./rsc": {
+      "types": "./dist/rsc/index.d.ts",
+      "default": "./dist/rsc/index.js"
+    },
+    "./rsc/client": {
+      "types": "./dist/rsc/client.d.ts",
+      "default": "./dist/rsc/client.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "default": "./dist/mcp/index.js"
+    },
     "./genui.prompt.md": "./genui.prompt.md",
     "./package.json": "./package.json"
   },

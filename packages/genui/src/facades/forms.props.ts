@@ -1,6 +1,6 @@
 // Generated from forms.props.ark.ts by `pnpm test -u` (src/facades/props.test.ts). Do not edit:
 // change the ArkType source and regenerate.
-import { bindable, fromJsonSchema, nodes, oneOf } from "../catalog/schema.js";
+import { bindable, fromJsonSchema, list, nodes, oneOf } from "../catalog/schema.js";
 
 export const formProps = {
   name: fromJsonSchema<string>({
@@ -11,11 +11,38 @@ export const formProps = {
     type: "string",
     description: "Accessible name of the form. Add a Heading to show it.",
   }),
-  children: nodes("The form controls and any explanatory components."),
   "submitLabel?": fromJsonSchema<string>({
     type: "string",
     description: 'Text of the submit button; "Submit" by default.',
   }),
+  "action?": list(
+    {
+      "call?": fromJsonSchema<string>({
+        type: "string",
+        description: "Name of a host tool to call, from the list of tools.",
+      }),
+      "args?": fromJsonSchema<Record<string, unknown>>({
+        type: "object",
+        description:
+          'Arguments for the tool; any value may be {"$bind": name} or {"$expr": "..."}.',
+        additionalProperties: {},
+      }),
+      "into?": fromJsonSchema<string>({
+        type: "string",
+        description: "Name to store the tool's result under, for bound props.",
+      }),
+      "set?": fromJsonSchema<string>({ type: "string", description: "Name of a value to set." }),
+      "value?": fromJsonSchema<unknown>({
+        description: 'The value to set; may be {"$bind": name} or {"$expr": "..."}.',
+      }),
+      "send?": fromJsonSchema<string>({
+        type: "string",
+        description: "A message to send to the assistant as the person's next turn.",
+      }),
+    },
+    "Steps to run in order on submit instead of sending the answers to the assistant: a call step without args receives the form's values by control name. Stops at the first that fails.",
+  ),
+  children: nodes("The form controls and any explanatory components."),
 };
 export const textFieldProps = {
   label: fromJsonSchema<string>({

@@ -161,6 +161,11 @@ assert(
     entries.includes("package/genui.prompt.md"),
     "@comp0/genui tarball is missing genui.prompt.md.",
   );
+  // React Server Components need the client half of the RSC entry marked as such.
+  assert(
+    readArchiveFile(genuiArchivePath, "dist/rsc/client.js").startsWith('"use client";'),
+    "@comp0/genui dist/rsc/client.js must start with the use client directive.",
+  );
   // The built-in props are written with ArkType and precompiled; the package never loads it.
   for (const entry of entries.filter((name) => /\.(?:js|d\.ts)$/.test(name))) {
     const source = readArchiveFile(genuiArchivePath, entry.replace(/^package\//, ""));
@@ -238,6 +243,23 @@ if (!Object.hasOwn(genui.responseJsonSchema({ strict: true }).$defs ?? {}, "Stac
 if (!genui.genuiPrompt().includes("#### TextField")) {
   throw new Error("Packed @comp0/genui prompt is missing its components.");
 }
+const genuiRsc = await import("@comp0/genui/rsc");
+if (
+  typeof genuiRsc.GenUIView !== "function" ||
+  typeof genuiRsc.runTool !== "function" ||
+  !genuiRsc.genuiPrompt({ slots: { map: "A map." } }).includes("#### Slot")
+) {
+  throw new Error("Packed @comp0/genui/rsc exports are not executable.");
+}
+const genuiMcp = await import("@comp0/genui/mcp");
+if (
+  typeof genuiMcp.createMcpAppBridge !== "function" ||
+  genuiMcp.mcpAppMimeType !== "text/html;profile=mcp-app" ||
+  genuiMcp.genuiAppTool({ name: "render_ui", description: "UI.", resourceUri: "ui://app" })._meta.ui
+    .resourceUri !== "ui://app"
+) {
+  throw new Error("Packed @comp0/genui/mcp exports are not executable.");
+}
 if (genui.evaluateExpression("round(seats * 1.5, 2)", { seats: 3 }) !== 4.5) {
   throw new Error("Packed @comp0/genui expressions do not evaluate.");
 }
@@ -287,6 +309,9 @@ writeFileSync(
 import {Label, Link as Comp0Link, Select, SelectPopover, SelectOption, SelectTrigger, SelectValue} from "@comp0/react";
 import {Link as RouterLink} from "react-router";
 import {GenUI, catalog, describeFormValues, formatErrors, genuiPrompt, responseJsonSchema, type CatalogEntry, type GenUIAction} from "@comp0/genui";
+import {GenUIRoot, GenUIView, catalogSpecs, defineTool, handleToolRequest} from "@comp0/genui/rsc";
+import {useGenUIValue} from "@comp0/genui/rsc/client";
+import {McpAppGenUI, createMcpAppBridge, genuiAppTool, type McpAppBridge} from "@comp0/genui/mcp";
 
 const entries: readonly CatalogEntry[] = catalog;
 const summary: string = describeFormValues([{ name: "plan", label: "Plan" }], { plan: "Pro" });
@@ -295,6 +320,25 @@ const schema = responseJsonSchema({ strict: true });
 
 export function Assistant({ response, streaming }: { response: string; streaming: boolean }) {
   return <GenUI response={response} streaming={streaming} catalog={entries} onAction={(action: GenUIAction) => action.message + summary + system + String(schema)} onError={(errors) => formatErrors(errors)} />;
+}
+
+const tools = { echo: defineTool({ description: "Echoes.", input: { "~standard": { version: 1, vendor: "test", validate: (value: unknown) => ({ value }), jsonSchema: { input: () => ({}), output: () => ({}) } } }, run: (input) => input }) };
+export const toolRoute = (request: Request) => handleToolRequest(tools, request);
+export const specCount: number = catalogSpecs.length;
+
+export function Streamed({ stream }: { stream: AsyncIterable<string> }) {
+  return <GenUIRoot call="/api/tools"><GenUIView stream={stream} /></GenUIRoot>;
+}
+
+const bridge: McpAppBridge = createMcpAppBridge({ appInfo: { name: "Trips", version: "1.0.0" } });
+export const renderUi = genuiAppTool({ name: "render_ui", description: system, resourceUri: "ui://trips/app.html" });
+
+export function InHost() {
+  return <McpAppGenUI bridge={bridge} />;
+}
+
+export function Reader() {
+  return <output>{String(useGenUIValue("speed"))}</output>;
 }
 
 export function Consumer() {

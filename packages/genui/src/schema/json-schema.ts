@@ -1,12 +1,12 @@
-import { catalog as defaultCatalog } from "../catalog/catalog.js";
+import { catalogSpecs } from "../catalog/specs.js";
 import { jsonSchemaOf, type JsonSchema } from "../catalog/schema.js";
-import { type CatalogEntry } from "../catalog/types.js";
+import { type CatalogSpec } from "../catalog/types.js";
 
 export { type JsonSchema };
 
 export type ResponseSchemaOptions = {
   /** The components a response may use; defaults to the built-in catalog. */
-  catalog?: readonly CatalogEntry[] | undefined;
+  catalog?: readonly CatalogSpec[] | undefined;
   /** The component a response is: the root of the schema. Defaults to `"Stack"`. */
   root?: string | undefined;
   /**
@@ -20,7 +20,7 @@ export type ResponseSchemaOptions = {
 
 const nodeReference = "#/$defs/Node";
 
-function entrySchema(entry: CatalogEntry): JsonSchema {
+function entrySchema(entry: CatalogSpec): JsonSchema {
   const generated = jsonSchemaOf(entry.props, { $ref: nodeReference });
   const properties = (generated.properties ?? {}) as Record<string, unknown>;
   const required = (generated.required ?? []) as string[];
@@ -95,7 +95,7 @@ function strictify(value: unknown): unknown {
  * checked by the validator, which also sanitizes everything it renders.
  */
 export function responseJsonSchema(options: ResponseSchemaOptions = {}): JsonSchema {
-  const entries = options.catalog ?? defaultCatalog;
+  const entries = options.catalog ?? catalogSpecs;
   const rootName = options.root ?? "Stack";
   const root = entries.find((entry) => entry.name === rootName) ?? entries[0];
   if (root === undefined) throw new Error("responseJsonSchema needs at least one catalog entry.");

@@ -2,10 +2,18 @@ import { Suspense, type ReactNode } from "react";
 import { type JsonValue } from "../json/parse.js";
 import { aligns, gaps, tones } from "../facades/tokens.js";
 import { asNumber, asToken, safeImageSrc } from "../safe.js";
-import { validateWith } from "../validate/core.js";
+import { validateResponse } from "../validate/validate.js";
 import { Binding, Computed, ValidNode } from "../validate/values.js";
-import { serverCatalog } from "./catalog.js";
-import { GenUIClientNode, GenUIStreamEnd, GenUIViewScope } from "./client.js";
+import {
+  GenUIAccordionItem,
+  GenUIAccordionRoot,
+  GenUIClientNode,
+  GenUIStreamEnd,
+  GenUITab,
+  GenUITabPanel,
+  GenUITabsRoot,
+  GenUIViewScope,
+} from "./client.js";
 import { readResponse, type ResponseStream } from "./stream.js";
 
 /*
@@ -44,10 +52,7 @@ function collect(value: unknown, nodes: Map<string, ValidNode>) {
 function validated(response: ResponseStream): Validated {
   const cached = validations.get(response);
   if (cached?.version === response.version) return cached;
-  const result = validateWith(response.parsed, {
-    catalog: serverCatalog,
-    complete: response.done,
-  });
+  const result = validateResponse(response.parsed, { complete: response.done });
   const nodes = new Map<string, ValidNode>();
   collect(result.root, nodes);
   const bindings: Record<string, JsonValue> = {};
@@ -56,6 +61,19 @@ function validated(response: ResponseStream): Validated {
   const next = { version: response.version, nodes, bindings };
   validations.set(response, next);
   return next;
+}
+
+/** The pointer of the object or array that holds `pointer`. */
+function parentOf(pointer: string) {
+  return pointer.slice(0, pointer.lastIndexOf("/"));
+}
+
+/**
+ * Whether a value that is not written yet never will be: its container has closed. A key the
+ * model has not reached is not the same as an empty one.
+ */
+function missingForGood(response: ResponseStream, pointer: string) {
+  return response.valueAt(pointer) === undefined && !response.isOpen(parentOf(pointer));
 }
 
 function clampLevel(level: number) {
@@ -74,6 +92,7 @@ async function GrowingText({
 }) {
   await response.until(() => {
     const value = response.valueAt(path);
+    if (value === undefined) return missingForGood(response, path);
     return (typeof value === "string" && value.length > from) || !response.isOpen(path);
   });
   const value = response.valueAt(path);
@@ -103,7 +122,12 @@ async function ItemsFrom({
   render: (itemPath: string) => ReactNode;
 }) {
   const itemPath = `${path}/${index}`;
-  await response.until(() => response.valueAt(itemPath) !== undefined || !response.isOpen(path));
+  await response.until(() => {
+    if (response.valueAt(itemPath) !== undefined) return true;
+    // The array itself may not have started yet.
+    if (response.valueAt(path) === undefined) return missingForGood(response, path);
+    return !response.isOpen(path);
+  });
   if (response.valueAt(itemPath) === undefined) return null;
   return (
     <>
@@ -129,6 +153,34 @@ function Children({ scope, path, level }: { scope: Scope; path: string; level: n
         )}
       />
     </Suspense>
+  );
+}
+
+function itemIndex(itemPath: string) {
+  return itemPath.slice(itemPath.lastIndexOf("/") + 1);
+}
+
+/** One accordion section, once its `open` flag is written; title and content stream in it. */
+async function AccordionItemAt({
+  scope,
+  path,
+  level,
+}: {
+  scope: Scope;
+  path: string;
+  level: number;
+}) {
+  const { response } = scope;
+  await response.until(() => settled(response, path, ["title", "children"]));
+  return (
+    <GenUIAccordionItem
+      value={`item-${itemIndex(path)}`}
+      level={clampLevel(level) as 1 | 2 | 3 | 4 | 5 | 6}
+      open={response.valueAt(`${path}/open`) === true}
+      title={<GrowingText response={response} path={`${path}/title`} />}
+    >
+      <Children scope={scope} path={path} level={level + 1} />
+    </GenUIAccordionItem>
   );
 }
 
@@ -219,6 +271,51 @@ const serverRenderers: Record<string, ServerRenderer> = {
     if (node.props.ordered === true) return <ol data-slot="list">{items}</ol>;
     return <ul data-slot="list">{items}</ul>;
   },
+  Tabs: ({ scope, node, level }) => {
+    const tabs = `${node.key}/tabs`;
+    return (
+      <GenUITabsRoot
+        label={typeof node.props.label === "string" ? node.props.label : undefined}
+        triggers={
+          <ItemsFrom
+            response={scope.response}
+            path={tabs}
+            index={0}
+            render={(itemPath) => (
+              <GenUITab key={itemPath} value={`tab-${itemIndex(itemPath)}`}>
+                <GrowingText response={scope.response} path={`${itemPath}/label`} />
+              </GenUITab>
+            )}
+          />
+        }
+      >
+        <ItemsFrom
+          response={scope.response}
+          path={tabs}
+          index={0}
+          render={(itemPath) => (
+            <GenUITabPanel key={itemPath} value={`tab-${itemIndex(itemPath)}`}>
+              <Children scope={scope} path={itemPath} level={level} />
+            </GenUITabPanel>
+          )}
+        />
+      </GenUITabsRoot>
+    );
+  },
+  Accordion: ({ scope, node, level }) => (
+    <GenUIAccordionRoot multiple={node.props.multiple === true}>
+      <ItemsFrom
+        response={scope.response}
+        path={`${node.key}/items`}
+        index={0}
+        render={(itemPath) => (
+          <Suspense key={itemPath} fallback={null}>
+            <AccordionItemAt scope={scope} path={itemPath} level={level} />
+          </Suspense>
+        )}
+      />
+    </GenUIAccordionRoot>
+  ),
   Image: ({ node }) => {
     const src = safeImageSrc(node.props.src);
     if (src === undefined) return null;
@@ -251,6 +348,8 @@ const streamedKeys: Record<string, readonly string[]> = {
   Text: ["text"],
   List: ["items"],
   Image: [],
+  Tabs: ["tabs"],
+  Accordion: ["items"],
 };
 
 /** Whether every prop of the node that does not stream in place has been written in full. */

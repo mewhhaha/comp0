@@ -9,26 +9,26 @@ const tabProps = {
 };
 
 export const tabsProps = {
+  "label?": type("string").describe("Accessible name of the tab list."),
   tabs: list(
     tabProps,
     "The tabs, each { label, children } where children are the components shown when the tab is selected.",
   ),
-  "label?": type("string").describe("Accessible name of the tab list."),
 };
 
 const accordionItemProps = {
   title: type("string").describe("Visible heading of the section; it toggles the section."),
-  children: nodes("Content revealed when the section is open."),
   "open?": type("boolean").describe("Starts open."),
+  children: nodes("Content revealed when the section is open."),
 };
 
 export const accordionProps = {
-  items: list(accordionItemProps, "The sections, each { title, children, open? }."),
   "multiple?": type("boolean").describe("Allow several sections open at once."),
+  items: list(accordionItemProps, "The sections, each { title, open?, children }."),
 };
 
 export const disclosureProps = {
   summary: type("string").describe("Visible text that toggles the details."),
-  children: nodes("Details revealed when opened."),
   "open?": type("boolean").describe("Starts open."),
+  children: nodes("Details revealed when opened."),
 };

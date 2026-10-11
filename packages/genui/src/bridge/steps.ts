@@ -67,7 +67,12 @@ export function useActionSteps() {
     for (const step of steps) {
       if (typeof step.call === "string") {
         if (call === undefined) return { ok: false, error: "This app does not offer tools." };
-        const result = await call(step.call, resolveStepValue(step.args ?? {}, read));
+        // In a form, a call without args sends the form's values by control name.
+        const args =
+          step.args === undefined && origin.values !== undefined
+            ? origin.values
+            : resolveStepValue(step.args ?? {}, read);
+        const result = await call(step.call, args);
         if (!result.ok) return { ok: false, error: result.error };
         if (isName(step.into)) store.set(step.into, result.value);
       } else if (isName(step.set)) {
