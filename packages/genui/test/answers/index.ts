@@ -4,6 +4,7 @@ import { citedAnswer } from "./cited-answer.js";
 import { dashboard } from "./dashboard.js";
 import { explainer } from "./explainer.js";
 import { garbage } from "./garbage.js";
+import { liveExplorer } from "./live-explorer.js";
 import { planComparison } from "./plan-comparison.js";
 
 /** The text a model would stream: pretty-printed so that cuts land inside names and strings. */
@@ -18,6 +19,7 @@ export const answers = [
   { name: "dashboard", value: dashboard, source: asJson(dashboard) },
   { name: "explainer", value: explainer, source: asJson(explainer) },
   { name: "cited answer", value: citedAnswer, source: asJson(citedAnswer) },
+  { name: "live explorer", value: liveExplorer, source: asJson(liveExplorer) },
 ] as const;
 
 /** A hallucinating, hostile response; not part of the coverage check. */

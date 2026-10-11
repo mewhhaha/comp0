@@ -53,6 +53,15 @@ export {
   type ExpressionValue,
 } from "./expression/expression.js";
 export { createGenUIStore, type GenUIState, type GenUIStore } from "./state/store.js";
+export { handleToolRequest, httpToolCaller } from "./tools/http.js";
+export {
+  defineTool,
+  runTool,
+  type ToolCaller,
+  type ToolDefinition,
+  type ToolResult,
+  type Tools,
+} from "./tools/tools.js";
 export { formatErrors, type GenUIError, type GenUIErrorCode } from "./validate/errors.js";
 export {
   validateNode,

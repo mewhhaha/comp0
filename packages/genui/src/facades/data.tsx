@@ -26,7 +26,7 @@ import {
   TableRow,
   TableRowHeader,
 } from "@comp0/react";
-import { useComputed } from "../bridge/state.js";
+import { useBound, useComputed } from "../bridge/state.js";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
 import {
   tableProps,
@@ -49,7 +49,12 @@ import {
   uniqueBy,
 } from "../safe.js";
 
-export function TableFacade({ caption, columns, rows }: CatalogProps<typeof tableProps>) {
+export function TableFacade({
+  caption,
+  columns,
+  rows: boundRows,
+}: CatalogProps<typeof tableProps>) {
+  const rows = useBound(boundRows);
   const headings = asStrings(columns, 24);
   // A cell budget keeps a hostile table from locking the page: wide tables get fewer rows.
   const rowLimit = Math.min(maxItems, Math.floor(800 / Math.max(1, headings.length)));
@@ -146,12 +151,13 @@ function chartDescription(description: unknown) {
 
 export function BarChartFacade({
   title,
-  data,
+  data: boundData,
   description,
   categoryLabel,
   valueLabel,
   unit,
 }: CatalogProps<typeof barChartProps>) {
+  const data = useBound(boundData);
   const values = categories(data, true);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -171,12 +177,13 @@ export function BarChartFacade({
 
 export function ColumnChartFacade({
   title,
-  data,
+  data: boundData,
   description,
   categoryLabel,
   valueLabel,
   unit,
 }: CatalogProps<typeof columnChartProps>) {
+  const data = useBound(boundData);
   const values = categories(data, true);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -196,12 +203,13 @@ export function ColumnChartFacade({
 
 export function PieChartFacade({
   title,
-  data,
+  data: boundData,
   description,
   categoryLabel,
   valueLabel,
   unit,
 }: CatalogProps<typeof pieChartProps>) {
+  const data = useBound(boundData);
   const values = categories(data, false);
   const total = values.reduce((sum, item) => sum + item.value, 0);
   if (values.length === 0 || total <= 0) return <ChartEmpty title={title} />;
@@ -227,12 +235,13 @@ function formatX(value: number | Date) {
 
 export function LineChartFacade({
   title,
-  data,
+  data: boundData,
   description,
   xLabel,
   yLabel,
   unit,
 }: CatalogProps<typeof lineChartProps>) {
+  const data = useBound(boundData);
   const values = points(data);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -253,12 +262,13 @@ export function LineChartFacade({
 
 export function AreaChartFacade({
   title,
-  data,
+  data: boundData,
   description,
   xLabel,
   yLabel,
   unit,
 }: CatalogProps<typeof areaChartProps>) {
+  const data = useBound(boundData);
   const values = points(data);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (

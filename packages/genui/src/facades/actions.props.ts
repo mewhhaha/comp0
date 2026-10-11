@@ -1,6 +1,6 @@
 // Generated from actions.props.ark.ts by `pnpm test -u` (src/facades/props.test.ts). Do not edit:
 // change the ArkType source and regenerate.
-import { fromJsonSchema, oneOf, url } from "../catalog/schema.js";
+import { fromJsonSchema, list, oneOf, url } from "../catalog/schema.js";
 
 export const buttonProps = {
   label: fromJsonSchema<string>({
@@ -16,6 +16,33 @@ export const buttonProps = {
     description:
       "What the person is asking for, written as their message to the assistant. Defaults to the label.",
   }),
+  "action?": list(
+    {
+      "call?": fromJsonSchema<string>({
+        type: "string",
+        description: "Name of a host tool to call, from the list of tools.",
+      }),
+      "args?": fromJsonSchema<Record<string, unknown>>({
+        type: "object",
+        description:
+          'Arguments for the tool; any value may be {"$bind": name} or {"$expr": "..."}.',
+        additionalProperties: {},
+      }),
+      "into?": fromJsonSchema<string>({
+        type: "string",
+        description: "Name to store the tool's result under, for bound props.",
+      }),
+      "set?": fromJsonSchema<string>({ type: "string", description: "Name of a value to set." }),
+      "value?": fromJsonSchema<unknown>({
+        description: 'The value to set; may be {"$bind": name} or {"$expr": "..."}.',
+      }),
+      "send?": fromJsonSchema<string>({
+        type: "string",
+        description: "A message to send to the assistant as the person's next turn.",
+      }),
+    },
+    "Steps to run in order when pressed, instead of sending the message: call a tool, set a value, send a message. Stops at the first that fails.",
+  ),
 };
 export const linkProps = {
   label: fromJsonSchema<string>({

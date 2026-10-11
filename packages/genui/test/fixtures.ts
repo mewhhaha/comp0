@@ -291,5 +291,17 @@ export const kitchenSink: JsonValue = {
         },
       ],
     },
+    {
+      type: "Stack",
+      children: [
+        { type: "Query", tool: "forecast", args: { city: { $bind: "city" } }, into: "forecast" },
+        { type: "Slot", name: "map" },
+        {
+          type: "Button",
+          label: "Refresh",
+          action: [{ call: "forecast", args: { city: "Oslo" }, into: "forecast" }],
+        },
+      ],
+    },
   ],
 };

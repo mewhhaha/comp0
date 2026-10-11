@@ -1,12 +1,11 @@
 import { Suspense, type ReactNode } from "react";
 import { type JsonValue } from "../json/parse.js";
 import { aligns, gaps, tones } from "../facades/tokens.js";
-import { type GenUIAction } from "../render/context.js";
 import { asNumber, asToken, safeImageSrc } from "../safe.js";
 import { validateWith } from "../validate/core.js";
-import { Computed, ValidNode } from "../validate/values.js";
+import { Binding, Computed, ValidNode } from "../validate/values.js";
 import { serverCatalog } from "./catalog.js";
-import { GenUIClientNode, GenUIClientRoot, GenUIStreamEnd } from "./client.js";
+import { GenUIClientNode, GenUIStreamEnd, GenUIViewScope } from "./client.js";
 import { readResponse, type ResponseStream } from "./stream.js";
 
 /*
@@ -18,8 +17,7 @@ import { readResponse, type ResponseStream } from "./stream.js";
 
 type Scope = {
   response: ResponseStream;
-  slots: Readonly<Record<string, ReactNode>>;
-  /** Makes ids unique per surface. */
+  /** Makes ids unique per view. */
   id: string;
 };
 
@@ -238,11 +236,6 @@ const serverRenderers: Record<string, ServerRenderer> = {
       </figure>
     );
   },
-  Slot: ({ scope, node }) => {
-    const name = typeof node.props.name === "string" ? node.props.name : "";
-    // Only views the host offers can be placed; any other name renders nothing.
-    return Object.hasOwn(scope.slots, name) ? scope.slots[name] : null;
-  },
 };
 
 /**
@@ -258,7 +251,6 @@ const streamedKeys: Record<string, readonly string[]> = {
   Text: ["text"],
   List: ["items"],
   Image: [],
-  Slot: [],
 };
 
 /** Whether every prop of the node that does not stream in place has been written in full. */
@@ -269,10 +261,12 @@ function settled(response: ResponseStream, path: string, streamed: readonly stri
   return keys.every((key) => streamed.includes(key) || !response.isOpen(`${path}/${key}`));
 }
 
-/** Whether the node renders on the server; computed text needs the client store. */
+/** Whether the node renders on the server; bound and computed values live in the client store. */
 function rendersOnServer(node: ValidNode) {
   if (!Object.hasOwn(serverRenderers, node.entry.name)) return false;
-  return !(node.props.text instanceof Computed);
+  return !Object.values(node.props).some(
+    (value) => value instanceof Binding || value instanceof Computed,
+  );
 }
 
 /** Waits for the props an interactive component needs, then hands it to the client. */
@@ -318,27 +312,27 @@ async function StreamEnd({ response }: { response: ResponseStream }) {
   return <GenUIStreamEnd />;
 }
 
-export type GenUISurfaceProps = {
+export type GenUIViewProps = {
   /** The model's response as it streams, such as the text deltas of a chat completion. */
   stream: AsyncIterable<string>;
-  /** Host views the model may place by name with `{ "type": "Slot", "name": ... }`. */
-  slots?: Readonly<Record<string, ReactNode>> | undefined;
-  /** Called when a button, form, or suggestion acts; pass a server function. */
-  onAction?: ((action: GenUIAction) => Promise<void>) | undefined;
 };
 
-/** Streams a model-composed interface as React Server Components. */
-export function GenUISurface({ stream, slots = {}, onAction }: GenUISurfaceProps) {
+/**
+ * Streams one model response as React Server Components, inside a `<GenUIRoot>`: layout renders
+ * on the server and interactive parts are the built-in client components. A root holds any
+ * number of views, which share its values, tools, and host views.
+ */
+export function GenUIView({ stream }: GenUIViewProps) {
   const response = readResponse(stream);
-  const scope: Scope = { response, slots, id: crypto.randomUUID().slice(0, 8) };
+  const scope: Scope = { response, id: crypto.randomUUID().slice(0, 8) };
   return (
-    <GenUIClientRoot onAction={onAction}>
+    <GenUIViewScope>
       <Suspense fallback={null}>
         <NodeAt scope={scope} path="" level={2} />
       </Suspense>
       <Suspense fallback={null}>
         <StreamEnd response={response} />
       </Suspense>
-    </GenUIClientRoot>
+    </GenUIViewScope>
   );
 }

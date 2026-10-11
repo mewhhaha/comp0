@@ -1,4 +1,4 @@
-import { fromJsonSchema, type PropShape } from "../catalog/schema.js";
+import { type PropShape } from "../catalog/schema.js";
 import { type CatalogEntry } from "../catalog/types.js";
 import {
   buttonProps,
@@ -40,15 +40,8 @@ import {
   stackProps,
   textProps,
 } from "../facades/layout.props.js";
+import { queryProps, slotProps } from "../facades/host.props.js";
 import { citedTextProps, comparisonProps, outputProps } from "../facades/results.props.js";
-
-/** A place in the layout where the host renders one of its own views, by name. */
-export const slotProps = {
-  name: fromJsonSchema<string>({
-    type: "string",
-    description: "Name of a host view to place here, from the list of available views.",
-  }),
-};
 
 const shapes: Record<string, PropShape> = {
   Stack: stackProps,
@@ -90,6 +83,7 @@ const shapes: Record<string, PropShape> = {
   CitedText: citedTextProps,
   Alert: alertProps,
   Separator: separatorProps,
+  Query: queryProps,
 };
 
 /**

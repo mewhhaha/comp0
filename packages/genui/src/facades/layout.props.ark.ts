@@ -1,7 +1,7 @@
 // The layout facades' props, written with ArkType and precompiled into layout.props.ts.
 // Edit here, then run `pnpm test -u` to regenerate.
 import { type } from "arktype";
-import { computed, nodes, oneOf, url } from "../catalog/schema.js";
+import { bindable, computed, nodes, oneOf, url } from "../catalog/schema.js";
 import { gaps, aligns, tones } from "./tokens.js";
 
 export const stackProps = {
@@ -48,6 +48,6 @@ export const imageProps = {
 };
 
 export const listProps = {
-  items: type("string[]").describe("One short text per item."),
+  items: bindable(type("string[]"), "One short text per item."),
   "ordered?": type("boolean").describe("Number the items; bulleted by default."),
 };

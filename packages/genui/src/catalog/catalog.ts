@@ -3,6 +3,7 @@ import { dataEntries } from "../facades/data.js";
 import { disclosureEntries } from "../facades/disclosure.js";
 import { feedbackEntries } from "../facades/feedback.js";
 import { formEntries } from "../facades/forms.js";
+import { hostEntries } from "../facades/host.js";
 import { layoutEntries } from "../facades/layout.js";
 import { resultEntries } from "../facades/results.js";
 import { type CatalogEntry } from "./types.js";
@@ -20,4 +21,5 @@ export const catalog: readonly CatalogEntry[] = [
   ...dataEntries,
   ...resultEntries,
   ...feedbackEntries,
+  ...hostEntries,
 ];

@@ -1,6 +1,6 @@
 // Generated from layout.props.ark.ts by `pnpm test -u` (src/facades/props.test.ts). Do not edit:
 // change the ArkType source and regenerate.
-import { computed, fromJsonSchema, nodes, oneOf, url } from "../catalog/schema.js";
+import { bindable, computed, fromJsonSchema, nodes, oneOf, url } from "../catalog/schema.js";
 
 export const stackProps = {
   children: nodes("Components to lay out, in order."),
@@ -62,11 +62,10 @@ export const imageProps = {
   }),
 };
 export const listProps = {
-  items: fromJsonSchema<string[]>({
-    type: "array",
-    description: "One short text per item.",
-    items: { type: "string" },
-  }),
+  items: bindable(
+    fromJsonSchema<string[]>({ type: "array", items: { type: "string" } }),
+    "One short text per item.",
+  ),
   "ordered?": fromJsonSchema<boolean>({
     type: "boolean",
     description: "Number the items; bulleted by default.",

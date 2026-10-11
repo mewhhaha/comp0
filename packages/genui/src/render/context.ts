@@ -1,6 +1,7 @@
-import { createContext, use } from "react";
+import { createContext, use, type ReactNode } from "react";
 import { type JsonValue } from "../json/parse.js";
 import { type GenUIStore } from "../state/store.js";
+import { type ToolCaller } from "../tools/tools.js";
 
 /**
  * What a response asks the host to do: a pressed button, a submitted form, or a chosen
@@ -24,6 +25,10 @@ export type GenUIContextValue = {
   bindings: ReadonlyMap<string, JsonValue | undefined>;
   /** Hands an action to the host. */
   act: (action: GenUIAction) => void;
+  /** Calls one of the host's tools, when the host offers any. */
+  call?: ToolCaller | undefined;
+  /** Host views the model can place by name with a Slot. */
+  slots: Readonly<Record<string, ReactNode>>;
 };
 
 export const GenUIContext = createContext<GenUIContextValue | null>(null);

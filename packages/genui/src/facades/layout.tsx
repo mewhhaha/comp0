@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { HeadingLevelContext, useHeadingLevel } from "../bridge/heading-level.js";
-import { useComputed } from "../bridge/state.js";
+import { useBound, useComputed } from "../bridge/state.js";
 import { type CatalogProps, defineEntry } from "../catalog/types.js";
 import {
   stackProps,
@@ -161,7 +161,7 @@ export function ImageFacade({ src, alt, caption }: CatalogProps<typeof imageProp
 }
 
 export function ListFacade({ items, ordered }: CatalogProps<typeof listProps>) {
-  const entries = asStrings(items);
+  const entries = asStrings(useBound(items));
   const content = entries.map((item, index) => <li key={index}>{item}</li>);
   if (ordered === true) return <ol data-slot="list">{content}</ol>;
   return <ul data-slot="list">{content}</ul>;

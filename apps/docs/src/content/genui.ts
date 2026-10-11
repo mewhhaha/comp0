@@ -265,6 +265,14 @@ export const genuiDocs: GenUIDoc[] = [
         catalogGroup: "Feedback",
       },
       {
+        id: "host",
+        title: "Host",
+        paragraphs: [
+          "`Query` and `Slot` connect the interface to your app. They are offered to the model only when you pass tools or slots to `genuiPrompt`, and they do something only when the renderer has a tool caller or the named view.",
+        ],
+        catalogGroup: "Host",
+      },
+      {
         id: "custom-components",
         title: "Add your own components",
         paragraphs: [
@@ -322,6 +330,16 @@ export const genuiDocs: GenUIDoc[] = [
               root: {
                 type: "string",
                 description: "The component a response is. Defaults to `Stack`.",
+              },
+              tools: {
+                type: "Record<string, { description, input }>",
+                description:
+                  "The host tools a `Query` or a `call` step may use, such as those given to `runTool`. Without any, `Query` is left out.",
+              },
+              slots: {
+                type: "Record<string, string>",
+                description:
+                  "The host views a `Slot` may place, by name, each with what it shows. Without any, `Slot` is left out.",
               },
             }),
           },
@@ -432,6 +450,15 @@ export const genuiDocs: GenUIDoc[] = [
                 description:
                   "A store from `createGenUIStore` kept outside the component, which then ignores `initialState`.",
               },
+              call: {
+                type: "ToolCaller",
+                description:
+                  "Runs the host's tools for `Query` nodes and `call` steps: a server function that calls `runTool`, a fetch, or an MCP `tools/call`.",
+              },
+              slots: {
+                type: "Record<string, ReactNode>",
+                description: "Host views the model can place by name with a `Slot`.",
+              },
             }),
           },
         ],
@@ -449,6 +476,16 @@ export const genuiDocs: GenUIDoc[] = [
           "While `streaming` is true, buttons, suggestions, copy buttons, and submits are disabled, nothing is reported as an error, and comp0 parts hold back data warnings and focus moves.",
           "When `streaming` becomes false the full response is validated once, defaults are written into the state, and `onError` is called if there are problems.",
         ],
+      },
+      {
+        id: "host",
+        title: "Connect the interface to your app",
+        paragraphs: [
+          "The model composes layout; your app supplies what it can reach. A tool is a function with a schema for its input, declared with `defineTool`. The interface calls tools through one `call(name, args)` function you pass to the renderer, so the same tools work from an HTTP endpoint (`handleToolRequest` on the server, `httpToolCaller` or just the endpoint's URL in the browser), a function that calls `runTool` (which validates the arguments and keeps error details on the server), or an MCP `tools/call`.",
+          "A `Query` node calls a tool and stores the result under a name, again whenever a bound argument changes, without another turn; a chart's `data`, a table's `rows`, or a list's `items` bound to that name follow it. A button's `action` runs steps in order: `call` a tool, `set` a value, or `send` a message. A `Slot` places one of your own views, which read the same values with hooks, so a slider the model wrote can drive your canvas live.",
+          "With React Server Components, `@comp0/genui/rsc` streams layout as server HTML: `GenUIRoot` holds the values, slots, and tool caller, and any number of `GenUIView` elements stream responses into it, sharing them.",
+        ],
+        code: "<GenUI\n  response={response}\n  streaming={streaming}\n  call={callTool}\n  slots={{ shader: <ShaderCanvas /> }}\n/>;\n\n// With React Server Components\n<GenUIRoot call={callTool} slots={{ shader: <ShaderCanvas /> }}>\n  <GenUIView stream={modelStream} />\n</GenUIRoot>;",
       },
       {
         id: "actions",

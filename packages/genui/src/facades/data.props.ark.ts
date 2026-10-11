@@ -1,17 +1,17 @@
 // The data facades' props, written with ArkType and precompiled into data.props.ts.
 // Edit here, then run `pnpm test -u` to regenerate.
 import { type } from "arktype";
-import { computed, list } from "../catalog/schema.js";
+import { bindable, computed, list } from "../catalog/schema.js";
 
 const cell = type("string | number | boolean | null");
 
 export const tableProps = {
   caption: type("string").describe("What the table shows; it names the table for screen readers."),
   columns: type("string[]").describe("Column headings, left to right."),
-  rows: cell
-    .array()
-    .array()
-    .describe("One array of cells per row, in column order. The first cell names the row."),
+  rows: bindable(
+    cell.array().array(),
+    "One array of cells per row, in column order. The first cell names the row.",
+  ),
 };
 
 const datumProps = {
@@ -26,7 +26,7 @@ const pointProps = {
 
 const categoricalChartProps = () => ({
   title: type("string").describe("What the chart shows; it names the chart. Required."),
-  data: list(datumProps, "The bars, each { label, value }."),
+  data: bindable(list(datumProps), "The bars, each { label, value }."),
   "description?": type("string").describe("One sentence stating the main takeaway."),
   "categoryLabel?": type("string").describe('Axis label for the categories; "Category".'),
   "valueLabel?": type("string").describe('Axis label for the numbers; "Value".'),
@@ -35,7 +35,7 @@ const categoricalChartProps = () => ({
 
 export const pieChartProps = {
   title: type("string").describe("What the chart shows; it names the chart. Required."),
-  data: list(datumProps, "The slices, each { label, value } with value >= 0."),
+  data: bindable(list(datumProps), "The slices, each { label, value } with value >= 0."),
   "description?": type("string").describe("One sentence stating the main takeaway."),
   "categoryLabel?": type("string").describe('Heading for the slice names; "Category".'),
   "valueLabel?": type("string").describe('Heading for the numbers; "Value".'),
@@ -44,7 +44,7 @@ export const pieChartProps = {
 
 const seriesChartProps = () => ({
   title: type("string").describe("What the chart shows; it names the chart. Required."),
-  data: list(pointProps, "The points, each { x, y }."),
+  data: bindable(list(pointProps), "The points, each { x, y }."),
   "description?": type("string").describe("One sentence stating the main takeaway."),
   "xLabel?": type("string").describe('Axis label for x; "X".'),
   "yLabel?": type("string").describe('Axis label for y; "Y".'),

@@ -1,30 +1,62 @@
+import { useState } from "react";
 import { Button, CopyButton, Link, Suggestion, Suggestions } from "@comp0/react";
 import { useFormSnapshot } from "../bridge/fields.js";
+import { useActionSteps, type ActionStep } from "../bridge/steps.js";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
 import { buttonProps, linkProps, suggestionsProps, copyButtonProps } from "./actions.props.js";
 import { variants } from "./tokens.js";
 import { useGenUI } from "../render/context.js";
-import { asStrings, asText, asToken, safeHref } from "../safe.js";
+import { asRecords, asStrings, asText, asToken, safeHref } from "../safe.js";
 
-export function ButtonFacade({ label, variant, message }: CatalogProps<typeof buttonProps>) {
+export function ButtonFacade({
+  label,
+  variant,
+  message,
+  action,
+}: CatalogProps<typeof buttonProps>) {
   const { act, streaming } = useGenUI();
   const snapshot = useFormSnapshot();
+  const runSteps = useActionSteps();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   const text = asText(label);
   const sentence = asText(message).trim() === "" ? text : asText(message);
+  const steps = asRecords(action) as ActionStep[];
+  let failure = null;
+  if (error !== "") {
+    failure = (
+      <p data-slot="button-error" role="alert">
+        {error}
+      </p>
+    );
+  }
   return (
-    <Button
-      data-slot="button"
-      data-variant={asToken(variant, variants)}
-      // Pressing a button during streaming would act on a half-written interface.
-      disabled={streaming || text === ""}
-      onClick={() => {
-        // Inside a form the button also reports what the person has filled in so far.
-        const { name, values } = snapshot();
-        act({ type: "button", name, message: sentence, values });
-      }}
-    >
-      {text}
-    </Button>
+    <>
+      <Button
+        data-slot="button"
+        data-variant={asToken(variant, variants)}
+        // Pressing a button during streaming would act on a half-written interface.
+        disabled={streaming || pending || text === ""}
+        aria-busy={pending || undefined}
+        onClick={() => {
+          // Inside a form the button also reports what the person has filled in so far.
+          const { name, values } = snapshot();
+          if (steps.length === 0) {
+            act({ type: "button", name, message: sentence, values });
+            return;
+          }
+          setPending(true);
+          setError("");
+          void runSteps(steps, { type: "button", name, values }).then((result) => {
+            setPending(false);
+            if (!result.ok) setError(result.error);
+          });
+        }}
+      >
+        {text}
+      </Button>
+      {failure}
+    </>
   );
 }
 

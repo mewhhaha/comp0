@@ -60,7 +60,11 @@ export type StandardJSONSchemaV1<TInput = unknown, TOutput = TInput> = {
 };
 
 /** The input type a schema declares. */
-export type InferInput<TSchema extends { readonly "~standard": { readonly types?: unknown } }> =
-  NonNullable<TSchema["~standard"]["types"]> extends StandardTypes<infer TInput, unknown>
-    ? TInput
-    : unknown;
+export type InferInput<
+  TSchema extends { readonly "~standard": { readonly types?: StandardTypes | undefined } },
+> = NonNullable<TSchema["~standard"]["types"]>["input"];
+
+/** The output type a schema declares: what `validate` returns. */
+export type InferOutput<
+  TSchema extends { readonly "~standard": { readonly types?: StandardTypes | undefined } },
+> = NonNullable<TSchema["~standard"]["types"]>["output"];

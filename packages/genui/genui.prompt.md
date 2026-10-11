@@ -77,7 +77,7 @@ An image from an http(s) or relative URL. Requires src and alt text that describ
 
 A bulleted or numbered list of short text items. Use it for steps, options, or highlights. Requires items.
 
-- `items` (required): `string[]`. One short text per item.
+- `items` (required): `string[] | Binding`. One short text per item.
 - `ordered`: `boolean`. Number the items; bulleted by default.
 
 ### Actions
@@ -92,6 +92,7 @@ A button that sends a message back to the assistant when pressed, for choices an
 - `label` (required): `string`. Visible text of the button; say what happens when it is pressed.
 - `variant`: `"primary" | "secondary" | "danger"`. "primary" for the main action; "danger" for destructive ones.
 - `message`: `string`. What the person is asking for, written as their message to the assistant. Defaults to the label.
+- `action`: `{ call?: string, args?: object, into?: string, set?: string, value?: any, send?: string }[]`. Steps to run in order when pressed, instead of sending the message: call a tool, set a value, send a message. Stops at the first that fails.
 
 #### Link
 
@@ -274,14 +275,14 @@ A table for comparing items across attributes. Requires caption, columns, and ro
 
 - `caption` (required): `string`. What the table shows; it names the table for screen readers.
 - `columns` (required): `string[]`. Column headings, left to right.
-- `rows` (required): `((number | string | boolean | null)[])[]`. One array of cells per row, in column order. The first cell names the row.
+- `rows` (required): `((number | string | boolean | null)[])[] | Binding`. One array of cells per row, in column order. The first cell names the row.
 
 #### BarChart
 
 Horizontal bars comparing a number across categories, best for long labels or rankings. Requires title and data ({ label, value } objects); add a description with the takeaway. A data table is included for screen readers.
 
 - `title` (required): `string`. What the chart shows; it names the chart. Required.
-- `data` (required): `{ label: string, value: number }[]`. The bars, each { label, value }.
+- `data` (required): `{ label: string, value: number }[] | Binding`. The bars, each { label, value }.
 - `description`: `string`. One sentence stating the main takeaway.
 - `categoryLabel`: `string`. Axis label for the categories; "Category".
 - `valueLabel`: `string`. Axis label for the numbers; "Value".
@@ -292,7 +293,7 @@ Horizontal bars comparing a number across categories, best for long labels or ra
 Vertical columns comparing a number across a few short categories. Requires title and data ({ label, value } objects); add a description with the takeaway.
 
 - `title` (required): `string`. What the chart shows; it names the chart. Required.
-- `data` (required): `{ label: string, value: number }[]`. The bars, each { label, value }.
+- `data` (required): `{ label: string, value: number }[] | Binding`. The bars, each { label, value }.
 - `description`: `string`. One sentence stating the main takeaway.
 - `categoryLabel`: `string`. Axis label for the categories; "Category".
 - `valueLabel`: `string`. Axis label for the numbers; "Value".
@@ -303,7 +304,7 @@ Vertical columns comparing a number across a few short categories. Requires titl
 A line showing how a number changes along an ordered axis such as time. Requires title and data ({ x, y } objects with increasing x); add a description with the takeaway.
 
 - `title` (required): `string`. What the chart shows; it names the chart. Required.
-- `data` (required): `{ x: number, y: number }[]`. The points, each { x, y }.
+- `data` (required): `{ x: number, y: number }[] | Binding`. The points, each { x, y }.
 - `description`: `string`. One sentence stating the main takeaway.
 - `xLabel`: `string`. Axis label for x; "X".
 - `yLabel`: `string`. Axis label for y; "Y".
@@ -314,7 +315,7 @@ A line showing how a number changes along an ordered axis such as time. Requires
 Like LineChart with the area below filled, for totals that accumulate. Requires title and data ({ x, y } objects with increasing x).
 
 - `title` (required): `string`. What the chart shows; it names the chart. Required.
-- `data` (required): `{ x: number, y: number }[]`. The points, each { x, y }.
+- `data` (required): `{ x: number, y: number }[] | Binding`. The points, each { x, y }.
 - `description`: `string`. One sentence stating the main takeaway.
 - `xLabel`: `string`. Axis label for x; "X".
 - `yLabel`: `string`. Axis label for y; "Y".
@@ -325,7 +326,7 @@ Like LineChart with the area below filled, for totals that accumulate. Requires 
 Parts of a whole, for up to six slices that sum to a meaningful total. Requires title and data ({ label, value } objects with values >= 0). Prefer BarChart for more slices.
 
 - `title` (required): `string`. What the chart shows; it names the chart. Required.
-- `data` (required): `{ label: string, value: number }[]`. The slices, each { label, value } with value >= 0.
+- `data` (required): `{ label: string, value: number }[] | Binding`. The slices, each { label, value } with value >= 0.
 - `description`: `string`. One sentence stating the main takeaway.
 - `categoryLabel`: `string`. Heading for the slice names; "Category".
 - `valueLabel`: `string`. Heading for the numbers; "Value".

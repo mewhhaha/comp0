@@ -1,5 +1,7 @@
-import { GenUISurface } from "@comp0/genui/rsc";
+import { GenUIRoot, GenUIView } from "@comp0/genui/rsc";
 import { demoResponses, tokenize } from "../../../examples/demos/intelligent-ui-responses.js";
+import { forecastExplorer } from "./forecast-explorer.js";
+import { LiveValues } from "./LiveValues.js";
 import { ShaderCanvas } from "./ShaderCanvas.js";
 import { shaderExplorer } from "./shader-explorer.js";
 
@@ -31,12 +33,23 @@ export function ServerComponent() {
           components that share one store.
         </p>
       </header>
-      <section aria-label="Shader explorer" data-intelligent-ui="">
-        <GenUISurface stream={replay(shaderExplorer)} slots={{ shader: <ShaderCanvas /> }} />
-      </section>
-      <section aria-label={dashboard.prompt} data-intelligent-ui="">
-        <GenUISurface stream={replay(dashboard.response)} />
-      </section>
+      <GenUIRoot call="/labs/genui-rsc/tools" slots={{ shader: <ShaderCanvas /> }}>
+        <section aria-label="Live values" className="grid gap-2">
+          <h2 className="text-sm/6 font-semibold text-zinc-950 dark:text-white">
+            Live values, read by a host component outside every view
+          </h2>
+          <LiveValues />
+        </section>
+        <section aria-label="Shader explorer" data-intelligent-ui="">
+          <GenUIView stream={replay(shaderExplorer)} />
+        </section>
+        <section aria-label="Forecast" data-intelligent-ui="">
+          <GenUIView stream={replay(forecastExplorer)} />
+        </section>
+        <section aria-label={dashboard.prompt} data-intelligent-ui="">
+          <GenUIView stream={replay(dashboard.response)} />
+        </section>
+      </GenUIRoot>
     </div>
   );
 }

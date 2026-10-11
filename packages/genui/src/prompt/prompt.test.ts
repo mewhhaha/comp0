@@ -26,7 +26,8 @@ describe("genuiPrompt", () => {
     for (const group of ["Layout", "Actions", "Forms", "Disclosure", "Data", "Feedback"]) {
       expect(prompt).toContain(`### ${group}`);
     }
-    for (const entry of catalog) {
+    // Query and Slot are only offered when the host has tools and views.
+    for (const entry of catalog.filter((item) => item.group !== "Host")) {
       expect(prompt, entry.name).toContain(`#### ${entry.name}`);
       expect(prompt, entry.name).toContain(entry.description);
       for (const prop of shapeEntries(entry.props))
@@ -38,6 +39,28 @@ describe("genuiPrompt", () => {
     expect(prompt).toContain('- `gap`: `"xs" | "sm" | "md" | "lg" | "xl"`.');
     expect(prompt).toContain("`value`: `string | Binding`");
     expect(prompt).toContain("`children` (required): `Component[]`");
+  });
+
+  it("offers Query and Slot with the host's tools and views", () => {
+    expect(prompt).not.toContain("#### Query");
+    expect(prompt).not.toContain("#### Slot");
+    const hosted = genuiPrompt({
+      tools: {
+        forecast: {
+          description: "Seven daily highs for a city.",
+          input: type({ city: "string", "days?": "number" }),
+        },
+      },
+      slots: { map: "A map of the chosen city; reads the bound value city." },
+    });
+    expect(hosted).toContain("#### Query");
+    expect(hosted).toContain("#### Slot");
+    expect(hosted).toContain("## Host tools");
+    expect(hosted).toContain(
+      "- `forecast`: Seven daily highs for a city. Arguments: `{ city: string, days?: number }`.",
+    );
+    expect(hosted).toContain("## Host views");
+    expect(hosted).toContain("- `map`: A map of the chosen city; reads the bound value city.");
   });
 
   it("puts valid JSON examples in the prompt", () => {

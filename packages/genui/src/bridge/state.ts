@@ -62,3 +62,20 @@ export function useComputed(value: unknown): unknown {
     Object.hasOwn(state, name) ? state[name] : bindings.get(name),
   );
 }
+
+/**
+ * The value of a data prop that may be bound: a literal comes back unchanged, and a
+ * `{ "$bind": name }` reads the store, so a chart or table shows whatever a Query or an action
+ * step last wrote under that name, live.
+ */
+export function useBound(value: unknown): unknown {
+  const { store, bindings } = useGenUI();
+  const name = value instanceof Binding ? value.name : undefined;
+  const stored = useSyncExternalStore(
+    store.subscribe,
+    () => (name === undefined ? undefined : store.get(name)),
+    () => (name === undefined ? undefined : store.get(name)),
+  );
+  if (!(value instanceof Binding)) return value;
+  return stored ?? bindings.get(value.name) ?? value.initial;
+}

@@ -15,6 +15,8 @@ import * as feedback from "./feedback.props.ark.js";
 import * as feedbackCompiled from "./feedback.props.js";
 import * as forms from "./forms.props.ark.js";
 import * as formsCompiled from "./forms.props.js";
+import * as host from "./host.props.ark.js";
+import * as hostCompiled from "./host.props.js";
 import * as layout from "./layout.props.ark.js";
 import * as layoutCompiled from "./layout.props.js";
 import * as results from "./results.props.ark.js";
@@ -27,6 +29,7 @@ const groups: Record<string, [Record<string, unknown>, Record<string, unknown>]>
   disclosure: [disclosure, disclosureCompiled],
   feedback: [feedback, feedbackCompiled],
   forms: [forms, formsCompiled],
+  host: [host, hostCompiled],
   layout: [layout, layoutCompiled],
   results: [results, resultsCompiled],
 };

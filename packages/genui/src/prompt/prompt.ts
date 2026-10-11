@@ -1,5 +1,7 @@
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
 import { describeCatalog, type CatalogEntryDescription } from "../catalog/describe-catalog.js";
+import { describeType } from "../catalog/describe-schema.js";
+import { type PropSchema } from "../catalog/schema.js";
 import { type CatalogEntry } from "../catalog/types.js";
 import { expressionFunctions } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
@@ -15,6 +17,13 @@ export type GenUIPromptOptions = {
   examples?: readonly (JsonValue | string)[] | undefined;
   /** The component a response is; defaults to `"Stack"`. */
   root?: string | undefined;
+  /**
+   * The host tools a Query or a `call` step may use, such as the tools given to `runTool`. Without
+   * any, Query is left out of the prompt.
+   */
+  tools?: Readonly<Record<string, { description: string; input: PropSchema }>> | undefined;
+  /** The host views a Slot may place, by name, each with what it shows. Without any, Slot is left out. */
+  slots?: Readonly<Record<string, string>> | undefined;
 };
 
 /** Rules that keep what a model composes accessible, safe, and stable while it streams. */
@@ -234,7 +243,13 @@ function exampleText(example: JsonValue | string): string {
  * Pass options to add a preamble, more rules, or more examples.
  */
 export function genuiPrompt(options: GenUIPromptOptions = {}): string {
-  const catalog = options.catalog ?? defaultCatalog;
+  const tools = Object.entries(options.tools ?? {});
+  const slots = Object.entries(options.slots ?? {});
+  // Query and Slot only mean something when the host offers tools and views.
+  const catalog = (options.catalog ?? defaultCatalog).filter(
+    (entry) =>
+      (entry.name !== "Query" || tools.length > 0) && (entry.name !== "Slot" || slots.length > 0),
+  );
   const root = options.root ?? "Stack";
   const preamble =
     options.preamble ??
@@ -269,6 +284,27 @@ export function genuiPrompt(options: GenUIPromptOptions = {}): string {
       ...componentLines,
     ]),
   );
+  if (tools.length > 0) {
+    parts.push(
+      section("Host tools", [
+        'Call these from a Query, or from a Button action step {"call": name, "args": {...}, "into": name}. Arguments must match the types shown; bind them to controls so results follow the person\'s choices.',
+        "",
+        ...tools.map(
+          ([name, tool]) =>
+            `- \`${name}\`: ${tool.description} Arguments: \`${describeType(tool.input)}\`.`,
+        ),
+      ]),
+    );
+  }
+  if (slots.length > 0) {
+    parts.push(
+      section("Host views", [
+        'Place these with {"type": "Slot", "name": name}. They read the values your controls bind, so bind controls to the names a view describes.',
+        "",
+        ...slots.map(([name, description]) => `- \`${name}\`: ${description}`),
+      ]),
+    );
+  }
   parts.push(
     section(
       "Rules",

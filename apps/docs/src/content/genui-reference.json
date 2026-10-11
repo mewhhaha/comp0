@@ -169,7 +169,7 @@
       "props": [
         {
           "name": "items",
-          "type": "string[]",
+          "type": "string[] | Binding",
           "required": true,
           "description": "One short text per item."
         },
@@ -203,6 +203,12 @@
           "type": "string",
           "required": false,
           "description": "What the person is asking for, written as their message to the assistant. Defaults to the label."
+        },
+        {
+          "name": "action",
+          "type": "{ call?: string, args?: object, into?: string, set?: string, value?: any, send?: string }[]",
+          "required": false,
+          "description": "Steps to run in order when pressed, instead of sending the message: call a tool, set a value, send a message. Stops at the first that fails."
         }
       ]
     },
@@ -782,7 +788,7 @@
         },
         {
           "name": "rows",
-          "type": "((number | string | boolean | null)[])[]",
+          "type": "((number | string | boolean | null)[])[] | Binding",
           "required": true,
           "description": "One array of cells per row, in column order. The first cell names the row."
         }
@@ -801,7 +807,7 @@
         },
         {
           "name": "data",
-          "type": "{ label: string, value: number }[]",
+          "type": "{ label: string, value: number }[] | Binding",
           "required": true,
           "description": "The bars, each { label, value }."
         },
@@ -844,7 +850,7 @@
         },
         {
           "name": "data",
-          "type": "{ label: string, value: number }[]",
+          "type": "{ label: string, value: number }[] | Binding",
           "required": true,
           "description": "The bars, each { label, value }."
         },
@@ -887,7 +893,7 @@
         },
         {
           "name": "data",
-          "type": "{ x: number, y: number }[]",
+          "type": "{ x: number, y: number }[] | Binding",
           "required": true,
           "description": "The points, each { x, y }."
         },
@@ -930,7 +936,7 @@
         },
         {
           "name": "data",
-          "type": "{ x: number, y: number }[]",
+          "type": "{ x: number, y: number }[] | Binding",
           "required": true,
           "description": "The points, each { x, y }."
         },
@@ -973,7 +979,7 @@
         },
         {
           "name": "data",
-          "type": "{ label: string, value: number }[]",
+          "type": "{ label: string, value: number }[] | Binding",
           "required": true,
           "description": "The slices, each { label, value } with value >= 0."
         },
@@ -1181,6 +1187,44 @@
           "type": "\"horizontal\" | \"vertical\"",
           "required": false,
           "description": "\"horizontal\" by default."
+        }
+      ]
+    },
+    {
+      "name": "Query",
+      "group": "Host",
+      "description": "Calls one of the host's tools and stores the result under a name, again whenever a bound argument changes, without asking the assistant. Draws nothing: bind a chart's data, a table's rows, or a list's items to the name to show the result. Requires tool and into.",
+      "props": [
+        {
+          "name": "tool",
+          "type": "string",
+          "required": true,
+          "description": "Name of the host tool to call, from the list of tools."
+        },
+        {
+          "name": "args",
+          "type": "object",
+          "required": false,
+          "description": "Arguments for the tool; bind a value with {\"$bind\": name} and the query runs again whenever it changes."
+        },
+        {
+          "name": "into",
+          "type": "string",
+          "required": true,
+          "description": "Name to store the result under; show it with {\"$bind\": name} in a data prop such as a chart's data."
+        }
+      ]
+    },
+    {
+      "name": "Slot",
+      "group": "Host",
+      "description": "Places one of the host's own views, such as a live preview, by name. The host's views read values bound by your controls. Requires name.",
+      "props": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "description": "Name of a host view to place here, from the list of host views."
         }
       ]
     }

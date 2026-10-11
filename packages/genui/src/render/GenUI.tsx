@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BusyRegion } from "@comp0/react";
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
 import { type CatalogEntry } from "../catalog/types.js";
 import { createGenUIStore, type GenUIState, type GenUIStore } from "../state/store.js";
+import { toolCaller } from "../tools/http.js";
+import { type ToolCaller } from "../tools/tools.js";
 import { type GenUIError } from "../validate/errors.js";
 import { validateResponse, type ValidatedResponse } from "../validate/validate.js";
 import { GenUIContext, type GenUIAction } from "./context.js";
@@ -29,7 +31,13 @@ export type GenUIProps = {
   onError?: ((errors: GenUIError[]) => void) | undefined;
   /** A store to keep outside the component, which then ignores `initialState`. */
   store?: GenUIStore | undefined;
+  /** Runs the host's tools for Query nodes and `call` action steps: a function, or a tool endpoint's URL. */
+  call?: ToolCaller | string | undefined;
+  /** Host views the model can place by name with `{ "type": "Slot", "name": ... }`. */
+  slots?: Readonly<Record<string, ReactNode>> | undefined;
 };
+
+const noSlots: Readonly<Record<string, ReactNode>> = {};
 
 const emptyResponse: ValidatedResponse = {
   root: undefined,
@@ -52,8 +60,12 @@ export function GenUI({
   initialState,
   onError,
   store: provided,
+  call,
+  slots = noSlots,
 }: GenUIProps) {
   const [ownStore] = useState(() => createGenUIStore(initialState));
+  // Semantic identity: queries rerun when the caller changes, so a URL keeps one caller.
+  const caller = useMemo(() => toolCaller(call), [call]);
   const store = provided ?? ownStore;
   const known = Object.keys(initialState ?? {});
   const blank = response === null || response === undefined || response === "";
@@ -81,6 +93,8 @@ export function GenUI({
     store,
     streaming,
     bindings: validated.bindings,
+    call: caller,
+    slots,
     act: (action: GenUIAction) => {
       // Acting on a half-written interface would send a half-written request.
       if (!streaming) latestAction.current?.(action);

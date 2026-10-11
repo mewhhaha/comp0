@@ -1,6 +1,6 @@
 // Generated from data.props.ark.ts by `pnpm test -u` (src/facades/props.test.ts). Do not edit:
 // change the ArkType source and regenerate.
-import { computed, fromJsonSchema, list } from "../catalog/schema.js";
+import { bindable, computed, fromJsonSchema, list } from "../catalog/schema.js";
 
 export const tableProps = {
   caption: fromJsonSchema<string>({
@@ -12,27 +12,29 @@ export const tableProps = {
     description: "Column headings, left to right.",
     items: { type: "string" },
   }),
-  rows: fromJsonSchema<(number | string | boolean | null)[][]>({
-    type: "array",
-    description: "One array of cells per row, in column order. The first cell names the row.",
-    items: {
+  rows: bindable(
+    fromJsonSchema<(number | string | boolean | null)[][]>({
       type: "array",
       items: {
-        anyOf: [{ type: "number" }, { type: "string" }, { type: "boolean" }, { type: "null" }],
+        type: "array",
+        items: {
+          anyOf: [{ type: "number" }, { type: "string" }, { type: "boolean" }, { type: "null" }],
+        },
       },
-    },
-  }),
+    }),
+    "One array of cells per row, in column order. The first cell names the row.",
+  ),
 };
 export const pieChartProps = {
   title: fromJsonSchema<string>({
     type: "string",
     description: "What the chart shows; it names the chart. Required.",
   }),
-  data: list(
-    {
+  data: bindable(
+    list({
       label: fromJsonSchema<string>({ type: "string", description: "Category name." }),
       value: fromJsonSchema<number>({ type: "number", description: "Number for the category." }),
-    },
+    }),
     "The slices, each { label, value } with value >= 0.",
   ),
   "description?": fromJsonSchema<string>({
@@ -82,11 +84,11 @@ export const barChartProps = {
     type: "string",
     description: "What the chart shows; it names the chart. Required.",
   }),
-  data: list(
-    {
+  data: bindable(
+    list({
       label: fromJsonSchema<string>({ type: "string", description: "Category name." }),
       value: fromJsonSchema<number>({ type: "number", description: "Number for the category." }),
-    },
+    }),
     "The bars, each { label, value }.",
   ),
   "description?": fromJsonSchema<string>({
@@ -111,11 +113,11 @@ export const columnChartProps = {
     type: "string",
     description: "What the chart shows; it names the chart. Required.",
   }),
-  data: list(
-    {
+  data: bindable(
+    list({
       label: fromJsonSchema<string>({ type: "string", description: "Category name." }),
       value: fromJsonSchema<number>({ type: "number", description: "Number for the category." }),
-    },
+    }),
     "The bars, each { label, value }.",
   ),
   "description?": fromJsonSchema<string>({
@@ -140,14 +142,14 @@ export const lineChartProps = {
     type: "string",
     description: "What the chart shows; it names the chart. Required.",
   }),
-  data: list(
-    {
+  data: bindable(
+    list({
       x: fromJsonSchema<number>({
         type: "number",
         description: "Position on the horizontal axis, such as a year or an index.",
       }),
       y: fromJsonSchema<number>({ type: "number", description: "Number at that position." }),
-    },
+    }),
     "The points, each { x, y }.",
   ),
   "description?": fromJsonSchema<string>({
@@ -166,14 +168,14 @@ export const areaChartProps = {
     type: "string",
     description: "What the chart shows; it names the chart. Required.",
   }),
-  data: list(
-    {
+  data: bindable(
+    list({
       x: fromJsonSchema<number>({
         type: "number",
         description: "Position on the horizontal axis, such as a year or an index.",
       }),
       y: fromJsonSchema<number>({ type: "number", description: "Number at that position." }),
-    },
+    }),
     "The points, each { x, y }.",
   ),
   "description?": fromJsonSchema<string>({
