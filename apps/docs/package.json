@@ -7,8 +7,8 @@
     "build": "node ../../scripts/generate-llms-txt.mjs && react-router build && node ../../scripts/verify-docs-client-bundle.mjs",
     "dev": "node ../../scripts/generate-llms-txt.mjs && react-router dev --host 0.0.0.0",
     "preview": "pnpm run build && vite preview --host 0.0.0.0",
-    "deploy": "wrangler deploy",
-    "cf-typegen": "wrangler types",
+    "deploy": "cf deploy --prebuilt",
+    "cf-typegen": "cf workers types",
     "typecheck": "react-router typegen && tsgo -p tsconfig.json"
   },
   "dependencies": {
@@ -23,14 +23,14 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.63.1",
+    "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",
     "@react-router/dev": "8.4.0",
     "@tailwindcss/vite": "4.3.3",
     "@vitejs/plugin-react": "catalog:",
     "@vitejs/plugin-rsc": "0.5.36",
+    "cf": "1.0.0-beta.14",
     "oxc-transform-react": "catalog:",
     "tailwindcss": "4.3.3",
-    "vite": "catalog:",
-    "wrangler": "4.149.0"
+    "vite": "catalog:"
   }
 }

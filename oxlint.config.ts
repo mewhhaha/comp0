@@ -8,7 +8,7 @@ export default defineConfig({
     "**/dist-types",
     "apps/docs/build",
     "apps/docs/.react-router",
-    "apps/docs/.wrangler",
+    "apps/docs/.cloudflare",
     ".agents",
     ".claude",
     ".playwright",

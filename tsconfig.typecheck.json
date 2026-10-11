@@ -20,6 +20,7 @@
     "packages/genui/test/**/*.tsx",
     "apps/docs/src/**/*.ts",
     "apps/docs/src/**/*.tsx",
+    "apps/docs/cloudflare.config.ts",
     "apps/docs/react-router.config.ts",
     "e2e/**/*.ts",
     "playwright.config.ts",

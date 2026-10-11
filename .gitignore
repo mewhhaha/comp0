@@ -1,7 +1,7 @@
 node_modules
 .agents
 apps/docs/.react-router
-apps/docs/.wrangler
+apps/docs/.cloudflare
 apps/docs/build
 packages/*/dist
 .agents

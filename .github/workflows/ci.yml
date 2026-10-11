@@ -96,10 +96,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: docs-build
-          # Vite preview also needs Cloudflare's generated pointer to the built worker.
+          # Vite preview serves the Cloudflare Build Output (worker bundle and assets).
           path: |
             apps/docs/build
-            apps/docs/.wrangler/deploy/config.json
+            apps/docs/.cloudflare/output
           include-hidden-files: true
           retention-days: 1
           if-no-files-found: error
