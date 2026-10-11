@@ -5,7 +5,25 @@ import { PointerEventsCheckLevel, userEvent } from "@testing-library/user-event"
 
 export { userEvent, within };
 
+/**
+ * jsdom has no popover API, so its UA rule `[popover]:not(:popover-open)` hides every popover
+ * surface, and since jsdom 30.1 `focus()` inside a `display: none` ancestor does nothing. Shows
+ * surfaces our components opened (they drop `hidden`) so focus behaves as in a browser. The
+ * selector matches the UA rule's specificity, which jsdom needs to let an author rule win.
+ */
+function showOpenPopovers(ownerDocument: Document) {
+  const view = ownerDocument.defaultView;
+  if (!view || "showPopover" in view.HTMLElement.prototype) return;
+  if (ownerDocument.getElementById("jsdom-popover-shim")) return;
+  const style = ownerDocument.createElement("style");
+  style.id = "jsdom-popover-shim";
+  style.textContent =
+    "[popover]:not([hidden]):not(:popover-open):not(dialog[open]) { display: block; }";
+  ownerDocument.head.append(style);
+}
+
 export function render(element: ReactElement, ownerDocument: Document = document) {
+  showOpenPopovers(ownerDocument);
   const container = ownerDocument.createElement("div");
   ownerDocument.body.append(container);
   return renderWithTestingLibrary(element, {

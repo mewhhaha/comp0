@@ -9,13 +9,13 @@ describe("editable browser interactions", () => {
   it("has no axe violations in view mode or while editing", async () => {
     const { container, unmount } = render(
       <Editable defaultValue="Quarterly report">
-        <EditableView aria-label="Document title, press to edit" />
+        <EditableView aria-label="Quarterly report, press to edit" />
         <EditableInput aria-label="Document title" name="title" />
       </Editable>,
     );
     await expectNoAxeViolations(container, "editable view");
 
-    const view = page.getByRole("button", { name: "Document title, press to edit" });
+    const view = page.getByRole("button", { name: "Quarterly report, press to edit" });
     await act(async () => userEvent.click(view.element()));
     const input = page.getByRole("textbox", { name: "Document title" }).element();
 

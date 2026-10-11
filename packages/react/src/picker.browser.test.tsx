@@ -42,7 +42,7 @@ describe("open picker accessibility", () => {
           </SelectPopover>
         </Select>
         <Select id="axe-unlabelled-select">
-          <SelectTrigger aria-label="Size">Choose</SelectTrigger>
+          <SelectTrigger aria-label="Choose size">Choose</SelectTrigger>
           <SelectPopover>
             <SelectOption value="small">Small</SelectOption>
           </SelectPopover>
@@ -50,7 +50,7 @@ describe("open picker accessibility", () => {
       </div>,
     );
 
-    for (const name of [/Plan/, /Size/]) {
+    for (const name of [/Plan/, /size/]) {
       const trigger = page.getByRole("button", { name }).element();
       await act(async () => userEvent.click(trigger));
       await vi.waitFor(() => expectNoAxeViolations(document.body, "open select"));

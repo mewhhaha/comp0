@@ -190,7 +190,7 @@ describe("open overlays have no accessibility violations", () => {
           <FloatingPanelTrigger>Open layers</FloatingPanelTrigger>
           <FloatingPanelSurface>
             <FloatingPanelTitle>Layers</FloatingPanelTitle>
-            <FloatingPanelDragHandle aria-label="Move Layers">Grip</FloatingPanelDragHandle>
+            <FloatingPanelDragHandle aria-label="Grip, move Layers">Grip</FloatingPanelDragHandle>
             <FloatingPanelClose />
           </FloatingPanelSurface>
         </FloatingPanel>
