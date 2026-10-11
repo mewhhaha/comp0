@@ -1,5 +1,4 @@
 import { useId } from "react";
-import { z } from "zod";
 import {
   AreaChart,
   AreaChartPlot,
@@ -28,8 +27,17 @@ import {
   TableRowHeader,
 } from "@comp0/react";
 import { useComputed } from "../bridge/state.js";
-import { computed } from "../catalog/schema.js";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import {
+  tableProps,
+  barChartProps,
+  columnChartProps,
+  lineChartProps,
+  areaChartProps,
+  pieChartProps,
+  meterProps,
+  progressBarProps,
+} from "./data.props.js";
 import {
   asCell,
   asDatum,
@@ -40,16 +48,6 @@ import {
   maxItems,
   uniqueBy,
 } from "../safe.js";
-
-const cell = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-
-const tableProps = z.object({
-  caption: z.string().describe("What the table shows; it names the table for screen readers."),
-  columns: z.array(z.string()).describe("Column headings, left to right."),
-  rows: z
-    .array(z.array(cell))
-    .describe("One array of cells per row, in column order. The first cell names the row."),
-});
 
 export function TableFacade({ caption, columns, rows }: CatalogProps<typeof tableProps>) {
   const headings = asStrings(columns, 24);
@@ -92,16 +90,6 @@ export function TableFacade({ caption, columns, rows }: CatalogProps<typeof tabl
     </Table>
   );
 }
-
-const datumProps = z.object({
-  label: z.string().describe("Category name."),
-  value: z.number().describe("Number for the category."),
-});
-
-const pointProps = z.object({
-  x: z.number().describe("Position on the horizontal axis, such as a year or an index."),
-  y: z.number().describe("Number at that position."),
-});
 
 type Datum = { label: string; value: number };
 type Point = { x: number; y: number };
@@ -156,16 +144,6 @@ function chartDescription(description: unknown) {
   return text === "" ? null : <ChartDescription>{text}</ChartDescription>;
 }
 
-const categoricalChartProps = () =>
-  z.object({
-    title: z.string().describe("What the chart shows; it names the chart. Required."),
-    data: z.array(datumProps).describe("The bars, each { label, value }."),
-    description: z.string().optional().describe("One sentence stating the main takeaway."),
-    categoryLabel: z.string().optional().describe('Axis label for the categories; "Category".'),
-    valueLabel: z.string().optional().describe('Axis label for the numbers; "Value".'),
-    unit: z.string().optional().describe('Text appended to numbers, such as "%" or " ms".'),
-  });
-
 export function BarChartFacade({
   title,
   data,
@@ -173,7 +151,7 @@ export function BarChartFacade({
   categoryLabel,
   valueLabel,
   unit,
-}: CatalogProps<ReturnType<typeof categoricalChartProps>>) {
+}: CatalogProps<typeof barChartProps>) {
   const values = categories(data, true);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -198,7 +176,7 @@ export function ColumnChartFacade({
   categoryLabel,
   valueLabel,
   unit,
-}: CatalogProps<ReturnType<typeof categoricalChartProps>>) {
+}: CatalogProps<typeof columnChartProps>) {
   const values = categories(data, true);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -215,15 +193,6 @@ export function ColumnChartFacade({
     </ColumnChart>
   );
 }
-
-const pieChartProps = z.object({
-  title: z.string().describe("What the chart shows; it names the chart. Required."),
-  data: z.array(datumProps).describe("The slices, each { label, value } with value >= 0."),
-  description: z.string().optional().describe("One sentence stating the main takeaway."),
-  categoryLabel: z.string().optional().describe('Heading for the slice names; "Category".'),
-  valueLabel: z.string().optional().describe('Heading for the numbers; "Value".'),
-  unit: z.string().optional().describe('Text appended to numbers, such as "%" or " ms".'),
-});
 
 export function PieChartFacade({
   title,
@@ -252,16 +221,6 @@ export function PieChartFacade({
   );
 }
 
-const seriesChartProps = () =>
-  z.object({
-    title: z.string().describe("What the chart shows; it names the chart. Required."),
-    data: z.array(pointProps).describe("The points, each { x, y }."),
-    description: z.string().optional().describe("One sentence stating the main takeaway."),
-    xLabel: z.string().optional().describe('Axis label for x; "X".'),
-    yLabel: z.string().optional().describe('Axis label for y; "Y".'),
-    unit: z.string().optional().describe('Text appended to y numbers, such as "%" or " ms".'),
-  });
-
 function formatX(value: number | Date) {
   return value instanceof Date ? value.toISOString() : String(value);
 }
@@ -273,7 +232,7 @@ export function LineChartFacade({
   xLabel,
   yLabel,
   unit,
-}: CatalogProps<ReturnType<typeof seriesChartProps>>) {
+}: CatalogProps<typeof lineChartProps>) {
   const values = points(data);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -299,7 +258,7 @@ export function AreaChartFacade({
   xLabel,
   yLabel,
   unit,
-}: CatalogProps<ReturnType<typeof seriesChartProps>>) {
+}: CatalogProps<typeof areaChartProps>) {
   const values = points(data);
   if (values.length === 0) return <ChartEmpty title={title} />;
   return (
@@ -317,18 +276,6 @@ export function AreaChartFacade({
     </AreaChart>
   );
 }
-
-const meterProps = z.object({
-  label: z.string().describe("What is measured. Required."),
-  value: computed(z.number()).describe(
-    'The current measurement, or an expression such as {"$expr": "used / total * 100"}.',
-  ),
-  min: z.number().optional().describe("Lowest possible value; 0 by default."),
-  max: z.number().optional().describe("Highest possible value; 100 by default."),
-  low: z.number().optional().describe("Values below this are low."),
-  high: z.number().optional().describe("Values above this are high."),
-  optimum: z.number().optional().describe("The ideal value."),
-});
 
 export function MeterFacade({
   label,
@@ -364,13 +311,6 @@ export function MeterFacade({
   );
 }
 
-const progressBarProps = z.object({
-  label: z.string().describe("What is progressing. Required."),
-  value: computed(z.number())
-    .optional()
-    .describe("Percent complete, 0 to 100, or an expression; omit when unknown."),
-});
-
 export function ProgressBarFacade({ label, value }: CatalogProps<typeof progressBarProps>) {
   const labelId = useId();
   const percent = asNumber(useComputed(value));
@@ -401,7 +341,7 @@ export const dataEntries = [
     group: "Data",
     description:
       "Horizontal bars comparing a number across categories, best for long labels or rankings. Requires title and data ({ label, value } objects); add a description with the takeaway. A data table is included for screen readers.",
-    props: categoricalChartProps(),
+    props: barChartProps,
     component: BarChartFacade,
   }),
   defineEntry({
@@ -409,7 +349,7 @@ export const dataEntries = [
     group: "Data",
     description:
       "Vertical columns comparing a number across a few short categories. Requires title and data ({ label, value } objects); add a description with the takeaway.",
-    props: categoricalChartProps(),
+    props: columnChartProps,
     component: ColumnChartFacade,
   }),
   defineEntry({
@@ -417,7 +357,7 @@ export const dataEntries = [
     group: "Data",
     description:
       "A line showing how a number changes along an ordered axis such as time. Requires title and data ({ x, y } objects with increasing x); add a description with the takeaway.",
-    props: seriesChartProps(),
+    props: lineChartProps,
     component: LineChartFacade,
   }),
   defineEntry({
@@ -425,7 +365,7 @@ export const dataEntries = [
     group: "Data",
     description:
       "Like LineChart with the area below filled, for totals that accumulate. Requires title and data ({ x, y } objects with increasing x).",
-    props: seriesChartProps(),
+    props: areaChartProps,
     component: AreaChartFacade,
   }),
   defineEntry({

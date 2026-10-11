@@ -15,7 +15,8 @@ async function sourceFiles(directory) {
       files.push(...(await sourceFiles(file)));
       continue;
     }
-    if (!/\.[jt]sx?$/.test(entry.name) || /\.test\.[jt]sx?$/.test(entry.name)) continue;
+    // Tests and `.ark.ts` sources (precompiled into the shipped modules) stay out of dist.
+    if (!/\.[jt]sx?$/.test(entry.name) || /\.(?:test|ark)\.[jt]sx?$/.test(entry.name)) continue;
     files.push(file);
   }
 

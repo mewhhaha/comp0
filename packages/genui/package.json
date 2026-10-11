@@ -51,13 +51,13 @@
     "@comp0/react": "workspace:*"
   },
   "devDependencies": {
+    "arktype": "2.2.8",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "zod": "^4.0.0"
+    "react-dom": "^19.0.0"
   }
 }

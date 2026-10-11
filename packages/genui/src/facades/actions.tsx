@@ -1,26 +1,10 @@
-import { z } from "zod";
 import { Button, CopyButton, Link, Suggestion, Suggestions } from "@comp0/react";
 import { useFormSnapshot } from "../bridge/fields.js";
-import { url } from "../catalog/schema.js";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { buttonProps, linkProps, suggestionsProps, copyButtonProps } from "./actions.props.js";
+import { variants } from "./tokens.js";
 import { useGenUI } from "../render/context.js";
 import { asStrings, asText, asToken, safeHref } from "../safe.js";
-
-const variants = ["primary", "secondary", "danger"] as const;
-
-const buttonProps = z.object({
-  label: z.string().describe("Visible text of the button; say what happens when it is pressed."),
-  variant: z
-    .enum(variants)
-    .optional()
-    .describe('"primary" for the main action; "danger" for destructive ones.'),
-  message: z
-    .string()
-    .optional()
-    .describe(
-      "What the person is asking for, written as their message to the assistant. Defaults to the label.",
-    ),
-});
 
 export function ButtonFacade({ label, variant, message }: CatalogProps<typeof buttonProps>) {
   const { act, streaming } = useGenUI();
@@ -44,14 +28,6 @@ export function ButtonFacade({ label, variant, message }: CatalogProps<typeof bu
   );
 }
 
-const linkProps = z.object({
-  label: z.string().describe("Visible link text that makes sense out of context."),
-  href: url(
-    "link",
-    "http(s), mailto:, tel:, relative, or #fragment URL. Other schemes are not linked.",
-  ),
-});
-
 export function LinkFacade({ label, href }: CatalogProps<typeof linkProps>) {
   const text = asText(label);
   const safe = safeHref(href);
@@ -64,15 +40,6 @@ export function LinkFacade({ label, href }: CatalogProps<typeof linkProps>) {
     </Link>
   );
 }
-
-const suggestionsProps = z.object({
-  label: z
-    .string()
-    .describe("Names the group of replies, such as 'Follow-up questions'. Required."),
-  items: z
-    .array(z.string())
-    .describe("Short replies the person can send as their next message, each a sentence or less."),
-});
 
 export function SuggestionsFacade({ label, items }: CatalogProps<typeof suggestionsProps>) {
   const { act, streaming } = useGenUI();
@@ -95,11 +62,6 @@ export function SuggestionsFacade({ label, items }: CatalogProps<typeof suggesti
     </Suggestions>
   );
 }
-
-const copyButtonProps = z.object({
-  label: z.string().describe("Visible text saying what is copied, such as 'Copy install command'."),
-  value: z.string().describe("The exact text placed on the clipboard."),
-});
 
 export function CopyButtonFacade({ label, value }: CatalogProps<typeof copyButtonProps>) {
   const { streaming } = useGenUI();

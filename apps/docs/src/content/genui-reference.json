@@ -782,7 +782,7 @@
         },
         {
           "name": "rows",
-          "type": "((string | number | boolean | null)[])[]",
+          "type": "((number | string | boolean | null)[])[]",
           "required": true,
           "description": "One array of cells per row, in column order. The first cell names the row."
         }
@@ -1084,7 +1084,7 @@
         },
         {
           "name": "value",
-          "type": "string | number | Expression",
+          "type": "number | string | Expression",
           "required": true,
           "description": "The result. Write {\"$expr\": \"seats * 12\"} so it recalculates as the person changes the controls bound to the names it reads."
         },
@@ -1115,7 +1115,7 @@
         },
         {
           "name": "features",
-          "type": "({ name: string, values: (string | number | boolean | null)[] })[]",
+          "type": "({ name: string, values: (number | string | boolean | null)[] })[]",
           "required": true,
           "description": "The rows, each { name, values }."
         },

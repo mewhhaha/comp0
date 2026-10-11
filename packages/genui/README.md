@@ -4,7 +4,7 @@ Let a model compose accessible comp0 interfaces. `@comp0/genui` is a model-facin
 
 Documentation: [comp0-docs.horrible.workers.dev/genui/overview](https://comp0-docs.horrible.workers.dev/genui/overview), with the full component catalog generated from the schemas.
 
-- **One JSON format**: `{ "type": "Select", "label": "Plan", "name": "plan", "options": ["Basic", "Pro"] }`. A Zod schema per component is the single source of the validator, the JSON Schema for structured outputs, and the prompt.
+- **One JSON format**: `{ "type": "Select", "label": "Plan", "name": "plan", "options": ["Basic", "Pro"] }`. Each component's props are Standard Schemas, the single source of the validator, the JSON Schema for structured outputs, and the prompt. The built-ins are written with ArkType and ship precompiled to static JSON Schema, so no schema library runs or ships with the package; your own components can use ArkType, zod, Valibot, or any library that implements Standard Schema.
 - **Streams**: any prefix of a response renders. Components keep their identity (and typed text and focus) as the response grows; nothing warns, moves focus, or acts until the response is complete.
 - **Safe by construction**: components render only the props their schema declares, only safe URLs, and text as text. Computed values run in a small whitelisted evaluator, never `eval`.
 - **Accessible by schema**: every control, chart, table, and image requires its accessible name; a component without everything it requires is not rendered.
@@ -13,10 +13,10 @@ Documentation: [comp0-docs.horrible.workers.dev/genui/overview](https://comp0-do
 ## Install
 
 ```sh
-pnpm add @comp0/genui @comp0/react zod react@^19 react-dom@^19
+pnpm add @comp0/genui @comp0/react react@^19 react-dom@^19
 ```
 
-`zod` (^4), `react`, and `react-dom` (^19) are peer dependencies, so your app controls their versions. comp0 ships no CSS; components carry `data-*` hooks to style (see below).
+`react` and `react-dom` (^19) are peer dependencies, so your app controls their versions. There are no other runtime dependencies. comp0 ships no CSS; components carry `data-*` hooks to style (see below).
 
 ## Render a response
 
@@ -241,7 +241,7 @@ evaluateExpression("round(seats * 1.5, 2)", { seats: 3 }); // 4.5
 ## The catalog
 
 ```ts
-import { catalog, defineEntry, nodes, bindable, computed, url } from "@comp0/genui";
+import { catalog, defineEntry, nodes, bindable, computed, url, list } from "@comp0/genui";
 ```
 
 | Group      | Components                                                                                                                            |
@@ -253,22 +253,28 @@ import { catalog, defineEntry, nodes, bindable, computed, url } from "@comp0/gen
 | Data       | `Table`, `BarChart`, `ColumnChart`, `LineChart`, `AreaChart`, `PieChart`, `Meter`, `ProgressBar`, `Output`, `Comparison`, `CitedText` |
 | Feedback   | `Alert`, `Separator`                                                                                                                  |
 
-An entry is plain data:
+An entry is plain data. Its props are a shape: each key holds a [Standard Schema](https://standardschema.dev) that can also describe itself as JSON Schema (ArkType 2.1.28+, zod 4.2+, Valibot through `toStandardJsonSchema()`), and a key ending in `?` is optional. Key order is the order the prompt lists them in.
 
 ```tsx
+import { type } from "arktype";
+import { z } from "zod";
+
 const Shout = defineEntry({
   name: "Shout",
   group: "Layout",
   description: "Loud text. Requires text.",
-  props: z.object({ text: z.string().describe("What to shout.") }),
-  component: ({ text }) => <strong>{text}</strong>,
+  props: {
+    text: type("string").describe("What to shout."),
+    "volume?": z.number().min(1).max(11).describe("How loud, 1 to 11."),
+  },
+  component: ({ text, volume }) => <strong data-volume={volume}>{text}</strong>,
 });
 
 <GenUI response={response} catalog={[...catalog, Shout]} />;
 genuiPrompt({ catalog: [...catalog, Shout] });
 ```
 
-In a schema use `nodes("description")` for a slot that holds nested components (the component receives a `ReactNode`), `bindable(schema)` for a value a control can bind, `computed(schema)` for a value that may be an expression, and `url("link" | "image", "description")` for a URL the validator must vet. A component receives only the props its schema declares, each possibly missing, so render defensively.
+genui adds a few schemas of its own: `nodes("description")` for a slot that holds nested components (the component receives a `ReactNode`), `bindable(schema, "description")` for a value a control can bind, `computed(schema, "description")` for a value that may be an expression, `url("link" | "image", "description")` for a URL the validator must vet, and `list(itemShape, "description")` for a list whose items hold any of these. While a response streams, a prop is checked against its JSON Schema so partial values render; once it is finished it must also pass the library's own `validate`, so formats and refinements (`string.email`, `.min(1)`) count. Validators must be synchronous. A component receives only the props its schema declares, each possibly missing, so render defensively.
 
 ## Safety
 

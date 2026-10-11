@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { z } from "zod";
 import {
   Accordion,
   AccordionHeader,
@@ -15,23 +14,9 @@ import {
   Tabs,
 } from "@comp0/react";
 import { useHeadingLevel } from "../bridge/heading-level.js";
-import { nodes } from "../catalog/schema.js";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { tabsProps, accordionProps, disclosureProps } from "./disclosure.props.js";
 import { asNode, asRecords, asText } from "../safe.js";
-
-const tabProps = z.object({
-  label: z.string().describe("Visible text of the tab."),
-  children: nodes("Content shown when the tab is selected."),
-});
-
-const tabsProps = z.object({
-  tabs: z
-    .array(tabProps)
-    .describe(
-      "The tabs, each { label, children } where children are the components shown when the tab is selected.",
-    ),
-  label: z.string().optional().describe("Accessible name of the tab list."),
-});
 
 export function TabsFacade({ tabs, label }: CatalogProps<typeof tabsProps>) {
   const entries = asRecords(tabs, 24).filter((tab) => asText(tab.label) !== "");
@@ -54,17 +39,6 @@ export function TabsFacade({ tabs, label }: CatalogProps<typeof tabsProps>) {
     </Tabs>
   );
 }
-
-const accordionItemProps = z.object({
-  title: z.string().describe("Visible heading of the section; it toggles the section."),
-  children: nodes("Content revealed when the section is open."),
-  open: z.boolean().optional().describe("Starts open."),
-});
-
-const accordionProps = z.object({
-  items: z.array(accordionItemProps).describe("The sections, each { title, children, open? }."),
-  multiple: z.boolean().optional().describe("Allow several sections open at once."),
-});
 
 export function AccordionFacade({ items, multiple }: CatalogProps<typeof accordionProps>) {
   const entries = asRecords(items, 100).filter((item) => asText(item.title) !== "");
@@ -101,12 +75,6 @@ export function AccordionFacade({ items, multiple }: CatalogProps<typeof accordi
     </Accordion>
   );
 }
-
-const disclosureProps = z.object({
-  summary: z.string().describe("Visible text that toggles the details."),
-  children: nodes("Details revealed when opened."),
-  open: z.boolean().optional().describe("Starts open."),
-});
 
 export function DisclosureFacade({
   summary,

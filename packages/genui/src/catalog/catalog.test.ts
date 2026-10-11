@@ -1,15 +1,42 @@
+import { type } from "arktype";
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
 import { catalog } from "./catalog.js";
-import { defOf, describeType, isOptional } from "./describe-schema.js";
-import { bindable, computed, isNodesSchema, markerOf, nodeSlotKeys, nodes, url } from "./schema.js";
+import { describeType } from "./describe-schema.js";
+import {
+  bindable,
+  computed,
+  descriptionOf,
+  isShape,
+  kindOf,
+  list,
+  nodes,
+  oneOf,
+  shapeEntries,
+  url,
+  type PropShape,
+} from "./schema.js";
 
-function required(name: string) {
+function entryNamed(name: string) {
   const entry = catalog.find((candidate) => candidate.name === name);
   if (!entry) throw new Error(`No catalog entry ${name}`);
-  return Object.entries(entry.props.shape)
-    .filter(([, schema]) => !isOptional(schema as z.ZodType))
-    .map(([key]) => key);
+  return entry;
+}
+
+function required(name: string) {
+  return shapeEntries(entryNamed(name).props)
+    .filter((prop) => !prop.optional)
+    .map((prop) => prop.name);
+}
+
+function propSchema(name: string, prop: string) {
+  return shapeEntries(entryNamed(name).props).find((entry) => entry.name === prop)!.schema;
+}
+
+function listShape(name: string, prop: string): PropShape {
+  const kind = kindOf(propSchema(name, prop));
+  if (kind?.kind !== "list" || !isShape(kind.element))
+    throw new Error(`${name}.${prop} is no list`);
+  return kind.element;
 }
 
 describe("catalog", () => {
@@ -68,15 +95,18 @@ describe("catalog", () => {
   it("describes every entry and every prop for a model", () => {
     for (const entry of catalog) {
       expect(entry.description.length, entry.name).toBeGreaterThan(30);
-      for (const [key, schema] of Object.entries(entry.props.shape)) {
-        expect((schema as z.ZodType).description, `${entry.name}.${key}`).toBeTruthy();
+      for (const prop of shapeEntries(entry.props)) {
+        expect(descriptionOf(prop.schema), `${entry.name}.${prop.name}`).toBeTruthy();
       }
     }
   });
 
   it("never lets a prop shadow the type discriminator", () => {
     for (const entry of catalog)
-      expect(Object.keys(entry.props.shape), entry.name).not.toContain("type");
+      expect(
+        shapeEntries(entry.props).map((prop) => prop.name),
+        entry.name,
+      ).not.toContain("type");
   });
 
   it("names the required props in every description of an entry that has them", () => {
@@ -127,26 +157,24 @@ describe("catalog", () => {
   });
 
   it("requires the accessible name inside the parts too", () => {
-    const tabs = defOf(
-      defOf(catalog.find((entry) => entry.name === "Tabs")!.props.shape.tabs).element,
+    const names = (shape: PropShape) =>
+      shapeEntries(shape).map((prop) => `${prop.name}${prop.optional ? "?" : ""}`);
+    expect(names(listShape("Tabs", "tabs"))).toEqual(["label", "children"]);
+    expect(names(listShape("Accordion", "items"))).toEqual(["title", "children", "open?"]);
+    expect(describeType(propSchema("Select", "options"))).toBe(
+      "(string | { value: string, label?: string })[]",
     );
-    const item = defOf(
-      defOf(catalog.find((entry) => entry.name === "Accordion")!.props.shape.items).element,
-    );
-
-    expect(Object.keys(tabs.shape ?? {})).toEqual(["label", "children"]);
-    expect(Object.keys(item.shape ?? {})).toEqual(["title", "children", "open"]);
-    expect(
-      describeType(
-        catalog.find((entry) => entry.name === "Select")!.props.shape.options as z.ZodType,
-      ),
-    ).toBe("(string | { value: string, label?: string })[]");
   });
 
   it("marks the slots for nested components", () => {
     const slots = Object.fromEntries(
       catalog
-        .map((entry) => [entry.name, nodeSlotKeys(entry.props)])
+        .map((entry) => [
+          entry.name,
+          shapeEntries(entry.props)
+            .filter((prop) => kindOf(prop.schema)?.kind === "nodes")
+            .map((prop) => prop.name),
+        ])
         .filter(([, keys]) => keys!.length > 0),
     );
 
@@ -157,16 +185,14 @@ describe("catalog", () => {
       Form: ["children"],
       Disclosure: ["children"],
     });
-    expect(isNodesSchema(nodes("x").optional())).toBe(true);
-    expect(isNodesSchema(z.array(z.string()))).toBe(false);
   });
 
   it("marks the props that accept bindings and expressions", () => {
     const marked = (kind: string) =>
       catalog.flatMap((entry) =>
-        Object.entries(entry.props.shape)
-          .filter(([, schema]) => markerOf(defOf(schema).innerType ?? schema)?.kind === kind)
-          .map(([key]) => `${entry.name}.${key}`),
+        shapeEntries(entry.props)
+          .filter((prop) => kindOf(prop.schema)?.kind === kind)
+          .map((prop) => `${entry.name}.${prop.name}`),
       );
 
     expect(marked("bindable").sort()).toEqual([
@@ -191,24 +217,45 @@ describe("catalog", () => {
   });
 });
 
-describe("schema markers", () => {
-  it("survive describe, optional, and nesting", () => {
-    expect(markerOf(bindable(z.string()).optional().describe("x"))).toBeUndefined();
-    expect(markerOf(bindable(z.string()).describe("x"))?.kind).toBe("bindable");
-    expect(markerOf(computed(z.number()).describe("x"))?.kind).toBe("computed");
-    expect(markerOf(url("link", "x").describe("y"))?.kind).toBe("url");
-    expect(markerOf(z.string())).toBeUndefined();
+describe("prop schemas", () => {
+  it("recognize genui schemas by identity and leave library schemas alone", () => {
+    expect(kindOf(bindable(type("string")))?.kind).toBe("bindable");
+    expect(kindOf(computed(type("number")))?.kind).toBe("computed");
+    expect(kindOf(url("link", "x"))?.kind).toBe("url");
+    expect(kindOf(nodes("x"))?.kind).toBe("nodes");
+    expect(kindOf(list(type("string")))?.kind).toBe("list");
+    expect(kindOf(type("string"))).toBeUndefined();
+    expect(isShape({ a: type("string") })).toBe(true);
+    expect(isShape(type("string"))).toBe(false);
+  });
+
+  it("read optional keys and descriptions", () => {
+    expect(
+      shapeEntries({ a: type("string"), "b?": type("number").describe("B") }).map((entry) => [
+        entry.name,
+        entry.optional,
+        descriptionOf(entry.schema),
+      ]),
+    ).toEqual([
+      ["a", false, undefined],
+      ["b", true, "B"],
+    ]);
+    expect(descriptionOf(bindable(type("string").describe("Inner")))).toBe("Inner");
+    expect(descriptionOf(bindable(type("string").describe("Inner"), "Outer"))).toBe("Outer");
   });
 
   it("describe the shapes for a model", () => {
-    expect(describeType(bindable(z.number()))).toBe("number | Binding");
-    expect(describeType(computed(z.string()))).toBe("string | Expression");
+    expect(describeType(bindable(type("number")))).toBe("number | Binding");
+    expect(describeType(computed(type("string")))).toBe("string | Expression");
     expect(describeType(nodes("x"))).toBe("Component[]");
-    expect(describeType(z.enum(["a", "b"]).optional())).toBe('"a" | "b"');
-    expect(describeType(z.object({ a: z.string(), b: z.number().optional() }))).toBe(
+    expect(describeType(oneOf(["xs", "sm", "md"]))).toBe('"xs" | "sm" | "md"');
+    expect(describeType({ a: type("string"), "b?": type("number") })).toBe(
       "{ a: string, b?: number }",
     );
-    expect(describeType(z.array(z.union([z.string(), z.number()])))).toBe("(string | number)[]");
-    expect(describeType(z.string().nullable())).toBe("string | null");
+    expect(describeType(list({ title: type("string"), "href?": url("link", "x") }))).toBe(
+      "{ title: string, href?: URL }[]",
+    );
+    expect(describeType(type("(string | number)[]"))).toBe("(number | string)[]");
+    expect(describeType(type("string | null"))).toBe("string | null");
   });
 });

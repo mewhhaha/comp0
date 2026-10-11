@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { type } from "arktype";
 import { catalog } from "../catalog/catalog.js";
+import { shapeEntries } from "../catalog/schema.js";
 import { defineEntry } from "../catalog/types.js";
 import { answers, hostile } from "../../test/answers/index.js";
 import { kitchenSink } from "../../test/fixtures.js";
@@ -89,16 +90,16 @@ describe("responseJsonSchema", () => {
       expect(definition.additionalProperties, entry.name).toBe(false);
       expect(Object.keys(definition.properties ?? {}), entry.name).toEqual([
         "type",
-        ...Object.keys(entry.props.shape),
+        ...shapeEntries(entry.props).map((prop) => prop.name),
       ]);
     }
   });
 
   it("lists exactly the required props of each component", () => {
     for (const entry of catalog) {
-      const expected = Object.entries(entry.props.shape)
-        .filter(([, prop]) => !(prop as z.ZodType).safeParse(undefined).success)
-        .map(([key]) => key);
+      const expected = shapeEntries(entry.props)
+        .filter((prop) => !prop.optional)
+        .map((prop) => prop.name);
       expect(schema.$defs[entry.name]!.required, entry.name).toEqual(["type", ...expected]);
     }
   });
@@ -152,10 +153,10 @@ describe("responseJsonSchema", () => {
       name: "Shout",
       group: "Layout",
       description: "Loud text. Requires text.",
-      props: z.object({
-        text: z.string().describe("What to shout."),
-        volume: z.number().optional().describe("How loud."),
-      }),
+      props: {
+        text: type("string").describe("What to shout."),
+        "volume?": type("number").describe("How loud."),
+      },
       component: () => null,
     });
     const custom = responseJsonSchema({ catalog: [Shout], root: "Shout" }) as Schema;

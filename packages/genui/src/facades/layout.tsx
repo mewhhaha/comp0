@@ -1,28 +1,24 @@
 import { useId } from "react";
-import { z } from "zod";
 import { HeadingLevelContext, useHeadingLevel } from "../bridge/heading-level.js";
 import { useComputed } from "../bridge/state.js";
-import { computed, nodes, url } from "../catalog/schema.js";
 import { type CatalogProps, defineEntry } from "../catalog/types.js";
+import {
+  stackProps,
+  gridProps,
+  cardProps,
+  headingProps,
+  textProps,
+  imageProps,
+  listProps,
+} from "./layout.props.js";
+import { gaps, aligns, tones } from "./tokens.js";
 import { asNumber, asResult, asText, asToken, asStrings, safeImageSrc } from "../safe.js";
-
-const gaps = ["xs", "sm", "md", "lg", "xl"] as const;
-const aligns = ["start", "center", "end", "stretch"] as const;
-const tones = ["default", "muted", "success", "warning", "danger"] as const;
 
 function clampInteger(value: unknown, min: number, max: number) {
   const number = asNumber(value);
   if (number === undefined) return undefined;
   return Math.min(max, Math.max(min, Math.round(number)));
 }
-
-const stackProps = z.object({
-  children: nodes("Components to lay out, in order."),
-  direction: z.enum(["column", "row"]).optional().describe('"column" (default) stacks vertically.'),
-  gap: z.enum(gaps).optional().describe('Space between children; "md" by default.'),
-  align: z.enum(aligns).optional().describe("Cross-axis alignment."),
-  wrap: z.boolean().optional().describe("Let a row wrap onto several lines."),
-});
 
 export function StackFacade({
   children,
@@ -44,12 +40,6 @@ export function StackFacade({
   );
 }
 
-const gridProps = z.object({
-  children: nodes("Components to place in grid cells, in order."),
-  columns: z.number().optional().describe("Number of equal columns, 1 to 6; 2 by default."),
-  gap: z.enum(gaps).optional().describe('Space between cells; "md" by default.'),
-});
-
 export function GridFacade({ children, columns, gap }: CatalogProps<typeof gridProps>) {
   return (
     <div data-slot="grid" data-columns={clampInteger(columns, 1, 6)} data-gap={asToken(gap, gaps)}>
@@ -57,13 +47,6 @@ export function GridFacade({ children, columns, gap }: CatalogProps<typeof gridP
     </div>
   );
 }
-
-const cardProps = z.object({
-  title: z.string().describe("Heading of the card; it also names the card for screen readers."),
-  children: nodes("Content of the card."),
-  description: z.string().optional().describe("One short supporting sentence under the title."),
-  tone: z.enum(["default", "muted", "accent"]).optional().describe("Visual emphasis."),
-});
 
 export function CardFacade({ title, children, description, tone }: CatalogProps<typeof cardProps>) {
   const headingId = useId();
@@ -133,11 +116,6 @@ function CardTitle({ id, level, children }: CardTitleProps) {
   );
 }
 
-const headingProps = z.object({
-  text: z.string().describe("The heading text."),
-  level: z.number().optional().describe("Heading level 1 to 6; 2 by default. Do not skip levels."),
-});
-
 export function HeadingFacade({ text, level }: CatalogProps<typeof headingProps>) {
   const resolved = clampInteger(level, 1, 6) ?? 2;
   const content = asText(text);
@@ -151,14 +129,6 @@ export function HeadingFacade({ text, level }: CatalogProps<typeof headingProps>
   return <h2 data-slot="heading">{content}</h2>;
 }
 
-const textProps = z.object({
-  text: computed(z.string()).describe(
-    'Plain text. Markdown and HTML are shown literally. May be {"$expr": "..."} over bound names.',
-  ),
-  tone: z.enum(tones).optional().describe('Meaning of the text; "default" unless it matters.'),
-  size: z.enum(["sm", "md", "lg"]).optional().describe('Text size; "md" by default.'),
-});
-
 export function TextFacade({ text, tone, size }: CatalogProps<typeof textProps>) {
   return (
     <p
@@ -170,14 +140,6 @@ export function TextFacade({ text, tone, size }: CatalogProps<typeof textProps>)
     </p>
   );
 }
-
-const imageProps = z.object({
-  src: url("image", "http(s) or relative URL of the image. data: URLs are not rendered."),
-  alt: z
-    .string()
-    .describe("Text alternative describing what the image shows. Required; never a filename."),
-  caption: z.string().optional().describe("Visible caption under the image."),
-});
 
 export function ImageFacade({ src, alt, caption }: CatalogProps<typeof imageProps>) {
   const safeSrc = safeImageSrc(src);
@@ -197,11 +159,6 @@ export function ImageFacade({ src, alt, caption }: CatalogProps<typeof imageProp
     </figure>
   );
 }
-
-const listProps = z.object({
-  items: z.array(z.string()).describe("One short text per item."),
-  ordered: z.boolean().optional().describe("Number the items; bulleted by default."),
-});
 
 export function ListFacade({ items, ordered }: CatalogProps<typeof listProps>) {
   const entries = asStrings(items);

@@ -1,15 +1,8 @@
-import { z } from "zod";
 import { Alert, Separator, Status } from "@comp0/react";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import { alertProps, separatorProps } from "./feedback.props.js";
+import { alertTones } from "./tokens.js";
 import { asText, asToken } from "../safe.js";
-
-const alertTones = ["info", "success", "warning", "danger"] as const;
-
-const alertProps = z.object({
-  message: z.string().describe("What the person needs to know, in a sentence or two."),
-  tone: z.enum(alertTones).optional().describe('"info" by default.'),
-  title: z.string().optional().describe("Short bold lead-in."),
-});
 
 export function AlertFacade({ message, tone, title }: CatalogProps<typeof alertProps>) {
   const resolved = asToken(tone, alertTones) ?? "info";
@@ -26,10 +19,6 @@ export function AlertFacade({ message, tone, title }: CatalogProps<typeof alertP
   }
   return <Status data-tone={resolved}>{content}</Status>;
 }
-
-const separatorProps = z.object({
-  orientation: z.enum(["horizontal", "vertical"]).optional().describe('"horizontal" by default.'),
-});
 
 export function SeparatorFacade({ orientation }: CatalogProps<typeof separatorProps>) {
   return (

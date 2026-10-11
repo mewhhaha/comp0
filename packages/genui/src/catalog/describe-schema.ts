@@ -1,98 +1,86 @@
-import { type z } from "zod";
-import { markerOf } from "./schema.js";
-
-type Def = {
-  type?: string;
-  shape?: Record<string, z.ZodType>;
-  element?: z.ZodType;
-  options?: z.ZodType[];
-  entries?: Record<string, string>;
-  values?: unknown[];
-  innerType?: z.ZodType;
-  getter?: () => z.ZodType;
-};
-
-/** The internal definition of a Zod schema; the validator and the generators read it. */
-export function defOf(schema: unknown): Def {
-  return ((schema as { _zod?: { def?: Def } })._zod?.def ?? {}) as Def;
-}
-
-/** Whether a schema accepts `undefined` (is optional). */
-export function isOptional(schema: z.ZodType): boolean {
-  const def = defOf(schema);
-  if (def.type === "optional" || def.type === "default") return true;
-  if ((def.type === "readonly" || def.type === "nullable") && def.innerType) {
-    return isOptional(def.innerType);
-  }
-  return false;
-}
-
-/** The schema without `optional`, `nullable`, `default`, and `readonly` wrappers. */
-export function unwrap(schema: z.ZodType): z.ZodType {
-  const def = defOf(schema);
-  if (
-    (def.type === "optional" ||
-      def.type === "nullable" ||
-      def.type === "default" ||
-      def.type === "readonly") &&
-    def.innerType
-  ) {
-    return unwrap(def.innerType);
-  }
-  return schema;
-}
+import {
+  isShape,
+  jsonSchemaOf,
+  kindOf,
+  shapeEntries,
+  type JsonSchema,
+  type PropSchema,
+  type PropShape,
+} from "./schema.js";
 
 function compound(text: string): string {
   return text.includes(" | ") ? `(${text})` : text;
 }
 
+function isRecord(value: unknown): value is JsonSchema {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function describeTypeName(name: unknown): string {
+  if (name === "integer") return "number";
+  if (name === "string" || name === "number" || name === "boolean" || name === "null") return name;
+  if (name === "array") return "any[]";
+  if (name === "object") return "object";
+  return "any";
+}
+
 /**
- * A short, readable type for a schema, used in the prompt and in error messages:
+ * A short, readable type for a JSON Schema, used in the prompt and in error messages:
  * `string`, `"a" | "b"`, `{ value: string, label?: string }[]`.
  */
-export function describeType(schema: z.ZodType): string {
-  const marker = markerOf(schema);
-  if (marker?.kind === "nodes") return "Component[]";
-  if (marker?.kind === "bindable") return `${describeType(marker.inner)} | Binding`;
-  if (marker?.kind === "computed") return `${describeType(marker.inner)} | Expression`;
-  if (marker?.kind === "url") return marker.url === "image" ? "image URL" : "URL";
-  const def = defOf(schema);
-  switch (def.type) {
-    case "string":
-      return "string";
-    case "number":
-      return "number";
-    case "boolean":
-      return "boolean";
-    case "null":
-      return "null";
-    case "unknown":
-      return "any";
-    case "enum":
-      return Object.values(def.entries ?? {})
-        .map((value) => JSON.stringify(value))
-        .join(" | ");
-    case "literal":
-      return (def.values ?? []).map((value) => JSON.stringify(value)).join(" | ");
-    case "array":
-      return `${compound(describeType(def.element as z.ZodType))}[]`;
-    case "union":
-      return (def.options ?? []).map(describeType).join(" | ");
-    case "object": {
-      const parts = Object.entries(def.shape ?? {}).map(
-        ([key, child]) => `${key}${isOptional(child) ? "?" : ""}: ${describeType(child)}`,
+export function describeJsonType(json: JsonSchema): string {
+  const union = json.anyOf ?? json.oneOf;
+  if (Array.isArray(union)) {
+    const options = union.filter(isRecord).map(describeJsonType);
+    return [...new Set(options)].join(" | ");
+  }
+  if ("const" in json) return JSON.stringify(json.const);
+  if (Array.isArray(json.enum)) return json.enum.map((value) => JSON.stringify(value)).join(" | ");
+  if (Array.isArray(json.type)) return json.type.map(describeTypeName).join(" | ");
+  if (json.type === "array" || (json.type === undefined && isRecord(json.items))) {
+    return isRecord(json.items) ? `${compound(describeJsonType(json.items))}[]` : "any[]";
+  }
+  if (json.type === "object" || (json.type === undefined && isRecord(json.properties))) {
+    const properties = isRecord(json.properties) ? json.properties : {};
+    const required = new Set(Array.isArray(json.required) ? json.required : []);
+    const parts = Object.entries(properties)
+      .filter(([, child]) => isRecord(child))
+      .map(
+        ([key, child]) =>
+          `${key}${required.has(key) ? "" : "?"}: ${describeJsonType(child as JsonSchema)}`,
       );
-      return `{ ${parts.join(", ")} }`;
-    }
-    case "optional":
-    case "default":
-    case "readonly":
-      return describeType(def.innerType as z.ZodType);
-    case "nullable":
-      return `${describeType(def.innerType as z.ZodType)} | null`;
-    case "lazy":
-      return describeType((def.getter as () => z.ZodType)());
-    default:
-      return "any";
+    return parts.length === 0 ? "object" : `{ ${parts.join(", ")} }`;
+  }
+  return describeTypeName(json.type);
+}
+
+/**
+ * A short, readable type for a prop schema or shape, used in the prompt and in error messages.
+ * genui schemas read as `Component[]`, `string | Binding`, `number | Expression`, and `URL`.
+ */
+export function describeType(schema: PropSchema | PropShape): string {
+  if (isShape(schema)) {
+    const parts = shapeEntries(schema).map(
+      (entry) => `${entry.name}${entry.optional ? "?" : ""}: ${describeType(entry.schema)}`,
+    );
+    return `{ ${parts.join(", ")} }`;
+  }
+  const kind = kindOf(schema);
+  if (kind === undefined) return describeJsonType(jsonSchemaOf(schema));
+  switch (kind.kind) {
+    case "nodes":
+      return "Component[]";
+    case "bindable":
+      return `${describeType(kind.inner)} | Binding`;
+    case "computed":
+      return `${describeType(kind.inner)} | Expression`;
+    case "url":
+      return kind.url === "image" ? "image URL" : "URL";
+    case "list":
+      return `${compound(describeType(kind.element))}[]`;
+    case "oneOf":
+      return kind.values.map((value) => JSON.stringify(value)).join(" | ");
+    case "json":
+      return describeJsonType(kind.json);
   }
 }

@@ -1,5 +1,4 @@
 import { use, useId, useState, type FormEvent } from "react";
-import { z } from "zod";
 import {
   Button,
   Calendar,
@@ -42,8 +41,21 @@ import {
   useStateKey,
 } from "../bridge/fields.js";
 import { useField } from "../bridge/state.js";
-import { bindable, nodes } from "../catalog/schema.js";
 import { defineEntry, type CatalogProps } from "../catalog/types.js";
+import {
+  formProps,
+  textFieldProps,
+  textAreaProps,
+  numberFieldProps,
+  selectProps,
+  radioGroupProps,
+  checkboxGroupProps,
+  checkboxProps,
+  switchProps,
+  sliderProps,
+  datePickerProps,
+} from "./forms.props.js";
+import { textTypes } from "./tokens.js";
 import { describeFormValues, type FormFieldDescriptor } from "../describe.js";
 import { type JsonValue } from "../json/parse.js";
 import { useGenUI } from "../render/context.js";
@@ -77,24 +89,6 @@ export function normalizeOptions(value: unknown): ChoiceOption[] {
   }
   return uniqueBy(options, (option) => option.value);
 }
-
-const optionProps = z.object({
-  value: z.string().describe("The value that is stored and submitted."),
-  label: z.string().optional().describe("Visible text; defaults to the value."),
-});
-
-const optionList = z
-  .array(z.union([z.string(), optionProps]))
-  .describe(
-    "The choices: plain strings (shown and stored as written) or { value, label } when the stored value differs from the text.",
-  );
-
-const formProps = z.object({
-  name: z.string().describe("Short identifier for the form, unique in the response."),
-  title: z.string().describe("Accessible name of the form. Add a Heading to show it."),
-  children: nodes("The form controls and any explanatory components."),
-  submitLabel: z.string().optional().describe('Text of the submit button; "Submit" by default.'),
-});
 
 export function FormFacade({ name, title, children, submitLabel }: CatalogProps<typeof formProps>) {
   const formName = fieldKey(name, title);
@@ -161,23 +155,6 @@ function useControl<TValue extends JsonValue>(
   return { key, field };
 }
 
-const textTypes = ["text", "email", "tel", "url"] as const;
-
-const textFieldProps = z.object({
-  label: z.string().describe("Visible label naming the field. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  value: bindable(z.string())
-    .optional()
-    .describe('Initial text, or a binding {"$bind": name} the field reads and writes.'),
-  required: z.boolean().optional().describe("The person must fill this in."),
-  placeholder: z.string().optional().describe("Example input; never a substitute for the label."),
-  inputType: z
-    .enum(textTypes)
-    .optional()
-    .describe('Kind of text: "text" (default), "email", "tel", or "url".'),
-  description: z.string().optional().describe("Help text shown under the field."),
-});
-
 export function TextFieldFacade({
   label,
   name,
@@ -213,15 +190,6 @@ export function TextFieldFacade({
   );
 }
 
-const textAreaProps = z.object({
-  label: z.string().describe("Visible label naming the field. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  value: bindable(z.string()).optional().describe('Initial text, or a binding {"$bind": name}.'),
-  required: z.boolean().optional().describe("The person must fill this in."),
-  placeholder: z.string().optional().describe("Example input; never a substitute for the label."),
-  description: z.string().optional().describe("Help text shown under the field."),
-});
-
 export function TextAreaFacade({
   label,
   name,
@@ -251,21 +219,6 @@ export function TextAreaFacade({
     </TextField>
   );
 }
-
-const numberFieldProps = z.object({
-  label: z.string().describe("Visible label naming the field. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  value: bindable(z.number())
-    .optional()
-    .describe(
-      'Initial number, or a binding {"$bind": name} the field reads and writes; empty when omitted.',
-    ),
-  min: z.number().optional().describe("Smallest allowed number."),
-  max: z.number().optional().describe("Largest allowed number."),
-  step: z.number().optional().describe("Amount one step changes the number; 1 by default."),
-  required: z.boolean().optional().describe("The person must fill this in."),
-  description: z.string().optional().describe("Help text shown under the field."),
-});
 
 export function NumberFieldFacade({
   label,
@@ -300,19 +253,6 @@ export function NumberFieldFacade({
     </NumberField>
   );
 }
-
-const selectProps = z.object({
-  label: z.string().describe("Visible label naming the field. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  options: optionList,
-  value: bindable(z.string())
-    .optional()
-    .describe(
-      'Initially chosen option value, or a binding {"$bind": name} the field reads and writes.',
-    ),
-  required: z.boolean().optional().describe("The person must choose one."),
-  description: z.string().optional().describe("Help text shown under the field."),
-});
 
 export function SelectFacade({
   label,
@@ -355,19 +295,6 @@ export function SelectFacade({
   );
 }
 
-const radioGroupProps = z.object({
-  label: z.string().describe("Visible question or label naming the group. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  options: optionList,
-  value: bindable(z.string())
-    .optional()
-    .describe(
-      'Initially chosen option value, or a binding {"$bind": name} the group reads and writes.',
-    ),
-  required: z.boolean().optional().describe("The person must choose one."),
-  description: z.string().optional().describe("Help text shown under the group."),
-});
-
 export function RadioGroupFacade({
   label,
   name,
@@ -403,16 +330,6 @@ export function RadioGroupFacade({
     </RadioGroup>
   );
 }
-
-const checkboxGroupProps = z.object({
-  label: z.string().describe("Visible label naming the group. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  options: optionList,
-  value: bindable(z.array(z.string()))
-    .optional()
-    .describe('Option values that start checked, or a binding {"$bind": name}.'),
-  description: z.string().optional().describe("Help text shown under the group."),
-});
 
 function stringValues(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined;
@@ -453,15 +370,6 @@ export function CheckboxGroupFacade({
   );
 }
 
-const checkboxProps = z.object({
-  label: z.string().describe("Visible text next to the checkbox. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  checked: bindable(z.boolean())
-    .optional()
-    .describe('Starts checked, or a binding {"$bind": name} the checkbox reads and writes.'),
-  required: z.boolean().optional().describe("Must be checked to submit."),
-});
-
 export function CheckboxFacade({
   label,
   name,
@@ -482,14 +390,6 @@ export function CheckboxFacade({
   );
 }
 
-const switchProps = z.object({
-  label: z.string().describe("Visible text next to the switch, naming the setting. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  checked: bindable(z.boolean())
-    .optional()
-    .describe('Starts on, or a binding {"$bind": name} the switch reads and writes.'),
-});
-
 export function SwitchFacade({ label, name, checked }: CatalogProps<typeof switchProps>) {
   const { key, field } = useControl<boolean>(name, label, asBoolean(checked) ?? false, checked);
   return (
@@ -498,19 +398,6 @@ export function SwitchFacade({ label, name, checked }: CatalogProps<typeof switc
     </Switch>
   );
 }
-
-const sliderProps = z.object({
-  label: z.string().describe("Visible label naming the setting. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  min: z.number().optional().describe("Lowest value; 0 by default."),
-  max: z.number().optional().describe("Highest value; 100 by default."),
-  value: bindable(z.number())
-    .optional()
-    .describe(
-      'Initial value, or a binding {"$bind": name} the slider reads and writes; min by default.',
-    ),
-  step: z.number().optional().describe("Amount one step changes the value; 1 by default."),
-});
 
 export function SliderFacade({
   label,
@@ -544,16 +431,6 @@ export function SliderFacade({
     </div>
   );
 }
-
-const datePickerProps = z.object({
-  label: z.string().describe("Visible label naming the date. Required."),
-  name: z.string().describe("Identifier of the field, unique in its form."),
-  value: bindable(z.string())
-    .optional()
-    .describe('Initial date as "YYYY-MM-DD", or a binding {"$bind": name}.'),
-  required: z.boolean().optional().describe("The person must pick a date."),
-  description: z.string().optional().describe("Help text shown under the field."),
-});
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 

@@ -19,8 +19,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "8.4.0",
-    "shiki": "4.5.0",
-    "zod": "catalog:"
+    "shiki": "4.5.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",

@@ -1,10 +1,8 @@
-import { z } from "zod";
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
-import { isNodesSchema } from "../catalog/schema.js";
+import { jsonSchemaOf, type JsonSchema } from "../catalog/schema.js";
 import { type CatalogEntry } from "../catalog/types.js";
 
-/** A JSON Schema document (draft 2020-12). */
-export type JsonSchema = { [key: string]: unknown };
+export { type JsonSchema };
 
 export type ResponseSchemaOptions = {
   /** The components a response may use; defaults to the built-in catalog. */
@@ -23,19 +21,7 @@ export type ResponseSchemaOptions = {
 const nodeReference = "#/$defs/Node";
 
 function entrySchema(entry: CatalogEntry): JsonSchema {
-  const generated = z.toJSONSchema(entry.props, {
-    target: "draft-2020-12",
-    io: "input",
-    unrepresentable: "any",
-    override(context) {
-      if (!isNodesSchema(context.zodSchema)) return;
-      const { description } = context.jsonSchema;
-      for (const key of Object.keys(context.jsonSchema)) delete context.jsonSchema[key];
-      context.jsonSchema.type = "array";
-      context.jsonSchema.items = { $ref: nodeReference };
-      if (description !== undefined) context.jsonSchema.description = description;
-    },
-  }) as JsonSchema;
+  const generated = jsonSchemaOf(entry.props, { $ref: nodeReference });
   const properties = (generated.properties ?? {}) as Record<string, unknown>;
   const required = (generated.required ?? []) as string[];
   return {

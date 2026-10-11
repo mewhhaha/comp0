@@ -1,7 +1,17 @@
-import { type z } from "zod";
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
-import { defOf, describeType, isOptional, unwrap } from "../catalog/describe-schema.js";
-import { markerOf } from "../catalog/schema.js";
+import { describeJsonType, describeType } from "../catalog/describe-schema.js";
+import {
+  bindingNamePattern,
+  isShape,
+  jsonSchemaOf,
+  kindOf,
+  maxBindingName,
+  shapeEntries,
+  type JsonSchema,
+  type PropSchema,
+  type PropShape,
+} from "../catalog/schema.js";
+import { type StandardIssue } from "../catalog/standard-schema.js";
 import { type CatalogEntry } from "../catalog/types.js";
 import { parseExpression } from "../expression/expression.js";
 import {
@@ -109,13 +119,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function mismatch(context: Context, path: string, schema: z.ZodType, value: unknown): Checked {
-  reportClosed(
-    context,
-    path,
-    "invalid-prop",
-    `expected ${describeType(schema)}, got ${describeJson(value)}`,
-  );
+function mismatch(context: Context, path: string, expected: string, value: unknown): Checked {
+  reportClosed(context, path, "invalid-prop", `expected ${expected}, got ${describeJson(value)}`);
   return failed;
 }
 
@@ -136,18 +141,20 @@ function attempt(context: Context, run: () => Checked): Checked {
   return result;
 }
 
-function checkBindable(
-  inner: z.ZodType,
-  binding: z.ZodObject,
-  value: unknown,
-  path: string,
-  context: Context,
-): Checked {
+/** Whether the response is finished and nothing at or below `path` is still being written. */
+function isFinished(context: Context, path: string): boolean {
+  if (!context.reporting || context.open.has(path)) return false;
+  const prefix = `${path}/`;
+  for (const open of context.open) if (open.startsWith(prefix)) return false;
+  return true;
+}
+
+function checkBindable(inner: PropSchema, value: unknown, path: string, context: Context): Checked {
   if (!isRecord(value) || !Object.hasOwn(value, "$bind")) return check(inner, value, path, context);
   const name = value.$bind;
   const namePath = childPointer(path, "$bind");
   if (context.open.has(namePath)) return failed;
-  if (typeof name !== "string" || !(binding.shape.$bind as z.ZodType).safeParse(name).success) {
+  if (typeof name !== "string" || name.length > maxBindingName || !bindingNamePattern.test(name)) {
     report(
       context,
       namePath,
@@ -175,7 +182,7 @@ function checkBindable(
   return accepted(new Binding(name, initial));
 }
 
-function checkComputed(inner: z.ZodType, value: unknown, path: string, context: Context): Checked {
+function checkComputed(inner: PropSchema, value: unknown, path: string, context: Context): Checked {
   if (!isRecord(value) || !Object.hasOwn(value, "$expr")) return check(inner, value, path, context);
   const sourcePath = childPointer(path, "$expr");
   if (context.open.has(sourcePath)) return failed;
@@ -215,160 +222,309 @@ function checkComputed(inner: z.ZodType, value: unknown, path: string, context: 
   return accepted(new Computed(parsed.expression));
 }
 
-function checkObject(
-  schema: z.ZodObject,
-  value: unknown,
+/**
+ * Checks one key of a shape or object. `undefined` means the key is left out: absent, or `null`
+ * where it is optional, which is how a structured-output response writes what it leaves out.
+ */
+function checkEntry(
+  entry: { name: string; optional: boolean },
+  raw: unknown,
   path: string,
+  parentPath: string,
   context: Context,
-  allowed: readonly string[] = [],
-): Checked {
-  if (!isRecord(value)) return mismatch(context, path, schema, value);
-  const shape = schema.shape as Record<string, z.ZodType>;
-  const result: Record<string, unknown> = {};
-  let valid = true;
-  for (const [key, child] of Object.entries(shape)) {
-    const present = Object.hasOwn(value, key);
-    const raw = present ? value[key] : undefined;
-    const childPath = childPointer(path, key);
-    if (raw === undefined) {
-      if (!isOptional(child)) {
-        reportClosed(
-          context,
-          childPath,
-          "missing-prop",
-          `required property ${key} is missing`,
-          path,
-        );
-        valid = false;
-      }
-      continue;
+  run: (value: unknown) => Checked,
+): Checked | undefined {
+  if (raw === undefined) {
+    if (!entry.optional) {
+      reportClosed(
+        context,
+        path,
+        "missing-prop",
+        `required property ${entry.name} is missing`,
+        parentPath,
+      );
     }
-    const checked = check(child, raw, childPath, context);
-    if (checked.ok) {
-      if (checked.value !== undefined) result[key] = checked.value;
-    } else if (!isOptional(child)) {
-      valid = false;
-    }
+    return undefined;
   }
+  if (raw === null && entry.optional) {
+    const asNull = attempt(context, () => run(null));
+    return asNull.ok ? asNull : undefined;
+  }
+  return run(raw);
+}
+
+function reportUnknownKeys(
+  context: Context,
+  value: Record<string, unknown>,
+  path: string,
+  known: readonly string[],
+) {
   for (const key of Object.keys(value)) {
-    if (!Object.hasOwn(shape, key) && !allowed.includes(key)) {
+    if (!known.includes(key)) {
       reportClosed(
         context,
         childPointer(path, key),
         "unknown-prop",
-        `${key} is not a property here; allowed properties: ${Object.keys(shape).join(", ")}`,
+        `${key} is not a property here; allowed properties: ${known.join(", ")}`,
       );
+    }
+  }
+}
+
+function checkShape(shape: PropShape, value: unknown, path: string, context: Context): Checked {
+  if (!isRecord(value)) return mismatch(context, path, describeType(shape), value);
+  const entries = shapeEntries(shape);
+  const result: Record<string, unknown> = {};
+  let valid = true;
+  for (const entry of entries) {
+    const raw = Object.hasOwn(value, entry.name) ? value[entry.name] : undefined;
+    const childPath = childPointer(path, entry.name);
+    const checked = checkEntry(entry, raw, childPath, path, context, (item) =>
+      check(entry.schema, item, childPath, context),
+    );
+    if (checked?.ok) {
+      if (checked.value !== undefined) result[entry.name] = checked.value;
+    } else if (!entry.optional) {
+      valid = false;
+    }
+  }
+  reportUnknownKeys(
+    context,
+    value,
+    path,
+    entries.map((entry) => entry.name),
+  );
+  return valid ? accepted(result) : failed;
+}
+
+function checkItems(
+  value: unknown[],
+  path: string,
+  context: Context,
+  checkItem: (item: unknown, itemPath: string) => Checked,
+): Checked {
+  if (value.length > maxItems) {
+    reportClosed(
+      context,
+      path,
+      "limit",
+      `at most ${maxItems} items are used; the rest are ignored`,
+    );
+  }
+  const result: unknown[] = [];
+  for (let index = 0; index < Math.min(value.length, maxItems); index += 1) {
+    const checked = checkItem(value[index], childPointer(path, index));
+    if (checked.ok) result.push(checked.value);
+  }
+  return accepted(result);
+}
+
+function checkUrl(kind: "link" | "image", value: unknown, path: string, context: Context): Checked {
+  if (typeof value !== "string") {
+    return mismatch(context, path, kind === "image" ? "image URL" : "URL", value);
+  }
+  // A URL that is still being written is not safe to use yet, and not wrong either.
+  if (context.open.has(path)) return failed;
+  const safe = kind === "image" ? safeImageSrc(value) : safeHref(value);
+  if (safe === undefined) {
+    report(
+      context,
+      path,
+      "unsafe-url",
+      kind === "image"
+        ? "image URLs must be http(s) or relative; data:, javascript:, and other schemes are not loaded"
+        : "links must be http(s), mailto:, tel:, relative, or #fragment URLs",
+    );
+    return failed;
+  }
+  return accepted(safe);
+}
+
+function check(
+  schema: PropSchema | PropShape,
+  value: unknown,
+  path: string,
+  context: Context,
+): Checked {
+  if (isShape(schema)) return checkShape(schema, value, path, context);
+  const kind = kindOf(schema);
+  if (kind === undefined) return checkLibrary(schema, value, path, context);
+  switch (kind.kind) {
+    case "nodes":
+      return checkNodes(value, path, context);
+    case "bindable":
+      return checkBindable(kind.inner, value, path, context);
+    case "computed":
+      return checkComputed(kind.inner, value, path, context);
+    case "url":
+      return checkUrl(kind.url, value, path, context);
+    case "list":
+      if (!Array.isArray(value)) return mismatch(context, path, describeType(schema), value);
+      return checkItems(value, path, context, (item, itemPath) =>
+        check(kind.element, item, itemPath, context),
+      );
+    case "oneOf":
+      return kind.values.includes(value as string | number)
+        ? accepted(value)
+        : mismatch(context, path, describeType(schema), value);
+    case "json":
+      return checkJson(kind.json, value, path, context);
+  }
+}
+
+function issuePointer(path: string, issuePath: StandardIssue["path"]): string {
+  let pointer = path;
+  for (const segment of issuePath ?? []) {
+    const key = typeof segment === "object" && segment !== null ? segment.key : segment;
+    pointer = childPointer(pointer, typeof key === "number" ? key : String(key));
+  }
+  return pointer;
+}
+
+/**
+ * A value from a schema library. Its JSON Schema is walked so that a partial value renders while
+ * it streams; once the value is finished it must also pass the library's own `validate`, which
+ * knows the rules JSON Schema leaves out (formats, refinements, custom checks).
+ */
+function checkLibrary(schema: PropSchema, value: unknown, path: string, context: Context): Checked {
+  const checked = checkJson(jsonSchemaOf(schema), value, path, context);
+  if (!checked.ok || !isFinished(context, path)) return checked;
+  let result: ReturnType<PropSchema["~standard"]["validate"]>;
+  try {
+    result = schema["~standard"].validate(checked.value);
+  } catch {
+    return checked;
+  }
+  // Rendering is synchronous, so an asynchronous validator is not awaited.
+  if (result instanceof Promise) {
+    result.catch(() => undefined);
+    return checked;
+  }
+  if (result.issues === undefined) return checked;
+  for (const issue of result.issues) {
+    report(context, issuePointer(path, issue.path), "invalid-prop", issue.message);
+  }
+  return failed;
+}
+
+function checkJsonObject(
+  json: JsonSchema,
+  value: unknown,
+  path: string,
+  context: Context,
+): Checked {
+  if (!isRecord(value)) return mismatch(context, path, describeJsonType(json), value);
+  const properties = (isRecord(json.properties) ? json.properties : {}) as Record<string, unknown>;
+  const required = new Set(Array.isArray(json.required) ? json.required : []);
+  const result: Record<string, unknown> = {};
+  let valid = true;
+  for (const [name, child] of Object.entries(properties)) {
+    if (!isRecord(child)) continue;
+    const entry = { name, optional: !required.has(name) };
+    const raw = Object.hasOwn(value, name) ? value[name] : undefined;
+    const childPath = childPointer(path, name);
+    const checked = checkEntry(entry, raw, childPath, path, context, (item) =>
+      checkJson(child, item, childPath, context),
+    );
+    if (checked?.ok) {
+      if (checked.value !== undefined) result[name] = checked.value;
+    } else if (!entry.optional) {
+      valid = false;
+    }
+  }
+  const extra = json.additionalProperties;
+  if (extra === undefined || extra === false) {
+    reportUnknownKeys(context, value, path, Object.keys(properties));
+  } else {
+    for (const [key, item] of Object.entries(value)) {
+      if (!Object.hasOwn(properties, key)) result[key] = item;
     }
   }
   return valid ? accepted(result) : failed;
 }
 
-function check(schema: z.ZodType, value: unknown, path: string, context: Context): Checked {
-  const marker = markerOf(schema);
-  if (marker?.kind === "nodes") return checkNodes(value, path, context);
-  if (marker?.kind === "bindable") {
-    return checkBindable(marker.inner, marker.binding, value, path, context);
+function checkJsonUnion(
+  json: JsonSchema,
+  options: readonly JsonSchema[],
+  value: unknown,
+  path: string,
+  context: Context,
+): Checked {
+  for (const option of options) {
+    const checked = attempt(context, () => checkJson(option, value, path, context));
+    if (checked.ok) return checkJson(option, value, path, context);
   }
-  if (marker?.kind === "computed") return checkComputed(marker.inner, value, path, context);
-  if (marker?.kind === "url") {
-    if (typeof value !== "string") return mismatch(context, path, schema, value);
-    // A URL that is still being written is not safe to use yet, and not wrong either.
-    if (context.open.has(path)) return failed;
-    const safe = marker.url === "image" ? safeImageSrc(value) : safeHref(value);
-    if (safe === undefined) {
-      report(
-        context,
-        path,
-        "unsafe-url",
-        marker.url === "image"
-          ? "image URLs must be http(s) or relative; data:, javascript:, and other schemes are not loaded"
-          : "links must be http(s), mailto:, tel:, relative, or #fragment URLs",
-      );
-      return failed;
-    }
-    return accepted(safe);
+  // Explain the closest option: for an object, the first object shape in the union.
+  if (isRecord(value)) {
+    const shape = options.find((option) => option.type === "object" || isRecord(option.properties));
+    if (shape !== undefined) return checkJson(shape, value, path, context);
   }
-  const def = defOf(schema);
-  switch (def.type) {
-    case "optional": {
-      if (value === undefined) return accepted(undefined);
-      const inner = def.innerType as z.ZodType;
-      if (value === null) {
-        // A structured-output response writes null for what it leaves out.
-        const asNull = attempt(context, () => check(inner, null, path, context));
-        return asNull.ok ? asNull : accepted(undefined);
-      }
-      return check(inner, value, path, context);
+  return mismatch(context, path, describeJsonType(json), value);
+}
+
+/** Walks a JSON Schema (as a schema library generated it) the way `check` walks a shape. */
+function checkJson(json: JsonSchema, value: unknown, path: string, context: Context): Checked {
+  const union = json.anyOf ?? json.oneOf;
+  if (Array.isArray(union))
+    return checkJsonUnion(json, union.filter(isRecord), value, path, context);
+  if (Array.isArray(json.allOf)) {
+    let current = value;
+    for (const part of json.allOf.filter(isRecord)) {
+      const checked = checkJson(part, current, path, context);
+      if (!checked.ok) return checked;
+      current = checked.value;
     }
-    case "nullable":
-      if (value === null) return accepted(null);
-      return check(def.innerType as z.ZodType, value, path, context);
-    case "default":
-    case "readonly":
-      return check(def.innerType as z.ZodType, value, path, context);
-    case "lazy":
-      return check((def.getter as () => z.ZodType)(), value, path, context);
+    return accepted(current);
+  }
+  if ("const" in json) {
+    return value === json.const
+      ? accepted(value)
+      : mismatch(context, path, describeJsonType(json), value);
+  }
+  if (Array.isArray(json.enum)) {
+    return json.enum.includes(value)
+      ? accepted(value)
+      : mismatch(context, path, describeJsonType(json), value);
+  }
+  const type = json.type;
+  if (Array.isArray(type)) {
+    const options = type.map((name: unknown) => ({ ...json, type: name }));
+    return checkJsonUnion(json, options, value, path, context);
+  }
+  switch (type) {
     case "string":
-      return typeof value === "string" ? accepted(value) : mismatch(context, path, schema, value);
+      return typeof value === "string" ? accepted(value) : mismatch(context, path, "string", value);
     case "number":
       return typeof value === "number" && Number.isFinite(value)
         ? accepted(value)
-        : mismatch(context, path, schema, value);
+        : mismatch(context, path, "number", value);
+    case "integer":
+      return Number.isInteger(value) ? accepted(value) : mismatch(context, path, "integer", value);
     case "boolean":
-      return typeof value === "boolean" ? accepted(value) : mismatch(context, path, schema, value);
+      return typeof value === "boolean"
+        ? accepted(value)
+        : mismatch(context, path, "boolean", value);
     case "null":
-      return value === null ? accepted(null) : mismatch(context, path, schema, value);
-    case "unknown":
-      return accepted(value);
-    case "enum":
-      return Object.values(def.entries ?? {}).includes(value as string)
-        ? accepted(value)
-        : mismatch(context, path, schema, value);
-    case "literal":
-      return (def.values ?? []).includes(value)
-        ? accepted(value)
-        : mismatch(context, path, schema, value);
-    case "array": {
-      if (!Array.isArray(value)) return mismatch(context, path, schema, value);
-      const element = def.element as z.ZodType;
-      const result: unknown[] = [];
-      if (value.length > maxItems) {
-        reportClosed(
-          context,
-          path,
-          "limit",
-          `at most ${maxItems} items are used; the rest are ignored`,
-        );
-      }
-      for (let index = 0; index < Math.min(value.length, maxItems); index += 1) {
-        const checked = check(element, value[index], childPointer(path, index), context);
-        if (checked.ok) result.push(checked.value);
-      }
-      return accepted(result);
-    }
+      return value === null ? accepted(null) : mismatch(context, path, "null", value);
+    case "array":
+      if (!Array.isArray(value)) return mismatch(context, path, describeJsonType(json), value);
+      if (!isRecord(json.items)) return accepted(value);
+      return checkItems(value, path, context, (item, itemPath) =>
+        checkJson(json.items as JsonSchema, item, itemPath, context),
+      );
     case "object":
-      return checkObject(schema as z.ZodObject, value, path, context);
-    case "union": {
-      const options = def.options ?? [];
-      for (const option of options) {
-        const checked = attempt(context, () => check(option, value, path, context));
-        if (checked.ok) return check(option, value, path, context);
-      }
-      // Explain the closest option: for an object, the first object shape in the union.
-      if (isRecord(value)) {
-        const shape = options.find((option) => defOf(option).type === "object");
-        if (shape !== undefined) return check(shape, value, path, context);
-      }
-      return mismatch(context, path, schema, value);
-    }
+      return checkJsonObject(json, value, path, context);
+    case undefined:
+      if (isRecord(json.properties)) return checkJsonObject(json, value, path, context);
+      return accepted(value);
     default:
       return accepted(value);
   }
 }
 
 /** Whether a prop is a URL: one that is unsafe or still streaming leaves the text of a link. */
-function isUrl(schema: z.ZodType): boolean {
-  return markerOf(unwrap(schema))?.kind === "url";
+function isUrl(schema: PropSchema | PropShape): boolean {
+  return kindOf(schema)?.kind === "url";
 }
 
 function closest(name: string, names: Iterable<string>): string | undefined {
@@ -489,36 +645,27 @@ function validateNodeAt(value: unknown, path: string, context: Context): ValidNo
     // A component without everything its schema requires is withheld: it would be a control
     // without a name, or a chart without data. While streaming it appears once the rest arrives.
     let withheld = false;
-    const shape = entry.props.shape as Record<string, z.ZodType>;
-    for (const [key, child] of Object.entries(shape)) {
-      const raw = Object.hasOwn(value, key) ? value[key] : undefined;
-      const childPath = childPointer(path, key);
-      if (raw === undefined) {
-        if (!isOptional(child)) {
-          reportClosed(
-            context,
-            childPath,
-            "missing-prop",
-            `required property ${key} is missing`,
-            path,
-          );
-          withheld = true;
-        }
-        continue;
-      }
+    const entries = shapeEntries(entry.props);
+    for (const prop of entries) {
+      const raw = Object.hasOwn(value, prop.name) ? value[prop.name] : undefined;
+      const childPath = childPointer(path, prop.name);
       context.component = entry.name;
-      const checked = check(child, raw, childPath, context);
+      const checked = checkEntry(prop, raw, childPath, path, context, (item) =>
+        check(prop.schema, item, childPath, context),
+      );
       context.component = entry.name;
-      if (checked.ok && checked.value !== undefined) props[key] = checked.value;
-      else if (!isOptional(child) && !isUrl(child)) withheld = true;
+      if (checked?.ok && checked.value !== undefined) props[prop.name] = checked.value;
+      // A link whose URL is unsafe or unfinished still shows its text.
+      else if (!prop.optional && (checked === undefined || !isUrl(prop.schema))) withheld = true;
     }
+    const names = entries.map((prop) => prop.name);
     for (const key of Object.keys(value)) {
-      if (key !== "type" && !Object.hasOwn(shape, key)) {
+      if (key !== "type" && !names.includes(key)) {
         reportClosed(
           context,
           childPointer(path, key),
           "unknown-prop",
-          `${key} is not a property of ${entry.name}; allowed: type, ${Object.keys(shape).join(", ")}`,
+          `${key} is not a property of ${entry.name}; allowed: type, ${names.join(", ")}`,
           path,
         );
       }

@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { type } from "arktype";
 import { catalog } from "../catalog/catalog.js";
+import { shapeEntries } from "../catalog/schema.js";
 import { defineEntry } from "../catalog/types.js";
 import { parsePartialJson } from "../json/parse.js";
 import { validateResponse } from "../validate/validate.js";
@@ -28,8 +29,8 @@ describe("genuiPrompt", () => {
     for (const entry of catalog) {
       expect(prompt, entry.name).toContain(`#### ${entry.name}`);
       expect(prompt, entry.name).toContain(entry.description);
-      for (const key of Object.keys(entry.props.shape))
-        expect(prompt, `${entry.name}.${key}`).toContain(`\`${key}\``);
+      for (const prop of shapeEntries(entry.props))
+        expect(prompt, `${entry.name}.${prop.name}`).toContain(`\`${prop.name}\``);
     }
     expect(prompt).toContain(
       "- `label` (required): `string`. Visible label naming the field. Required.",
@@ -74,7 +75,7 @@ describe("genuiPrompt", () => {
       name: "Shout",
       group: "Voices",
       description: "Loud text. Requires text.",
-      props: z.object({ text: z.string().describe("What to shout.") }),
+      props: { text: type("string").describe("What to shout.") },
       component: () => null,
     });
     const custom = genuiPrompt({ catalog: [Shout], root: "Shout" });

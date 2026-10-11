@@ -274,7 +274,7 @@ A table for comparing items across attributes. Requires caption, columns, and ro
 
 - `caption` (required): `string`. What the table shows; it names the table for screen readers.
 - `columns` (required): `string[]`. Column headings, left to right.
-- `rows` (required): `((string | number | boolean | null)[])[]`. One array of cells per row, in column order. The first cell names the row.
+- `rows` (required): `((number | string | boolean | null)[])[]`. One array of cells per row, in column order. The first cell names the row.
 
 #### BarChart
 
@@ -355,7 +355,7 @@ Progress of a task from 0 to 100 percent. Requires label; omit value when the am
 A computed result shown next to the controls it depends on, such as a price or a total. Bind controls with {"$bind": name} and write the value as {"$expr": "..."} over those names, and it updates live. Requires label and value.
 
 - `label` (required): `string`. Names the result, such as 'Monthly total'. Required.
-- `value` (required): `string | number | Expression`. The result. Write {"$expr": "seats * 12"} so it recalculates as the person changes the controls bound to the names it reads.
+- `value` (required): `number | string | Expression`. The result. Write {"$expr": "seats * 12"} so it recalculates as the person changes the controls bound to the names it reads.
 - `unit`: `string`. Text shown after a number, such as "%" or " per month".
 
 #### Comparison
@@ -364,7 +364,7 @@ Sets options side by side, such as plans or products, with a recommended one. Re
 
 - `caption` (required): `string`. What is compared; it names the table. Required.
 - `options` (required): `string[]`. The things compared, such as plan names, left to right.
-- `features` (required): `({ name: string, values: (string | number | boolean | null)[] })[]`. The rows, each { name, values }.
+- `features` (required): `({ name: string, values: (number | string | boolean | null)[] })[]`. The rows, each { name, values }.
 - `recommended`: `string`. The name of the option to recommend, exactly as written in options.
 
 #### CitedText

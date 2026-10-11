@@ -149,9 +149,11 @@ assert(
 assert(
   genuiManifest.peerDependencies?.react === "^19.0.0" &&
     genuiManifest.peerDependencies?.["react-dom"] === "^19.0.0" &&
-    genuiManifest.peerDependencies?.zod === "^4.0.0" &&
-    Object.keys(genuiManifest.peerDependencies ?? {}).length === 3,
-  "@comp0/genui must peer-depend on React 19, React DOM 19, and Zod 4 only.",
+    Object.keys(genuiManifest.peerDependencies ?? {}).length === 2 &&
+    Object.keys(genuiManifest.dependencies ?? {})
+      .sort()
+      .join() === "@comp0/core,@comp0/react",
+  "@comp0/genui must peer-depend on React 19 and React DOM 19 and depend on comp0 alone.",
 );
 {
   const entries = run("tar", ["-tzf", genuiArchivePath]).trim().split("\n");
@@ -159,6 +161,11 @@ assert(
     entries.includes("package/genui.prompt.md"),
     "@comp0/genui tarball is missing genui.prompt.md.",
   );
+  // The built-in props are written with ArkType and precompiled; the package never loads it.
+  for (const entry of entries.filter((name) => /\.(?:js|d\.ts)$/.test(name))) {
+    const source = readArchiveFile(genuiArchivePath, entry.replace(/^package\//, ""));
+    assert(!source.includes('"arktype"'), `@comp0/genui ${entry} must not import arktype.`);
+  }
   assert(
     readArchiveFile(genuiArchivePath, "genui.prompt.md").includes("#### TextField"),
     "@comp0/genui genui.prompt.md must contain the generated component reference.",
@@ -178,7 +185,6 @@ writeFileSync(
         react: resolveSpec("react", workspaceManifest.devDependencies.react),
         "react-dom": resolveSpec("react-dom", workspaceManifest.devDependencies["react-dom"]),
         "react-router": resolveSpec("react-router", docsManifest.dependencies["react-router"]),
-        zod: resolveSpec("zod", packageSources.genui.devDependencies.zod),
       },
       devDependencies: {
         "@types/react": resolveSpec(

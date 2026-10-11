@@ -49,7 +49,6 @@ export default defineConfig({
             "react/jsx-runtime",
             "react/compiler-runtime",
             "axe-core",
-            "packages/genui/node_modules/zod",
             "react-dom",
             "react-dom/client",
           ],

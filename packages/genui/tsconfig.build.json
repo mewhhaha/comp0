@@ -14,5 +14,5 @@
       "@comp0/react": ["../react/dist/index.d.ts"]
     }
   },
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "test"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.ark.ts", "test"]
 }

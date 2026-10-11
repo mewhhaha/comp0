@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { type } from "arktype";
 import { z } from "zod";
 import { answers, asJson, hostile } from "../../test/answers/index.js";
 import { kitchenSink } from "../../test/fixtures.js";
@@ -402,7 +403,8 @@ describe("validateResponse", () => {
       name: "Shout",
       group: "Layout",
       description: "Loud text. Requires text.",
-      props: z.object({ text: z.string().describe("What to shout.") }),
+      // A zod schema works like any other Standard Schema.
+      props: { text: z.string().describe("What to shout.") },
       component: () => null,
     });
     const result = validate({ type: "Shout", text: "HEY" }, { catalog: [Shout] });
@@ -413,6 +415,46 @@ describe("validateResponse", () => {
     );
     expect(validate({ type: "Shout", text: "x" }).errors[0]?.code).toBe("unknown-type");
     expect(catalog.length).toBeGreaterThan(1);
+  });
+});
+
+describe("schema library rules", () => {
+  const Contact = defineEntry({
+    name: "Contact",
+    group: "Layout",
+    description: "An email address. Requires email.",
+    props: {
+      email: type("string.email").describe("Where to write."),
+      "tags?": z.array(z.string().min(2)).describe("Short labels."),
+    },
+    component: () => null,
+  });
+
+  it("apply once a value is finished, with the library's message", () => {
+    const result = validate(
+      { type: "Contact", email: "not an email", tags: ["ok", "x"] },
+      { catalog: [Contact] },
+    );
+
+    expect(result.root).toBeUndefined();
+    expect(result.errors.map((error) => [error.path, error.code])).toEqual([
+      ["/email", "invalid-prop"],
+      ["/tags/1", "invalid-prop"],
+    ]);
+    expect(result.errors[0]?.message).toContain("email");
+  });
+
+  it("wait while the value is still being written", () => {
+    const partial = validate('{"type": "Contact", "email": "ada@', {
+      catalog: [Contact],
+      complete: false,
+    });
+
+    expect(partial.errors).toEqual([]);
+    expect(partial.root?.props.email).toBe("ada@");
+    expect(
+      validate({ type: "Contact", email: "ada@example.com" }, { catalog: [Contact] }).errors,
+    ).toEqual([]);
   });
 });
 

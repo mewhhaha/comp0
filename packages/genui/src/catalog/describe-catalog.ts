@@ -1,6 +1,6 @@
-import { type ZodType } from "zod";
 import { catalog as defaultCatalog } from "./catalog.js";
-import { describeType, isOptional } from "./describe-schema.js";
+import { describeType } from "./describe-schema.js";
+import { descriptionOf, shapeEntries } from "./schema.js";
 import { type CatalogEntry } from "./types.js";
 
 /** One prop of a catalog component as plain data. */
@@ -9,7 +9,7 @@ export type CatalogPropDescription = {
   /** A short readable type: `string`, `"sm" | "md" | "lg"`, `Component[]`, `number | Binding`. */
   type: string;
   required: boolean;
-  /** The schema's `.describe()` text; empty when the schema has none. */
+  /** The schema's description; empty when it has none. */
   description: string;
 };
 
@@ -33,11 +33,11 @@ export function describeCatalog(
     name: entry.name,
     group: entry.group,
     description: entry.description,
-    props: Object.entries(entry.props.shape as Record<string, ZodType>).map(([name, schema]) => ({
-      name,
-      type: describeType(schema),
-      required: !isOptional(schema),
-      description: schema.description ?? "",
+    props: shapeEntries(entry.props).map((prop) => ({
+      name: prop.name,
+      type: describeType(prop.schema),
+      required: !prop.optional,
+      description: descriptionOf(prop.schema) ?? "",
     })),
   }));
 }

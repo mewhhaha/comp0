@@ -270,7 +270,7 @@ export const learnDocs: LearnDoc[] = [
         id: "how-comp0-fits",
         title: "How comp0 fits",
         explanation:
-          "A model is a poor judge of accessibility, so comp0 makes it part of the contract. @comp0/genui is a model-facing layer on top of comp0 with no third-party runtime and no provider lock-in. Its catalog is a set of Zod schemas that are the single source of the validator, the JSON Schema for structured outputs, and the system prompt. Every control, chart, table, and image requires its accessible name, and a component without everything it requires is not drawn. Components render only the props their schema declares, so no model-provided style, event handler, or unsafe URL reaches the DOM.",
+          "A model is a poor judge of accessibility, so comp0 makes it part of the contract. @comp0/genui is a model-facing layer on top of comp0 with no third-party runtime and no provider lock-in. Its catalog describes every prop with a Standard Schema, the single source of the validator, the JSON Schema for structured outputs, and the system prompt. Every control, chart, table, and image requires its accessible name, and a component without everything it requires is not drawn. Components render only the props their schema declares, so no model-provided style, event handler, or unsafe URL reaches the DOM.",
         code: 'import { catalog, genuiPrompt, responseJsonSchema } from "@comp0/genui";\n\ncatalog.map((entry) => entry.name); // Stack, Card, Select, BarChart, Table, ...\ngenuiPrompt(); // the system prompt that teaches a model the catalog\nresponseJsonSchema(); // the JSON Schema for structured outputs',
         language: "tsx",
       },
@@ -279,7 +279,7 @@ export const learnDocs: LearnDoc[] = [
         title: "Install the packages",
         explanation:
           "Add the integration next to comp0 and the peers it asks you to own. Nothing here needs an API key: you bring your own model provider, and comp0 never calls one.",
-        code: "pnpm add @comp0/genui @comp0/react zod react react-dom",
+        code: "pnpm add @comp0/genui @comp0/react react react-dom",
         language: "bash",
       },
       {

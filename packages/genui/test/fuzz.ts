@@ -1,7 +1,13 @@
-import { type z } from "zod";
 import { catalog } from "../src/catalog/catalog.js";
-import { defOf } from "../src/catalog/describe-schema.js";
-import { markerOf } from "../src/catalog/schema.js";
+import {
+  isShape,
+  jsonSchemaOf,
+  kindOf,
+  shapeEntries,
+  type JsonSchema,
+  type PropSchema,
+  type PropShape,
+} from "../src/catalog/schema.js";
 import { type CatalogEntry } from "../src/catalog/types.js";
 
 /** A small seeded generator (mulberry32), so a failing run can be replayed from its seed. */
@@ -186,102 +192,152 @@ function oversizedString(random: Random): string {
   return random.pick(["a", "word ", "<b>", "é"]).repeat(random.int(300, 1500));
 }
 
-/** Generates a value for a Zod schema in the given mode. */
-export function generateValue(schema: z.ZodType, random: Random, mode: Mode, depth = 0): unknown {
+function generateArray(
+  random: Random,
+  mode: Mode,
+  effective: Mode,
+  depth: number,
+  item: () => unknown,
+): unknown {
+  if (effective === "partial" && random.chance(0.3)) return undefined;
+  if (depth > 3) return [];
+  let count = random.int(0, 6);
+  if (effective === "oversized") count = depth > 1 ? random.int(0, 20) : random.int(60, 200);
+  if (effective === "valid") count = random.int(1, 6);
+  const items: unknown[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const value = item();
+    // A half-written trailing item is the common shape of a stream.
+    items.push(
+      effective === "partial" && index === count - 1 && random.chance(0.4)
+        ? partialOf(value)
+        : value,
+    );
+  }
+  return items;
+}
+
+function generateShape(shape: PropShape, random: Random, mode: Mode, depth: number) {
+  const props: Record<string, unknown> = {};
+  const effective =
+    mode === "mixed" ? random.pick(modes.filter((entry) => entry !== "mixed")) : mode;
+  for (const entry of shapeEntries(shape)) {
+    if (entry.optional && random.chance(effective === "partial" ? 0.5 : 0.2)) {
+      // Structured outputs write null for what they leave out.
+      if (random.chance(0.3)) props[entry.name] = null;
+      continue;
+    }
+    const value = generateValue(entry.schema, random, mode, depth + 1);
+    if (value !== undefined) props[entry.name] = value;
+  }
+  return props;
+}
+
+function generateString(random: Random, effective: Mode, depth: number): string {
+  if (effective === "oversized" && depth <= 3) return oversizedString(random);
+  if (effective === "hostile") return random.pick(hostileStrings);
+  const word = random.pick(["Alpha", "Beta", "Gamma", "Pro plan", "Seats", "42", "x"]);
+  if (effective === "partial" && random.chance(0.4))
+    return word.slice(0, random.int(0, word.length));
+  return word;
+}
+
+/** Generates a value for a schema library's JSON Schema in the given mode. */
+function generateJson(
+  json: JsonSchema,
+  random: Random,
+  mode: Mode,
+  effective: Mode,
+  depth: number,
+): unknown {
+  const union = json.anyOf ?? json.oneOf;
+  if (Array.isArray(union)) {
+    return generateJson(random.pick(union as JsonSchema[]), random, mode, effective, depth + 1);
+  }
+  if ("const" in json) return json.const;
+  if (Array.isArray(json.enum)) {
+    if (effective === "hostile" && random.chance(0.5)) return random.pick(hostileStrings);
+    return random.pick(json.enum as unknown[]);
+  }
+  const type = Array.isArray(json.type) ? random.pick(json.type as string[]) : json.type;
+  switch (type) {
+    case "string":
+      return generateString(random, effective, depth);
+    case "number":
+    case "integer":
+      if (effective === "hostile" || effective === "oversized") return random.pick(hostileNumbers);
+      return random.int(-5, 120);
+    case "boolean":
+      return random.chance(0.5);
+    case "null":
+      return null;
+    case "array": {
+      const items =
+        typeof json.items === "object" && json.items !== null ? (json.items as JsonSchema) : {};
+      return generateArray(random, mode, effective, depth, () =>
+        generateJson(items, random, mode, effective, depth + 1),
+      );
+    }
+    case "object": {
+      const properties = (json.properties ?? {}) as Record<string, JsonSchema>;
+      const required = new Set((json.required ?? []) as string[]);
+      const result: Record<string, unknown> = {};
+      for (const [key, child] of Object.entries(properties)) {
+        if (!required.has(key) && random.chance(0.3)) continue;
+        result[key] = generateJson(child, random, mode, effective, depth + 1);
+      }
+      return result;
+    }
+    default:
+      return generateHostile(random, depth);
+  }
+}
+
+/** Generates a value for a prop schema or shape in the given mode. */
+export function generateValue(
+  schema: PropSchema | PropShape,
+  random: Random,
+  mode: Mode,
+  depth = 0,
+): unknown {
   const effective =
     mode === "mixed" ? random.pick(modes.filter((entry) => entry !== "mixed")) : mode;
   if (effective === "wrong-type" && random.chance(0.6)) return generateHostile(random, depth);
   if (effective === "hostile" && random.chance(0.35)) return generateHostile(random, depth);
   if (effective === "hostile" && random.chance(0.05)) return deeplyNested(random);
-  const marker = markerOf(schema);
-  if (marker?.kind === "nodes") return generateNodes(random, effective, depth);
-  if (marker?.kind === "bindable" && random.chance(0.4)) {
-    const name =
-      effective === "valid" ? random.pick(bindingNames.slice(0, 5)) : random.pick(bindingNames);
-    const binding: Record<string, unknown> = { $bind: name };
-    if (random.chance(0.6)) binding.initial = generateValue(marker.inner, random, mode, depth + 1);
-    return binding;
-  }
-  if (marker?.kind === "bindable") return generateValue(marker.inner, random, mode, depth);
-  if (marker?.kind === "computed") {
-    const expression = random.chance(0.4) ? generateExpression(random, effective) : undefined;
-    return expression ?? generateValue(marker.inner, random, mode, depth);
-  }
-  if (marker?.kind === "url") {
-    if (effective === "valid") {
-      if (marker.url === "image") return random.pick(["/ok.png", "https://example.com/a.png"]);
-      return random.pick(["/ok", "https://example.com/a", "#top", "mailto:a@b.c"]);
+  if (isShape(schema)) return generateShape(schema, random, mode, depth);
+  const kind = kindOf(schema);
+  if (kind === undefined) return generateJson(jsonSchemaOf(schema), random, mode, effective, depth);
+  switch (kind.kind) {
+    case "nodes":
+      return generateNodes(random, effective, depth);
+    case "bindable": {
+      if (!random.chance(0.4)) return generateValue(kind.inner, random, mode, depth);
+      const name =
+        effective === "valid" ? random.pick(bindingNames.slice(0, 5)) : random.pick(bindingNames);
+      const binding: Record<string, unknown> = { $bind: name };
+      if (random.chance(0.6)) binding.initial = generateValue(kind.inner, random, mode, depth + 1);
+      return binding;
     }
-    return random.pick([...hostileStrings, "/ok.png", "https://example.com/a"]);
-  }
-
-  const def = defOf(schema);
-  switch (def.type) {
-    case "optional":
-    case "nullable":
-    case "default":
-    case "readonly":
-      if (random.chance(effective === "partial" ? 0.5 : 0.2))
-        return def.type === "nullable" ? null : undefined;
-      return generateValue(def.innerType as z.ZodType, random, mode, depth);
-    case "string": {
-      if (effective === "oversized" && depth <= 3) return oversizedString(random);
-      if (effective === "hostile") return random.pick(hostileStrings);
-      const word = random.pick(["Alpha", "Beta", "Gamma", "Pro plan", "Seats", "42", "x"]);
-      if (effective === "partial" && random.chance(0.4))
-        return word.slice(0, random.int(0, word.length));
-      return word;
+    case "computed": {
+      const expression = random.chance(0.4) ? generateExpression(random, effective) : undefined;
+      return expression ?? generateValue(kind.inner, random, mode, depth);
     }
-    case "number": {
-      if (effective === "hostile" || effective === "oversized") return random.pick(hostileNumbers);
-      return random.int(-5, 120);
-    }
-    case "boolean":
-      return random.chance(0.5);
-    case "null":
-      return null;
-    case "enum": {
-      const values = Object.values(def.entries as Record<string, string>);
+    case "url":
+      if (effective === "valid") {
+        if (kind.url === "image") return random.pick(["/ok.png", "https://example.com/a.png"]);
+        return random.pick(["/ok", "https://example.com/a", "#top", "mailto:a@b.c"]);
+      }
+      return random.pick([...hostileStrings, "/ok.png", "https://example.com/a"]);
+    case "list":
+      return generateArray(random, mode, effective, depth, () =>
+        generateValue(kind.element, random, mode, depth + 1),
+      );
+    case "oneOf":
       if (effective === "hostile" && random.chance(0.5)) return random.pick(hostileStrings);
-      return random.pick(values);
-    }
-    case "literal":
-      return (def.values as unknown[])[0];
-    case "lazy":
-      return generateValue((def.getter as () => z.ZodType)(), random, mode, depth);
-    case "unknown":
-      return generateHostile(random, depth);
-    case "union":
-      return generateValue(random.pick(def.options as z.ZodType[]), random, mode, depth + 1);
-    case "array": {
-      if (effective === "partial" && random.chance(0.3)) return undefined;
-      if (depth > 3) return [];
-      let count = random.int(0, 6);
-      if (effective === "oversized") count = depth > 1 ? random.int(0, 20) : random.int(60, 200);
-      if (effective === "valid") count = random.int(1, 6);
-      const items: unknown[] = [];
-      for (let index = 0; index < count; index += 1) {
-        const item = generateValue(def.element as z.ZodType, random, mode, depth + 1);
-        // A half-written trailing item is the common shape of a stream.
-        items.push(
-          effective === "partial" && index === count - 1 && random.chance(0.4)
-            ? partialOf(item)
-            : item,
-        );
-      }
-      return items;
-    }
-    case "object": {
-      const shape = def.shape as Record<string, z.ZodType>;
-      const props: Record<string, unknown> = {};
-      for (const [key, child] of Object.entries(shape)) {
-        const value = generateValue(child, random, mode, depth + 1);
-        if (value !== undefined) props[key] = value;
-      }
-      return props;
-    }
-    default:
-      return generateHostile(random, depth);
+      return random.pick([...kind.values]);
+    case "json":
+      return generateJson(kind.json, random, mode, effective, depth);
   }
 }
 
@@ -302,12 +358,7 @@ export function generateProps(
   mode: Mode,
   depth = 0,
 ): Record<string, unknown> {
-  const props: Record<string, unknown> = {};
-  for (const [key, child] of Object.entries(entry.props.shape)) {
-    const value = generateValue(child as z.ZodType, random, mode, depth + 1);
-    if (value !== undefined) props[key] = value;
-  }
-  return props;
+  return generateShape(entry.props, random, mode, depth);
 }
 
 /** Props a hostile model adds to every component; none are declared in any schema. */
