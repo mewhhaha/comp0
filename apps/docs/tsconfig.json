@@ -14,13 +14,21 @@
     "paths": {
       "@comp0/genui": ["../../packages/genui/src/index.ts"],
       "@comp0/react": ["../../packages/react/src/index.ts"],
-      "@comp0/core": ["../../packages/core/src/index.ts"]
+      "@comp0/core": ["../../packages/core/src/index.ts"],
+      "@comp0/genui/rsc": ["../../packages/genui/src/rsc/index.ts"],
+      "@comp0/genui/rsc/client": ["../../packages/genui/src/rsc/client.tsx"]
     }
   },
   "references": [
-    { "path": "../../packages/core" },
-    { "path": "../../packages/react" },
-    { "path": "../../packages/genui" }
+    {
+      "path": "../../packages/core"
+    },
+    {
+      "path": "../../packages/react"
+    },
+    {
+      "path": "../../packages/genui"
+    }
   ],
   "include": ["src", ".react-router/types"]
 }

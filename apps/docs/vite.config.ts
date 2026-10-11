@@ -47,10 +47,16 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@comp0/core": fileURLToPath(new URL("../../packages/core/src/index.ts", import.meta.url)),
-      "@comp0/genui": fileURLToPath(new URL("../../packages/genui/src/index.ts", import.meta.url)),
-      "@comp0/react": fileURLToPath(new URL("../../packages/react/src/index.ts", import.meta.url)),
-    },
+    // Exact matches, so `@comp0/genui/rsc` does not resolve inside `@comp0/genui`.
+    alias: [
+      ["@comp0/core", "../../packages/core/src/index.ts"],
+      ["@comp0/genui", "../../packages/genui/src/index.ts"],
+      ["@comp0/genui/rsc", "../../packages/genui/src/rsc/index.ts"],
+      ["@comp0/genui/rsc/client", "../../packages/genui/src/rsc/client.tsx"],
+      ["@comp0/react", "../../packages/react/src/index.ts"],
+    ].map(([name, path]) => ({
+      find: new RegExp(`^${name}$`),
+      replacement: fileURLToPath(new URL(path!, import.meta.url)),
+    })),
   },
 });

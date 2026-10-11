@@ -23,13 +23,17 @@ function resolveValue(value: unknown): unknown {
   return value;
 }
 
+/** The props a facade renders for validated props. */
+export function resolveProps(props: Readonly<Record<string, unknown>>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(props).map(([key, value]) => [key, resolveValue(value)]),
+  );
+}
+
 type NodeViewProps = { node: ValidNode };
 
 /** Renders one validated component with its catalog entry's facade. */
 export function NodeView({ node }: NodeViewProps): ReactNode {
   const Facade = node.entry.component;
-  const props = Object.fromEntries(
-    Object.entries(node.props).map(([key, value]) => [key, resolveValue(value)]),
-  );
-  return <Facade {...props} />;
+  return <Facade {...resolveProps(node.props)} />;
 }
