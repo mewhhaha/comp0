@@ -1,412 +1,223 @@
 # @comp0/genui
 
-Let a model compose accessible comp0 interfaces. `@comp0/genui` is a model-facing layer on top of [`@comp0/react`](../react): a JSON format a model writes, a parser that renders every prefix of it while it streams, a validator that sanitizes it against a catalog and tells the model what to fix, a small state store, a safe expression evaluator, and a renderer. No third-party runtime and no provider lock-in: it works with any model that can write JSON.
+Let a model compose accessible comp0 interfaces as restricted JSX. You choose the component vocabulary, declare typed state, and supply implementations. The model composes children; React Server Components stream the result. No provider dependency or third-party runtime.
 
-Documentation: [comp0-docs.horrible.workers.dev/genui/overview](https://comp0-docs.horrible.workers.dev/genui/overview), with the full component catalog generated from the schemas.
-
-- **One JSON format**: `{ "type": "Select", "label": "Plan", "name": "plan", "options": ["Basic", "Pro"] }`. Each component's props are Standard Schemas, the single source of the validator, the JSON Schema for structured outputs, and the prompt. The built-ins are written with ArkType and ship precompiled to static JSON Schema, so no schema library runs or ships with the package; your own components can use ArkType, zod, Valibot, or any library that implements Standard Schema.
-- **Streams**: any prefix of a response renders. Components keep their identity (and typed text and focus) as the response grows; nothing warns, moves focus, or acts until the response is complete.
-- **Safe by construction**: components render only the props their schema declares, only safe URLs, and text as text. Computed values run in a small whitelisted evaluator, never `eval`.
-- **Accessible by schema**: every control, chart, table, and image requires its accessible name; a component without everything it requires is not rendered.
-- **Repairable**: a finished response with problems yields structured errors (path, code, message) you can send back to the model.
-
-## Install
+[Documentation](https://comp0-docs.horrible.workers.dev/genui/overview) · [RSC reference](https://comp0-docs.horrible.workers.dev/genui/server)
 
 ```sh
 pnpm add @comp0/genui @comp0/react react@^19 react-dom@^19
 ```
 
-`react` and `react-dom` (^19) are peer dependencies, so your app controls their versions. There are no other runtime dependencies. comp0 ships no CSS; components carry `data-*` hooks to style (see below).
+## Define the model's vocabulary
 
-## Render a response
+Contracts are server-safe. Combine whole groups or select only the parts you need.
+
+```ts
+import { fromJsonSchema, forms, layout, state, vocabulary } from "@comp0/genui/vocabulary";
+
+export const settings = state(
+  {
+    seats: fromJsonSchema<number>({ type: "number" }),
+    plan: fromJsonSchema<string>({ type: "string" }),
+  },
+  { seats: 1, plan: "basic" },
+);
+export const ui = vocabulary(layout, forms);
+export const system = ui.prompt({ state: settings });
+```
+
+The model writes:
 
 ```tsx
-import { GenUI } from "@comp0/genui";
+<Card title="Your plan">
+  <Select label="Plan" bind="plan">
+    <Option value="basic">Basic</Option>
+    <Option value="pro">Professional</Option>
+  </Select>
+  <Slider label="Seats" bind="seats" min={1} max={20} />
+  <Text>Monthly total: {seats * 12}</Text>
+</Card>
+```
 
-function Assistant({ response, streaming, savedState }) {
+State names, schemas, and defaults belong to the host. A binding must match the field's kind, and writes must pass the state validator. Unbound form fields stay local. Arrays and plain data objects are allowed in props; expressions run in a whitelisted evaluator, with no property access or arbitrary code.
+
+The built-in groups are `layout`, `forms`, `charts`, `actions`, and `disclosure`. `builtInVocabulary` combines them. Lists use `Item` children, selects use `Option` children, tabs use `TabList`, `Tab`, and `TabPanel`, and accordions use `Section` children. Button and Link labels are their text children. Form takes a required `label`, optional `submitLabel` and `action`, and field children.
+
+## Stream a response
+
+Use any provider that emits text deltas as an `AsyncIterable<string>`.
+
+Vocabulary and state contracts contain methods and validators, so import them inside a client wrapper instead of passing them across the RSC boundary.
+
+```tsx
+// AnswerRoot.tsx
+"use client";
+
+import { GenUIRoot } from "@comp0/genui/rsc/client";
+import { type ReactNode } from "react";
+import { settings, ui } from "./ui.js";
+
+export function AnswerRoot({ children }: { children: ReactNode }) {
   return (
-    <GenUI
-      response={response}
-      streaming={streaming}
-      onAction={(action) => sendToAssistant(action.message)}
-      onStateChange={(state) => save(state)}
-      initialState={savedState}
-      onError={(errors) => repair(formatErrors(errors))}
-    />
+    <GenUIRoot vocabulary={ui} state={settings}>
+      {children}
+    </GenUIRoot>
   );
 }
 ```
 
-| Prop            | Meaning                                                                                                      |
-| --------------- | ------------------------------------------------------------------------------------------------------------ |
-| `response`      | The JSON text (hand over the whole text so far on every chunk) or an already parsed object.                  |
-| `streaming`     | The response is still arriving: output is `aria-busy` in a comp0 `BusyRegion`, and buttons and submits wait. |
-| `catalog`       | The components a response may use; defaults to the built-in `catalog`.                                       |
-| `onAction`      | A button was pressed, a form submitted, or a suggestion chosen. Send `action.message` as the next user turn. |
-| `onStateChange` | The person changed a control; receives every stored value by state key.                                      |
-| `initialState`  | Values to restore, such as the last state `onStateChange` reported. Read once, when the component mounts.    |
-| `onError`       | The finished response had problems. Called once per distinct set of problems, never while streaming.         |
-| `store`         | A store you keep outside the component (`createGenUIStore()`), to keep state across remounts.                |
-
-### With any provider
-
-The renderer takes text, so wiring a provider is only accumulating chunks:
+The server passes React children:
 
 ```tsx
-const [response, setResponse] = useState("");
-const [streaming, setStreaming] = useState(false);
+// Answer.tsx
+import { GenUIView } from "@comp0/genui/rsc";
+import { AnswerRoot } from "./AnswerRoot.js";
+import { settings, system, ui } from "./ui.js";
 
-async function ask(messages) {
-  setResponse("");
-  setStreaming(true);
-  for await (const chunk of streamFromYourProvider(messages)) {
-    setResponse((text) => text + chunk);
-  }
-  setStreaming(false);
+export function Answer({ message }: { message: string }) {
+  return (
+    <AnswerRoot>
+      <GenUIView
+        vocabulary={ui}
+        state={settings}
+        stream={streamFromYourProvider(system, message)}
+      />
+    </AnswerRoot>
+  );
 }
 ```
 
-A model may wrap the JSON in a Markdown code fence; the parser skips it. Give the model the prompt and, where the provider supports it, the JSON Schema (below).
+Opening tags settle props. Text and children stream through independent Suspense boundaries, including children of custom components. Static layout renders as server HTML; interactive parts are predefined client components. Buttons and form submissions wait until the view settles. `onAction` on the root receives the person's message and form values; `onError` reports structured validation problems after streaming. `formatErrors(errors, "jsx")` formats a correction request.
 
-## Tell the model what it may use
+Host client components read typed values with `useGenUIValue(settings, "seats")` from `@comp0/genui/rsc/client`. `useGenUIState`, `useGenUIStore`, and `useGenUICall` expose the shared scope when needed. Persist validated state with `settings.createStore(savedValues)` and pass the resulting store to the root.
 
-```ts
-import { genuiPrompt, responseJsonSchema } from "@comp0/genui";
+## Add your components
 
-const system = genuiPrompt({ preamble: "You are a travel assistant." });
-const schema = responseJsonSchema(); // for structured outputs and tool calling
-const strict = responseJsonSchema({ strict: true }); // for OpenAI-style strict structured outputs
-```
-
-`genuiPrompt` writes the format rules, the binding and expression rules, every component with its props and descriptions, the accessibility and safety rules, and JSON examples. The same text ships pre-generated as `@comp0/genui/genui.prompt.md` (`pnpm --filter @comp0/genui prompt` regenerates it; a test fails when it is stale). Options: `preamble`, `rules` (added after the built-in ones), `examples` (objects or JSON text), `catalog`, and `root`.
-
-`responseJsonSchema` is the recursive JSON Schema (draft 2020-12) of one root component, normally a `Stack`: `Node` is any component and every component has a `$defs` entry, so containers nest each other. With `strict: true` every property is required, optional ones are nullable, `additionalProperties` is `false`, the root is a single object, and the keywords strict mode rejects (`minLength`, `pattern`, `format`, `default`, ...) are removed. The validator treats `null` as "left out" for an optional prop, so a response written to the strict schema renders as is. Some rules a schema cannot express (unsafe URLs, expression syntax, unknown binding names) are still checked by the validator.
-
-```ts
-// OpenAI Chat Completions, structured output
-response_format: {
-  type: "json_schema",
-  json_schema: { name: "ui", strict: true, schema: responseJsonSchema({ strict: true }) },
-}
-```
-
-## The format
-
-A response is one JSON object, normally a `Stack`.
-
-```json
-{
-  "type": "Stack",
-  "children": [
-    { "type": "Heading", "text": "Choose a plan", "level": 2 },
-    {
-      "type": "Form",
-      "name": "plan",
-      "title": "Choose a plan",
-      "submitLabel": "Continue",
-      "children": [
-        {
-          "type": "RadioGroup",
-          "label": "Plan",
-          "name": "plan",
-          "options": [
-            { "value": "free", "label": "Free" },
-            { "value": "pro", "label": "Pro, $12 per seat" }
-          ],
-          "value": "pro"
-        },
-        {
-          "type": "NumberField",
-          "label": "Seats",
-          "name": "seats",
-          "value": 5,
-          "min": 1,
-          "max": 100
-        }
-      ]
-    }
-  ]
-}
-```
-
-That is a labelled form whose submit sends `Plan: Pro, $12 per seat; Seats: 5` as the user's message.
-
-- **Components** are objects with a `type` (one of the catalog names) and their props inline. Write `type` first so the component appears as early as possible while streaming. The built-in props never include `type`; the text-field kind is `inputType`.
-- **Containers** (`Stack`, `Grid`, `Card`, `Form`, `Disclosure`) take `children`: an array of component objects.
-- **Data** is plain JSON in a prop: `options`, `tabs`, `items`, chart `data`, comparison `features`, `sources`. Where an item holds content (a tab, an accordion section) it has its own `children` array of components.
-- **Optional props** may be left out or written as `null`.
-- **Required props** must be present; a component that lacks one is not rendered (and, once the response is complete, reported).
-
-### Bindings
-
-A control that other parts depend on reads and writes a shared name. Write `{ "$bind": "seats" }` as its `value` (or `checked`), optionally with the starting value:
-
-```json
-{
-  "type": "Slider",
-  "label": "Seats",
-  "name": "seats",
-  "min": 1,
-  "max": 50,
-  "value": { "$bind": "seats", "initial": 5 }
-}
-```
-
-- Names are letters, digits, and underscores, not starting with a digit, at most 64 characters.
-- The same name in several controls shares one value. The first `initial` written for a name is used.
-- **Initial state**, in order of precedence: what the person has entered, a value restored with `initialState`, the binding's `initial`, the control's own literal `value`/`checked`, then the control's default (the slider's minimum, an empty text field, unchecked).
-- Controls that are not bound store their value under their `name`, inside their form: the state key is `<form name>.<name>` (just `<name>` outside a form). A bound control stores under its binding name wherever it is.
-- Defaults are written into the state once the response is complete (that is not an edit and does not call `onStateChange`), so the state you save and a form submit always include them.
-
-Accepted by: `TextField`, `TextArea`, `NumberField`, `Select`, `RadioGroup`, `CheckboxGroup`, `Slider`, `DatePicker` (`value`) and `Checkbox`, `Switch` (`checked`).
-
-### Expressions
-
-A computed value is `{ "$expr": "seats * 12" }`, evaluated against the bound names and re-evaluated whenever one changes. Accepted by `Output.value`, `Meter.value`, `ProgressBar.value`, and `Text.text`.
-
-| Part      | Supported                                                                                               |
-| --------- | ------------------------------------------------------------------------------------------------------- |
-| Values    | numbers, `"text"` or `'text'` literals, `true`, `false`, `null`, bound names                            |
-| Operators | `+ - * / %`, `< <= > >=`, `== !=`, `&& \|\| !`, unary `-`, `a ? b : c`, parentheses                     |
-| Functions | `round(x, digits?)`, `floor`, `ceil`, `abs`, `sign`, `sqrt`, `pow`, `min`, `max`, `sum`, `avg`, `clamp` |
-
-`+` adds numbers or joins text. There is no property access, no assignment, and no call outside the list, and the source is parsed and walked by a hand-written evaluator (no `eval`, no `Function`). A name with no value reads as `null`, and any arithmetic with `null` is `null`; a result that is not a finite number, such as division by zero, is `null` and shows as empty. Expressions are limited to 500 characters and 200 nodes. An expression that does not parse is an error, and an expression that reads a name no control binds is reported with the fix (`add {"$bind": "price"} to a control`).
-
-### Actions
-
-`onAction` receives:
-
-```ts
-type GenUIAction = {
-  type: "button" | "form" | "suggestion";
-  name?: string; // the form's name, for a form and for a button inside one
-  message: string; // the person's request in their own words: send it as the next user turn
-  values?: Record<string, JsonValue>; // the form's controls by control name
-};
-```
-
-A form's `message` is built by `describeFormValues(fields, values)` from the visible labels and, for choices, the visible option labels: `Plan: Pro; Seats: 5` (a form submitted untouched falls back to its submit label). A `Button` sends its `message` (or its label); inside a form it also carries the values so far. A `Suggestion` sends its text. Nothing acts while `streaming` is true.
-
-### Errors
-
-Once the response is complete (`streaming` false), `onError` receives problems found in it, each written to be sent back to the model:
-
-```ts
-type GenUIError = {
-  path: string; // JSON Pointer, e.g. "/children/2/options/1/value"
-  code: GenUIErrorCode; // "syntax" | "truncated" | "unknown-type" | "missing-prop" | "invalid-prop" | ...
-  message: string; // e.g. 'required property label is missing'
-  component?: string; // e.g. "Select"
-};
-```
-
-`formatErrors(errors)` turns them into a message such as `The response has 2 problems. Fix them and answer again with the complete corrected JSON: - /children/1 [Select]: required property label is missing`. Problems are never reported for a response that is still streaming, and never for the part of it that is still open. The renderer shows everything that is valid regardless: unknown components and props are left out, a prop of the wrong type is dropped, an unsafe URL is not used, and a component missing a required prop is not drawn. At most 50 problems are listed.
-
-## Connect it to your app
-
-The model composes; your app decides what it can reach.
+`spec` defines the model-facing contract. Its props are Standard Schemas; keys ending in `?` are optional. Children can be `"text"`, `"nodes"`, or a list of allowed component names. `.implement(Component)` checks the implementation against the inferred required props and React children. Put client implementations in modules marked `"use client"`; the server renderer passes their RSC client references.
 
 ```tsx
-import { defineTool, handleToolRequest } from "@comp0/genui";
-import { type } from "arktype";
+import { forms, layout, spec, vocabulary } from "@comp0/genui/vocabulary";
+import { ShaderCanvas } from "./ShaderCanvas.js";
 
-const forecastInput = type({ city: "string" });
-export const tools = {
-  forecast: defineTool({
-    description: "Seven daily highs for a city, as points { x: day, y: degrees }.",
-    input: forecastInput,
-    run: async ({ city }) => fetchForecast(city),
-  }),
-};
+const Shader = spec("Shader", {
+  description: "A live preview driven by the declared shader settings.",
+  props: {},
+}).implement(ShaderCanvas);
 
-// Any Fetch API server: a React Router resource route, a Next.js route handler, a Worker.
-export const action = ({ request }: { request: Request }) => handleToolRequest(tools, request);
+const ui = vocabulary(layout, forms, Shader);
 ```
 
-```tsx
-<GenUI
-  response={response}
-  streaming={streaming}
-  call="/api/genui/tools" // or httpToolCaller(url), or any (name, args) => Promise<ToolResult>
-  slots={{ shader: <ShaderCanvas /> }}
-/>;
+Schema helpers `fromJsonSchema`, `oneOf`, and `url` need no schema library. Hosts may also supply synchronous Standard Schema validators from ArkType, zod, or Valibot. A schema is the single source of prop validation and the generated vocabulary prompt.
 
-genuiPrompt({ tools, slots: { shader: "A live plasma preview; reads speed, scale, and hue." } });
-```
+Data reads belong in async server components:
 
-- `{ "type": "Query", "tool": "forecast", "args": { "city": { "$bind": "city" } }, "into": "forecast" }` calls a tool and stores the result, again whenever a bound argument changes, with no turn to the model. Bind a chart's `data`, a table's `rows`, or a list's `items` to `forecast` to show it.
-- A Button's or Form's `action` runs steps in order: `{ "call", "args", "into" }`, `{ "set", "value" }`, `{ "send" }`. In a Form, a `call` without `args` sends the form's values.
-- `{ "type": "Slot", "name": "shader" }` places one of your views. Views read the values the model's controls bind with the hooks in `@comp0/genui/rsc/client` (`useGenUIValue`, `useGenUIState`, `useGenUIStore`, `useGenUICall`), so a slider the model wrote drives your canvas live.
-- `runTool` validates every call against the tool's input schema and reports failures without the error's details.
-
-## React Server Components
-
-`@comp0/genui/rsc` streams a response as server components: layout renders on the server with no JavaScript, and controls, charts, and your slots are client components that share one store.
-
-```tsx
-import { GenUIRoot, GenUIView } from "@comp0/genui/rsc";
-
-<GenUIRoot call="/api/genui/tools" slots={{ shader: <ShaderCanvas /> }}>
-  <LiveValues /> {/* your component, anywhere inside: reads the same values */}
-  <GenUIView stream={turn1} />
-  <GenUIView stream={turn2} />
-</GenUIRoot>;
-```
-
-`GenUIRoot` is the shared scope; each `GenUIView` streams one response (an `AsyncIterable<string>` of the model's text). The entry also exports the server-safe pieces (`catalogSpecs`, `genuiPrompt`, `responseJsonSchema`, `validateResponse`, `runTool`), so a route can prompt the model and render its answer without loading a renderer. On the server a node renders once, so the model must write a container's props before its children; the generated prompt says so. In React Router, serve tools from an endpoint rather than a server function, which re-renders the route after each call.
-
-## MCP Apps
-
-`@comp0/genui/mcp` renders a response inside an [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview) host (the `io.modelcontextprotocol/ui` extension, protocol `2026-01-26`). The model calls a tool whose arguments are a response; the host streams those arguments into your `ui://` resource, which renders them as they arrive.
-
-On the MCP server, describe the tool with `genuiAppTool` and serve the app's HTML as the resource:
+Keep the contract shared and the data implementation server-only, so the client root can import the vocabulary without importing data code:
 
 ```ts
-import { genuiPrompt } from "@comp0/genui";
-import { genuiAppTool, mcpAppMimeType } from "@comp0/genui/mcp";
+// forecast-spec.ts
+import { fromJsonSchema, layout, spec, vocabulary } from "@comp0/genui/vocabulary";
 
-const renderUi = genuiAppTool({
-  name: "render_ui",
-  description: genuiPrompt({ preamble: "Show the person an interface when it helps." }),
-  resourceUri: "ui://genui/app.html",
+export const ForecastSpec = spec("Forecast", {
+  description: "Weather for a chosen city.",
+  props: { city: fromJsonSchema<string>({ type: "string" }) },
 });
-// tools/list → [renderUi]
-// resources/read "ui://genui/app.html" → { contents: [{ uri, mimeType: mcpAppMimeType, text: appHtml }] }
+export const ui = vocabulary(layout, ForecastSpec);
 ```
-
-The tool's `inputSchema` is `responseJsonSchema()` and takes the same `catalog`, `root`, and `strict` options; `_meta.ui.resourceUri` links it to the app. In the `tools/call` handler, `validateResponse(args)` and `formatErrors` let you answer a broken response with `isError: true` so the model can fix it.
-
-In the app:
 
 ```tsx
-import { createRoot } from "react-dom/client";
-import { createMcpAppBridge, McpAppGenUI } from "@comp0/genui/mcp";
+// forecast.server.tsx
+import { serverComponent, GenUIView } from "@comp0/genui/rsc";
+import { ForecastSpec, ui } from "./forecast-spec.js";
 
-const bridge = createMcpAppBridge({ appInfo: { name: "Trips", version: "1.0.0" } });
-createRoot(document.getElementById("root")!).render(<McpAppGenUI bridge={bridge} />);
-```
-
-`McpAppGenUI` renders the arguments while the model writes them (`ui/notifications/tool-input-partial`), settles when they are final (`tool-input`), and withdraws them when the call is cancelled. Query nodes and `call` steps reach the MCP server through the host (`tools/call`), actions become the person's next message (`ui/message`), and every edit replaces the model's context with the stored values (`ui/update-model-context`). Any `GenUI` prop other than `response` and `streaming` can be passed and replaces the default. To compose your own, `useMcpAppResponse(bridge)` returns `{ response, streaming, cancelled }` for `<GenUI>`; while the arguments stream, `response` marks the part still being written as open, so half-written URLs, binding names, and expressions wait just as they do for streamed text.
-
-The bridge itself needs no React:
-
-| Member                                                         | Meaning                                                                                                                               |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `ready`                                                        | Settles after the `ui/initialize` handshake with the host's info, capabilities, and context.                                          |
-| `call(name, args)`                                             | A `ToolCaller` over `tools/call`: `structuredContent` first, else the text content (parsed when it is JSON). Errors carry no details. |
-| `sendMessage(text)`                                            | Sends the person's next turn (`ui/message`); resolves to whether the host accepted it.                                                |
-| `updateModelContext({ structuredContent })`                    | Replaces what the model reads on its next turn.                                                                                       |
-| `getToolInput()` / `onToolInput(listener)`                     | `{ arguments, final, cancelled, reason }` as the host streams the tool's arguments.                                                   |
-| `getHostContext()` / `onHostContext(listener)`                 | Theme, display mode, locale, and the rest, merged as the host reports changes.                                                        |
-| `notifySize({ width, height })`                                | Reports the app's size; sent automatically from a `ResizeObserver` unless `autoResize: false`.                                        |
-| `request(method, params)` / `onNotification(method, listener)` | Anything else, such as `ui/open-link`, `ui/request-display-mode`, or `ui/notifications/tool-result`.                                  |
-| `close()`                                                      | Stops listening and fails pending requests.                                                                                           |
-
-Options: `appInfo`, `displayModes`, `timeout` (one minute by default), `autoResize`, `onTeardown` (awaited before the host removes the app), and `targetOrigin` (`"*"` by default, because a sandboxed frame cannot know its parent's origin; set it when you do). Messages are read only from `window.parent`, and a page opened outside a host fails fast instead of talking to itself.
-
-## The pieces on their own
-
-The renderer is built from parts you can use directly, for example to validate on the server or to unit-test prompts:
-
-```ts
-import {
-  parsePartialJson,
-  validateResponse,
-  evaluateExpression,
-  parseExpression,
-  createGenUIStore,
-  formatErrors,
-} from "@comp0/genui";
-
-const parsed = parsePartialJson('{"type": "Stack", "children": [{"type": "Text", "text": "Hel');
-parsed.value; // { type: "Stack", children: [{ type: "Text", text: "Hel" }] }
-parsed.open; // Set { "", "/children", "/children/0", "/children/0/text" }
-parsed.complete; // false
-
-const { root, errors, bindings } = validateResponse(text, { complete: true });
-evaluateExpression("round(seats * 1.5, 2)", { seats: 3 }); // 4.5
-```
-
-- **`parsePartialJson(text, { final? })`** parses any prefix of a JSON document into the best complete tree: open strings, arrays, and objects are closed, a key without a value is dropped, half-written escapes, numbers, and literals are not guessed at. It also returns `open`, the JSON Pointers of everything that may still grow, and `issues` for syntax it cannot recover from (everything before an issue is still returned). Nesting deeper than 100 levels and text beyond 2 MB are cut off, numbers beyond the double range become `null`, lone surrogates are repaired, and `__proto__` is an ordinary key. It never throws.
-- **`validateResponse(text | parsed | object, { catalog?, complete?, known? })`** validates against the catalog and returns the component tree to render (`root`, with every node keyed by its JSON Pointer), `errors`, and the declared `bindings`. `validateNode` is the same for one finished object.
-- **`createGenUIStore(initialState?)`** is the external store the controls and results read with `useSyncExternalStore`.
-- **`describeCatalog(catalog?)`** describes a catalog as plain JSON (every component with its group, description, and props with readable types), for documentation or a component picker that should not load the schemas. The prompt is written from it.
-
-### Streaming contract
-
-1. Every prefix of a response renders without errors, warnings, or thrown exceptions.
-2. A component appears once its `type` is complete and every prop it requires has arrived. A string that is still being written is shown as written, except URLs (never loaded half-written), binding names, and expressions (used only once complete).
-3. Nodes are keyed by their JSON Pointer, so a component already drawn is never replaced as the response grows; typed text, focus, and open or closed sections survive.
-4. While `streaming`: output is `aria-busy`, buttons, suggestions, copy buttons, and form submits are disabled, nothing is validated for errors, and comp0 parts hold back data warnings and focus moves.
-5. When `streaming` becomes false the full response is validated once, defaults are written into the state, and `onError` is called if there are problems.
-
-## The catalog
-
-```ts
-import { catalog, defineEntry, nodes, bindable, computed, url, list } from "@comp0/genui";
-```
-
-| Group      | Components                                                                                                                            |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Layout     | `Stack`, `Grid`, `Card`, `Heading`, `Text`, `Image`, `List`                                                                           |
-| Actions    | `Button`, `Link`, `Suggestions`, `CopyButton`                                                                                         |
-| Forms      | `Form`, `TextField`, `TextArea`, `NumberField`, `Select`, `RadioGroup`, `CheckboxGroup`, `Checkbox`, `Switch`, `Slider`, `DatePicker` |
-| Disclosure | `Tabs`, `Accordion`, `Disclosure`                                                                                                     |
-| Data       | `Table`, `BarChart`, `ColumnChart`, `LineChart`, `AreaChart`, `PieChart`, `Meter`, `ProgressBar`, `Output`, `Comparison`, `CitedText` |
-| Feedback   | `Alert`, `Separator`                                                                                                                  |
-
-An entry is plain data. Its props are a shape: each key holds a [Standard Schema](https://standardschema.dev) that can also describe itself as JSON Schema (ArkType 2.1.28+, zod 4.2+, Valibot through `toStandardJsonSchema()`), and a key ending in `?` is optional. Key order is the order the prompt lists them in.
-
-```tsx
-import { type } from "arktype";
-import { z } from "zod";
-
-const Shout = defineEntry({
-  name: "Shout",
-  group: "Layout",
-  description: "Loud text. Requires text.",
-  props: {
-    text: type("string").describe("What to shout."),
-    "volume?": z.number().min(1).max(11).describe("How loud, 1 to 11."),
+const Forecast = serverComponent(ForecastSpec.name, {
+  description: ForecastSpec.description,
+  props: ForecastSpec.props,
+  async render({ city }) {
+    const forecast = await fetchForecast(city);
+    return <ForecastTable forecast={forecast} />;
   },
-  component: ({ text, volume }) => <strong data-volume={volume}>{text}</strong>,
 });
 
-<GenUI response={response} catalog={[...catalog, Shout]} />;
-genuiPrompt({ catalog: [...catalog, Shout] });
+const components = { Forecast };
+// Inside AnswerRoot, which imports this ui locally:
+<GenUIView vocabulary={ui} components={components} stream={modelStream} />;
 ```
 
-genui adds a few schemas of its own: `nodes("description")` for a slot that holds nested components (the component receives a `ReactNode`), `bindable(schema, "description")` for a value a control can bind, `computed(schema, "description")` for a value that may be an expression, `url("link" | "image", "description")` for a URL the validator must vet, and `list(itemShape, "description")` for a list whose items hold any of these. While a response streams, a prop is checked against its JSON Schema so partial values render; once it is finished it must also pass the library's own `validate`, so formats and refinements (`string.email`, `.min(1)`) count. Validators must be synchronous. A component receives only the props its schema declares, each possibly missing, so render defensively.
+The model places `<Forecast city="Lisbon" />` directly, or uses a declared city value through `city={city}`. When a dependent value changes, the root's `render(name, props, signal)` callback refreshes only that component, with debounce and cancellation. The host owns its framework's RSC transport. Validate refresh requests on the server with `renderComponent(components, name, props)` before invoking the component. The last accepted subtree remains visible during a refresh or failure.
 
-## Safety
+Button and Form `action` steps can call a tool, set a declared value, or send a message. Supply `call` on the root as a function or an endpoint URL; `defineTool`, `runTool`, `handleToolRequest`, and `httpToolCaller` provide validated tools and HTTP transport.
 
-A model's output is untrusted:
+## Revise an earlier answer
 
-- The validator drops every prop a schema does not declare, so `dangerouslySetInnerHTML`, `on*` handlers, `style`, `srcDoc`, `className`, `id`, and `ref` cannot reach the DOM, and component names are looked up in the catalog only (never through prototypes).
-- Links accept `http(s):`, `mailto:`, `tel:`, relative, and `#fragment` URLs; images accept `http(s)` and relative URLs. `javascript:`, `data:`, `blob:`, `file:`, protocol-relative URLs, and URLs hiding a scheme behind whitespace are not linked or loaded (`safeHref` and `safeImageSrc` are exported). Absolute links get `rel="noopener noreferrer"`; images load lazily without a referrer.
-- Text is text: Markdown and HTML are shown literally, including text computed from what the person typed.
-- Expressions run in a whitelisted evaluator with size limits; they cannot reach globals, prototypes, or functions outside the list.
-- Lists, tables, and responses are bounded (500 items, 24 table columns and 800 cells, 1000 components, 40 levels of nesting), so a response cannot lock the page.
-- Buttons and form submits are disabled while a response streams, so nothing acts on a half-written interface.
+Give initial components protocol IDs. A follow-up response can update their props or append children:
 
-## Accessibility
+```tsx
+// First response:
+<Card id="summary" title="Draft itinerary"><Text>A weekend by the sea.</Text></Card>
+<List id="checklist"><Item id="flight">Book the flight</Item></List>
 
-Schemas require the accessible name of everything that needs one: labels for inputs, visible text for buttons and links, `title` for charts and cards, `caption` for tables, `alt` for images. There are no icon-only components. Charts include a data table; fields support help text through `aria-describedby`; heading levels follow card nesting; warnings and errors are announced at once while other messages are polite. Tests run axe over every answer in the conformance suite at every stage of its stream, including open selects and calendars.
+// Later response:
+<Update id="summary" title="Ready itinerary" />
+<Append to="checklist"><Item id="ferry">Book the ferry</Item></Append>
+```
 
-## Styling hooks
+Keep the root and original view mounted. Add a separate view for the edit stream with exact earlier JSX and successful edits in `history`, and a stable `turn` identity. Supplying `history` marks a turn as edits only:
 
-No CSS ships. Components carry `data-slot` and token attributes; each is absent when the model did not choose a value:
+```tsx
+<AnswerRoot>
+  <GenUIView vocabulary={ui} state={settings} stream={firstStream} turn="assistant-1" />
+  <GenUIView
+    vocabulary={ui}
+    state={settings}
+    stream={editStream}
+    history={[firstResponse]}
+    turn="assistant-2"
+  />
+</AnswerRoot>
+```
 
-| Component     | Attributes                                                                                                  |
-| ------------- | ----------------------------------------------------------------------------------------------------------- |
-| `Stack`       | `data-direction` (`column`, `row`), `data-gap` (`xs`..`xl`), `data-align` (`start`..`stretch`), `data-wrap` |
-| `Grid`        | `data-columns` (1 to 6), `data-gap`                                                                         |
-| `Card`        | `data-tone` (`default`, `muted`, `accent`)                                                                  |
-| `Text`        | `data-tone` (`default`, `muted`, `success`, `warning`, `danger`), `data-size` (`sm`, `md`, `lg`)            |
-| `Button`      | `data-variant` (`primary`, `secondary`, `danger`)                                                           |
-| `Alert`       | `data-tone` (`info`, `success`, `warning`, `danger`)                                                        |
-| `Table` cells | `data-numeric` on cells that hold numbers                                                                   |
+The entire turn commits only after validation. Missing targets, invalid props or children, duplicate IDs, and stale target revisions reject it. Replaying an accepted turn identity is a no-op. IDs never become DOM attributes. Updates preserve mounted controls, focus, disclosure state, and user-owned values; identity props such as name, bind, and collection-item value cannot change. Data updates refresh only their target through the root's server renderer.
 
-The comp0 parts inside keep their own state attributes (`data-checked`, `data-selected`, `data-open`, `data-focus-visible`, and so on).
+[Try the recorded revisions lab](https://comp0-docs.horrible.workers.dev/labs/genui-edits).
+
+## Keep your own layout
+
+Named holes let the model fill bounded places in a host-owned page. One stream fills all holes; each has its own vocabulary and maximum number of direct children. Later `.fill` calls accept `history` and `turn` too. Wrap edits in the same hole tags; targets and atomic commits stay scoped to each hole. Omit a hole from a follow-up to leave it unchanged.
+
+```tsx
+import { hole, holes } from "@comp0/genui/rsc";
+import { layout, forms } from "@comp0/genui/vocabulary";
+import { AnswerRoot } from "./AnswerRoot.js";
+import { settings } from "./ui.js";
+
+const page = holes({
+  summary: hole(layout.only("Heading", "Text"), "Explain the result.", { max: 3 }),
+  controls: hole(forms.only("Slider", "Switch"), "Offer useful adjustments.", { max: 4 }),
+});
+const answer = page.fill(streamFromYourProvider(page.prompt({ state: settings }), message), {
+  state: settings,
+});
+
+<AnswerRoot>
+  <header>
+    <answer.summary />
+  </header>
+  <aside>
+    <answer.controls />
+  </aside>
+</AnswerRoot>;
+```
+
+## JSON and MCP transports
+
+The package root `@comp0/genui` keeps the structured JSON transport for browser-rendered answers and structured outputs: `GenUI`, `genuiPrompt`, `responseJsonSchema`, `catalog`, `defineEntry`, `parsePartialJson`, and `validateResponse`. Its binding objects, `Query`, and `Slot` are JSON transport features. `@comp0/genui/mcp` uses the same JSON transport inside an MCP Apps host through `genuiAppTool`, `createMcpAppBridge`, and `McpAppGenUI`.
+
+RSC composition uses `parsePartialJsx`, `validateJsx`, vocabularies, typed state, and custom components, with `Update` and `Append` for later turns.
+
+## Safety, accessibility, and styling
+
+The model can name only vocabulary components and declared state. No imports, event handlers, spreads, native HTML tags, or executable JavaScript are accepted. Undeclared props are dropped. Links and images use vetted URLs; text is never interpreted as HTML. Required accessible names and props are enforced before rendering. Collections and response depth are bounded.
+
+No CSS ships. Components expose `data-slot`, token attributes such as `data-gap` and `data-tone`, and the underlying comp0 state attributes (`data-selected`, `data-checked`, `data-open`, `data-focus-visible`).
 
 MIT licensed.

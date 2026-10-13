@@ -4,299 +4,445 @@ import {
   createContext,
   use,
   useEffect,
+  useId,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
+  type ComponentType,
   type ReactNode,
 } from "react";
-import {
-  Accordion,
-  AccordionHeader,
-  AccordionItem,
-  AccordionPanel,
-  AccordionTrigger,
-  BusyRegion,
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
-} from "@comp0/react";
-import { catalog } from "../catalog/catalog.js";
-import { type CatalogEntry } from "../catalog/types.js";
+import { BusyRegion } from "@comp0/react";
+import { type PropShape } from "../catalog/schema.js";
+import { builtInVocabulary } from "../composition/builtins.js";
+import { compositionComponents } from "../composition/parts.js";
+import { type Vocabulary } from "../composition/spec.js";
+import { type StateContract, type StateValues } from "../composition/state.js";
+import { expressionSource, resolveExpressions, validateProp } from "../composition/validate.js";
+import { evaluateExpression } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
 import { GenUIContext, type GenUIAction } from "../render/context.js";
-import { resolveProps } from "../render/node.js";
 import { createGenUIStore, type GenUIState, type GenUIStore } from "../state/store.js";
 import { toolCaller } from "../tools/http.js";
 import { type ToolCaller } from "../tools/tools.js";
-import { validateResponse } from "../validate/validate.js";
+import { type GenUIError } from "../validate/errors.js";
+import { Binding } from "../validate/values.js";
+import { type ComponentRenderer } from "./components.js";
+import {
+  createEditStore,
+  type ClientEdit,
+  type EditableNode,
+  type EditStore,
+} from "./edit-store.js";
 
-/*
- * The client half of server-streamed GenUI. A root is the shared scope: one store, the host's
- * views and tools, and where actions go. Any number of views stream into it from the server,
- * such as one per turn of a conversation, and the host's own components anywhere inside it read
- * and write the same values.
- */
+export type GenUIRootProps = {
+  children?: ReactNode;
+  /** Import the same vocabulary in the server view and this client scope. */
+  vocabulary?: Vocabulary;
+  /** Host-owned names, defaults and validators shared by controls and host components. */
+  state?: StateContract;
+  call?: ToolCaller | string | undefined;
+  /** Refreshes one data component. The host supplies its framework's RSC transport. */
+  render?: ComponentRenderer;
+  onAction?: ((action: GenUIAction) => void | Promise<void>) | undefined;
+  onError?: ((errors: readonly GenUIError[]) => void) | undefined;
+  initialState?: Readonly<Record<string, JsonValue>> | undefined;
+  store?: GenUIStore | undefined;
+};
 
 type Root = {
   store: GenUIStore;
-  slots: Readonly<Record<string, ReactNode>>;
+  edits: EditStore;
+  fields: GenUIStore;
+  vocabulary: Vocabulary;
+  render: ComponentRenderer | undefined;
   call: ToolCaller | undefined;
   act: (action: GenUIAction) => void;
+  onError: GenUIRootProps["onError"];
 };
 
+/** Unbound form fields stay local; only declared bindings can change shared host state. */
+function localFields(shared: GenUIStore, state: StateContract | undefined): GenUIStore {
+  if (!state) return shared;
+  const local = createGenUIStore();
+  let snapshot = { ...local.getSnapshot(), ...shared.getSnapshot() };
+  const subscribers = new Set<() => void>();
+  let stopShared = () => {};
+  let stopLocal = () => {};
+  function update() {
+    snapshot = { ...local.getSnapshot(), ...shared.getSnapshot() };
+    for (const listener of subscribers) listener();
+  }
+  const target = (name: string) => {
+    if (Object.hasOwn(state.shape, name)) return shared;
+    return local;
+  };
+  return {
+    get: (name) => target(name).get(name),
+    set: (name, value) => target(name).set(name, value),
+    seed: (name, value) => target(name).seed(name, value),
+    getSnapshot() {
+      // Subscribe callbacks keep this stable; before subscribing, refresh from current stores.
+      if (subscribers.size === 0) {
+        const next = { ...local.getSnapshot(), ...shared.getSnapshot() };
+        if (JSON.stringify(snapshot) !== JSON.stringify(next)) snapshot = next;
+      }
+      return snapshot;
+    },
+    subscribe(listener) {
+      if (subscribers.size === 0) {
+        stopShared = shared.subscribe(update);
+        stopLocal = local.subscribe(update);
+      }
+      subscribers.add(listener);
+      return () => {
+        subscribers.delete(listener);
+        if (subscribers.size === 0) {
+          stopShared();
+          stopLocal();
+        }
+      };
+    },
+    subscribeToEdits(listener) {
+      const changed = () => listener({ ...local.getSnapshot(), ...shared.getSnapshot() });
+      const stopShared = shared.subscribeToEdits(changed);
+      const stopLocal = local.subscribeToEdits(changed);
+      return () => {
+        stopShared();
+        stopLocal();
+      };
+    },
+  };
+}
 const RootContext = createContext<Root | null>(null);
-
 function useRoot(): Root {
   const root = use(RootContext);
   if (root === null) throw new Error("GenUI views and hooks must render inside <GenUIRoot>.");
   return root;
 }
 
-const noSlots: Readonly<Record<string, ReactNode>> = {};
-
-export type GenUIRootProps = {
-  children?: ReactNode;
-  /** Host views the model can place by name with `{ "type": "Slot", "name": ... }`. */
-  slots?: Readonly<Record<string, ReactNode>> | undefined;
-  /**
-   * Runs a tool for Query nodes and `call` steps: the URL of an endpoint served by
-   * `handleToolRequest`, or a function. Prefer a URL in React Router: its server functions
-   * re-render the route after every call.
-   */
-  call?: ToolCaller | string | undefined;
-  /** A button, form, or suggestion asked the assistant something; a server function works. */
-  onAction?: ((action: GenUIAction) => void | Promise<void>) | undefined;
-  /** Values to start with, such as a saved state. */
-  initialState?: Readonly<Record<string, JsonValue>> | undefined;
-  /** A store kept outside, to share values beyond this root. */
-  store?: GenUIStore | undefined;
-};
-
-/** The shared scope of server-streamed GenUI views. Renders no element. */
+/** Client scope for all views and host components sharing one typed state contract. */
 export function GenUIRoot({
   children,
-  slots = noSlots,
+  vocabulary = builtInVocabulary,
+  state,
   call,
+  render,
   onAction,
+  onError,
   initialState,
   store: provided,
 }: GenUIRootProps) {
-  const [own] = useState(() => createGenUIStore(initialState));
+  const [edits] = useState(createEditStore);
+  const [own] = useState(() => {
+    if (state) return state.createStore(initialState);
+    return createGenUIStore(initialState);
+  });
   // Semantic identity: queries rerun when the caller changes, so a URL keeps one caller.
   const caller = useMemo(() => toolCaller(call), [call]);
+  const store = provided ?? own;
+  // Semantic identity: the local form store must survive renders of its provider.
+  const fields = useMemo(() => localFields(store, state), [store, state]);
   const root: Root = {
-    store: provided ?? own,
-    slots,
+    store,
+    edits,
+    fields,
+    vocabulary,
+    render,
     call: caller,
     act: (action) => void onAction?.(action),
+    onError,
   };
   return <RootContext value={root}>{children}</RootContext>;
 }
 
 type View = { streaming: boolean; setStreaming: (streaming: boolean) => void };
-
 const ViewContext = createContext<View | null>(null);
-
 function useView(): View {
   const view = use(ViewContext);
-  if (view === null) throw new Error("A GenUI node must render inside a <GenUIView>.");
+  if (view === null) throw new Error("A GenUI node must render inside <GenUIView>.");
   return view;
 }
+const noBindings = new Map<string, JsonValue | undefined>();
+const noSlots: Readonly<Record<string, ReactNode>> = {};
 
-/** The client side of one streamed view: whether its response is still arriving. */
 export function GenUIViewScope({ children }: { children?: ReactNode }) {
+  const root = useRoot();
+  const id = useId();
   const [streaming, setStreaming] = useState(true);
+  const context = {
+    store: root.fields,
+    fieldPrefix: `view:${id}:`,
+    streaming,
+    bindings: noBindings,
+    call: root.call,
+    slots: noSlots,
+    act: (action: GenUIAction) => {
+      if (!streaming) root.act(action);
+    },
+  };
   return (
     <ViewContext value={{ streaming, setStreaming }}>
-      <BusyRegion busy={streaming} data-slot="genui-view">
-        {children}
-      </BusyRegion>
+      <GenUIContext value={context}>
+        <BusyRegion busy={streaming} data-slot="genui-view">
+          {children}
+        </BusyRegion>
+      </GenUIContext>
     </ViewContext>
   );
 }
 
 export type GenUIClientNodeProps = {
-  /** The component as the model wrote it, finished. Slots the server renders are left empty. */
-  node: JsonValue;
-  /** Every binding the response declared so far, with its initial value. */
-  bindings: Record<string, JsonValue>;
-  /** Nested components the server rendered, for a container such as a Form. */
+  name: string;
+  component?: ComponentType<never> | undefined;
+  props: Record<string, JsonValue>;
+  binding?: string | undefined;
+  text?: readonly (string | { $expr: string })[] | undefined;
   children?: ReactNode;
 };
 
-/** One interactive component: validated on the client and rendered with its built-in facade. */
-export function GenUIClientNode({ node, bindings, children }: GenUIClientNodeProps) {
+/** Custom client components and built-ins receive validated props and streamed React children. */
+export function GenUIClientNode({
+  name,
+  component,
+  props: raw,
+  binding,
+  text,
+  children,
+}: GenUIClientNodeProps) {
   const root = useRoot();
-  const view = useView();
-  const validated = validateResponse(node, { catalog });
-  if (validated.root === undefined) return null;
-  const context = {
-    store: root.store,
-    streaming: view.streaming,
-    bindings: new Map(Object.entries(bindings)),
-    call: root.call,
-    slots: root.slots,
-    // Acting on a half-written interface would send a half-written request.
-    act: (action: GenUIAction) => {
-      if (!view.streaming) root.act(action);
-    },
-  };
-  if (!("component" in validated.root.entry)) return null;
-  const Facade = (validated.root.entry as CatalogEntry).component;
-  const props = resolveProps(validated.root.props);
-  if (children !== undefined) props.children = children;
+  const values = useSyncExternalStore(
+    root.store.subscribe,
+    root.store.getSnapshot,
+    root.store.getSnapshot,
+  );
+  const entry = root.vocabulary.specs.find((item) => item.name === name);
+  const props: Record<string, unknown> = resolveExpressions(raw, values);
+  let content = children;
+  if (text) {
+    const label = text
+      .map((part) => {
+        if (typeof part === "string") return part;
+        const value = evaluateExpression(part.$expr, values);
+        if (typeof value === "string" || typeof value === "number") return String(value);
+        return "";
+      })
+      .join("");
+    if (label.trim() === "") return null;
+    content = label;
+  }
+  if (entry) {
+    for (const [key, value] of Object.entries(raw)) {
+      if (expressionSource(value) === undefined) continue;
+      const schema = entry.props[key] ?? entry.props[`${key}?`];
+      if (!schema) return null;
+      const checked = validateProp(schema, props[key]);
+      if (!checked.ok) return null;
+      if (
+        ["label", "title", "caption"].includes(key) &&
+        typeof checked.value === "string" &&
+        checked.value.trim() === ""
+      )
+        return null;
+      props[key] = checked.value;
+    }
+    if (binding && entry.binding) props[entry.binding.prop] = new Binding(binding, values[binding]);
+  }
+  const Component = (component ??
+    Object.getOwnPropertyDescriptor(compositionComponents, name)?.value) as
+    | ComponentType<Record<string, unknown>>
+    | undefined;
+  if (!Component) return null;
+  return <Component {...props}>{content}</Component>;
+}
+
+export function GenUIExpression({ source }: { source: string }) {
+  const values = useGenUIState();
+  const result = evaluateExpression(source, values);
+  if (result === null || typeof result === "boolean") return null;
+  return <>{result}</>;
+}
+
+/** An explicit protocol ID adds an addressable boundary without replacing its mounted children. */
+export function GenUIEditable({
+  node: initial,
+  scope = "",
+  component,
+  initialProps,
+  children,
+}: {
+  node: EditableNode;
+  scope?: string;
+  component?: ComponentType<never> | undefined;
+  /** Present for a server component, even when its initial props contain no expressions. */
+  initialProps?: Record<string, JsonValue> | undefined;
+  children?: ReactNode;
+}) {
+  const { edits, onError } = useRoot();
+  const owner = useId();
+  const target = useSyncExternalStore(
+    edits.subscribe,
+    () => edits.get(scope, initial.id),
+    () => undefined,
+  );
+  useEffect(() => {
+    const errors = edits.register(scope, owner, initial);
+    if (errors.length) onError?.(errors);
+    return () => edits.unregister(scope, initial.id, owner);
+  }, [edits, scope, owner, initial, onError]);
+  if (target?.owner !== undefined && target.owner !== owner) return null;
+  const node = target?.node ?? initial;
+  if (initialProps) {
+    return (
+      <GenUIServerNode name={node.name} props={node.inputs} initialProps={initialProps}>
+        {children}
+      </GenUIServerNode>
+    );
+  }
   return (
-    <GenUIContext value={context}>
-      <Facade {...props} />
-    </GenUIContext>
+    <GenUIClientNode
+      name={node.name}
+      component={component}
+      props={node.props}
+      binding={node.binding}
+      text={node.text}
+    >
+      {children}
+      {target?.appends}
+    </GenUIClientNode>
   );
 }
 
-/** Rendered by the server once the model has finished; ends the view's streaming state. */
-export function GenUIStreamEnd() {
+/** Complete edit turns commit once. Validation failures never mutate an accepted view. */
+export function GenUIApplyEdits({
+  turn,
+  scope = "",
+  operations,
+  errors,
+}: {
+  turn: string;
+  scope?: string;
+  operations: readonly ClientEdit[];
+  errors: readonly GenUIError[];
+}) {
+  const { edits, onError } = useRoot();
   const { setStreaming } = useView();
-  useEffect(() => setStreaming(false), [setStreaming]);
+  const applied = useRef(false);
+  useEffect(() => {
+    if (applied.current) return;
+    applied.current = true;
+    let problems = errors;
+    if (problems.length === 0) problems = edits.apply(turn, scope, operations);
+    setStreaming(false);
+    if (problems.length) onError?.(problems);
+  }, [edits, turn, scope, operations, errors, onError, setStreaming]);
   return null;
 }
 
-/** The store every view in the root shares, for host components that write values too. */
+/** Keeps the accepted subtree while the latest dependent props are rendered on the server. */
+export function GenUIServerNode({
+  name,
+  props,
+  initialProps,
+  children,
+}: {
+  name: string;
+  props: Record<string, JsonValue>;
+  initialProps: Record<string, JsonValue>;
+  children?: ReactNode;
+}) {
+  const root = useRoot();
+  const values = useGenUIState();
+  const resolved = resolveExpressions(props, values);
+  const signature = JSON.stringify(resolved);
+  const initialSignature = JSON.stringify(initialProps);
+  const [result, setResult] = useState<{ signature: string; content: ReactNode }>({
+    signature: initialSignature,
+    content: children,
+  });
+  const [failure, setFailure] = useState<{ signature: string; message: string }>();
+  const render = root.render;
+  useEffect(() => {
+    if (signature === result.signature) return;
+    if (!render) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      void Promise.resolve()
+        .then(() =>
+          render(name, JSON.parse(signature) as Record<string, JsonValue>, controller.signal),
+        )
+        .then(
+          (content) => {
+            if (!controller.signal.aborted) setResult({ signature, content });
+          },
+          () => {
+            if (!controller.signal.aborted)
+              setFailure({ signature, message: "This view could not be updated." });
+          },
+        );
+    }, 150);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [render, name, signature, result.signature]);
+  let message: string | undefined;
+  if (signature !== result.signature) {
+    if (!render) message = "This component needs a server renderer.";
+    if (failure?.signature === signature) message = failure.message;
+  }
+  return (
+    <BusyRegion
+      data-slot="server-component"
+      busy={signature !== result.signature && message === undefined}
+    >
+      {result.content}
+      {message && <output>{message}</output>}
+    </BusyRegion>
+  );
+}
+
+export function GenUIStreamEnd({ errors }: { errors: readonly GenUIError[] }) {
+  const { setStreaming } = useView();
+  const { onError } = useRoot();
+  const reported = useRef(false);
+  useEffect(() => {
+    setStreaming(false);
+    if (!reported.current && errors.length && onError) {
+      reported.current = true;
+      onError(errors);
+    }
+  }, [setStreaming, onError, errors]);
+  return null;
+}
+
 export function useGenUIStore(): GenUIStore {
   return useRoot().store;
 }
 
-/**
- * The live value of a name, for host components such as a canvas the model's controls drive. It
- * updates as the person moves a control, with no server round trip.
- */
-export function useGenUIValue(name: string): JsonValue | undefined {
+export function useGenUIValue<T extends PropShape, K extends keyof T & string>(
+  contract: StateContract<T>,
+  name: K,
+): StateValues<T>[K];
+export function useGenUIValue(name: string): JsonValue | undefined;
+export function useGenUIValue(contractOrName: StateContract | string, key?: string): unknown {
   const { store } = useRoot();
-  return useSyncExternalStore(
+  let name = key ?? "";
+  if (typeof contractOrName === "string") name = contractOrName;
+  const value = useSyncExternalStore(
     store.subscribe,
     () => store.get(name),
     () => store.get(name),
   );
+  if (value === undefined && typeof contractOrName !== "string")
+    return contractOrName.initial[name];
+  return value;
 }
 
-/** Every stored value, for host components that react to the whole state. */
 export function useGenUIState(): GenUIState {
   const { store } = useRoot();
   return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
-
-/** The root's tool caller, for host components that call the same tools as the model. */
 export function useGenUICall(): ToolCaller | undefined {
   return useRoot().call;
-}
-
-/*
- * Containers whose items hold nested components stream through the server: the server renders
- * each item as it arrives inside one of these predefined parts, so a tab or a section appears
- * while the model is still writing the next.
- */
-
-export type GenUITabsRootProps = {
-  /** Accessible name of the tab list. */
-  label?: string | undefined;
-  /** The streamed `GenUITab` triggers. */
-  triggers?: ReactNode;
-  /** The streamed `GenUITabPanel` panels. */
-  children?: ReactNode;
-};
-
-/** A model's Tabs: the server streams the triggers and panels in as the model writes them. */
-export function GenUITabsRoot({ label, triggers, children }: GenUITabsRootProps) {
-  return (
-    <Tabs as="div" defaultValue="tab-0">
-      <TabList aria-label={label}>{triggers}</TabList>
-      {children}
-    </Tabs>
-  );
-}
-
-export function GenUITab({ value, children }: { value: string; children?: ReactNode }) {
-  return <Tab value={value}>{children}</Tab>;
-}
-
-export function GenUITabPanel({ value, children }: { value: string; children?: ReactNode }) {
-  return <TabPanel value={value}>{children}</TabPanel>;
-}
-
-type AccordionRoot = { declareOpen: (value: string) => void };
-
-const AccordionRootContext = createContext<AccordionRoot | null>(null);
-
-export type GenUIAccordionRootProps = {
-  /** Allow several sections open at once. */
-  multiple?: boolean | undefined;
-  /** The streamed `GenUIAccordionItem` sections. */
-  children?: ReactNode;
-};
-
-/** A model's Accordion: sections stream in, and the ones the model opened start open. */
-export function GenUIAccordionRoot({ multiple, children }: GenUIAccordionRootProps) {
-  // The model's `open` flags apply until the person opens or closes a section.
-  const [modelOpen, setModelOpen] = useState<string[]>([]);
-  const [chosen, setChosen] = useState<string[] | null>(null);
-  const root: AccordionRoot = {
-    declareOpen: (value) =>
-      setModelOpen((current) => (current.includes(value) ? current : [...current, value])),
-  };
-  const open = chosen ?? (multiple === true ? modelOpen : modelOpen.slice(0, 1));
-  if (multiple === true) {
-    return (
-      <AccordionRootContext value={root}>
-        <Accordion as="div" type="multiple" value={open} onChange={setChosen}>
-          {children}
-        </Accordion>
-      </AccordionRootContext>
-    );
-  }
-  return (
-    <AccordionRootContext value={root}>
-      <Accordion
-        as="div"
-        type="single"
-        collapsible
-        value={open[0] ?? ""}
-        onChange={(next) => setChosen(next === "" ? [] : [next])}
-      >
-        {children}
-      </Accordion>
-    </AccordionRootContext>
-  );
-}
-
-export type GenUIAccordionItemProps = {
-  value: string;
-  /** Heading level of the section's trigger, from where the accordion sits. */
-  level: 1 | 2 | 3 | 4 | 5 | 6;
-  /** Whether the model asked for the section to start open. */
-  open?: boolean | undefined;
-  /** The streamed title. */
-  title?: ReactNode;
-  /** The streamed content. */
-  children?: ReactNode;
-};
-
-export function GenUIAccordionItem({
-  value,
-  level,
-  open,
-  title,
-  children,
-}: GenUIAccordionItemProps) {
-  const root = use(AccordionRootContext);
-  const declareOpen = root?.declareOpen;
-  useEffect(() => {
-    if (open === true) declareOpen?.(value);
-  }, [open, value, declareOpen]);
-  return (
-    <AccordionItem value={value}>
-      <AccordionHeader level={level}>
-        <AccordionTrigger>{title}</AccordionTrigger>
-      </AccordionHeader>
-      <AccordionPanel>{children}</AccordionPanel>
-    </AccordionItem>
-  );
 }

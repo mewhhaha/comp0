@@ -1,10 +1,12 @@
-import { GenUIRoot, GenUIView } from "@comp0/genui/rsc";
+import { GenUIView } from "@comp0/genui/rsc";
 import { Link } from "react-router";
-import { demoResponses, tokenize } from "../../../examples/demos/intelligent-ui-responses.js";
+import { dashboard, explainer } from "./responses.js";
+import { labState, labVocabulary } from "./contract.js";
+import { labComponents } from "./components.server.js";
 import { forecastExplorer } from "./forecast-explorer.js";
 import { releaseNotes } from "./release-notes.js";
 import { LiveValues } from "./LiveValues.js";
-import { ShaderCanvas } from "./ShaderCanvas.js";
+import { LabRoot } from "./LabRoot.js";
 import { shaderExplorer } from "./shader-explorer.js";
 
 export function meta() {
@@ -13,7 +15,7 @@ export function meta() {
 
 /** Replays a recorded response as a model would stream it: a few tokens at a time. */
 async function* replay(response: string): AsyncGenerator<string> {
-  const tokens = tokenize(response);
+  const tokens = response.match(/[A-Za-z0-9$.]+|\s+|[^A-Za-z0-9$.\s]/g) ?? [];
   for (let index = 0; index < tokens.length; index += 3) {
     await new Promise((resolve) => setTimeout(resolve, 45));
     yield tokens.slice(index, index + 3).join("");
@@ -21,8 +23,6 @@ async function* replay(response: string): AsyncGenerator<string> {
 }
 
 export function ServerComponent() {
-  const dashboard = demoResponses.find((demo) => demo.title === "Dashboard")!;
-  const explainer = demoResponses.find((demo) => demo.title === "Explainer")!;
   return (
     <div className="mx-auto grid max-w-4xl gap-16 px-4 py-12 sm:px-6 lg:px-10">
       <header className="grid gap-2">
@@ -43,7 +43,7 @@ export function ServerComponent() {
           to compose one live.
         </p>
       </header>
-      <GenUIRoot call="/labs/genui-rsc/tools" slots={{ shader: <ShaderCanvas /> }}>
+      <LabRoot>
         <section aria-label="Live values" className="grid gap-2">
           <h2 className="text-sm/6 font-semibold text-zinc-950 dark:text-white">
             Live values, read by a host component outside every view
@@ -51,21 +51,46 @@ export function ServerComponent() {
           <LiveValues />
         </section>
         <section aria-label="Shader explorer" data-intelligent-ui="">
-          <GenUIView stream={replay(shaderExplorer)} />
+          <GenUIView
+            stream={replay(shaderExplorer)}
+            vocabulary={labVocabulary}
+            state={labState}
+            components={labComponents}
+          />
         </section>
         <section aria-label="Forecast" data-intelligent-ui="">
-          <GenUIView stream={replay(forecastExplorer)} />
+          <GenUIView
+            stream={replay(forecastExplorer)}
+            vocabulary={labVocabulary}
+            state={labState}
+            components={labComponents}
+          />
         </section>
-        <section aria-label={dashboard.prompt} data-intelligent-ui="">
-          <GenUIView stream={replay(dashboard.response)} />
+        <section aria-label="How did the product do this week?" data-intelligent-ui="">
+          <GenUIView
+            stream={replay(dashboard)}
+            vocabulary={labVocabulary}
+            state={labState}
+            components={labComponents}
+          />
         </section>
         <section aria-label="Release notes" data-intelligent-ui="">
-          <GenUIView stream={replay(releaseNotes)} />
+          <GenUIView
+            stream={replay(releaseNotes)}
+            vocabulary={labVocabulary}
+            state={labState}
+            components={labComponents}
+          />
         </section>
-        <section aria-label={explainer.prompt} data-intelligent-ui="">
-          <GenUIView stream={replay(explainer.response)} />
+        <section aria-label="Explain how OAuth works." data-intelligent-ui="">
+          <GenUIView
+            stream={replay(explainer)}
+            vocabulary={labVocabulary}
+            state={labState}
+            components={labComponents}
+          />
         </section>
-      </GenUIRoot>
+      </LabRoot>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useId, useSyncExternalStore } from "react";
 import { evaluateExpression } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
 import { useGenUI } from "../render/context.js";
@@ -24,9 +24,14 @@ export function useField<TValue extends JsonValue>(
   /** The value shown until the person changes the control. */
   fallback: JsonValue | undefined;
 } {
-  const { store, streaming, bindings } = useGenUI();
+  const { store, streaming, bindings, fieldPrefix = "" } = useGenUI();
+  const id = useId();
   const bound = binding instanceof Binding ? binding : undefined;
-  const stateKey = bound === undefined ? key : bound.name;
+  let stateKey = key;
+  // RSC fields are local to their mounted control: relabeling never resets a person's input,
+  // and equal labels do not share values. Explicit bindings still name host-owned state.
+  if (fieldPrefix !== "") stateKey = `${fieldPrefix}${id}`;
+  if (bound !== undefined) stateKey = bound.name;
   let fallback: JsonValue | undefined = literal;
   if (bound !== undefined) fallback = bindings.get(bound.name) ?? bound.initial ?? literal;
   const stored = useSyncExternalStore(

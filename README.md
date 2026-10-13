@@ -170,23 +170,38 @@ If you alias directly to this repository's source, vendor the source, or otherwi
 
 ## Intelligent UI
 
-Let a model answer with real interfaces instead of walls of text. [`@comp0/genui`](packages/genui) is a JSON format, a streaming-tolerant parser and validator, and a renderer for a catalog of compact, accessible comp0 components (forms, tables, charts, buttons) that render progressively while a response streams, with any provider:
+Let a model compose your components as restricted JSX. [`@comp0/genui`](packages/genui) gives the host a typed state contract and a component vocabulary; React Server Components stream the model's layout, text, and children progressively.
 
-```tsx
-import { GenUI, genuiPrompt, responseJsonSchema } from "@comp0/genui";
-
-const system = genuiPrompt({ preamble: "You are a travel assistant." });
-const schema = responseJsonSchema({ strict: true }); // for structured outputs
-
-<GenUI
-  response={response}
-  streaming={streaming}
-  onAction={(action) => ask(action.message)}
-  onError={(errors) => ask(formatErrors(errors))}
-/>;
+```ts
+// ui.ts: shared contracts
+import { forms, layout, vocabulary } from "@comp0/genui/vocabulary";
+export const ui = vocabulary(layout, forms);
 ```
 
-Every control, chart, and table requires its accessible name in the schema, components render only the props the schema declares, and output sits in a `BusyRegion` so nothing warns or steals focus until the answer is complete. The same text the model reads ships as `@comp0/genui/genui.prompt.md`, and the docs publish `llms.txt` and `llms-full.txt` for coding assistants.
+```tsx
+// AnswerRoot.tsx: import contracts locally in the client boundary
+"use client";
+import { GenUIRoot } from "@comp0/genui/rsc/client";
+import { type ReactNode } from "react";
+import { ui } from "./ui.js";
+
+export function AnswerRoot({ children }: { children: ReactNode }) {
+  return <GenUIRoot vocabulary={ui}>{children}</GenUIRoot>;
+}
+```
+
+```tsx
+// Answer.tsx: the server passes only React children to the client wrapper
+import { GenUIView } from "@comp0/genui/rsc";
+import { AnswerRoot } from "./AnswerRoot.js";
+import { ui } from "./ui.js";
+
+<AnswerRoot>
+  <GenUIView vocabulary={ui} stream={streamFromYourProvider(ui.prompt(), message)} />
+</AnswerRoot>;
+```
+
+Custom client components read typed shared state. Async server components fetch their own data and refresh independently when a dependent value changes. Named holes let the model fill bounded places inside your layout. Later `Update` and `Append` turns revise identified components without remounting controls or discarding the person’s values; edit history is validated before the whole turn commits. Component schemas validate props and accessible names; model text never becomes executable JavaScript. The JSON browser renderer and MCP Apps transport remain available from the package root and `@comp0/genui/mcp`.
 
 `@comp0/react` also has the general-purpose pieces conversational interfaces need, useful with or without a model: `BusyRegion`, `Output`, `Comparison`, `Citation`, `Message`, `Composer`, `Suggestions`, `Reasoning`, `Feedback`, and `CopyButton`.
 

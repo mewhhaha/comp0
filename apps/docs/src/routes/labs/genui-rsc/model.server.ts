@@ -1,17 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { genuiPrompt } from "@comp0/genui/rsc";
+import { labState, labVocabulary } from "./contract.js";
 import { labTools } from "./lab-tools.js";
 
 /** What the lab tells the model it may compose with: the catalog, the lab's tools, and its views. */
-export const labPrompt = genuiPrompt({
-  preamble:
-    "You are the assistant in the comp0 GenUI lab. Answer each request with an interface composed from the components below, written as JSON.",
-  tools: labTools,
-  slots: {
-    shader:
-      'A live plasma shader. It reads the numbers bound as "speed" (0 to 4), "scale" (1 to 12), and "hue" (0 to 360), so sliders bound to those names drive it.',
-  },
-});
+export const labPrompt = [
+  "You are the assistant in the comp0 GenUI lab. Compose an interface using the following restricted JSX vocabulary.",
+  labVocabulary.prompt({ state: labState }),
+  "Action tools (call steps on Form or Button):",
+  ...Object.entries(labTools).map(([name, tool]) => `${name}: ${tool.description}`),
+].join("\n\n");
 
 /**
  * The lab's model key, from the Worker's environment: a secret in production, `.dev.vars` or
@@ -30,7 +27,7 @@ export async function* askClaude(request: string, client: Anthropic): AsyncGener
     max_tokens: 16000,
     output_config: { effort: "medium" },
     // A declined request continues on a fallback model in the same stream; a decline mid-answer
-    // passes the partial text on, so the JSON keeps growing instead of starting over.
+    // passes the partial text on, so the JSX keeps growing instead of starting over.
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     system: labPrompt,

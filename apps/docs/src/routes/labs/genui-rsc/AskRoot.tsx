@@ -1,9 +1,8 @@
 "use client";
 
-import { GenUIRoot } from "@comp0/genui/rsc/client";
 import { type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { ShaderCanvas } from "./ShaderCanvas.js";
+import { LabRoot } from "./LabRoot.js";
 
 export type AskRootProps = {
   /** The request the current answer responds to, passed on as context for a follow-up. */
@@ -18,14 +17,12 @@ export type AskRootProps = {
 export function AskRoot({ prompt, children }: AskRootProps) {
   const navigate = useNavigate();
   return (
-    <GenUIRoot
-      call="/labs/genui-rsc/tools"
-      slots={{ shader: <ShaderCanvas /> }}
+    <LabRoot
       onAction={(action) =>
         navigate(`?${new URLSearchParams({ prompt: action.message, after: prompt })}`)
       }
     >
       {children}
-    </GenUIRoot>
+    </LabRoot>
   );
 }

@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { axeViolations } from "./axe.js";
 
 const toolPath = "/labs/genui-rsc/tools";
+const componentPath = "/labs/genui-rsc/components";
 // The server replays five recorded responses for about 20 seconds; a loaded machine stretches it.
 const streamTimeout = 90_000;
 
@@ -21,12 +22,13 @@ function liveValue(page: Page, term: string) {
     .locator(`dt:text-is("${term}") + dd`);
 }
 
-test("genui lab: server-streamed views finish, Query calls the tool once per city, sliders drive the host shader locally, streamed tabs and sections work, a form action calls its tool, accessible, and fits phones", async ({
+test("genui lab: server-streamed views finish, city refreshes its server component, sliders drive the shader locally, tabs and sections work, form actions call tools, accessible, and fits phones", async ({
   page,
 }) => {
   test.setTimeout(240_000);
   const errors: string[] = [];
   const toolCalls: string[] = [];
+  const componentCalls: string[] = [];
   const requests: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
@@ -36,6 +38,9 @@ test("genui lab: server-streamed views finish, Query calls the tool once per cit
     requests.push(`${request.method()} ${request.url()}`);
     if (request.method() === "POST" && new URL(request.url()).pathname === toolPath) {
       toolCalls.push(request.postData() ?? "");
+    }
+    if (request.method() === "POST" && new URL(request.url()).pathname === componentPath) {
+      componentCalls.push(request.postData() ?? "");
     }
   });
 
@@ -63,11 +68,11 @@ test("genui lab: server-streamed views finish, Query calls the tool once per cit
   const table = forecast.getByRole("table", { name: "Daily high", exact: true });
   const oslo = await chartValues(table);
   await page.waitForLoadState("networkidle");
-  expect(toolCalls, "The forecast Query must call its tool exactly once").toEqual([
-    JSON.stringify({ name: "forecast", args: { city: "Oslo" } }),
-  ]);
+  expect(toolCalls, "Initial data renders directly on the server").toEqual([]);
+  expect(componentCalls, "The initial forecast needs no browser request").toEqual([]);
 
-  await test.step("choosing another city calls the tool once more", async () => {
+  await test.step("choosing another city refreshes its server component once", async () => {
+    requests.length = 0;
     const city = forecast.getByRole("button", { name: /^City\b/ });
     await expect(city).toHaveText("Oslo");
     await city.click();
@@ -76,7 +81,9 @@ test("genui lab: server-streamed views finish, Query calls the tool once per cit
     await expect(liveValue(page, "City"), "Host components read the shared store").toHaveText(
       "Tokyo",
     );
-    await expect.poll(() => toolCalls.length, "Changing the city must rerun the Query").toBe(2);
+    await expect
+      .poll(() => componentCalls.length, "Changing the city must refresh its server component")
+      .toBe(1);
     await expect
       .poll(
         () => table.locator("tbody td").allTextContents(),
@@ -85,10 +92,18 @@ test("genui lab: server-streamed views finish, Query calls the tool once per cit
       .not.toEqual(oslo);
     await chartValues(table);
     await page.waitForLoadState("networkidle");
-    expect(toolCalls[1], "The Query must ask for the chosen city").toBe(
-      JSON.stringify({ name: "forecast", args: { city: "Tokyo" } }),
+    expect(componentCalls[0], "The component must receive the chosen city").toBe(
+      JSON.stringify({ name: "Forecast", props: { city: "Tokyo" } }),
     );
-    expect(toolCalls, "One city change must make exactly one call").toHaveLength(2);
+    expect(componentCalls, "One city change must make exactly one call").toHaveLength(1);
+    expect(toolCalls, "Reads are component renders").toEqual([]);
+    expect(
+      requests.filter(
+        (request) =>
+          new URL(request.slice(request.indexOf(" ") + 1)).pathname === "/labs/genui-rsc",
+      ),
+      "The route must not reload",
+    ).toEqual([]);
   });
 
   await test.step("sliders drive the shader and live values without the network", async () => {
@@ -109,7 +124,8 @@ test("genui lab: server-streamed views finish, Query calls the tool once per cit
     await expect(liveValue(page, "Speed")).toHaveText("1.3");
     await expect(liveValue(page, "Hue")).toHaveText("195");
     expect(requests, "Moving a slider must stay on the client").toEqual([]);
-    expect(toolCalls, "Sliders must not call tools").toHaveLength(2);
+    expect(toolCalls, "Sliders must not call tools").toHaveLength(0);
+    expect(componentCalls, "Sliders must not refresh server components").toHaveLength(1);
   });
 
   await test.step("streamed tabs switch, and the form's action calls its tool", async () => {
@@ -146,7 +162,7 @@ test("genui lab: server-streamed views finish, Query calls the tool once per cit
     expect(toolCalls.at(-1)).toBe(
       JSON.stringify({ name: "subscribe", args: { email: "ada@example.com" } }),
     );
-    expect(toolCalls, "Each submit must make exactly one call").toHaveLength(4);
+    expect(toolCalls, "Each submit must make exactly one call").toHaveLength(2);
   });
 
   await test.step("streamed accordion sections open and close", async () => {

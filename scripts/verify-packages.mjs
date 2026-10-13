@@ -247,9 +247,17 @@ const genuiRsc = await import("@comp0/genui/rsc");
 if (
   typeof genuiRsc.GenUIView !== "function" ||
   typeof genuiRsc.runTool !== "function" ||
-  !genuiRsc.genuiPrompt({ slots: { map: "A map." } }).includes("#### Slot")
+  !genuiRsc.builtInVocabulary.prompt().includes("restricted JSX")
 ) {
   throw new Error("Packed @comp0/genui/rsc exports are not executable.");
+}
+const vocabulary = await import("@comp0/genui/vocabulary");
+const textUI = vocabulary.layout.only("Text");
+if (!textUI.prompt().includes("restricted JSX") || textUI.validate("<Text>Hello</Text>").errors.length) {
+  throw new Error("Packed compositional vocabulary must parse and validate JSX.");
+}
+if (typeof genuiRsc.serverComponent !== "function" || typeof genuiRsc.holes !== "function") {
+  throw new Error("Packed RSC composition exports are missing.");
 }
 const genuiMcp = await import("@comp0/genui/mcp");
 if (
@@ -309,8 +317,10 @@ writeFileSync(
 import {Label, Link as Comp0Link, Select, SelectPopover, SelectOption, SelectTrigger, SelectValue} from "@comp0/react";
 import {Link as RouterLink} from "react-router";
 import {GenUI, catalog, describeFormValues, formatErrors, genuiPrompt, responseJsonSchema, type CatalogEntry, type GenUIAction} from "@comp0/genui";
-import {GenUIRoot, GenUIView, catalogSpecs, defineTool, handleToolRequest} from "@comp0/genui/rsc";
+import {GenUIRoot, GenUIView, builtInVocabulary, defineTool, handleToolRequest} from "@comp0/genui/rsc";
 import {useGenUIValue} from "@comp0/genui/rsc/client";
+import {spec, vocabulary, state, layout, forms, oneOf} from "@comp0/genui/vocabulary";
+import {serverComponent, holes, hole} from "@comp0/genui/rsc";
 import {McpAppGenUI, createMcpAppBridge, genuiAppTool, type McpAppBridge} from "@comp0/genui/mcp";
 
 const entries: readonly CatalogEntry[] = catalog;
@@ -324,7 +334,19 @@ export function Assistant({ response, streaming }: { response: string; streaming
 
 const tools = { echo: defineTool({ description: "Echoes.", input: { "~standard": { version: 1, vendor: "test", validate: (value: unknown) => ({ value }), jsonSchema: { input: () => ({}), output: () => ({}) } } }, run: (input) => input }) };
 export const toolRoute = (request: Request) => handleToolRequest(tools, request);
-export const specCount: number = catalogSpecs.length;
+export const specCount: number = builtInVocabulary.specs.length;
+const citySchema = oneOf(["Oslo", "Tokyo"]);
+const tripState = state({city: citySchema}, {city: "Oslo"});
+const MapSpec = spec("TripMap", {description: "A map.", props: {city: citySchema}});
+const TripMap = MapSpec.implement(({city}) => <p>{city}</p>);
+const Forecast = serverComponent("Forecast", {description: "Forecast.", props: {city: citySchema}, render: async ({city}) => <p>{city}</p>});
+const tripUI = vocabulary(layout, forms, TripMap, Forecast.spec);
+export const tripPrompt = tripUI.prompt({state: tripState});
+export const page = holes({summary: hole(layout.only("Text"), "Summarize.", {max: 2})});
+export function TypedReader() {
+  const city: "Oslo" | "Tokyo" = useGenUIValue(tripState, "city");
+  return <output>{city}</output>;
+}
 
 export function Streamed({ stream }: { stream: AsyncIterable<string> }) {
   return <GenUIRoot call="/api/tools"><GenUIView stream={stream} /></GenUIRoot>;

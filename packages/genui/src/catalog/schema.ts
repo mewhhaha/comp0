@@ -3,6 +3,7 @@ import { type JsonValue } from "../json/parse.js";
 import { safeHref, safeImageSrc } from "../safe.js";
 import {
   type InferInput,
+  type InferOutput,
   type StandardIssue,
   type StandardJSONSchemaOptions,
   type StandardJSONSchemaV1,
@@ -42,6 +43,19 @@ export type InputOf<TSchema> = TSchema extends StandardSchemaV1
         >;
       } & {
         [TKey in OptionalKeys<TSchema> as KeyName<TKey>]?: InputOf<TSchema[TKey]> | null;
+      }
+    : never;
+
+/** The validated value delivered to a component, after schema transforms. */
+export type OutputOf<TSchema> = TSchema extends StandardSchemaV1
+  ? InferOutput<TSchema>
+  : TSchema extends PropShape
+    ? {
+        [TKey in Exclude<keyof TSchema, OptionalKeys<TSchema>> as KeyName<TKey>]: OutputOf<
+          TSchema[TKey]
+        >;
+      } & {
+        [TKey in OptionalKeys<TSchema> as KeyName<TKey>]?: OutputOf<TSchema[TKey]> | null;
       }
     : never;
 

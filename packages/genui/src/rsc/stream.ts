@@ -1,4 +1,4 @@
-import { parsePartialJson, type JsonValue, type PartialParse } from "../json/parse.js";
+import { maxJsxLength, parsePartialJsx, type JsxNode, type JsxParse } from "../jsx/parse.js";
 
 function signal() {
   let resolve = () => {};
@@ -15,7 +15,7 @@ function signal() {
  */
 class StreamedResponse {
   #text = "";
-  #parsed: PartialParse = parsePartialJson("");
+  #parsed: JsxParse = parsePartialJsx("");
   #done = false;
   #version = 0;
   #changed = signal();
@@ -25,16 +25,25 @@ class StreamedResponse {
   }
 
   async #read(chunks: AsyncIterable<string>) {
+    let failed = false;
     try {
       for await (const chunk of chunks) {
-        this.#text += chunk;
-        this.#parsed = parsePartialJson(this.#text);
+        this.#text += chunk.slice(0, maxJsxLength + 1 - this.#text.length);
+        this.#parsed = parsePartialJsx(this.#text);
         this.#notify();
+        if (this.#text.length > maxJsxLength) break;
       }
     } catch {
       // A broken stream ends the response; what arrived still renders.
+      failed = true;
     } finally {
-      this.#parsed = parsePartialJson(this.#text, { final: true });
+      this.#parsed = parsePartialJsx(this.#text, { final: true });
+      if (failed)
+        this.#parsed.errors.push({
+          path: "",
+          code: "truncated",
+          message: "The response stream ended unexpectedly.",
+        });
       this.#done = true;
       this.#notify();
     }
@@ -48,8 +57,13 @@ class StreamedResponse {
   }
 
   /** The response parsed so far. */
-  get parsed(): PartialParse {
+  get parsed(): JsxParse {
     return this.#parsed;
+  }
+
+  /** Bounded source text, retained for validating a complete edit turn. */
+  get source(): string {
+    return this.#text;
   }
 
   /** Whether the model has finished writing. */
@@ -62,23 +76,19 @@ class StreamedResponse {
     return this.#version;
   }
 
-  /** The value at a JSON Pointer, as written so far. */
-  valueAt(pointer: string): JsonValue | undefined {
-    let value: JsonValue | undefined = this.#parsed.value;
-    if (pointer === "") return value;
-    for (const raw of pointer.slice(1).split("/")) {
-      const key = raw.replaceAll("~1", "/").replaceAll("~0", "~");
-      if (Array.isArray(value)) value = value[Number(key)];
-      else if (typeof value === "object" && value !== null && Object.hasOwn(value, key)) {
-        value = value[key];
-      } else return undefined;
-    }
-    return value;
-  }
-
-  /** Whether the value at a pointer may still grow. */
-  isOpen(pointer: string): boolean {
-    return !this.#done && this.#parsed.open.has(pointer);
+  /** A node at its stable tree path. */
+  nodeAt(key: string): JsxNode | undefined {
+    const find = (nodes: JsxNode[]): JsxNode | undefined => {
+      for (const node of nodes) {
+        if (node.key === key) return node;
+        if (node.kind === "element") {
+          const found = find(node.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    return find(this.#parsed.nodes);
   }
 
   /** Resolves once `ready()` holds or the response is finished. */
@@ -88,9 +98,32 @@ class StreamedResponse {
 }
 
 /** A model response that server components can wait on while it streams. */
-export type ResponseStream = StreamedResponse;
+export type ResponseStream = Pick<
+  StreamedResponse,
+  "source" | "parsed" | "done" | "version" | "nodeAt" | "until"
+>;
 
 /** Starts reading a model response; the returned stream fills in as chunks arrive. */
 export function readResponse(chunks: AsyncIterable<string>): ResponseStream {
   return new StreamedResponse(chunks);
+}
+
+/** An already validated append keeps its original paths and ancestry without reparsing JSX. */
+export function completedResponse(nodes: JsxNode[]): ResponseStream {
+  const byKey = new Map<string, JsxNode>();
+  function visit(children: JsxNode[]) {
+    for (const node of children) {
+      byKey.set(node.key, node);
+      if (node.kind === "element") visit(node.children);
+    }
+  }
+  visit(nodes);
+  return {
+    source: "",
+    parsed: { nodes, errors: [], complete: true },
+    done: true,
+    version: 0,
+    nodeAt: (key) => byKey.get(key),
+    until: async () => {},
+  };
 }

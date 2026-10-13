@@ -1,7 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { readResponse, validateResponse } from "@comp0/genui/rsc";
+import { readResponse } from "@comp0/genui/rsc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { askClaude, labApiKey, labPrompt } from "./model.server.js";
+import { labState, labVocabulary } from "./contract.js";
+import { dashboard, explainer } from "./responses.js";
+import { forecastExplorer } from "./forecast-explorer.js";
+import { shaderExplorer } from "./shader-explorer.js";
+import { releaseNotes } from "./release-notes.js";
 
 /** A Messages API stream as the server sends it, split into the given text deltas. */
 function eventStream(deltas: readonly string[]): string {
@@ -71,7 +76,7 @@ describe("askClaude", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("streams the text deltas as a GenUI response", async () => {
-    const deltas = ['{"type":"Stack","chil', 'dren":[{"type":"Text","text":"Hel', 'lo"}]}'];
+    const deltas = ["<Stack><Text>Hel", "lo", "</Text></Stack>"];
     const { client } = fakeClaude(
       () => new Response(eventStream(deltas), { headers: { "content-type": "text/event-stream" } }),
     );
@@ -79,13 +84,13 @@ describe("askClaude", () => {
     const chunks = await collect(askClaude("Say hello", client));
 
     expect(chunks).toEqual(deltas);
-    const validated = validateResponse(chunks.join(""));
+    const validated = labVocabulary.validate(chunks.join(""), { state: labState });
     expect(validated.errors).toEqual([]);
-    expect(validated.root?.entry.name).toBe("Stack");
+    expect(validated.nodes[0]).toMatchObject({ name: "Stack" });
   });
 
   it("feeds a view on the server as it arrives", async () => {
-    const deltas = ['{"type":"Stack","children":[{"type":"Text","text":"Hi"}]}'];
+    const deltas = ["<Stack><Text>Hi</Text></Stack>"];
     const { client } = fakeClaude(
       () => new Response(eventStream(deltas), { headers: { "content-type": "text/event-stream" } }),
     );
@@ -93,15 +98,18 @@ describe("askClaude", () => {
     const response = readResponse(askClaude("Say hi", client));
     await response.until(() => false);
 
-    expect(response.parsed.value).toEqual({
-      type: "Stack",
-      children: [{ type: "Text", text: "Hi" }],
+    expect(response.parsed.nodes[0]).toMatchObject({
+      name: "Stack",
+      children: [{ name: "Text", children: [{ kind: "text", text: "Hi" }] }],
     });
   });
 
   it("asks Claude with the lab's prompt, tools, and a fallback for declined requests", async () => {
     const { client, sent } = fakeClaude(
-      () => new Response(eventStream(["{}"]), { headers: { "content-type": "text/event-stream" } }),
+      () =>
+        new Response(eventStream(["<Text>Hi</Text>"]), {
+          headers: { "content-type": "text/event-stream" },
+        }),
     );
 
     await collect(askClaude("Compare Oslo and Lisbon", client));
@@ -119,8 +127,10 @@ describe("askClaude", () => {
       system: labPrompt,
       messages: [{ role: "user", content: "Compare Oslo and Lisbon" }],
     });
-    expect(labPrompt).toContain("forecast");
-    expect(labPrompt).toContain("shader");
+    expect(labPrompt).toContain("Forecast");
+    expect(labPrompt).toContain("Shader");
+    expect(labPrompt).toContain("restricted JSX");
+    expect(labPrompt).toContain("subscribe");
   });
 
   it("ends the response and logs the reason when the API refuses the key", async () => {
@@ -135,6 +145,17 @@ describe("askClaude", () => {
     await expect(collect(askClaude("Hello", client))).resolves.toEqual([]);
     expect(log).toHaveBeenCalledWith("GenUI lab: ANTHROPIC_API_KEY was rejected");
   });
+});
+
+describe("recorded lab responses", () => {
+  it.each([shaderExplorer, forecastExplorer, dashboard, releaseNotes, explainer])(
+    "validates a recorded JSX response",
+    (source) => {
+      const validated = labVocabulary.validate(source, { state: labState });
+      expect(validated.errors).toEqual([]);
+      expect(validated.nodes).toHaveLength(1);
+    },
+  );
 });
 
 describe("labApiKey", () => {

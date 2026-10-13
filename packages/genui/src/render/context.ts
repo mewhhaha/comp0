@@ -19,6 +19,8 @@ export type GenUIAction = {
 
 export type GenUIContextValue = {
   store: GenUIStore;
+  /** A view-local namespace for unbound fields; explicit bindings bypass it. */
+  fieldPrefix?: string;
   /** Whether the response is still arriving; actions wait until it is complete. */
   streaming: boolean;
   /** The binding names the response declares, with the first initial value written for each. */

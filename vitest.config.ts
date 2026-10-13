@@ -7,6 +7,10 @@ const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 // Exact matches, so a package's subpath entries resolve to their own source files.
 const aliases = [
+  {
+    find: /^@comp0\/genui\/vocabulary$/,
+    replacement: source("./packages/genui/src/composition/index.ts"),
+  },
   { find: /^@comp0\/core$/, replacement: source("./packages/core/src/index.ts") },
   { find: /^@comp0\/react$/, replacement: source("./packages/react/src/index.ts") },
   { find: /^@comp0\/genui$/, replacement: source("./packages/genui/src/index.ts") },

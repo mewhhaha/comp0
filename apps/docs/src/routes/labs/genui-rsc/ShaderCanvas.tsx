@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useGenUIValue } from "@comp0/genui/rsc/client";
+import { labState } from "./contract.js";
 
 const vertexSource = `
 attribute vec2 position;
@@ -31,16 +32,12 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
   return shader;
 }
 
-function numberOr(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-/** A host view the model can place with `{ "type": "Slot", "name": "shader" }`. */
+/** A host component the model can place with `<Shader />`. */
 export function ShaderCanvas() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const speed = numberOr(useGenUIValue("speed"), 1);
-  const scale = numberOr(useGenUIValue("scale"), 4);
-  const hue = numberOr(useGenUIValue("hue"), 200);
+  const speed = useGenUIValue(labState, "speed");
+  const scale = useGenUIValue(labState, "scale");
+  const hue = useGenUIValue(labState, "hue");
   // The draw loop reads the latest values without restarting WebGL on every change.
   const uniforms = useRef({ speed, scale, hue });
   useEffect(() => {

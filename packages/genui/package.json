@@ -1,7 +1,7 @@
 {
   "name": "@comp0/genui",
   "version": "0.1.0-next.25",
-  "description": "Generative UI for comp0: a JSON format models write, a streaming-tolerant parser, validator, store, expression evaluator, and an accessible renderer built on @comp0/react.",
+  "description": "Composable generative UI: typed vocabularies, declarative JSX streaming, React Server Components, and structured MCP responses.",
   "keywords": [
     "accessibility",
     "generative-ui",
@@ -47,7 +47,11 @@
       "default": "./dist/mcp/index.js"
     },
     "./genui.prompt.md": "./genui.prompt.md",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./vocabulary": {
+      "types": "./dist/composition/index.d.ts",
+      "default": "./dist/composition/index.js"
+    }
   },
   "publishConfig": {
     "access": "public"
