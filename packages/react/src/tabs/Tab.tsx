@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react";
+import { useEffect, useLayoutEffect, type ComponentProps } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { disabledProps } from "../internal/disabled.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -25,6 +25,13 @@ export function Tab({ as, value, disabled, onClick, ref, ...props }: TabProps) {
       element,
     });
   });
+  // A tab can change its own disabled state without Tabs re-rendering, so re-sync its stop.
+  useLayoutEffect(() => {
+    tabs.syncTabStops();
+  });
+  // Unmounting can happen without any re-render above the tab. Passive cleanup runs after the
+  // ref detach has unregistered the tab, so the stop moves to a remaining tab.
+  useEffect(() => () => tabs.syncTabStops(), [tabs]);
 
   const disabledAttributes = disabledProps<HTMLButtonElement>(resolvedDisabled, {
     native: isNativeButton,

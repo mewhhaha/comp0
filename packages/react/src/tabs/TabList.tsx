@@ -1,11 +1,5 @@
-import {
-  useLayoutEffect,
-  useRef,
-  type ComponentProps,
-  type FocusEvent,
-  type KeyboardEvent,
-} from "react";
-import { useCollectionNavigation, useComposedRefs } from "@comp0/core";
+import { type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
+import { useCollectionNavigation } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { writingDirection } from "../internal/writing-direction.js";
 import { useTabsContext } from "./tabs-shared.js";
@@ -18,6 +12,7 @@ export type TabListProps = ComponentProps<"div"> &
 export function TabList({
   as,
   orientation = "horizontal",
+  onBlur,
   onFocus,
   onKeyDown,
   ref,
@@ -26,33 +21,27 @@ export function TabList({
   const tabs = useTabsContext("TabList");
   const { collection } = tabs;
   const navigate = useCollectionNavigation();
-  const tabListRef = useRef<HTMLElement | null>(null);
-  const listRef = useComposedRefs(ref, tabListRef);
-  const hasEnabledSelectedTab = () => {
-    const selected = collection.get(tabs.selectedKey);
-    return Boolean(selected?.element && !selected.disabled);
-  };
-  useLayoutEffect(() => {
-    const element = tabListRef.current;
-    if (!element) return;
-    if (hasEnabledSelectedTab()) element.removeAttribute("tabindex");
-    else element.tabIndex = 0;
-  });
 
   const Part = partElement(as, "div");
   return (
     <Part
       {...props}
-      ref={listRef}
+      ref={ref}
       role="tablist"
       aria-orientation={orientation}
       data-orientation={orientation}
-      tabIndex={0}
       onFocus={(event: FocusEvent<HTMLElement>) => {
         onFocus?.(event as FocusEvent<HTMLDivElement>);
-        if (event.defaultPrevented || hasEnabledSelectedTab()) return;
-        if (event.target !== event.currentTarget) return;
-        collection.enabledItems()[0]?.element?.focus();
+        if (event.defaultPrevented) return;
+        tabs.syncTabStops();
+      }}
+      onBlur={(event: FocusEvent<HTMLElement>) => {
+        onBlur?.(event as FocusEvent<HTMLDivElement>);
+        if (event.defaultPrevented) return;
+        // Focus moving to another tab in the list keeps the stop on that tab; leaving the list
+        // hands the stop back to the selected tab, so re-entry lands there.
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+        tabs.syncTabStops();
       }}
       onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
         onKeyDown?.(event as KeyboardEvent<HTMLDivElement>);

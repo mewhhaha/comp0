@@ -7,6 +7,8 @@ export type TabsContextValue = {
   setSelectedKey: (key: string) => void;
   /** The document-order registry every Tab joins. */
   collection: Collection;
+  /** Re-applies the single tab stop. */
+  syncTabStops: () => void;
 };
 
 export const [TabsContext, useTabsContext] = createRequiredContext<TabsContextValue>("Tabs");
