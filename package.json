@@ -16,6 +16,7 @@
     "test": "vitest run --project unit",
     "test:all": "vitest run",
     "test:browser": "vitest run --project browser",
+    "bench": "vitest run -c vitest.bench.config.ts",
     "test:e2e": "playwright test",
     "test:package": "node scripts/verify-packages.mjs",
     "test:compiler-conformance": "node scripts/compare-react-compilers.mjs",

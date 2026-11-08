@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, type TestProjectInlineConfiguration } from "vitest/config";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
@@ -21,6 +21,38 @@ const aliases = [
     replacement: source("./packages/genui/src/rsc/client.tsx"),
   },
 ];
+
+// Shared with vitest.bench.config.ts, which runs benchmarks in the same browser setup.
+export const browserProject = {
+  // Compiled modules import react/compiler-runtime; declare it so a cold
+  // cache does not discover it mid-run, re-optimize, and load a second
+  // React copy into the browser.
+  optimizeDeps: {
+    include: [
+      "react",
+      "react/jsx-runtime",
+      "react/compiler-runtime",
+      "axe-core",
+      "react-dom",
+      "react-dom/client",
+    ],
+  },
+  test: {
+    browser: {
+      enabled: true,
+      headless: true,
+      instances: [{ browser: "chromium" }],
+      provider: playwright(),
+    },
+    include: [
+      "packages/react/src/**/*.browser.test.tsx",
+      "packages/genui/src/**/*.browser.test.tsx",
+      "apps/docs/src/**/*.browser.test.tsx",
+    ],
+    name: "browser",
+    setupFiles: ["./vitest.browser.setup.ts"],
+  },
+} satisfies TestProjectInlineConfiguration;
 
 export default defineConfig({
   plugins: [
@@ -52,36 +84,7 @@ export default defineConfig({
           setupFiles: ["./vitest.setup.ts"],
         },
       },
-      {
-        // Compiled modules import react/compiler-runtime; declare it so a cold
-        // cache does not discover it mid-run, re-optimize, and load a second
-        // React copy into the browser.
-        optimizeDeps: {
-          include: [
-            "react",
-            "react/jsx-runtime",
-            "react/compiler-runtime",
-            "axe-core",
-            "react-dom",
-            "react-dom/client",
-          ],
-        },
-        test: {
-          browser: {
-            enabled: true,
-            headless: true,
-            instances: [{ browser: "chromium" }],
-            provider: playwright(),
-          },
-          include: [
-            "packages/react/src/**/*.browser.test.tsx",
-            "packages/genui/src/**/*.browser.test.tsx",
-            "apps/docs/src/**/*.browser.test.tsx",
-          ],
-          name: "browser",
-          setupFiles: ["./vitest.browser.setup.ts"],
-        },
-      },
+      browserProject,
     ],
   },
 });

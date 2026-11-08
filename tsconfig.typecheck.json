@@ -17,6 +17,7 @@
     "packages/react/src/**/*.ts",
     "packages/react/src/**/*.tsx",
     "packages/react/test/**/*.tsx",
+    "packages/react/bench/**/*.tsx",
     "packages/genui/src/**/*.ts",
     "packages/genui/src/**/*.tsx",
     "packages/genui/test/**/*.ts",
@@ -29,6 +30,7 @@
     "playwright.config.ts",
     "apps/docs/vite.config.ts",
     "vitest.config.ts",
+    "vitest.bench.config.ts",
     "vitest.browser.setup.ts",
     "vitest.setup.ts"
   ]
