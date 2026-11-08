@@ -16,16 +16,24 @@ export function Tab({ as, value, disabled, onClick, ref, ...props }: TabProps) {
   const isNativeButton = as === undefined || as === "button";
   const selected = tabs.selectedKey === value;
   const { tabId, panelId } = tabPairIds(tabs.baseId, value);
+  // Read the stable registry outside the ref callback: depending on the whole context would
+  // re-register every tab whenever the stop moves, and each registration notifies Tabs.
+  const { collection } = tabs;
   const tabRef = useComposedRefs(ref, (element: HTMLButtonElement | null) => {
-    tabs.collection.register({
+    if (!element) return;
+    collection.register({
       key: value,
       id: tabId,
-      textValue: element?.textContent?.trim() || value,
+      textValue: element.textContent?.trim() || value,
       disabled: resolvedDisabled,
       element,
     });
+    // Guarded by element: when React reuses this element for another value, the stale cleanup
+    // must not remove the registration a sibling just made under this key.
+    return () => {
+      collection.unregister(value, element);
+    };
   });
-
   const disabledAttributes = disabledProps<HTMLButtonElement>(resolvedDisabled, {
     native: isNativeButton,
     onClick(event) {
@@ -43,7 +51,7 @@ export function Tab({ as, value, disabled, onClick, ref, ...props }: TabProps) {
       id={tabId}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       role="tab"
-      tabIndex={selected && !resolvedDisabled ? 0 : -1}
+      tabIndex={tabs.tabStopKey === value && !resolvedDisabled ? 0 : -1}
       aria-selected={selected}
       aria-controls={panelId}
       data-selected={dataAttr(selected)}

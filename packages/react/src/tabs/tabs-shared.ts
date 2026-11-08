@@ -7,6 +7,10 @@ export type TabsContextValue = {
   setSelectedKey: (key: string) => void;
   /** The document-order registry every Tab joins. */
   collection: Collection;
+  /** The one tab rendered with tabIndex 0. */
+  tabStopKey: string;
+  /** Records the tab holding focus inside the list, or "" once focus leaves it. */
+  setFocusedKey: (key: string) => void;
 };
 
 export const [TabsContext, useTabsContext] = createRequiredContext<TabsContextValue>("Tabs");
