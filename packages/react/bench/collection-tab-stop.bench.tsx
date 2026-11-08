@@ -1,0 +1,144 @@
+import { type ReactNode } from "react";
+import { describe, expect, it } from "vitest";
+import {
+  GridList,
+  GridListItem,
+  ListBox,
+  ListBoxOption,
+  Menu,
+  Menubar,
+  MenuTrigger,
+} from "../src/index.js";
+import { keyDown, median, mountMeasured, report, type Row, type Sample } from "./measure.js";
+
+// The roving tab stop of every collection that renders its own items, measured through the
+// public API only: check out another commit and run `pnpm bench` again to compare.
+
+const SIZES = [10, 100, 1000];
+const REPEATS = 5;
+const PRESSES = 10;
+
+type Family = {
+  name: string;
+  /** Selector for the items that share the one tab stop. */
+  item: string;
+  /** The key that moves the stop to the next item. */
+  next: string;
+  /** Whether that key wraps from the last item to the first. */
+  loop: boolean;
+  ui: (size: number, value: string | undefined) => ReactNode;
+};
+
+const values = (size: number) => Array.from({ length: size }, (_, index) => `item-${index}`);
+
+const families: Family[] = [
+  {
+    name: "Menubar",
+    item: "[role='menuitem']",
+    next: "ArrowRight",
+    loop: true,
+    ui: (size) => (
+      <Menubar aria-label="Bench">
+        {values(size).map((value) => (
+          <Menu key={value}>
+            <MenuTrigger>{value}</MenuTrigger>
+          </Menu>
+        ))}
+      </Menubar>
+    ),
+  },
+  {
+    name: "ListBox",
+    item: "[role='option']",
+    next: "ArrowDown",
+    loop: true,
+    ui: (size, value) => (
+      <ListBox aria-label="Bench" defaultValue={value}>
+        {values(size).map((item) => (
+          <ListBoxOption key={item} value={item}>
+            {item}
+          </ListBoxOption>
+        ))}
+      </ListBox>
+    ),
+  },
+  {
+    name: "GridList",
+    item: "[role='row']",
+    next: "ArrowDown",
+    loop: false,
+    ui: (size, value) => (
+      <GridList aria-label="Bench" defaultValue={value}>
+        {values(size).map((item) => (
+          <GridListItem key={item} value={item}>
+            {item}
+          </GridListItem>
+        ))}
+      </GridList>
+    ),
+  },
+];
+
+function expectOneStop(container: HTMLElement, family: Family) {
+  const stops = [...container.querySelectorAll<HTMLElement>(family.item)].filter(
+    (element) => element.tabIndex === 0,
+  );
+  expect(stops).toHaveLength(1);
+}
+
+function mountSample(family: Family, size: number, value: string | undefined) {
+  const view = mountMeasured();
+  const sample = view.render(family.ui(size, value));
+  expectOneStop(view.container, family);
+  view.unmount();
+  return sample;
+}
+
+/** Cost per arrow press from the first item, averaged over PRESSES presses. */
+function arrowSample(family: Family, size: number) {
+  const view = mountMeasured();
+  view.render(family.ui(size, "item-0"));
+  const first = view.container.querySelector<HTMLElement>(family.item)!;
+  view.measure(() => first.focus());
+  const total: Sample = { commits: 0, renderMs: 0, wallMs: 0 };
+  for (let press = 0; press < PRESSES; press += 1) {
+    const sample = view.measure(() => keyDown(document.activeElement!, family.next));
+    total.commits += sample.commits;
+    total.renderMs += sample.renderMs;
+    total.wallMs += sample.wallMs;
+  }
+  const landed = family.loop ? PRESSES % size : Math.min(PRESSES, size - 1);
+  expect(document.activeElement?.textContent).toBe(`item-${landed}`);
+  expectOneStop(view.container, family);
+  view.unmount();
+  return {
+    commits: total.commits / PRESSES,
+    renderMs: total.renderMs / PRESSES,
+    wallMs: total.wallMs / PRESSES,
+  };
+}
+
+const scenarios: Array<{ name: string; run: (family: Family, size: number) => Sample }> = [
+  {
+    name: "mount, first item selected",
+    run: (family, size) => mountSample(family, size, "item-0"),
+  },
+  { name: "mount, no item selected", run: (family, size) => mountSample(family, size, undefined) },
+  { name: "arrow to next item", run: arrowSample },
+];
+
+describe("collection roving tab stop", () => {
+  for (const family of families) {
+    it(`measures ${family.name} mount and keyboard movement`, () => {
+      const rows: Row[] = [];
+      for (const scenario of scenarios) {
+        for (const size of SIZES) {
+          scenario.run(family, size); // warm up the JIT for this shape
+          const samples = Array.from({ length: REPEATS }, () => scenario.run(family, size));
+          rows.push({ scenario: scenario.name, size, ...median(samples) });
+        }
+      }
+      report(`${family.name} roving tab stop (median per mount, mean per key press)`, rows);
+    }, 600_000);
+  }
+});

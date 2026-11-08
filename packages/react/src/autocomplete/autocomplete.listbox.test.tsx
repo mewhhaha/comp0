@@ -183,6 +183,51 @@ describe("Autocomplete with a ListBox", () => {
     expect(document.activeElement).toBe(input);
   });
 
+  it("keeps every option out of the tab order under virtual focus", async () => {
+    const { container, user, unmount } = setup(
+      <Autocomplete>
+        <SearchField>
+          <SearchFieldInput aria-label="Framework" />
+        </SearchField>
+        <ListBox aria-label="Frameworks" defaultValue="react">
+          <ListBoxOption id="react-option" value="react">
+            React
+          </ListBoxOption>
+          <ListBoxOption id="vue-option" value="vue">
+            Vue
+          </ListBoxOption>
+        </ListBox>
+      </Autocomplete>,
+    );
+    const input = container.querySelector<HTMLInputElement>("input")!;
+    const options = container.querySelectorAll<HTMLElement>("[role='option']");
+
+    expect([...options].map((option) => option.tabIndex)).toEqual([-1, -1]);
+    await user.type(input, "r");
+    expect(input.getAttribute("aria-activedescendant")).toBe("react-option");
+    expect(container.querySelector("#react-option")!.hasAttribute("data-active")).toBe(true);
+    expect(container.querySelector("#vue-option")!.hasAttribute("data-active")).toBe(false);
+    expect([...options].map((option) => option.tabIndex)).toEqual([-1, -1]);
+    unmount();
+  });
+
+  it("keeps a ListBox with disableVirtualFocus as a standalone tab stop", () => {
+    const { container, unmount } = setup(
+      <Autocomplete disableVirtualFocus>
+        <SearchField>
+          <SearchFieldInput aria-label="Framework" />
+        </SearchField>
+        <ListBox aria-label="Frameworks" defaultValue="vue">
+          <ListBoxOption value="react">React</ListBoxOption>
+          <ListBoxOption value="vue">Vue</ListBoxOption>
+        </ListBox>
+      </Autocomplete>,
+    );
+    const options = container.querySelectorAll<HTMLElement>("[role='option']");
+    expect([...options].map((option) => option.tabIndex)).toEqual([-1, 0]);
+    unmount();
+  });
+
   it("leaves Home and End to the text input while clearing virtual focus", async () => {
     const { container, user } = setup(
       <Autocomplete>

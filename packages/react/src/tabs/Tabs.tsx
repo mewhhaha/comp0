@@ -1,6 +1,7 @@
-import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
-import { type Collection, useCollection, useControllableState } from "@comp0/core";
+import { useId, useState, type ReactNode } from "react";
+import { useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
+import { useTabStop } from "../internal/tab-stop.js";
 import { TabsContext } from "./tabs-shared.js";
 
 export type TabsProps = RootProps<{
@@ -24,11 +25,7 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
   const [focusedKey, setFocusedKey] = useState("");
   // Registration, unregistration, and a tab's own disabled change all notify the collection,
   // so the stop follows them without Tabs re-rendering first.
-  const tabStopKey = useSyncExternalStore(
-    collection.subscribe,
-    () => resolveTabStop(collection, focusedKey, selected),
-    () => selected,
-  );
+  const tabStopKey = useTabStop(collection, focusedKey, selected);
 
   const Root = rootElement(as);
   return (
@@ -47,21 +44,4 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
       </Root>
     </TabsContext>
   );
-}
-
-/**
- * The one tab in the sequence: the focused tab, else the selected tab, else the first enabled
- * tab. Before any tab registers it is the selected key, matching the server render.
- *
- * Runs on every Tabs render and every registry change, so the common case is two O(1) lookups;
- * only the fallback reads document order.
- */
-function resolveTabStop(collection: Collection, focusedKey: string, selectedKey: string) {
-  for (const key of [focusedKey, selectedKey]) {
-    const tab = collection.get(key);
-    if (tab && !tab.disabled) return key;
-  }
-  const items = collection.items();
-  if (items.length === 0) return selectedKey;
-  return items.find((tab) => !tab.disabled)?.key ?? "";
 }

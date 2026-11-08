@@ -1,9 +1,8 @@
 import {
-  useEffect,
   useLayoutEffect,
   useRef,
-  useState,
   type ComponentProps,
+  type FocusEvent,
   type KeyboardEvent,
 } from "react";
 import {
@@ -11,13 +10,13 @@ import {
   useCollection,
   useCollectionNavigation,
   useControllableState,
-  type CollectionItem,
 } from "@comp0/core";
 import { type ListBoxContextValue } from "./list-box-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
 import { useMentionFieldListBoxContext } from "../mention-field/mention-field-shared.js";
 import { useRenderedId } from "../internal/rendered-id.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import { writingDirection } from "../internal/writing-direction.js";
 import { ListBoxContext } from "./list-box-shared.js";
 
@@ -35,6 +34,7 @@ export function ListBox({
   defaultValue,
   onChange,
   orientation = "vertical",
+  onFocus,
   onKeyDown,
   children,
   ref,
@@ -57,64 +57,24 @@ export function ListBox({
   const listRef = useRef<HTMLDivElement | null>(null);
   const composedRef = useComposedRefs(ref, listRef);
   const collection = useCollection();
-  const [activeKey, setActiveKey] = useState(selected);
-  const activeKeyRef = useRef(activeKey);
-  const selectedRef = useRef(selected);
-
-  const syncOptionTabStops = (key: string) => {
-    const virtualFocus = autocomplete !== null && !autocomplete.disableVirtualFocus;
-    for (const item of collection.items()) {
-      if (!item.element || item.disabled) continue;
-      item.element.tabIndex = !virtualFocus && item.key === key ? 0 : -1;
-    }
-  };
-
-  useEffect(() => {
-    selectedRef.current = selected;
-    if (selected) {
-      activeKeyRef.current = selected;
-      setActiveKey(selected);
-    }
-  }, [selected]);
-
-  useEffect(() => {
-    activeKeyRef.current = activeKey;
-  }, [activeKey]);
-
-  const register = (item: CollectionItem) => {
-    const { key, disabled } = item;
-    collection.register(item);
-    if (!item.element) {
-      if (activeKeyRef.current === key) {
-        const fallback = collection.enabledItems()[0]?.key ?? "";
-        activeKeyRef.current = fallback;
-        syncOptionTabStops(fallback);
-        setActiveKey(fallback);
-      }
-      return;
-    }
-
-    if (selectedRef.current === key && !disabled) {
-      activeKeyRef.current = key;
-      syncOptionTabStops(key);
-      setActiveKey(key);
-      return;
-    }
-    const activeItem = collection.get(activeKeyRef.current);
-    if ((!activeItem || activeItem.disabled) && !disabled) {
-      activeKeyRef.current = key;
-      syncOptionTabStops(key);
-      setActiveKey(key);
-    }
+  // The option that last held focus or was chosen, recorded under the selection current at the
+  // time: any change of selection drops it (clearing to "" keeps it), so a value that returns
+  // later cannot revive a stale record. The stop lives outside React state, so a focus move
+  // re-renders only the two options whose tabIndex changes (bench:
+  // collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  const selection = useTabStopSelection(selected);
+  const tabStops = useTabStopStore(collection);
+  const setFocusedKey = (key: string) => {
+    tabStops.focus(key, selection);
   };
 
   const context: ListBoxContextValue = {
-    activeKey,
+    tabStops,
+    selection,
     selectedKey: selected,
-    setActiveKey,
+    setFocusedKey,
     setSelectedKey: setSelected,
-    register,
-    items: collection.items,
+    collection,
   };
 
   useLayoutEffect(() => {
@@ -146,17 +106,27 @@ export function ListBox({
         aria-labelledby={labelledBy}
         aria-orientation={orientation}
         data-orientation={orientation}
+        onFocus={(event: FocusEvent<HTMLDivElement>) => {
+          onFocus?.(event);
+          if (event.defaultPrevented) return;
+          const option = collection
+            .items()
+            .find((item) => item.element?.contains(event.target as Node));
+          if (option && !option.disabled) setFocusedKey(option.key);
+        }}
         onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
-          const key = navigate(event.key, collection.items(), selected, {
+          // Arrows move from the option holding focus, not from the selection, so a controlled
+          // value that rejects the move still advances to the next option.
+          const key = navigate(event.key, collection.items(), tabStops.get(selection), {
             orientation,
             dir: writingDirection(event.currentTarget),
             loop: true,
           });
           if (!key) return;
           event.preventDefault();
-          setActiveKey(key);
+          setFocusedKey(key);
           setSelected(key);
           collection.get(key)?.element?.focus();
         }}

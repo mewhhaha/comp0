@@ -13,6 +13,7 @@ import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { focusableWithin } from "../internal/focusable.js";
 import { resolveItemLabel } from "../internal/item-label.js";
+import { useIsTabStop } from "../internal/tab-stop.js";
 import {
   GridListItemContext,
   rowCell,
@@ -69,20 +70,23 @@ export function GridListItem({
     reorderable,
   };
   const selected = gridList.selectedKey === value;
-  const active = gridList.activeKey === value;
+  const isTabStop = useIsTabStop(gridList.tabStops, value, gridList.selection);
   const dragging = dnd?.dragValue === value;
   const dropEdge = dnd?.dropTarget?.value === value ? dnd.dropTarget.edge : undefined;
   const rowRef = useRef<HTMLElement | null>(null);
   const pointerStartedOnControl = useRef(false);
+  // Registration reads the two functions, not the whole context: the composition test in
+  // tab-stop.composition.test.tsx keeps a stop move to one commit with no registry changes.
+  const { register, unregister } = gridList;
   const registerRow = (element: HTMLElement | null) => {
     if (!element) return;
-    gridList.register({ key: value, id, textValue: label, element, disabled: resolvedDisabled });
-    return () => gridList.unregister(value, element);
+    register({ key: value, id, textValue: label, element, disabled: resolvedDisabled });
+    return () => unregister(value, element);
   };
   const composedRef = useComposedRefs(registerRow, rowRef, ref);
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
-  else if (active) tabIndex = 0;
+  else if (isTabStop) tabIndex = 0;
 
   // Interactive children use the inline-forward arrow instead of Tab, so the
   // grid stays a single tab stop.
@@ -99,14 +103,14 @@ export function GridListItem({
       fallback: value,
     });
     if (resolvedLabel !== label) setCrawledLabel(resolvedLabel);
-    gridList.register({
+    register({
       key: value,
       id,
       textValue: resolvedLabel,
       element: row,
       disabled: resolvedDisabled,
     });
-  }, [ariaLabel, children, gridList, id, label, resolvedDisabled, textValue, value]);
+  }, [ariaLabel, children, id, label, register, resolvedDisabled, textValue, value]);
 
   const Part = partElement(as, "div");
   return (
@@ -131,7 +135,7 @@ export function GridListItem({
         data-value={value}
         onFocus={(event: FocusEvent<HTMLDivElement>) => {
           onFocus?.(event);
-          if (!event.defaultPrevented && !resolvedDisabled) gridList.setActiveKey(value);
+          if (!event.defaultPrevented && !resolvedDisabled) gridList.setFocusedKey(value);
         }}
         onClick={(event: MouseEvent<HTMLDivElement>) => {
           if (resolvedDisabled) {
@@ -148,7 +152,7 @@ export function GridListItem({
           if (target && focusableWithin(event.currentTarget).some((el) => el.contains(target))) {
             return;
           }
-          gridList.setActiveKey(value);
+          gridList.setFocusedKey(value);
           gridList.setSelectedKey(value);
         }}
         onPointerDownCapture={(event: PointerEvent<HTMLDivElement>) => {

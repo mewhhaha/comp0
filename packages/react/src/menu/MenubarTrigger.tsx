@@ -6,9 +6,10 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import { composeRefs } from "@comp0/core";
+import { useComposedRefs } from "@comp0/core";
 import { useDisclosureTrigger } from "../internal/disclosure-trigger.js";
 import { resolveItemLabel } from "../internal/item-label.js";
+import { useIsTabStop } from "../internal/tab-stop.js";
 import { triggerAnchorStyle } from "../internal/overlay/index.js";
 import { partElement } from "../internal/polymorphic.js";
 import { useMenubarContext } from "../menubar/menubar-shared.js";
@@ -38,41 +39,50 @@ export function MenubarTrigger({
 }: MenubarTriggerProps) {
   const menu = useMenuRootContext("MenuTrigger");
   const menubar = useMenubarContext("MenuTrigger");
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<HTMLButtonElement | null>(null);
   // Skips focus-carried opening for the focus a pointer press causes, so a
   // click on a neighbor item toggles once instead of opening twice.
   const pointerPressed = useRef(false);
   const resolvedDisabled = Boolean(disabled);
   const tag = as ?? "div";
-  const register = (element: HTMLElement | null) => {
-    menubar.collection.register({
-      key: menu.triggerId,
-      id: element?.id,
+  // Read the stable registry and key outside the ref callback: depending on the whole bar
+  // context would detach and re-register every item whenever the bar's tab stop moves.
+  const { collection } = menubar;
+  const key = menu.triggerId;
+  const isTabStop = useIsTabStop(menubar.tabStops, key);
+  const registration = (element: HTMLElement | null) => {
+    if (!element) return;
+    // Guarded by element, so a stale cleanup cannot remove a replacement's registration.
+    return () => {
+      collection.unregister(key, element);
+    };
+  };
+  const setElement = useComposedRefs<HTMLButtonElement>(
+    ref,
+    elementRef,
+    menu.setTriggerElement,
+    registration,
+  );
+  // Register after every render so labels and open state stay current; an unchanged item is a
+  // no-op, and a change notifies the bar's tab stop subscription.
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+    collection.register({
+      key,
+      id: element.id,
       textValue: resolveItemLabel({
         textValue: undefined,
         children: undefined,
         element,
         ariaLabel: props["aria-label"],
-        fallback: menu.triggerId,
+        fallback: key,
       }),
       element,
       disabled: resolvedDisabled,
       open: menu.open,
       setOpen: menu.setOpen,
     });
-  };
-  const setElement = (element: HTMLButtonElement | null) => {
-    elementRef.current = element;
-    menu.setTriggerElement(element);
-    register(element);
-    composeRefs(ref)(element);
-  };
-  // Re-register with the bar every render so labels and open state stay
-  // current, then let the bar re-apply its single tab stop.
-  useLayoutEffect(() => {
-    if (!elementRef.current) return;
-    register(elementRef.current);
-    menubar.syncTabStops();
   });
   const trigger = useDisclosureTrigger({
     as: tag,
@@ -115,6 +125,7 @@ export function MenubarTrigger({
       {...props}
       ref={setElement}
       role="menuitem"
+      tabIndex={isTabStop ? 0 : -1}
       style={triggerAnchorStyle(menu.triggerId, style)}
       {...trigger}
       onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {

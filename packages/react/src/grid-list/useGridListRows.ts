@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useCollection, type CollectionItem } from "@comp0/core";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import {
   type GridListContextValue,
   type GridListFocusRequest,
@@ -7,8 +8,8 @@ import {
 } from "./grid-list-shared.js";
 
 /**
- * Owns a GridList's row registry and roving tab stop: which row is active,
- * which row holds tabindex 0, and the focus restoration that follows a move
+ * Owns a GridList's row registry and roving tab stop: which row last held focus or was
+ * activated, which row holds tabindex 0, and the focus restoration that follows a move
  * (a cross-list focus request, or a reorder that made the browser drop focus).
  */
 export function useGridListRows(options: {
@@ -19,36 +20,17 @@ export function useGridListRows(options: {
 }) {
   const { selected, select, name, group } = options;
   const collection = useCollection();
-  const [activeKey, setActiveKey] = useState(selected);
-  const activeKeyRef = useRef(activeKey);
+  // The row that last held focus or was activated, recorded under the selection current at the
+  // time: any change of selection drops it (clearing to "" keeps it), so a value that returns
+  // later cannot revive a stale record. The stop lives outside React state, so a focus move
+  // re-renders only the two rows whose tabIndex changes, not every row reading this context
+  // (bench: collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  const selection = useTabStopSelection(selected);
+  const tabStops = useTabStopStore(collection);
   const handledFocusRequest = useRef<GridListFocusRequest | null>(null);
 
-  useEffect(() => {
-    if (selected) {
-      activeKeyRef.current = selected;
-      setActiveKey(selected);
-    }
-  }, [selected]);
-
-  useEffect(() => {
-    activeKeyRef.current = activeKey;
-  }, [activeKey]);
-
-  const syncTabStops = (key: string) => {
-    for (const item of collection.items()) {
-      if (!item.element) continue;
-      if (item.disabled) {
-        item.element.removeAttribute("tabindex");
-        continue;
-      }
-      item.element.tabIndex = item.key === key ? 0 : -1;
-    }
-  };
-
   const activateRow = (key: string) => {
-    activeKeyRef.current = key;
-    syncTabStops(key);
-    setActiveKey(key);
+    tabStops.focus(key, selection);
   };
 
   const register = (item: CollectionItem) => {
@@ -70,6 +52,8 @@ export function useGridListRows(options: {
     }
   };
 
+  // Focus is imperative: a cross-list move asks this list to focus the moved row once it
+  // has rendered, then acknowledges the request.
   useLayoutEffect(() => {
     const focusRequest = group?.focusRequest;
     if (
@@ -83,16 +67,8 @@ export function useGridListRows(options: {
         activateRow(movedItem.key);
         movedItem.element.focus();
         group.acknowledgeFocusRequest(focusRequest);
-        return;
       }
     }
-    const current = collection.get(activeKeyRef.current);
-    if (current && !current.disabled) {
-      syncTabStops(current.key);
-      return;
-    }
-    const nextActiveKey = collection.enabledItems()[0]?.key ?? "";
-    if (nextActiveKey !== activeKeyRef.current) activateRow(nextActiveKey);
   });
 
   const focusRow = (key: string | undefined) => {
@@ -117,9 +93,10 @@ export function useGridListRows(options: {
   };
 
   const context: GridListContextValue = {
-    activeKey,
+    tabStops,
+    selection,
     selectedKey: selected,
-    setActiveKey: activateRow,
+    setFocusedKey: activateRow,
     setSelectedKey: select,
     register,
     unregister,
