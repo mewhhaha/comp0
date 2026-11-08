@@ -33,7 +33,10 @@ export function TabList({
       onFocus={(event: FocusEvent<HTMLElement>) => {
         onFocus?.(event as FocusEvent<HTMLDivElement>);
         if (event.defaultPrevented) return;
-        tabs.syncTabStops();
+        const focusedTab = collection
+          .items()
+          .find((tab) => tab.element?.contains(event.target as Node));
+        if (focusedTab) tabs.setFocusedKey(focusedTab.key);
       }}
       onBlur={(event: FocusEvent<HTMLElement>) => {
         onBlur?.(event as FocusEvent<HTMLDivElement>);
@@ -41,7 +44,7 @@ export function TabList({
         // Focus moving to another tab in the list keeps the stop on that tab; leaving the list
         // hands the stop back to the selected tab, so re-entry lands there.
         if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-        tabs.syncTabStops();
+        tabs.setFocusedKey("");
       }}
       onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
         onKeyDown?.(event as KeyboardEvent<HTMLDivElement>);

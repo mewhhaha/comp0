@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Profiler, useState } from "react";
 import { describe, expect, it } from "vitest";
 import { render, setup } from "../../test/render.js";
 import { Tab } from "./Tab.js";
@@ -217,8 +217,75 @@ describe("tabs composition", () => {
         </Tabs>
       </>,
     );
+    // React reuses the first tab's element for "two" here, so this also covers a stale
+    // registration cleanup removing the reused element under its new key.
+    const stops = [...container.querySelectorAll<HTMLElement>("[role='tab']")].filter(
+      (tab) => tab.tabIndex === 0,
+    );
+    expect(stops.map((tab) => tab.textContent)).toEqual(["Two"]);
     await user.tab();
     expect(document.activeElement?.textContent).toBe("Two");
+    unmount();
+  });
+
+  it("moves the stop off a tab that disables itself without a parent re-render", async () => {
+    const { container, user, unmount } = setup(
+      <>
+        <button type="button">Before</button>
+        <Tabs defaultValue="one">
+          <TabList aria-label="Project">
+            <DisableFirstTab />
+            <Tab value="two">Two</Tab>
+          </TabList>
+        </Tabs>
+      </>,
+    );
+    const before = container.querySelector<HTMLElement>("button")!;
+    const [one, two] = container.querySelectorAll<HTMLElement>("[role='tab']");
+    const disable = [...container.querySelectorAll<HTMLElement>("button")].find(
+      (button) => button.textContent === "Disable",
+    )!;
+
+    expect(one!.tabIndex).toBe(0);
+    await user.click(disable);
+    expect(one!.tabIndex).toBe(-1);
+    expect(two!.tabIndex).toBe(0);
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(two);
+    unmount();
+  });
+
+  it("moves the stop in one commit without re-registering every tab", async () => {
+    // Re-registering a tab notifies the Tabs subscription, so a tab whose registration depends
+    // on the whole context would add a commit per stop move and turn each move quadratic.
+    let commits = 0;
+    const values = ["one", "two", "three", "four"];
+    const { container, user, unmount } = setup(
+      <Profiler id="tabs" onRender={() => (commits += 1)}>
+        <button type="button">Before</button>
+        <Tabs value="missing">
+          <TabList aria-label="Project">
+            {values.map((value) => (
+              <Tab key={value} value={value}>
+                {value}
+              </Tab>
+            ))}
+          </TabList>
+        </Tabs>
+      </Profiler>,
+    );
+    const before = container.querySelector<HTMLElement>("button")!;
+    const tabs = container.querySelectorAll<HTMLElement>("[role='tab']");
+
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(tabs[0]);
+    commits = 0;
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(tabs[1]!.tabIndex).toBe(0);
+    expect(commits).toBe(1);
     unmount();
   });
 
@@ -513,6 +580,21 @@ function HideFirstTab() {
       {show ? <Tab value="one">One</Tab> : null}
       <button type="button" tabIndex={-1} onClick={() => setShow(false)}>
         Hide
+      </button>
+    </>
+  );
+}
+
+// Disables its own tab from inside TabList, so neither Tabs nor TabList re-renders.
+function DisableFirstTab() {
+  const [disabled, setDisabled] = useState(false);
+  return (
+    <>
+      <Tab value="one" disabled={disabled}>
+        One
+      </Tab>
+      <button type="button" tabIndex={-1} onClick={() => setDisabled(true)}>
+        Disable
       </button>
     </>
   );

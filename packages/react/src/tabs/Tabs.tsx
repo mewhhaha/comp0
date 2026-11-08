@@ -1,5 +1,5 @@
-import { useId, useLayoutEffect, useRef, type ReactNode } from "react";
-import { useCollection, useControllableState } from "@comp0/core";
+import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { type Collection, useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
 import { TabsContext } from "./tabs-shared.js";
 
@@ -19,31 +19,16 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
     onChange,
   });
   const collection = useCollection();
-  const tabStopKey = useRef("");
-  // Read by syncTabStops, which a Tab's unmount cleanup calls with the closure it mounted with.
-  const selectedRef = useRef(selected);
-
-  // The one tab in the sequence: the focused tab, else the selected tab, else the last stop,
-  // else the first enabled tab. A focused stop lets Shift+Tab leave the list in one press.
-  const syncTabStops = () => {
-    const focused = collection.items().find((tab) => tab.element?.matches(":focus"));
-    const candidates = [
-      focused,
-      collection.get(selectedRef.current),
-      collection.get(tabStopKey.current),
-    ];
-    const active = candidates.find((tab) => tab && !tab.disabled) ?? collection.enabledItems()[0];
-    tabStopKey.current = active?.key ?? "";
-    for (const tab of collection.items()) {
-      if (tab.element) tab.element.tabIndex = tab.key === active?.key ? 0 : -1;
-    }
-  };
-
-  // Keep exactly one tab stop as tabs mount or change state.
-  useLayoutEffect(() => {
-    selectedRef.current = selected;
-    syncTabStops();
-  });
+  // The tab holding focus while focus is inside the list, so Shift+Tab leaves from it in one
+  // press even when a controlled value rejected the arrow move that focused it.
+  const [focusedKey, setFocusedKey] = useState("");
+  // Registration, unregistration, and a tab's own disabled change all notify the collection,
+  // so the stop follows them without Tabs re-rendering first.
+  const tabStopKey = useSyncExternalStore(
+    collection.subscribe,
+    () => resolveTabStop(collection, focusedKey, selected),
+    () => selected,
+  );
 
   const Root = rootElement(as);
   return (
@@ -53,7 +38,8 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
         selectedKey: selected,
         setSelectedKey: setSelected,
         collection,
-        syncTabStops,
+        tabStopKey,
+        setFocusedKey,
       }}
     >
       <Root data-slot="tabs" {...props}>
@@ -61,4 +47,21 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
       </Root>
     </TabsContext>
   );
+}
+
+/**
+ * The one tab in the sequence: the focused tab, else the selected tab, else the first enabled
+ * tab. Before any tab registers it is the selected key, matching the server render.
+ *
+ * Runs on every Tabs render and every registry change, so the common case is two O(1) lookups;
+ * only the fallback reads document order.
+ */
+function resolveTabStop(collection: Collection, focusedKey: string, selectedKey: string) {
+  for (const key of [focusedKey, selectedKey]) {
+    const tab = collection.get(key);
+    if (tab && !tab.disabled) return key;
+  }
+  const items = collection.items();
+  if (items.length === 0) return selectedKey;
+  return items.find((tab) => !tab.disabled)?.key ?? "";
 }
