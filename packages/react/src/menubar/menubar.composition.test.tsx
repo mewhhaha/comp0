@@ -235,4 +235,72 @@ describe("menubar composition", () => {
     await user.click(edit);
     expect(surfaces[1]!.hidden).toBe(true);
   });
+
+  it("keeps the last focused trigger as the stop after focus leaves the bar", async () => {
+    const { container, user } = setup(
+      <>
+        <Menubar aria-label="Notes">
+          <Menu id="file">
+            <MenuTrigger>File</MenuTrigger>
+          </Menu>
+          <Menu id="edit">
+            <MenuTrigger>Edit</MenuTrigger>
+          </Menu>
+        </Menubar>
+        <button type="button">After</button>
+      </>,
+    );
+    const file = container.querySelector<HTMLElement>("#file-trigger")!;
+    const edit = container.querySelector<HTMLElement>("#edit-trigger")!;
+    const after = [...container.querySelectorAll<HTMLElement>("button")].find(
+      (button) => button.textContent === "After",
+    );
+
+    await user.tab();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(edit);
+    await user.tab();
+    expect(document.activeElement).toBe(after);
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(edit);
+    expect(edit.tabIndex).toBe(0);
+    expect(file.tabIndex).toBe(-1);
+  });
+
+  it("keeps no tab stop when every trigger is disabled", () => {
+    const { container } = setup(
+      <Menubar aria-label="Notes">
+        <Menu id="file">
+          <MenuTrigger disabled>File</MenuTrigger>
+        </Menu>
+        <Menu id="edit">
+          <MenuTrigger disabled>Edit</MenuTrigger>
+        </Menu>
+      </Menubar>,
+    );
+    const triggers = container.querySelectorAll<HTMLElement>("[role='menuitem']");
+    expect([...triggers].map((trigger) => trigger.tabIndex)).toEqual([-1, -1]);
+  });
+
+  it("moves the stop to the first enabled trigger when the focused trigger unmounts", async () => {
+    const bar = (withEdit: boolean) => (
+      <Menubar aria-label="Notes">
+        <Menu id="file">
+          <MenuTrigger>File</MenuTrigger>
+        </Menu>
+        {withEdit && (
+          <Menu id="edit">
+            <MenuTrigger>Edit</MenuTrigger>
+          </Menu>
+        )}
+      </Menubar>
+    );
+    const { container, rerender, user } = setup(bar(true));
+
+    await user.tab();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(container.querySelector("#edit-trigger"));
+    rerender(bar(false));
+    expect(container.querySelector<HTMLElement>("#file-trigger")!.tabIndex).toBe(0);
+  });
 });

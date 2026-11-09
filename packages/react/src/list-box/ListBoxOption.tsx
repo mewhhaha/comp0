@@ -12,6 +12,7 @@ import { dataAttr, useComposedRefs } from "@comp0/core";
 import { useWarnOnce } from "../internal/dev.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { useIsTabStop } from "../internal/tab-stop.js";
 import {
   resolveAutocompleteItemText,
   useAutocompleteContext,
@@ -44,18 +45,19 @@ export function ListBoxOption({
   const warn = useWarnOnce();
   const autocomplete = useAutocompleteContext();
   const listBox = useListBoxContext("ListBoxOption");
+  const { collection } = listBox;
   const generatedId = useId().replace(/:/g, "");
   const id = idProp ?? `listbox-option-${generatedId}`;
-  const registerListBoxOption = listBox.register;
   const resolvedDisabled = Boolean(disabled);
   const selected = listBox.selectedKey === value;
-  const collectionActive = listBox.activeKey === value;
-  const virtualActive = autocomplete?.activeId === id;
-  const active = autocomplete?.disableVirtualFocus === false ? virtualActive : collectionActive;
+  // Autocomplete keeps DOM focus in its input and moves a virtual active option instead, so no
+  // option takes the roving tab stop while it is in charge.
+  const virtualFocus = autocomplete?.disableVirtualFocus === false;
+  const isTabStop = useIsTabStop(listBox.tabStops, value, listBox.selection);
+  const active = virtualFocus ? autocomplete?.activeId === id : isTabStop;
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
-  else if (selected || active) tabIndex = 0;
-  if (autocomplete && !autocomplete.disableVirtualFocus && !resolvedDisabled) tabIndex = -1;
+  else if (!virtualFocus && isTabStop) tabIndex = 0;
   const ariaLabel = props["aria-label"];
   const elementRef = useRef<HTMLDivElement | null>(null);
   const [crawledLabel, setCrawledLabel] = useState("");
@@ -82,16 +84,17 @@ export function ListBoxOption({
 
   const itemRef = useComposedRefs(elementRef, ref);
 
-  // Re-register after every render so crawled labels follow content changes.
+  // Re-register after every render so crawled labels follow content changes; registering an
+  // unchanged option is a no-op in the collection.
   useLayoutEffect(() => {
     const element = elementRef.current;
     if (!element) {
-      registerListBoxOption({ key: value, id, textValue: label, element: null });
+      collection.unregister(value);
       return;
     }
     const crawled = resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value });
     if (crawled !== label) setCrawledLabel(crawled);
-    registerListBoxOption({
+    collection.register({
       key: value,
       id,
       textValue: crawled,
@@ -102,11 +105,11 @@ export function ListBoxOption({
 
   useLayoutEffect(() => {
     return () => {
-      registerListBoxOption({ key: value, id, textValue: label, element: null });
+      collection.unregister(value);
     };
     // The cleanup must run only when the option unmounts or changes identity,
     // not whenever its label or the ListBox's callback identity changes.
-  }, [value]);
+  }, [collection, value]);
 
   if (!visible) return null;
 
@@ -131,7 +134,7 @@ export function ListBoxOption({
         }
         onClick?.(event);
         if (!event.defaultPrevented) {
-          listBox.setActiveKey(value);
+          listBox.setFocusedKey(value);
           listBox.setSelectedKey(value);
         }
       }}
@@ -161,7 +164,7 @@ export function ListBoxOption({
         if (event.defaultPrevented || resolvedDisabled) return;
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-        listBox.setActiveKey(value);
+        listBox.setFocusedKey(value);
         listBox.setSelectedKey(value);
       }}
     >

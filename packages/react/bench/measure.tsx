@@ -1,5 +1,25 @@
+import * as React from "react";
 import { act, Profiler, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
+
+type DevInternals = { recentlyCreatedOwnerStacks?: number };
+const devInternals = (
+  React as unknown as {
+    __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?: DevInternals;
+  }
+).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
+/**
+ * The development build captures an owner stack (an Error plus console.createTask) for each JSX
+ * element, but only for the first 10,000 elements after a render that starts more than a second
+ * after the last reset. Whether a sample pays that cost would depend on when it ran, so every
+ * measurement starts from a reset counter: each one costs what it would in a fresh interaction.
+ */
+function resetOwnerStackBudget() {
+  if (devInternals && "recentlyCreatedOwnerStacks" in devInternals) {
+    devInternals.recentlyCreatedOwnerStacks = 0;
+  }
+}
 
 /** One measured run: React commits, render time React reports, and wall time to settle. */
 export type Sample = { commits: number; renderMs: number; wallMs: number };
@@ -26,6 +46,7 @@ export function mountMeasured() {
   const measure = (work: () => void): Sample => {
     commits = 0;
     renderMs = 0;
+    resetOwnerStackBudget();
     const start = performance.now();
     act(work);
     return { commits, renderMs, wallMs: performance.now() - start };
