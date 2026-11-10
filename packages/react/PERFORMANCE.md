@@ -61,6 +61,21 @@ What the numbers say:
 - **ListBox arrows still re-render every option.** Selection follows focus, and every option reads the selected key from context to render `aria-selected`, so each press re-renders all of them whatever holds the stop: 18.6 ms with the stop in context, 19.2 ms with the store, 18.2 ms imperative, at 1000 options. Narrowing it would mean copying the controlled `value` into a store after commit, which the DOM state rules rule out.
 - **The root is the stop until an item registers, which costs the unselected mount a walk of its children.** With nothing selected the root renders `tabIndex={0}` first and `-1` once an item takes the stop, so the composite is reachable in server HTML. Changing a prop on the root makes React reconcile its child list in the second commit, without rendering the items: a 1000-option ListBox mount went from 45.5 to 54.4 ms wall, measured back to back in one session. A mount with a selected item, and every arrow press, is unchanged.
 
+### Collection pass against the root tab stop (ListBox prototype)
+
+ListBox collects its options in a pass ahead of the real ones on the server and while hydrating (`internal/collection-pass.tsx`); GridList, Menubar, and TabList keep the root as the stop until an item registers. Both were built from the same entry as production bundles (React production build, React Compiler on, minified), the root-stop variant from the commit before the prototype. Hydration ran in headless Chromium through `pnpm bench`, timed from `hydrateRoot` until the list settled and laid out, variants alternating over 4 rounds; server render is `renderToString` in Node with `NODE_ENV=production`, 3 runs of 200 samples. Cells are the median with the range across rounds, in ms. The harness was a one-off and is not in the repo.
+
+| Scenario                  | Options | Hydration, pass  | Hydration, root stop | Server, pass | Server, root stop |
+| ------------------------- | ------: | ---------------- | -------------------- | ------------ | ----------------- |
+| Nothing selected          |     100 | 1.3 (1.0–1.5)    | 1.4 (1.0–1.4)        | 0.37–0.48    | 0.32–0.35         |
+| Nothing selected          |    1000 | 16.8 (12.5–18.0) | 15.2 (12.0–16.1)     | 3.6–5.1      | 3.5–3.8           |
+| Selected option           |    1000 | 14.6 (10.3–15.0) | 12.8 (8.2–14.0)      | 3.9–5.3      | 2.8–4.3           |
+| `value` matches no option |    1000 | 14.0 (12.5–17.7) | 16.6 (13.1–18.3)     | 4.1–5.2      | 4.0–4.3           |
+
+- **The pass costs little in production.** Hydration differs by about a tenth at 1000 options, inside the spread between rounds, and not measurably at 100. Server render is up to about 1 ms slower at 1000. The 25–30% hydration cost first measured in jsdom with the development build does not carry over.
+- **Only the pass is correct when the value matches no option.** Its server HTML has one tab stop in every scenario; the root-stop HTML has none in that one until hydration.
+- **Unmounting a large ListBox is slow, and was before either variant.** `root.unmount()` in the production build takes about 2 ms at 100 options, 15–70 ms at 300, and 0.6 s (selected) to 1.9 s (nothing selected) at 1000, the same at the commit before the tab stop store. The cause is not yet investigated; no existing bench measures unmount.
+
 ### Measuring the development build
 
 React's development build captures an owner stack (an `Error` plus `console.createTask`) for every JSX element, but only for the first 10,000 elements after a render that starts more than a second after the last reset. A 1000-row GridList mount creates about 3,000 elements, so whether a sample paid for stacks depended on how long the previous samples took: the same code measured 16 ms or 56 ms wall depending on what ran before it, which first looked like a 3× regression from `useTabStop`. `measure.tsx` now resets that counter before every measurement, so each sample costs what one fresh interaction would. Absolute numbers recorded before this change (the Tabs table above) may include samples that skipped stack capture; compare rows measured in the same session.
