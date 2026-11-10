@@ -9,6 +9,8 @@ export type TabsContextValue = {
   collection: Collection;
   /** The one tab rendered with tabIndex 0. */
   tabStopKey: string;
+  /** The TabList's own tabIndex: 0 while no tab has registered and none is selected. */
+  rootTabIndex: number;
   /** Records the tab holding focus inside the list, or "" once focus leaves it. */
   setFocusedKey: (key: string) => void;
 };

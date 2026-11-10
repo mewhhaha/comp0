@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { useCollection, type CollectionItem } from "@comp0/core";
-import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
+import { useRootTabIndex, useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import {
   type GridListContextValue,
   type GridListFocusRequest,
@@ -27,6 +27,7 @@ export function useGridListRows(options: {
   // (bench: collection-tab-stop.bench.tsx, PERFORMANCE.md).
   const selection = useTabStopSelection(selected);
   const tabStops = useTabStopStore(collection);
+  const rootTabIndex = useRootTabIndex(tabStops, selection);
   const handledFocusRequest = useRef<GridListFocusRequest | null>(null);
 
   const activateRow = (key: string) => {
@@ -102,5 +103,15 @@ export function useGridListRows(options: {
     unregister,
   };
 
-  return { collection, context, activateRow, focusRow, refocusAfterReorder };
+  const tabStop = () => tabStops.get(selection);
+
+  return {
+    collection,
+    context,
+    rootTabIndex,
+    tabStop,
+    activateRow,
+    focusRow,
+    refocusAfterReorder,
+  };
 }

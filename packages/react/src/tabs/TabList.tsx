@@ -1,6 +1,7 @@
 import { type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { useCollectionNavigation } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { rootEntryKey } from "../internal/tab-stop.js";
 import { writingDirection } from "../internal/writing-direction.js";
 import { useTabsContext } from "./tabs-shared.js";
 
@@ -28,6 +29,7 @@ export function TabList({
       {...props}
       ref={ref}
       role="tablist"
+      tabIndex={props.tabIndex ?? tabs.rootTabIndex}
       aria-orientation={orientation}
       data-orientation={orientation}
       onFocus={(event: FocusEvent<HTMLElement>) => {
@@ -51,12 +53,23 @@ export function TabList({
         if (event.defaultPrevented) return;
         const items = collection.items();
         const focusedTab = items.find((tab) => tab.element?.contains(event.target as Node));
-        const targetKey = navigate(event.key, items, focusedTab?.key ?? tabs.selectedKey, {
+        const options = {
           orientation,
           dir: writingDirection(event.currentTarget),
           loop: true,
           typeahead: false,
-        });
+        };
+        if (event.target === event.currentTarget) {
+          // Focus is on the list itself (focused before its tabs registered, or by a click
+          // between tabs): enter at the stop without changing the selection.
+          const entry = navigate(event.key, items, undefined, options);
+          const entryKey = rootEntryKey(event.key, tabs.tabStopKey, entry);
+          if (!entryKey) return;
+          event.preventDefault();
+          collection.get(entryKey)?.element?.focus();
+          return;
+        }
+        const targetKey = navigate(event.key, items, focusedTab?.key ?? tabs.selectedKey, options);
         if (!targetKey) return;
         event.preventDefault();
         tabs.setSelectedKey(targetKey);

@@ -3,6 +3,7 @@ import { useCollectionNavigation, type Collection } from "@comp0/core";
 import { writingDirection } from "../internal/writing-direction.js";
 import { resolveRowControlMove } from "./grid-list-row-keyboard.js";
 import { focusableWithin } from "../internal/focusable.js";
+import { rootEntryKey } from "../internal/tab-stop.js";
 import { type GridListDndContextValue } from "./grid-list-shared.js";
 
 /**
@@ -13,11 +14,13 @@ import { type GridListDndContextValue } from "./grid-list-shared.js";
 export function useGridListKeyboard(options: {
   collection: Collection;
   dnd: GridListDndContextValue | null;
+  /** The key of the row currently rendered with tabIndex 0. */
+  tabStop: () => string;
   focusRow: (key: string | undefined) => boolean;
   activateRow: (key: string) => void;
   select: (key: string) => void;
 }) {
-  const { collection, dnd, focusRow, activateRow, select } = options;
+  const { collection, dnd, tabStop, focusRow, activateRow, select } = options;
   const navigate = useCollectionNavigation();
 
   return (event: KeyboardEvent<HTMLElement>) => {
@@ -26,6 +29,16 @@ export function useGridListKeyboard(options: {
       ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
     if (!target) return;
     const rows = collection.items();
+    if (target === event.currentTarget) {
+      // Focus is on the grid itself (focused before its rows registered, or by a click
+      // between rows): enter at the stop.
+      const entry = navigate(event.key, rows, undefined, { orientation: "vertical" });
+      const entryKey = rootEntryKey(event.key, tabStop(), entry);
+      if (!entryKey) return;
+      event.preventDefault();
+      focusRow(entryKey);
+      return;
+    }
     const rowRecord = rows.find((item) => item.element?.contains(target));
     if (!rowRecord?.element) return;
     const row = rowRecord.element;

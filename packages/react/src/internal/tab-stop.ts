@@ -78,6 +78,8 @@ export type TabStopStore = {
    * selection keeps it.
    */
   focus: (key: string, selection: TabStopSelection) => void;
+  /** Whether the root holds the stop: no item has registered and nothing is preferred. */
+  rootIsStop: (selection: TabStopSelection) => boolean;
 };
 
 function createTabStopStore<TItem extends CollectionItem<Element>>(
@@ -99,7 +101,7 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
     else if (!selection.value && focused.epoch === selection.epoch - 1) key = focused.key;
     return resolveTabStop(collection, [key, selection.value]);
   };
-  return {
+  const store: TabStopStore = {
     subscribe(listener) {
       listeners.add(listener);
       unsubscribeCollection ??= collection.subscribe(notify);
@@ -121,7 +123,12 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
       focused = { key, epoch: selection.epoch };
       notify();
     },
+    rootIsStop(selection) {
+      // Document order is only read while no item holds the stop.
+      return store.get(selection) === "" && collection.items().length === 0;
+    },
   };
+  return store;
 }
 
 /**
@@ -144,4 +151,40 @@ export function useIsTabStop(
 ) {
   const isTabStop = () => store.get(selection) === key;
   return useSyncExternalStore(store.subscribe, isTabStop, isTabStop);
+}
+
+/**
+ * The root's own `tabIndex`. While no item has registered and nothing is preferred (server HTML
+ * and the first render with nothing selected, or an empty collection) the root is the tab stop,
+ * so the composite is not skipped by Tab before an item can take the stop. Otherwise it is -1:
+ * out of the tab order, so Shift+Tab from an item leaves the composite, but still focusable, so
+ * a root that was focused before its items registered keeps focus when the stop moves to an
+ * item. A collection whose items are all disabled stays out of the tab order.
+ */
+export function useRootTabIndex(store: TabStopStore, selection: TabStopSelection = NO_SELECTION) {
+  const rootIsStop = () => store.rootIsStop(selection);
+  return useSyncExternalStore(store.subscribe, rootIsStop, rootIsStop) ? 0 : -1;
+}
+
+/** `useRootTabIndex` for an owner that reads the stop with `useTabStop`. */
+export function useTabStopRootTabIndex<TItem extends CollectionItem<Element>>(
+  collection: Collection<TItem>,
+  tabStop: string,
+) {
+  // Document order is only read while no item holds the stop.
+  const rootIsStop = useSyncExternalStore(
+    collection.subscribe,
+    () => !tabStop && collection.items().length === 0,
+    () => !tabStop,
+  );
+  return rootIsStop ? 0 : -1;
+}
+
+/**
+ * The item a key press on the root itself enters at: the stop for an arrow, so the first press
+ * lands on the item Tab would have reached, and `target` (Home, End, typeahead) otherwise.
+ */
+export function rootEntryKey(eventKey: string, stop: string, target: string | undefined) {
+  if (!target) return undefined;
+  return eventKey.startsWith("Arrow") && stop ? stop : target;
 }

@@ -50,7 +50,7 @@ describe("tabs composition", () => {
     const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
     const tabs = container.querySelectorAll<HTMLElement>("[role='tab']");
 
-    expect(tablist.hasAttribute("tabindex")).toBe(false);
+    expect(tablist.tabIndex).toBe(-1);
     expect(tabs[0]!.tabIndex).toBe(0);
     expect(tabs[1]!.tabIndex).toBe(-1);
     await user.tab();
@@ -175,7 +175,7 @@ describe("tabs composition", () => {
     const [before, after] = container.querySelectorAll<HTMLElement>(":scope > button");
     const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
 
-    expect(tablist.hasAttribute("tabindex")).toBe(false);
+    expect(tablist.tabIndex).toBe(-1);
     for (const tab of container.querySelectorAll<HTMLElement>("[role='tab']")) {
       expect(tab.tabIndex).toBe(-1);
     }
@@ -358,7 +358,7 @@ describe("tabs composition", () => {
       </>,
     );
     const tablist = container.querySelector<HTMLElement>("[role='tablist']")!;
-    expect(tablist.hasAttribute("tabindex")).toBe(false);
+    expect(tablist.tabIndex).toBe(-1);
     expect(tabs[0]!.tabIndex).toBe(0);
     expect(tabs[1]!.tabIndex).toBe(-1);
     await user.tab({ shift: true });

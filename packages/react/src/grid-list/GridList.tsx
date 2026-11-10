@@ -59,12 +59,13 @@ export function GridList({
     defaultValue: defaultValue ?? "",
     onChange,
   });
-  const { collection, context, activateRow, focusRow, refocusAfterReorder } = useGridListRows({
-    selected,
-    select: setSelected,
-    name,
-    group: reorderGroup,
-  });
+  const { collection, context, rootTabIndex, tabStop, activateRow, focusRow, refocusAfterReorder } =
+    useGridListRows({
+      selected,
+      select: setSelected,
+      name,
+      group: reorderGroup,
+    });
   const listRef = useGridListMembership(name, reorderGroup);
   const composedRef = useComposedRefs(listRef, ref);
   const local = useGridListReorder({ collection, onReorder, canReorder, refocusAfterReorder });
@@ -78,6 +79,7 @@ export function GridList({
   const handleKeyDown = useGridListKeyboard({
     collection,
     dnd,
+    tabStop,
     focusRow,
     activateRow,
     select: setSelected,
@@ -91,6 +93,7 @@ export function GridList({
           {...props}
           ref={composedRef}
           role="grid"
+          tabIndex={props.tabIndex ?? rootTabIndex}
           data-drop-target={dataAttr(dnd?.listDropTarget)}
           data-drop-preview={dropPreviewLabel || undefined}
           onDragLeave={(event: DragEvent<HTMLDivElement>) => {
