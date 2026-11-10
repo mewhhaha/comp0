@@ -1,12 +1,4 @@
-import {
-  createContext,
-  Fragment,
-  use,
-  useState,
-  useSyncExternalStore,
-  type ElementType,
-  type ReactNode,
-} from "react";
+import { createContext, use, useState, useSyncExternalStore, type ReactNode } from "react";
 
 /**
  * The items a root's children will render, in render order, known before the real items render.
@@ -74,40 +66,24 @@ export function useCollectionSeed() {
 }
 
 /**
- * The collection pass, for the part that holds the items. On the server and while hydrating it
- * renders the same children once more ahead of the real ones, where items record themselves in
- * `seed` and render nothing, so the real items already know the whole collection. A client-only
- * mount renders no pass, and after hydration it unmounts.
+ * The collection pass, for the part that holds the items: render the result ahead of the part.
+ * On the server and while hydrating it renders the same children once more, where items record
+ * themselves in `seed` and render nothing, so the real items already know the whole collection.
+ * A client-only mount renders no pass, and after hydration it unmounts.
  *
- * Render `before` ahead of the part and `content` as the part's children. The pass normally
- * sits inside the part; `as={Fragment}` merges the part into its single child, so there it goes
- * before the part instead.
+ * It sits beside the part, not inside it, so the part's own children are exactly what the
+ * consumer passed: `as={Fragment}` still merges into its single child, and a custom `as`
+ * component still receives the items as its children.
  */
-export function useCollectionPass(
-  seed: CollectionSeed,
-  children: ReactNode,
-  as: ElementType | undefined,
-) {
+export function useCollectionPass(seed: CollectionSeed, children: ReactNode) {
   const hydrating = useIsHydrating();
-  let pass: ReactNode = null;
-  if (hydrating) {
-    pass = (
-      <CollectionPassContext value={seed}>
-        {/* Holds whatever consumer elements sit between the root and its items. */}
-        <div hidden>{children}</div>
-      </CollectionPassContext>
-    );
-  }
-  if (as === Fragment) return { before: pass, content: children };
-  return {
-    before: null,
-    content: (
-      <>
-        {pass}
-        {children}
-      </>
-    ),
-  };
+  if (!hydrating) return null;
+  return (
+    <CollectionPassContext value={seed}>
+      {/* Holds whatever consumer elements sit between the root and its items. */}
+      <div hidden>{children}</div>
+    </CollectionPassContext>
+  );
 }
 
 /** Whether this render is inside a collection pass, where parts render no elements. */

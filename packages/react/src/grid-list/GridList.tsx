@@ -68,7 +68,7 @@ export function GridList({
       group: reorderGroup,
     },
   );
-  const pass = useCollectionPass(seed, children, as);
+  const pass = useCollectionPass(seed, children);
   const listRef = useGridListMembership(name, reorderGroup);
   const composedRef = useComposedRefs(listRef, ref);
   const local = useGridListReorder({ collection, onReorder, canReorder, refocusAfterReorder });
@@ -91,7 +91,7 @@ export function GridList({
   return (
     <GridListContext value={context}>
       <GridListDndContext value={dnd}>
-        {pass.before}
+        {pass}
         <Part
           {...props}
           ref={composedRef}
@@ -132,7 +132,7 @@ export function GridList({
             if (!event.defaultPrevented) handleKeyDown(event);
           }}
         >
-          {pass.content}
+          {children}
         </Part>
         {/* Outside the grid element: role="grid" only permits row children. */}
         {onReorder && <VisuallyHidden aria-live="polite">{local.announcement}</VisuallyHidden>}

@@ -1,4 +1,6 @@
 import {
+  Fragment,
+  isValidElement,
   useId,
   useLayoutEffect,
   useRef,
@@ -82,10 +84,22 @@ function ListBoxOptionPart({
   else if (!virtualFocus && isTabStop) tabIndex = 0;
 
   // The stop depends on the whole collection, which the server can see in another order.
-  useHydrationRepair(elementRef, {
-    tabindex: tabIndex === undefined ? undefined : String(tabIndex),
-    "data-active": active ? "" : null,
-  });
+  // With as={Fragment} an inactive option leaves the child's own data-active in place.
+  let renderedActive: string | null = active ? "" : null;
+  if (!active && as === Fragment && isValidElement<{ "data-active"?: unknown }>(children)) {
+    const own = children.props["data-active"];
+    if (typeof own === "string") renderedActive = own;
+  }
+  useHydrationRepair(
+    elementRef,
+    {
+      tabindex: tabIndex === undefined ? undefined : String(tabIndex),
+      "data-active": renderedActive,
+    },
+    () => {
+      if (!resolvedDisabled) listBox.setFocusedKey(value);
+    },
+  );
 
   const itemRef = useComposedRefs(elementRef, ref);
 

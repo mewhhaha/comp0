@@ -1,4 +1,4 @@
-import { act, Suspense, use, type ReactElement } from "react";
+import { act, Fragment, Suspense, use, type ReactElement } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToPipeableStream } from "react-dom/server";
 import { Writable } from "node:stream";
@@ -100,7 +100,9 @@ describe("hydrating HTML the server rendered out of order", () => {
     );
 
     expect(stops(container, "option")).toEqual(["apple"]);
-    expect(container.querySelectorAll("[data-active]")).toHaveLength(1);
+    expect(
+      [...container.querySelectorAll<HTMLElement>("[data-active]")].map((o) => o.dataset.value),
+    ).toEqual(["apple"]);
     await userEvent.setup().click(container.querySelector("[data-value='plum']")!);
     expect(stops(container, "option")).toEqual(["plum"]);
     await act(async () => root.unmount());
@@ -222,6 +224,36 @@ describe("hydrating HTML the server rendered out of order", () => {
     expect(stops(container, "option")).toEqual(["apple"]);
     await userEvent.setup().click(container.querySelector("[data-value='plum']")!);
     expect(stops(container, "option")).toEqual(["plum"]);
+    await act(async () => root.unmount());
+  });
+
+  it("keeps an as={Fragment} child's own data-active when the server marked it active", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const late = gate();
+    const Late = () => {
+      use(late.promise);
+      return (
+        <ListBoxOption as={Fragment} value="apple">
+          <a href="/apple">Apple</a>
+        </ListBoxOption>
+      );
+    };
+    const { container, root } = await streamThenHydrate(
+      <ListBox aria-label="Fruit">
+        <Late />
+        <ListBoxOption as={Fragment} value="pear">
+          <a href="/pear" data-active="route">
+            Pear
+          </a>
+        </ListBoxOption>
+      </ListBox>,
+      late.open,
+    );
+
+    expect(stops(container, "option")).toEqual(["apple"]);
+    expect(container.querySelector("[data-value='pear']")!.getAttribute("data-active")).toBe(
+      "route",
+    );
     await act(async () => root.unmount());
   });
 });

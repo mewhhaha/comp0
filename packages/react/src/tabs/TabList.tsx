@@ -23,12 +23,12 @@ export function TabList({
   const tabs = useTabsContext("TabList");
   const { collection } = tabs;
   const navigate = useCollectionNavigation();
-  const pass = useCollectionPass(tabs.seed, children, as);
+  const pass = useCollectionPass(tabs.seed, children);
 
   const Part = partElement(as, "div");
   return (
     <>
-      {pass.before}
+      {pass}
       <Part
         {...props}
         ref={ref}
@@ -68,7 +68,7 @@ export function TabList({
           collection.get(targetKey)?.element?.focus();
         }}
       >
-        {pass.content}
+        {children}
       </Part>
     </>
   );

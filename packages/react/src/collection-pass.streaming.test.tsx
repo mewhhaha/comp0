@@ -44,7 +44,7 @@ function gate() {
  * Streaming SSR, kept apart from the hydration suites: `renderToPipeableStream` makes React log
  * a "multiple renderers" error in later tests of the same file. An item that streams in after
  * the shell cannot take the stop from one whose HTML was already sent, so the HTML holds one
- * stop; the selected item takes it once it registers after hydration.
+ * stop. `collection-pass.out-of-order.test.tsx` covers what happens once that HTML hydrates.
  */
 describe("collection pass with streaming", () => {
   it("streams one tab stop when the selected option suspends on the server", async () => {

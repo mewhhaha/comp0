@@ -2,7 +2,7 @@ import { act, type ReactElement } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { userEvent } from "vitest/browser";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { expectNoAxeViolations } from "../test/axe.js";
 import {
   GridList,
@@ -88,7 +88,7 @@ describe.each(cases)("$name tab stop across hydration", ({ role, forward, ui }) 
     await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(document.activeElement).toBe(first);
     expect(root.querySelectorAll("[tabindex='0']")).toHaveLength(1);
-    expect(root.querySelector(":scope > [hidden]:empty")).toBeNull();
+    expect(container.querySelector("[hidden]:empty")).toBeNull();
 
     await userEvent.keyboard(forward);
     const second = root.querySelector<HTMLElement>("[tabindex='0']")!;
@@ -103,6 +103,43 @@ describe.each(cases)("$name tab stop across hydration", ({ role, forward, ui }) 
     // The next Tab leaves the composite: one stop, however many items.
     await userEvent.tab();
     expect(root.contains(document.activeElement)).toBe(false);
+    await act(async () => reactRoot.unmount());
+    container.remove();
+  });
+
+  it("leaves in one Shift+Tab from an item focused before hydration moved the stop", async () => {
+    // The server can render items out of document order and put the stop on a later one. A
+    // browser test cannot stream that HTML, so the stop is moved by hand to the second item.
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = renderToString(page(ui));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+    const root = container.querySelector<HTMLElement>(`[role='${role}']`)!;
+    const first = root.querySelector<HTMLElement>("[tabindex='0']")!;
+    const second = root.querySelector<HTMLElement>("[tabindex='-1']")!;
+    first.setAttribute("tabindex", "-1");
+    second.setAttribute("tabindex", "0");
+    if (first.hasAttribute("data-active")) {
+      first.removeAttribute("data-active");
+      second.setAttribute("data-active", "");
+    }
+
+    await userEvent.click(before!);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(second);
+    let reactRoot!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      reactRoot = hydrateRoot(container, page(ui));
+    });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    // The stop follows the focus the user already placed, so it stays the only one.
+    expect(document.activeElement).toBe(second);
+    expect([...root.querySelectorAll("[tabindex='0']")]).toEqual([second]);
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(before);
+    errors.mockRestore();
     await act(async () => reactRoot.unmount());
     container.remove();
   });

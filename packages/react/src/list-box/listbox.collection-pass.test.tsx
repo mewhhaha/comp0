@@ -105,7 +105,10 @@ describe("ListBox collection pass", () => {
     // The pass leaves nothing behind but its empty, hidden holder: no duplicate parts.
     expect(container.querySelectorAll("[role='option']")).toHaveLength(3);
     expect(container.querySelectorAll("[role='group']")).toHaveLength(1);
-    expect(container.querySelector("[role='listbox'] > [hidden]")!.childNodes).toHaveLength(0);
+    const holder = container.querySelector("[hidden]")!;
+    expect(holder.childNodes).toHaveLength(0);
+    // It sits ahead of the list, so the list's own children are only what the consumer passed.
+    expect(holder.nextElementSibling).toBe(container.querySelector("[role='listbox']"));
   });
 
   it("hydrates without a mismatch, keeps focus, and removes the pass", async () => {
@@ -131,7 +134,7 @@ describe("ListBox collection pass", () => {
     expect(document.activeElement).toBe(pear);
     expect(container.querySelector<HTMLElement>("[data-value='pear']")).toBe(pear);
     expect(tabStops(container)).toEqual(["pear"]);
-    expect(container.querySelector("[role='listbox'] > [hidden]")).toBeNull();
+    expect(container.querySelector("[hidden]")).toBeNull();
     await act(async () => reactRoot.unmount());
   });
 
@@ -155,7 +158,7 @@ describe("ListBox collection pass", () => {
 
     expect(rendered).toHaveBeenCalledTimes(1);
     expect(tabStops(container)).toEqual(["apple"]);
-    expect(container.querySelector("[role='listbox'] > [hidden]")).toBeNull();
+    expect(container.querySelector("[hidden]")).toBeNull();
     await act(async () => reactRoot.unmount());
   });
 });

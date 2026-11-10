@@ -1,4 +1,4 @@
-import { act, Fragment, Suspense, type ReactElement } from "react";
+import { act, Children, Fragment, Suspense, type ReactElement, type ReactNode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -338,5 +338,58 @@ describe("collection pass", () => {
     );
 
     expect(container.querySelector("a")!.getAttribute("data-active")).toBe("route");
+  });
+
+  it("keeps an empty data-active an as={Fragment} child renders, and shows it once the option is the stop", async () => {
+    const { container, user } = setup(
+      <ListBox aria-label="Pages">
+        <ListBoxOption value="home">Home</ListBoxOption>
+        <ListBoxOption as={Fragment} value="docs">
+          <a href="/docs" data-active="">
+            Docs
+          </a>
+        </ListBoxOption>
+      </ListBox>,
+    );
+    const link = container.querySelector("a")!;
+
+    expect(link.getAttribute("data-active")).toBe("");
+    await user.click(link);
+    expect(stops(container, "option")).toEqual(["docs"]);
+    expect(link.hasAttribute("data-active")).toBe(true);
+  });
+
+  it("gives a custom as component the items as its children", () => {
+    function List({ children, ...props }: { children?: ReactNode }) {
+      return (
+        <ul {...props} data-count={Children.count(children)}>
+          {Children.map(children, (child) => (
+            <li role="presentation">{child}</li>
+          ))}
+        </ul>
+      );
+    }
+    const { container } = setup(
+      <>
+        <ListBox as={List} aria-label="Fruit">
+          <ListBoxOption value="apple">Apple</ListBoxOption>
+          <ListBoxOption value="pear">Pear</ListBoxOption>
+        </ListBox>
+        <Tabs defaultValue="one">
+          <TabList as={List} aria-label="Project">
+            <Tab value="one">One</Tab>
+            <Tab value="two">Two</Tab>
+          </TabList>
+        </Tabs>
+        <GridList as={List} aria-label="Files">
+          <GridListItem value="a">A</GridListItem>
+          <GridListItem value="b">B</GridListItem>
+        </GridList>
+      </>,
+    );
+
+    expect(container.querySelector("[role='listbox']")!.getAttribute("data-count")).toBe("2");
+    expect(container.querySelector("[role='tablist']")!.getAttribute("data-count")).toBe("2");
+    expect(container.querySelector("[role='grid']")!.getAttribute("data-count")).toBe("2");
   });
 });

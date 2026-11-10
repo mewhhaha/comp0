@@ -25,7 +25,9 @@ function TabPart({ as, value, disabled, onClick, ref, ...props }: TabProps) {
   const tabIndex = isTabStop && !resolvedDisabled ? 0 : -1;
   const elementRef = useRef<HTMLButtonElement | null>(null);
   // The stop depends on the whole collection, which the server can see in another order.
-  useHydrationRepair(elementRef, { tabindex: String(tabIndex) });
+  useHydrationRepair(elementRef, { tabindex: String(tabIndex) }, () => {
+    if (!resolvedDisabled) tabs.setFocusedKey(value);
+  });
   const tabRef = useComposedRefs(ref, elementRef, (element: HTMLButtonElement | null) => {
     if (!element) return;
     collection.register({
