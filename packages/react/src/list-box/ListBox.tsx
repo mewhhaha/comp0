@@ -15,13 +15,9 @@ import { type ListBoxContextValue } from "./list-box-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
 import { useMentionFieldListBoxContext } from "../mention-field/mention-field-shared.js";
+import { useCollectionPass } from "../internal/collection-pass.js";
 import { useRenderedId } from "../internal/rendered-id.js";
-import {
-  rootEntryKey,
-  useRootTabIndex,
-  useTabStopSelection,
-  useTabStopStore,
-} from "../internal/tab-stop.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import { writingDirection } from "../internal/writing-direction.js";
 import { ListBoxContext } from "./list-box-shared.js";
 
@@ -68,13 +64,13 @@ export function ListBox({
   // re-renders only the two options whose tabIndex changes (bench:
   // collection-tab-stop.bench.tsx, PERFORMANCE.md).
   const selection = useTabStopSelection(selected);
-  const tabStops = useTabStopStore(collection);
+  // On the server and while hydrating, the options are collected before they render, so the
+  // stop is already resolved in server HTML.
+  const { seed, pass } = useCollectionPass(children);
+  const tabStops = useTabStopStore(collection, seed);
   const setFocusedKey = (key: string) => {
     tabStops.focus(key, selection);
   };
-  // Autocomplete and MentionField keep DOM focus in their input, so the list must not take it.
-  const rootTabIndex = useRootTabIndex(tabStops, selection);
-  const focusStaysOutside = autocomplete?.disableVirtualFocus === false || Boolean(mentionField);
 
   const context: ListBoxContextValue = {
     tabStops,
@@ -111,7 +107,6 @@ export function ListBox({
         ref={composedRef}
         id={collectionId}
         role="listbox"
-        tabIndex={props.tabIndex ?? (focusStaysOutside ? undefined : rootTabIndex)}
         aria-labelledby={labelledBy}
         aria-orientation={orientation}
         data-orientation={orientation}
@@ -128,24 +123,11 @@ export function ListBox({
           if (event.defaultPrevented) return;
           // Arrows move from the option holding focus, not from the selection, so a controlled
           // value that rejects the move still advances to the next option.
-          const options = {
+          const key = navigate(event.key, collection.items(), tabStops.get(selection), {
             orientation,
             dir: writingDirection(event.currentTarget),
             loop: true,
-          };
-          const stop = tabStops.get(selection);
-          if (event.target === event.currentTarget) {
-            // Focus is on the list itself (focused before its options registered, or by a
-            // click between options): enter at the stop without changing the selection.
-            const entry = navigate(event.key, collection.items(), undefined, options);
-            const entryKey = rootEntryKey(event.key, stop, entry);
-            if (!entryKey) return;
-            event.preventDefault();
-            setFocusedKey(entryKey);
-            collection.get(entryKey)?.element?.focus();
-            return;
-          }
-          const key = navigate(event.key, collection.items(), stop, options);
+          });
           if (!key) return;
           event.preventDefault();
           setFocusedKey(key);
@@ -153,6 +135,7 @@ export function ListBox({
           collection.get(key)?.element?.focus();
         }}
       >
+        {pass}
         {children}
       </Part>
     </ListBoxContext>

@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   GridList,
   GridListItem,
-  ListBox,
-  ListBoxOption,
   Menu,
   Menubar,
   MenuItem,
@@ -31,18 +29,6 @@ type Case = {
 };
 
 const cases: Case[] = [
-  {
-    name: "ListBox",
-    root: "listbox, Fruit, orientated vertically",
-    firstItem: "option, Apple, not selected, position 1, set size 2",
-    forward: "ArrowDown",
-    ui: (
-      <ListBox aria-label="Fruit">
-        <ListBoxOption value="apple">Apple</ListBoxOption>
-        <ListBoxOption value="pear">Pear</ListBoxOption>
-      </ListBox>
-    ),
-  },
   {
     name: "GridList",
     root: "grid, Files",

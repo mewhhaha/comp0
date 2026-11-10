@@ -9,6 +9,7 @@ import {
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import { useCollectedItem } from "../internal/collection-pass.js";
 import { useWarnOnce } from "../internal/dev.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -19,16 +20,7 @@ import {
 } from "../autocomplete/autocomplete-shared.js";
 import { useListBoxContext } from "./list-box-shared.js";
 
-export type ListBoxOptionProps = ComponentProps<"div"> &
-  AsProp & {
-    /** Identity used for selection; unique within the ListBox. */
-    value: string;
-    disabled?: boolean | undefined;
-    /** Overrides the text crawled from children for typeahead and display. */
-    textValue?: string | undefined;
-  };
-
-export function ListBoxOption({
+function ListBoxOptionPart({
   as,
   id: idProp,
   value,
@@ -171,4 +163,21 @@ export function ListBoxOption({
       {children}
     </Part>
   );
+}
+
+export type ListBoxOptionProps = ComponentProps<"div"> &
+  AsProp & {
+    /** Identity used for selection; unique within the ListBox. */
+    value: string;
+    disabled?: boolean | undefined;
+    /** Overrides the text crawled from children for typeahead and display. */
+    textValue?: string | undefined;
+  };
+
+export function ListBoxOption(props: ListBoxOptionProps) {
+  // Inside a collection pass the option only records itself, so the real options know the
+  // whole collection before they render.
+  const collected = useCollectedItem(props.value, props.disabled);
+  if (collected) return null;
+  return <ListBoxOptionPart {...props} />;
 }

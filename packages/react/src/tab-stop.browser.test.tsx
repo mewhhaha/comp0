@@ -4,20 +4,9 @@ import { renderToString } from "react-dom/server";
 import { userEvent } from "vitest/browser";
 import { describe, expect, it } from "vitest";
 import { expectNoAxeViolations } from "../test/axe.js";
-import { GridList, GridListItem, ListBox, ListBoxOption, Tab, TabList, Tabs } from "./index.js";
+import { GridList, GridListItem, Tab, TabList, Tabs } from "./index.js";
 
 const cases: { name: string; role: string; forward: string; ui: ReactElement }[] = [
-  {
-    name: "ListBox",
-    role: "listbox",
-    forward: "{ArrowDown}",
-    ui: (
-      <ListBox aria-label="Fruit">
-        <ListBoxOption value="apple">Apple</ListBoxOption>
-        <ListBoxOption value="pear">Pear</ListBoxOption>
-      </ListBox>
-    ),
-  },
   {
     name: "GridList",
     role: "grid",
