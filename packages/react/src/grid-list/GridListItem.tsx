@@ -11,7 +11,11 @@ import {
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { useCollectedItem } from "../internal/collection-pass.js";
+import {
+  useCollectedItem,
+  useIsCollectionPass,
+  useRenderOrderSeed,
+} from "../internal/collection-pass.js";
 import { focusableWithin } from "../internal/focusable.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
@@ -61,6 +65,7 @@ function GridListItemPart({
     reorderable,
   };
   const selected = gridList.selectedKey === value;
+  useRenderOrderSeed(gridList.seed, value, resolvedDisabled);
   const isTabStop = useIsTabStop(gridList.tabStops, value, gridList.selection);
   const dragging = dnd?.dragValue === value;
   const dropEdge = dnd?.dropTarget?.value === value ? dnd.dropTarget.edge : undefined;
@@ -230,7 +235,8 @@ export type GridListItemProps = Omit<ComponentProps<"div">, "id"> &
 export function GridListItem(props: GridListItemProps) {
   // Inside a collection pass the row only records itself, so the real rows know the whole
   // collection before they render.
-  const collected = useCollectedItem(props.value, props.disabled);
-  if (collected) return null;
+  const collecting = useIsCollectionPass();
+  useCollectedItem(props.value, props.disabled);
+  if (collecting) return null;
   return <GridListItemPart {...props} />;
 }

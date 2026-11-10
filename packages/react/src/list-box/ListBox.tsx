@@ -67,13 +67,14 @@ export function ListBox({
   // On the server and while hydrating, the options are collected before they render, so the
   // stop is already resolved in server HTML.
   const seed = useCollectionSeed();
-  const pass = useCollectionPass(seed, children);
+  const pass = useCollectionPass(seed, children, as);
   const tabStops = useTabStopStore(collection, seed);
   const setFocusedKey = (key: string) => {
     tabStops.focus(key, selection);
   };
 
   const context: ListBoxContextValue = {
+    seed,
     tabStops,
     selection,
     selectedKey: selected,
@@ -103,6 +104,7 @@ export function ListBox({
   const Part = partElement(as, "div");
   return (
     <ListBoxContext value={context}>
+      {pass.before}
       <Part
         {...props}
         ref={composedRef}
@@ -136,8 +138,7 @@ export function ListBox({
           collection.get(key)?.element?.focus();
         }}
       >
-        {pass}
-        {children}
+        {pass.content}
       </Part>
     </ListBoxContext>
   );

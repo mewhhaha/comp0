@@ -13,7 +13,7 @@ Existing codebase of a library: headless React component library (`@comp0/react`
 ## Conventions
 
 - Component behavior change: tests next to the family (`packages/react/src/<family>/*.test.tsx`), interact through `setup(ui)` from `packages/react/test/render.tsx`; no synthetic events without a `comp0/no-synthetic-events` disable comment.
-- DOM state: attributes on elements comp0 renders come from render; collection-dependent values read via `useSyncExternalStore(collection.subscribe, ...)` (see `AGENTS.md` "DOM state", `Tabs` is the reference). Perf-motivated changes get a bench in `packages/react/bench/` and a row in `packages/react/PERFORMANCE.md`.
+- DOM state: attributes on elements comp0 renders come from render; collection-dependent values read via `useSyncExternalStore(collection.subscribe, ...)` (see `AGENTS.md` "DOM state", `ListBox` is the reference). Perf-motivated changes get a bench in `packages/react/bench/` and a row in `packages/react/PERFORMANCE.md`.
 - Docs for a family live in `apps/docs/src/content/components/<slug>.ts`; new `data-*` attributes must be documented there.
 
 ## Standing criteria

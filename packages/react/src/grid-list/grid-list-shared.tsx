@@ -1,9 +1,12 @@
 import { cloneElement, Fragment, isValidElement, type ElementType, type ReactNode } from "react";
 import { type CollectionItem } from "@comp0/core";
+import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
 import { type TabStopSelection, type TabStopStore } from "../internal/tab-stop.js";
 
 export type GridListContextValue = {
+  /** What the collection pass and the rows fill on the server and while hydrating. */
+  seed: CollectionSeed;
   /** The one row rendered with tabIndex 0; rows read it with `useIsTabStop`. */
   tabStops: TabStopStore;
   /** The numbered selection the stop is resolved under. */

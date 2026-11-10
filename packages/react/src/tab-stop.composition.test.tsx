@@ -9,6 +9,9 @@ import { ListBoxOption } from "./list-box/ListBoxOption.js";
 import { Menu } from "./menu/Menu.js";
 import { MenuTrigger } from "./menu/MenuTrigger.js";
 import { Menubar } from "./menubar/Menubar.js";
+import { Tab } from "./tabs/Tab.js";
+import { TabList } from "./tabs/TabList.js";
+import { Tabs } from "./tabs/Tabs.js";
 
 // Counts registry changes: a register or unregister that changed an entry. Registering an
 // unchanged item returns false and is not counted, so a stop move that re-registered every item
@@ -303,6 +306,29 @@ describe("roving tab stop re-renders", () => {
     rendered.clear();
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(options[2]);
+    expect([...rendered].sort()).toEqual(["three", "two"]);
+    unmount();
+  });
+
+  it("re-renders only the two tabs when a controlled value rejects the move", async () => {
+    const { rendered, onRender } = tracked();
+    const { container, user, unmount } = setup(
+      <Tabs value="one" onChange={() => {}}>
+        <TabList aria-label="Tabs">
+          {many.map((value) => (
+            <Profiler key={value} id={value} onRender={onRender}>
+              <Tab value={value}>{value}</Tab>
+            </Profiler>
+          ))}
+        </TabList>
+      </Tabs>,
+    );
+    const tabs = container.querySelectorAll<HTMLElement>("[role='tab']");
+    tabs[0]!.focus();
+    await user.keyboard("{ArrowRight}");
+    rendered.clear();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(tabs[2]);
     expect([...rendered].sort()).toEqual(["three", "two"]);
     unmount();
   });

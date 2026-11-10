@@ -1,48 +1,54 @@
 import {
   createContext,
+  Fragment,
   use,
-  useLayoutEffect,
   useState,
   useSyncExternalStore,
+  type ElementType,
   type ReactNode,
 } from "react";
 
 /**
  * The items a root's children will render, in render order, known before the real items render.
- * It exists only on the server and while hydrating; once items register their elements, the
+ * It only fills on the server and while hydrating; once an item registers its element, the
  * DOM-ordered collection is the source of truth and the seed is cleared.
  */
 export type CollectionSeed = {
   /** Records an item; a key already recorded keeps its first position. */
   add: (key: string, disabled: boolean) => void;
-  /** Whether `key` was recorded and is not disabled. */
-  isEnabled: (key: string) => boolean;
-  /** The first recorded item that is not disabled, or "". */
-  firstEnabled: () => string;
-  size: () => number;
+  /**
+   * The first of `preferred` that is recorded and enabled, else the first enabled item, or
+   * `null` while nothing is recorded. A fallback answer is kept: an item that streams in later
+   * (a Suspense boundary that suspended on the server) cannot take the stop from an item whose
+   * HTML was already sent, so server HTML never holds two stops.
+   */
+  resolve: (preferred: readonly string[]) => string | null;
   clear: () => void;
 };
 
 function createCollectionSeed(): CollectionSeed {
   const disabledByKey = new Map<string, boolean>();
+  let fallback = "";
+  const isEnabled = (key: string) => disabledByKey.get(key) === false;
   return {
     add(key, disabled) {
       if (!disabledByKey.has(key)) disabledByKey.set(key, disabled);
     },
-    isEnabled(key) {
-      return disabledByKey.get(key) === false;
-    },
-    firstEnabled() {
-      for (const [key, disabled] of disabledByKey) {
-        if (!disabled) return key;
+    resolve(preferred) {
+      if (disabledByKey.size === 0) return null;
+      if (fallback) return fallback;
+      const key = preferred.find(isEnabled);
+      if (key) return key;
+      for (const [candidate, disabled] of disabledByKey) {
+        if (disabled) continue;
+        fallback = candidate;
+        break;
       }
-      return "";
-    },
-    size() {
-      return disabledByKey.size;
+      return fallback;
     },
     clear() {
       disabledByKey.clear();
+      fallback = "";
     },
   };
 }
@@ -52,7 +58,7 @@ CollectionPassContext.displayName = "CollectionPassContext";
 
 const subscribeToNothing = () => () => {};
 
-/** True on the server and for the hydration render; false for every render after it. */
+/** True on the server and for a hydration render; false for every other render. */
 function useIsHydrating() {
   return useSyncExternalStore(
     subscribeToNothing,
@@ -61,63 +67,78 @@ function useIsHydrating() {
   );
 }
 
-/**
- * The seed a root resolves against before its items register. Pass it to the root's tab stop
- * store; it is cleared once the items have registered their elements.
- */
+/** The seed a root resolves against before its items register. Pass it to the tab stop store. */
 export function useCollectionSeed() {
   const [seed] = useState(createCollectionSeed);
-  // Item registration runs in the items' own ref callbacks and layout effects, before this one.
-  useLayoutEffect(() => {
-    seed.clear();
-  }, [seed]);
   return seed;
 }
 
 /**
- * The collection pass, for the part that holds the items: render the result before the real
- * `children`. On the server and while hydrating it renders the same children once more, where
- * items record themselves in `seed` and render nothing, so the real items after it already know
- * the whole collection. A client-only mount renders no pass, and after hydration it unmounts.
+ * The collection pass, for the part that holds the items. On the server and while hydrating it
+ * renders the same children once more ahead of the real ones, where items record themselves in
+ * `seed` and render nothing, so the real items already know the whole collection. A client-only
+ * mount renders no pass, and after hydration it unmounts.
+ *
+ * Render `before` ahead of the part and `content` as the part's children. The pass normally
+ * sits inside the part; `as={Fragment}` merges the part into its single child, so there it goes
+ * before the part instead.
  */
-export function useCollectionPass(seed: CollectionSeed, children: ReactNode) {
+export function useCollectionPass(
+  seed: CollectionSeed,
+  children: ReactNode,
+  as: ElementType | undefined,
+) {
   const hydrating = useIsHydrating();
-  if (!hydrating) return null;
-  return (
-    <CollectionPassContext value={seed}>
-      {/* Holds whatever consumer elements sit between the root and its items. */}
-      <div hidden>{children}</div>
-    </CollectionPassContext>
-  );
+  let pass: ReactNode = null;
+  if (hydrating) {
+    pass = (
+      <CollectionPassContext value={seed}>
+        {/* Holds whatever consumer elements sit between the root and its items. */}
+        <div hidden>{children}</div>
+      </CollectionPassContext>
+    );
+  }
+  if (as === Fragment) return { before: pass, content: children };
+  return {
+    before: null,
+    content: (
+      <>
+        {pass}
+        {children}
+      </>
+    ),
+  };
 }
 
-/**
- * For an item whose key cannot be known to a separate pass (a Menubar trigger's id comes from
- * its own Menu instance) and whose root has no selection: records the item as it renders for
- * real, on the server and while hydrating. The stop is then the first enabled item, which never
- * depends on the items after it. Call it before reading the stop.
- */
-export function useRenderOrderSeed(seed: CollectionSeed, key: string, disabled: boolean) {
-  const hydrating = useIsHydrating();
-  // A render-time write, limited to where a render runs once in order (the server) or replays
-  // that order (hydration). Recording is idempotent per key.
-  if (hydrating) seed.add(key, disabled);
-}
-
-/**
- * For an item: records it when rendered inside a collection pass and returns true, in which
- * case the item renders nothing.
- */
-export function useCollectedItem(key: string, disabled: boolean | undefined) {
-  const seed = use(CollectionPassContext);
-  if (!seed) return false;
-  // A render-time write, which is why the pass only exists where a render runs once in order
-  // (the server) or replays that order (hydration). Recording is idempotent per key.
-  seed.add(key, Boolean(disabled));
-  return true;
-}
-
-/** For a part between the root and its items: whether to render only its children. */
+/** Whether this render is inside a collection pass, where parts render no elements. */
 export function useIsCollectionPass() {
   return use(CollectionPassContext) !== null;
+}
+
+/**
+ * For an item rendered inside a collection pass: records it unless it is not `present` (an
+ * option an Autocomplete filter hides). The item then renders nothing.
+ */
+export function useCollectedItem(key: string, disabled: boolean | undefined, present = true) {
+  const seed = use(CollectionPassContext);
+  // A render-time write, which is why the pass only exists where a render runs once in order
+  // (the server) or replays that order (hydration). Recording is idempotent per key.
+  if (seed && present) seed.add(key, Boolean(disabled));
+}
+
+/**
+ * For an item's real render, before it reads the stop: records it in render order on the server
+ * and while hydrating. It covers what a pass cannot see: an item whose key a separate pass
+ * cannot know (a Menubar trigger's id comes from its own Menu), and items inside a Suspense
+ * boundary, which React hydrates after the pass is gone.
+ */
+export function useRenderOrderSeed(
+  seed: CollectionSeed,
+  key: string,
+  disabled: boolean,
+  present = true,
+) {
+  const hydrating = useIsHydrating();
+  // A render-time write under the same limits as `useCollectedItem`.
+  if (hydrating && present) seed.add(key, disabled);
 }

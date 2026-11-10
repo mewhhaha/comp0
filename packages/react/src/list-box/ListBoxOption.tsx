@@ -9,7 +9,11 @@ import {
   type PointerEvent,
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
-import { useCollectedItem } from "../internal/collection-pass.js";
+import {
+  useCollectedItem,
+  useIsCollectionPass,
+  useRenderOrderSeed,
+} from "../internal/collection-pass.js";
 import { useWarnOnce } from "../internal/dev.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -45,11 +49,6 @@ function ListBoxOptionPart({
   // Autocomplete keeps DOM focus in its input and moves a virtual active option instead, so no
   // option takes the roving tab stop while it is in charge.
   const virtualFocus = autocomplete?.disableVirtualFocus === false;
-  const isTabStop = useIsTabStop(listBox.tabStops, value, listBox.selection);
-  const active = virtualFocus ? autocomplete?.activeId === id : isTabStop;
-  let tabIndex: number | undefined = -1;
-  if (resolvedDisabled) tabIndex = undefined;
-  else if (!virtualFocus && isTabStop) tabIndex = 0;
   const ariaLabel = props["aria-label"];
   const elementRef = useRef<HTMLDivElement | null>(null);
   const [crawledLabel, setCrawledLabel] = useState("");
@@ -73,6 +72,13 @@ function ListBoxOptionPart({
     );
   }
   const visible = autocomplete?.isItemVisible(label) ?? true;
+  // An option the filter hides renders nothing, so it must not be recorded as a stop either.
+  useRenderOrderSeed(listBox.seed, value, resolvedDisabled, visible);
+  const isTabStop = useIsTabStop(listBox.tabStops, value, listBox.selection);
+  const active = virtualFocus ? autocomplete?.activeId === id : isTabStop;
+  let tabIndex: number | undefined = -1;
+  if (resolvedDisabled) tabIndex = undefined;
+  else if (!virtualFocus && isTabStop) tabIndex = 0;
 
   const itemRef = useComposedRefs(elementRef, ref);
 
@@ -177,7 +183,24 @@ export type ListBoxOptionProps = ComponentProps<"div"> &
 export function ListBoxOption(props: ListBoxOptionProps) {
   // Inside a collection pass the option only records itself, so the real options know the
   // whole collection before they render.
-  const collected = useCollectedItem(props.value, props.disabled);
-  if (collected) return null;
+  const collecting = useIsCollectionPass();
+  if (collecting) return <CollectedListBoxOption {...props} />;
   return <ListBoxOptionPart {...props} />;
+}
+
+function CollectedListBoxOption({
+  value,
+  disabled,
+  textValue,
+  children,
+  ...props
+}: ListBoxOptionProps) {
+  const autocomplete = useAutocompleteContext();
+  // The text the real option filters on in its first render, before it can crawl its element.
+  let label = textValue;
+  const renderedText = resolveAutocompleteItemText(children).text;
+  if (label === undefined && renderedText) label = renderedText;
+  if (label === undefined) label = props["aria-label"] ?? value;
+  useCollectedItem(value, disabled, autocomplete?.isItemVisible(label) ?? true);
+  return null;
 }

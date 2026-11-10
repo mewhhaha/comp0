@@ -97,6 +97,7 @@ export function useGridListRows(options: {
   };
 
   const context: GridListContextValue = {
+    seed,
     tabStops,
     selection,
     selectedKey: selected,

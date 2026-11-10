@@ -28,7 +28,9 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
   // it in one press even when a controlled value rejected the arrow move that focused it, and
   // the selected tab otherwise. Registration, unregistration, and a tab's own disabled change
   // all notify the store, and each tab reads its own boolean, so a move re-renders two tabs.
-  const selection = useTabStopSelection(selected);
+  // The focus record is cleared when focus leaves the list, so it is kept across a selection
+  // the owner changes while a tab holds focus.
+  const selection = useTabStopSelection(selected, true);
   const tabStops = useTabStopStore(collection, seed);
   const setFocusedKey = (key: string) => {
     tabStops.focus(key, selection);

@@ -15,12 +15,16 @@ function resolveTabStop<TItem extends CollectionItem<Element>>(
 ) {
   for (const key of preferred) {
     const item = key ? collection.get(key) : undefined;
-    if (item && !item.disabled) return key;
+    if (!item || item.disabled) continue;
+    seed.clear();
+    return key;
   }
   const items = collection.items();
-  if (items.length > 0) return items.find((item) => !item.disabled)?.key ?? "";
-  if (seed.size() === 0) return preferred.find(Boolean) ?? "";
-  return preferred.find((key) => seed.isEnabled(key)) ?? seed.firstEnabled();
+  if (items.length === 0) return seed.resolve(preferred) ?? preferred.find(Boolean) ?? "";
+  // Registered elements are the source of truth from here on. Dropping the seed here rather
+  // than in an effect also covers items React hydrates late, inside a Suspense boundary.
+  seed.clear();
+  return items.find((item) => !item.disabled)?.key ?? "";
 }
 
 /**
@@ -36,11 +40,16 @@ export const NO_SELECTION: TabStopSelection = { value: "", epoch: 0 };
  * Numbers the owner's selection during render (adjusting state, so no effect or extra commit).
  * The result is stable until `selected` changes, so passing it through context re-renders items
  * only when the selection does.
+ *
+ * An owner that clears its focus record when focus leaves (Tabs) passes `keepFocusRecord`: the
+ * record cannot go stale there, and a selection changed from outside must leave the stop on the
+ * item that holds focus.
  */
-export function useTabStopSelection(selected: string) {
+export function useTabStopSelection(selected: string, keepFocusRecord = false) {
   const [selection, setSelection] = useState<TabStopSelection>({ value: selected, epoch: 0 });
   if (selection.value === selected) return selection;
-  const next = { value: selected, epoch: selection.epoch + 1 };
+  const epoch = keepFocusRecord ? selection.epoch : selection.epoch + 1;
+  const next = { value: selected, epoch };
   setSelection(next);
   return next;
 }

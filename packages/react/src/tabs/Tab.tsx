@@ -1,6 +1,10 @@
 import { type ComponentProps } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
-import { useCollectedItem } from "../internal/collection-pass.js";
+import {
+  useCollectedItem,
+  useIsCollectionPass,
+  useRenderOrderSeed,
+} from "../internal/collection-pass.js";
 import { disabledProps } from "../internal/disabled.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
@@ -15,6 +19,7 @@ function TabPart({ as, value, disabled, onClick, ref, ...props }: TabProps) {
   // Read the stable registry outside the ref callback: depending on the whole context would
   // re-register every tab whenever the stop moves, and each registration notifies the store.
   const { collection } = tabs;
+  useRenderOrderSeed(tabs.seed, value, resolvedDisabled);
   const isTabStop = useIsTabStop(tabs.tabStops, value, tabs.selection);
   const tabRef = useComposedRefs(ref, (element: HTMLButtonElement | null) => {
     if (!element) return;
@@ -66,7 +71,8 @@ export type TabProps = Omit<ComponentProps<"button">, "id" | "value"> &
 export function Tab(props: TabProps) {
   // Inside TabList's collection pass the tab only records itself, so the real tabs know the
   // whole collection before they render.
-  const collected = useCollectedItem(props.value, props.disabled);
-  if (collected) return null;
+  const collecting = useIsCollectionPass();
+  useCollectedItem(props.value, props.disabled);
+  if (collecting) return null;
   return <TabPart {...props} />;
 }

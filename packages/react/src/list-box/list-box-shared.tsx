@@ -1,8 +1,11 @@
 import { type Collection } from "@comp0/core";
+import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
 import { type TabStopSelection, type TabStopStore } from "../internal/tab-stop.js";
 
 export type ListBoxContextValue = {
+  /** What the collection pass and the options fill on the server and while hydrating. */
+  seed: CollectionSeed;
   /** The one option rendered with tabIndex 0; options read it with `useIsTabStop`. */
   tabStops: TabStopStore;
   /** The numbered selection the stop is resolved under. */
