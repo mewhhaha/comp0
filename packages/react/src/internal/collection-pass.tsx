@@ -116,21 +116,28 @@ export function useIsCollectionPass() {
 }
 
 /**
- * For an item rendered inside a collection pass: records it unless it is not `present` (an
- * option an Autocomplete filter hides). The item then renders nothing.
+ * For an item rendered inside a collection pass: records it in its own root's `seed`, unless it
+ * is not `present` (an option an Autocomplete filter hides). An item reached through another
+ * root's pass (a composite nested between that root and its items) records nothing. Either way
+ * the item renders nothing.
  */
-export function useCollectedItem(key: string, disabled: boolean | undefined, present = true) {
-  const seed = use(CollectionPassContext);
+export function useCollectedItem(
+  seed: CollectionSeed,
+  key: string,
+  disabled: boolean | undefined,
+  present = true,
+) {
+  const pass = use(CollectionPassContext);
   // A render-time write, which is why the pass only exists where a render runs once in order
   // (the server) or replays that order (hydration). Recording is idempotent per key.
-  if (seed && present) seed.add(key, Boolean(disabled));
+  if (pass === seed && present) seed.add(key, Boolean(disabled));
 }
 
 /**
  * For an item's real render, before it reads the stop: records it in render order on the server
- * and while hydrating. It covers what a pass cannot see: an item whose key a separate pass
- * cannot know (a Menubar trigger's id comes from its own Menu), and items inside a Suspense
- * boundary, which React hydrates after the pass is gone.
+ * and while hydrating, unless it is not `present`. It covers what a pass cannot see: an item
+ * whose key a separate pass cannot know (a Menubar trigger's id comes from its own Menu), and
+ * items inside a Suspense boundary, which React hydrates after the pass is gone.
  */
 export function useRenderOrderSeed(
   seed: CollectionSeed,

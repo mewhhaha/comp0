@@ -235,8 +235,9 @@ export type GridListItemProps = Omit<ComponentProps<"div">, "id"> &
 export function GridListItem(props: GridListItemProps) {
   // Inside a collection pass the row only records itself, so the real rows know the whole
   // collection before they render.
+  const gridList = useGridListContext("GridListItem");
   const collecting = useIsCollectionPass();
-  useCollectedItem(props.value, props.disabled);
+  useCollectedItem(gridList.seed, props.value, props.disabled);
   if (collecting) return null;
   return <GridListItemPart {...props} />;
 }

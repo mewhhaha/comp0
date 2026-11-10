@@ -196,11 +196,13 @@ function CollectedListBoxOption({
   ...props
 }: ListBoxOptionProps) {
   const autocomplete = useAutocompleteContext();
+  const listBox = useListBoxContext("ListBoxOption");
   // The text the real option filters on in its first render, before it can crawl its element.
   let label = textValue;
   const renderedText = resolveAutocompleteItemText(children).text;
   if (label === undefined && renderedText) label = renderedText;
   if (label === undefined) label = props["aria-label"] ?? value;
-  useCollectedItem(value, disabled, autocomplete?.isItemVisible(label) ?? true);
+  // An option the filter hides renders nothing, so it must not be recorded as a stop either.
+  useCollectedItem(listBox.seed, value, disabled, autocomplete?.isItemVisible(label) ?? true);
   return null;
 }

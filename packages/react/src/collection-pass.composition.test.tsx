@@ -197,4 +197,99 @@ describe("collection pass", () => {
     expect(errors).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
+
+  // React hydrates a Suspense boundary apart from the items around it, so the client sees only
+  // part of the collection at each step and can disagree with the server's HTML while it
+  // hydrates. In development React logs that as an attribute mismatch; what must hold is that
+  // server HTML and the hydrated DOM each have the one correct stop.
+  it.each([
+    {
+      name: "the selected option inside a boundary with nothing outside it",
+      role: "option",
+      stop: "plum",
+      ui: (
+        <ListBox aria-label="Fruit" defaultValue="plum">
+          <Suspense fallback={null}>
+            <ListBoxOption value="pear">Pear</ListBoxOption>
+            <ListBoxOption value="plum">Plum</ListBoxOption>
+          </Suspense>
+        </ListBox>
+      ),
+    },
+    {
+      name: "no selection, a boundary first and an enabled tab after it",
+      role: "tab",
+      stop: "One",
+      ui: (
+        <Tabs>
+          <TabList aria-label="Project">
+            <Suspense fallback={null}>
+              <Tab value="one">One</Tab>
+            </Suspense>
+            <Tab value="two">Two</Tab>
+          </TabList>
+        </Tabs>
+      ),
+    },
+    {
+      name: "no selection, a disabled option outside and enabled ones inside a boundary",
+      role: "option",
+      stop: "pear",
+      ui: (
+        <ListBox aria-label="Fruit">
+          <ListBoxOption value="apple" disabled>
+            Apple
+          </ListBoxOption>
+          <Suspense fallback={null}>
+            <ListBoxOption value="pear">Pear</ListBoxOption>
+          </Suspense>
+        </ListBox>
+      ),
+    },
+    {
+      name: "the selected row inside a boundary with a row outside it",
+      role: "row",
+      stop: "b",
+      ui: (
+        <GridList aria-label="Files" defaultValue="b">
+          <GridListItem value="a">A</GridListItem>
+          <Suspense fallback={null}>
+            <GridListItem value="b">B</GridListItem>
+          </Suspense>
+        </GridList>
+      ),
+    },
+  ])("ends with the one correct stop for $name", async ({ role, stop, ui }) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = serverRender(ui);
+
+    expect(stops(container, role)).toEqual([stop]);
+    const root = await hydrate(container, ui);
+    expect(stops(container, role)).toEqual([stop]);
+    await act(async () => root.unmount());
+  });
+
+  it("keeps a composite nested between a root and its items out of that root's collection", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const ui = (
+      <ListBox aria-label="Fruit">
+        <div role="presentation">
+          <Tabs defaultValue="two">
+            <TabList aria-label="Kind">
+              <Tab value="one">One</Tab>
+              <Tab value="two">Two</Tab>
+            </TabList>
+          </Tabs>
+        </div>
+        <ListBoxOption value="apple">Apple</ListBoxOption>
+      </ListBox>
+    );
+    const container = serverRender(ui);
+
+    expect(stops(container, "option")).toEqual(["apple"]);
+    const root = await hydrate(container, ui);
+    expect(errors).not.toHaveBeenCalled();
+    expect(stops(container, "option")).toEqual(["apple"]);
+    await act(async () => root.unmount());
+  });
 });

@@ -71,8 +71,9 @@ export type TabProps = Omit<ComponentProps<"button">, "id" | "value"> &
 export function Tab(props: TabProps) {
   // Inside TabList's collection pass the tab only records itself, so the real tabs know the
   // whole collection before they render.
+  const tabs = useTabsContext("Tab");
   const collecting = useIsCollectionPass();
-  useCollectedItem(props.value, props.disabled);
+  useCollectedItem(tabs.seed, props.value, props.disabled);
   if (collecting) return null;
   return <TabPart {...props} />;
 }
