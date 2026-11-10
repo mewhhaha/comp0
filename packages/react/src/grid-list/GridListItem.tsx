@@ -85,7 +85,9 @@ function GridListItemPart({
   if (resolvedDisabled) tabIndex = undefined;
   else if (isTabStop) tabIndex = 0;
   // The stop depends on the whole collection, which the server can see in another order.
-  useHydrationRepair(rowRef, { tabindex: tabIndex === undefined ? null : String(tabIndex) });
+  useHydrationRepair(rowRef, {
+    tabindex: tabIndex === undefined ? undefined : String(tabIndex),
+  });
 
   // Interactive children use the inline-forward arrow instead of Tab, so the
   // grid stays a single tab stop.

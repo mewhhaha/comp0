@@ -83,7 +83,7 @@ function ListBoxOptionPart({
 
   // The stop depends on the whole collection, which the server can see in another order.
   useHydrationRepair(elementRef, {
-    tabindex: tabIndex === undefined ? null : String(tabIndex),
+    tabindex: tabIndex === undefined ? undefined : String(tabIndex),
     "data-active": active ? "" : null,
   });
 

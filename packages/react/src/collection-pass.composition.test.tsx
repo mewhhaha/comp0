@@ -292,4 +292,51 @@ describe("collection pass", () => {
     expect(stops(container, "option")).toEqual(["apple"]);
     await act(async () => root.unmount());
   });
+
+  // The hydration repair must only write what the part itself rendered: with as={Fragment} a
+  // part's undefined prop leaves the child's own value in place.
+  it("keeps the tabIndex a disabled ListBoxOption as={Fragment} child renders", () => {
+    const { container } = setup(
+      <ListBox aria-label="Pages">
+        <ListBoxOption value="home">Home</ListBoxOption>
+        <ListBoxOption as={Fragment} value="admin" disabled>
+          <a href="/admin" tabIndex={-1}>
+            Admin
+          </a>
+        </ListBoxOption>
+      </ListBox>,
+    );
+
+    expect(container.querySelector("a")!.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("keeps the tabIndex a disabled GridListItem as={Fragment} child renders", () => {
+    const { container } = setup(
+      <GridList aria-label="Pages">
+        <GridListItem value="home">Home</GridListItem>
+        <GridListItem as={Fragment} value="admin" disabled>
+          <a href="/admin" tabIndex={-1}>
+            Admin
+          </a>
+        </GridListItem>
+      </GridList>,
+    );
+
+    expect(container.querySelector("a")!.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("keeps a data-active value an inactive ListBoxOption as={Fragment} child renders", () => {
+    const { container } = setup(
+      <ListBox aria-label="Pages">
+        <ListBoxOption value="home">Home</ListBoxOption>
+        <ListBoxOption as={Fragment} value="docs">
+          <a href="/docs" data-active="route">
+            Docs
+          </a>
+        </ListBoxOption>
+      </ListBox>,
+    );
+
+    expect(container.querySelector("a")!.getAttribute("data-active")).toBe("route");
+  });
 });
