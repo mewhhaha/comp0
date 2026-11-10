@@ -1,11 +1,13 @@
-import { act, type ReactElement } from "react";
+import { act, StrictMode, type ReactElement } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { virtual } from "@guidepup/virtual-screen-reader";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   GridList,
   GridListItem,
+  ListBox,
+  ListBoxOption,
   Menu,
   Menubar,
   MenuItem,
@@ -20,8 +22,8 @@ import {
 type Case = {
   name: string;
   ui: ReactElement;
-  /** What a screen reader says when focus lands on the root itself. */
-  root: string;
+  /** The same composite with a value that matches no item, where the family has a value. */
+  unmatched?: ReactElement;
   /** What it says when focus lands on the first item. */
   firstItem: string;
   /** The arrow that moves forward in this composite. */
@@ -30,8 +32,24 @@ type Case = {
 
 const cases: Case[] = [
   {
+    name: "ListBox",
+    firstItem: "option, Apple, not selected, position 1, set size 2",
+    forward: "ArrowDown",
+    ui: (
+      <ListBox aria-label="Fruit">
+        <ListBoxOption value="apple">Apple</ListBoxOption>
+        <ListBoxOption value="pear">Pear</ListBoxOption>
+      </ListBox>
+    ),
+    unmatched: (
+      <ListBox aria-label="Fruit" defaultValue="missing">
+        <ListBoxOption value="apple">Apple</ListBoxOption>
+        <ListBoxOption value="pear">Pear</ListBoxOption>
+      </ListBox>
+    ),
+  },
+  {
     name: "GridList",
-    root: "grid, Files",
     firstItem: "row, Readme, not selected",
     forward: "ArrowDown",
     ui: (
@@ -40,10 +58,15 @@ const cases: Case[] = [
         <GridListItem value="license">License</GridListItem>
       </GridList>
     ),
+    unmatched: (
+      <GridList aria-label="Files" defaultValue="missing">
+        <GridListItem value="readme">Readme</GridListItem>
+        <GridListItem value="license">License</GridListItem>
+      </GridList>
+    ),
   },
   {
     name: "Menubar",
-    root: "menubar, Application, orientated horizontally",
     firstItem: "menuitem, File, 1 control, not expanded, has popup menu, position 1, set size 2",
     forward: "ArrowRight",
     ui: (
@@ -69,11 +92,18 @@ const cases: Case[] = [
   },
   {
     name: "Tabs",
-    root: "tablist, Project, orientated horizontally",
     firstItem: "tab, One, not selected, position 1, set size 2",
     forward: "ArrowRight",
     ui: (
       <Tabs>
+        <TabList aria-label="Project">
+          <Tab value="one">One</Tab>
+          <Tab value="two">Two</Tab>
+        </TabList>
+      </Tabs>
+    ),
+    unmatched: (
+      <Tabs defaultValue="missing">
         <TabList aria-label="Project">
           <Tab value="one">One</Tab>
           <Tab value="two">Two</Tab>
@@ -99,82 +129,83 @@ function mountContainer() {
 
 /**
  * What a screen reader user hears around the roving tab stop, through guidepup's virtual
- * screen reader. With nothing selected the root is the tab stop until an item registers, so the
- * composite is reachable in server HTML; once an item holds the stop the root leaves the tab
- * order, so it is never announced on the way in and cannot trap Shift+Tab.
+ * screen reader. The first enabled item holds the stop in server HTML, before any item has
+ * registered an element: ListBox, GridList, and TabList collect their items in a pass ahead of
+ * the real ones, and Menubar triggers record themselves in render order.
  */
-describe.each(cases)("$name tab stop for a screen reader", ({ ui, root, firstItem, forward }) => {
-  afterEach(async () => {
-    await virtual.stop();
-    document.body.innerHTML = "";
-  });
-
-  it("announces the root by role and name in server HTML, before any script runs", async () => {
-    const container = mountContainer();
-    container.innerHTML = renderToString(page(ui));
-    await virtual.start({ container });
-
-    await virtual.press("Tab");
-
-    expect(await virtual.lastSpokenPhrase()).toBe(root);
-    // Without the root as a stop, Tab would skip the whole composite.
-    await virtual.press("Tab");
-    expect(await virtual.lastSpokenPhrase()).toBe("button, After");
-  });
-
-  it("keeps focus on a root focused before hydration and enters at the first item", async () => {
-    const container = mountContainer();
-    container.innerHTML = renderToString(page(ui));
-    await virtual.start({ container });
-    await virtual.press("Tab");
-    const focusedRoot = document.activeElement;
-    await virtual.clearSpokenPhraseLog();
-
-    let reactRoot!: ReturnType<typeof hydrateRoot>;
-    await act(async () => {
-      reactRoot = hydrateRoot(container, page(ui));
+describe.each(cases)(
+  "$name tab stop for a screen reader",
+  ({ ui, unmatched, firstItem, forward }) => {
+    afterEach(async () => {
+      await virtual.stop();
+      document.body.innerHTML = "";
+      vi.restoreAllMocks();
     });
 
-    // Hydration says nothing and moves nothing: the user is still on the root.
-    expect(document.activeElement).toBe(focusedRoot);
-    expect(await virtual.spokenPhraseLog()).toEqual([]);
-    await virtual.press(forward);
-    expect(await virtual.spokenPhraseLog()).toEqual([firstItem]);
-    await act(async () => reactRoot.unmount());
-  });
+    it("reaches the first item in server HTML, before any script runs", async () => {
+      const container = mountContainer();
+      container.innerHTML = renderToString(page(ui));
+      await virtual.start({ container });
 
-  it("goes straight to the first item once mounted, without announcing the root", async () => {
-    const container = mountContainer();
-    let reactRoot!: ReturnType<typeof createRoot>;
-    await act(async () => {
-      reactRoot = createRoot(container);
-      reactRoot.render(page(ui));
+      await virtual.press("Tab");
+      expect(await virtual.lastSpokenPhrase()).toBe(firstItem);
+      await virtual.press("Tab");
+      expect(await virtual.lastSpokenPhrase()).toBe("button, After");
     });
-    await virtual.start({ container });
 
-    await virtual.press("Tab");
+    it.runIf(unmatched)("reaches the first item when the value matches no item", async () => {
+      const container = mountContainer();
+      container.innerHTML = renderToString(page(unmatched!));
+      await virtual.start({ container });
 
-    // The reader starts on the first node of the page; one Tab then says the item and nothing
-    // for the root in between.
-    expect(await virtual.spokenPhraseLog()).toEqual(["button, Before", firstItem]);
-    await act(async () => reactRoot.unmount());
-  });
+      await virtual.press("Tab");
 
-  it("lets Shift+Tab and Tab leave from an item in one press", async () => {
-    const container = mountContainer();
-    let reactRoot!: ReturnType<typeof createRoot>;
-    await act(async () => {
-      reactRoot = createRoot(container);
-      reactRoot.render(page(ui));
+      expect(await virtual.lastSpokenPhrase()).toBe(firstItem);
     });
-    await virtual.start({ container });
-    await virtual.press("Tab");
 
-    await virtual.press("Shift+Tab");
-    expect(await virtual.lastSpokenPhrase()).toBe("button, Before");
-    await virtual.press("Tab");
-    await virtual.press("Tab");
-    expect(await virtual.lastSpokenPhrase()).toBe("button, After");
-    await act(async () => reactRoot.unmount());
-  });
-});
+    it("hydrates silently with focus on the item, then moves with the arrow keys", async () => {
+      const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+      const container = mountContainer();
+      container.innerHTML = renderToString(page(ui));
+      await virtual.start({ container });
+      await virtual.press("Tab");
+      const focusedItem = document.activeElement;
+      await virtual.clearSpokenPhraseLog();
+
+      let reactRoot!: ReturnType<typeof hydrateRoot>;
+      await act(async () => {
+        reactRoot = hydrateRoot(container, <StrictMode>{page(ui)}</StrictMode>);
+      });
+
+      // Hydration reuses the server's elements, says nothing, and moves nothing.
+      expect(errors).not.toHaveBeenCalled();
+      expect(document.activeElement).toBe(focusedItem);
+      expect(await virtual.spokenPhraseLog()).toEqual([]);
+      expect(container.querySelectorAll("[hidden]:empty")).toHaveLength(0);
+      expect(container.querySelectorAll("[tabindex='0']")).toHaveLength(1);
+      await virtual.press(forward);
+      expect(document.activeElement).not.toBe(focusedItem);
+      expect(container.querySelectorAll("[tabindex='0']")).toHaveLength(1);
+      await act(async () => reactRoot.unmount());
+    });
+
+    it("lets Shift+Tab and Tab leave from an item in one press", async () => {
+      const container = mountContainer();
+      let reactRoot!: ReturnType<typeof createRoot>;
+      await act(async () => {
+        reactRoot = createRoot(container);
+        reactRoot.render(page(ui));
+      });
+      await virtual.start({ container });
+      await virtual.press("Tab");
+      expect(await virtual.lastSpokenPhrase()).toBe(firstItem);
+
+      await virtual.press("Shift+Tab");
+      expect(await virtual.lastSpokenPhrase()).toBe("button, Before");
+      await virtual.press("Tab");
+      await virtual.press("Tab");
+      expect(await virtual.lastSpokenPhrase()).toBe("button, After");
+      await act(async () => reactRoot.unmount());
+    });
+  },
+);

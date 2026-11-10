@@ -11,6 +11,7 @@ import {
 } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { useCollectedItem } from "../internal/collection-pass.js";
 import { focusableWithin } from "../internal/focusable.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
@@ -22,17 +23,7 @@ import {
   type GridListItemContextValue,
 } from "./grid-list-shared.js";
 
-export type GridListItemProps = Omit<ComponentProps<"div">, "id"> &
-  AsProp & {
-    /** This row's selection key. */
-    value: string;
-    id?: string | undefined;
-    disabled?: boolean | undefined;
-    /** Overrides the text crawled from children for typeahead. */
-    textValue?: string | undefined;
-  };
-
-export function GridListItem({
+function GridListItemPart({
   as,
   id: idProp,
   value,
@@ -224,4 +215,22 @@ export function GridListItem({
       </Part>
     </GridListItemContext>
   );
+}
+
+export type GridListItemProps = Omit<ComponentProps<"div">, "id"> &
+  AsProp & {
+    /** This row's selection key. */
+    value: string;
+    id?: string | undefined;
+    disabled?: boolean | undefined;
+    /** Overrides the text crawled from children for typeahead. */
+    textValue?: string | undefined;
+  };
+
+export function GridListItem(props: GridListItemProps) {
+  // Inside a collection pass the row only records itself, so the real rows know the whole
+  // collection before they render.
+  const collected = useCollectedItem(props.value, props.disabled);
+  if (collected) return null;
+  return <GridListItemPart {...props} />;
 }

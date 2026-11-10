@@ -62,28 +62,46 @@ function useIsHydrating() {
 }
 
 /**
- * A root's handle on the collection pass. Render `pass` before the element that holds the real
- * children: on the server and while hydrating it renders the same children once more, where
- * items record themselves in `seed` and render nothing, so the real items after it already know
- * the whole collection. A client-only mount renders no pass, and after hydration it unmounts.
+ * The seed a root resolves against before its items register. Pass it to the root's tab stop
+ * store; it is cleared once the items have registered their elements.
  */
-export function useCollectionPass(children: ReactNode) {
+export function useCollectionSeed() {
   const [seed] = useState(createCollectionSeed);
-  const hydrating = useIsHydrating();
-  // Item registration runs in the items' own layout effects, before this one.
+  // Item registration runs in the items' own ref callbacks and layout effects, before this one.
   useLayoutEffect(() => {
     seed.clear();
   }, [seed]);
-  let pass: ReactNode = null;
-  if (hydrating) {
-    pass = (
-      <CollectionPassContext value={seed}>
-        {/* Holds whatever consumer elements sit between the root and its items. */}
-        <div hidden>{children}</div>
-      </CollectionPassContext>
-    );
-  }
-  return { seed, pass };
+  return seed;
+}
+
+/**
+ * The collection pass, for the part that holds the items: render the result before the real
+ * `children`. On the server and while hydrating it renders the same children once more, where
+ * items record themselves in `seed` and render nothing, so the real items after it already know
+ * the whole collection. A client-only mount renders no pass, and after hydration it unmounts.
+ */
+export function useCollectionPass(seed: CollectionSeed, children: ReactNode) {
+  const hydrating = useIsHydrating();
+  if (!hydrating) return null;
+  return (
+    <CollectionPassContext value={seed}>
+      {/* Holds whatever consumer elements sit between the root and its items. */}
+      <div hidden>{children}</div>
+    </CollectionPassContext>
+  );
+}
+
+/**
+ * For an item whose key cannot be known to a separate pass (a Menubar trigger's id comes from
+ * its own Menu instance) and whose root has no selection: records the item as it renders for
+ * real, on the server and while hydrating. The stop is then the first enabled item, which never
+ * depends on the items after it. Call it before reading the stop.
+ */
+export function useRenderOrderSeed(seed: CollectionSeed, key: string, disabled: boolean) {
+  const hydrating = useIsHydrating();
+  // A render-time write, limited to where a render runs once in order (the server) or replays
+  // that order (hydration). Recording is idempotent per key.
+  if (hydrating) seed.add(key, disabled);
 }
 
 /**

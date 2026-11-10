@@ -1,7 +1,8 @@
-import { useId, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { useTabStop, useTabStopRootTabIndex } from "../internal/tab-stop.js";
+import { useCollectionSeed } from "../internal/collection-pass.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import { TabsContext } from "./tabs-shared.js";
 
 export type TabsProps = RootProps<{
@@ -20,13 +21,18 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
     onChange,
   });
   const collection = useCollection();
-  // The tab holding focus while focus is inside the list, so Shift+Tab leaves from it in one
-  // press even when a controlled value rejected the arrow move that focused it.
-  const [focusedKey, setFocusedKey] = useState("");
-  // Registration, unregistration, and a tab's own disabled change all notify the collection,
-  // so the stop follows them without Tabs re-rendering first.
-  const tabStopKey = useTabStop(collection, focusedKey, selected);
-  const rootTabIndex = useTabStopRootTabIndex(collection, tabStopKey);
+  // On the server and while hydrating, TabList collects the tabs before they render, so the
+  // stop is already resolved in server HTML.
+  const seed = useCollectionSeed();
+  // The stop is the tab holding focus while focus is inside the list, so Shift+Tab leaves from
+  // it in one press even when a controlled value rejected the arrow move that focused it, and
+  // the selected tab otherwise. Registration, unregistration, and a tab's own disabled change
+  // all notify the store, and each tab reads its own boolean, so a move re-renders two tabs.
+  const selection = useTabStopSelection(selected);
+  const tabStops = useTabStopStore(collection, seed);
+  const setFocusedKey = (key: string) => {
+    tabStops.focus(key, selection);
+  };
 
   const Root = rootElement(as);
   return (
@@ -36,8 +42,9 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
         selectedKey: selected,
         setSelectedKey: setSelected,
         collection,
-        tabStopKey,
-        rootTabIndex,
+        seed,
+        tabStops,
+        selection,
         setFocusedKey,
       }}
     >

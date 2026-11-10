@@ -7,6 +7,7 @@ import {
   type PointerEvent,
 } from "react";
 import { useComposedRefs } from "@comp0/core";
+import { useRenderOrderSeed } from "../internal/collection-pass.js";
 import { useDisclosureTrigger } from "../internal/disclosure-trigger.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
@@ -49,6 +50,7 @@ export function MenubarTrigger({
   // context would detach and re-register every item whenever the bar's tab stop moves.
   const { collection } = menubar;
   const key = menu.triggerId;
+  useRenderOrderSeed(menubar.seed, key, resolvedDisabled);
   const isTabStop = useIsTabStop(menubar.tabStops, key);
   const registration = (element: HTMLElement | null) => {
     if (!element) return;

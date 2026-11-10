@@ -15,7 +15,7 @@ import { type ListBoxContextValue } from "./list-box-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
 import { useMentionFieldListBoxContext } from "../mention-field/mention-field-shared.js";
-import { useCollectionPass } from "../internal/collection-pass.js";
+import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
 import { useRenderedId } from "../internal/rendered-id.js";
 import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import { writingDirection } from "../internal/writing-direction.js";
@@ -66,7 +66,8 @@ export function ListBox({
   const selection = useTabStopSelection(selected);
   // On the server and while hydrating, the options are collected before they render, so the
   // stop is already resolved in server HTML.
-  const { seed, pass } = useCollectionPass(children);
+  const seed = useCollectionSeed();
+  const pass = useCollectionPass(seed, children);
   const tabStops = useTabStopStore(collection, seed);
   const setFocusedKey = (key: string) => {
     tabStops.focus(key, selection);

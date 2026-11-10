@@ -1,4 +1,5 @@
 import { type Collection, type CollectionItem } from "@comp0/core";
+import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
 import { type TabStopStore } from "../internal/tab-stop.js";
 
@@ -15,6 +16,8 @@ export type MenubarContextValue = {
   isAnyOpen: () => boolean;
   /** Closes every open menu in the bar except the given item's own. */
   closeOthers: (key: string) => void;
+  /** The render-order record triggers fill on the server and while hydrating. */
+  seed: CollectionSeed;
   /** The one item rendered with tabIndex 0; triggers read it with `useIsTabStop`. */
   tabStops: TabStopStore;
   /**

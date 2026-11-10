@@ -1,5 +1,6 @@
 import { type ComponentProps, type DragEvent, type KeyboardEvent } from "react";
 import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
+import { useCollectionPass } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { VisuallyHidden } from "../visually-hidden/VisuallyHidden.js";
 import { groupDndContext, groupDropPreviewLabel } from "./grid-list-group-dnd.js";
@@ -59,13 +60,15 @@ export function GridList({
     defaultValue: defaultValue ?? "",
     onChange,
   });
-  const { collection, context, rootTabIndex, tabStop, activateRow, focusRow, refocusAfterReorder } =
-    useGridListRows({
+  const { collection, context, seed, activateRow, focusRow, refocusAfterReorder } = useGridListRows(
+    {
       selected,
       select: setSelected,
       name,
       group: reorderGroup,
-    });
+    },
+  );
+  const pass = useCollectionPass(seed, children);
   const listRef = useGridListMembership(name, reorderGroup);
   const composedRef = useComposedRefs(listRef, ref);
   const local = useGridListReorder({ collection, onReorder, canReorder, refocusAfterReorder });
@@ -79,7 +82,6 @@ export function GridList({
   const handleKeyDown = useGridListKeyboard({
     collection,
     dnd,
-    tabStop,
     focusRow,
     activateRow,
     select: setSelected,
@@ -93,7 +95,6 @@ export function GridList({
           {...props}
           ref={composedRef}
           role="grid"
-          tabIndex={props.tabIndex ?? rootTabIndex}
           data-drop-target={dataAttr(dnd?.listDropTarget)}
           data-drop-preview={dropPreviewLabel || undefined}
           onDragLeave={(event: DragEvent<HTMLDivElement>) => {
@@ -130,6 +131,7 @@ export function GridList({
             if (!event.defaultPrevented) handleKeyDown(event);
           }}
         >
+          {pass}
           {children}
         </Part>
         {/* Outside the grid element: role="grid" only permits row children. */}

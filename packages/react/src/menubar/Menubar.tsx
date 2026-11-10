@@ -1,12 +1,8 @@
 import { useRef, type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { composeRefs, useCollection, useCollectionNavigation } from "@comp0/core";
+import { useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import {
-  NO_SELECTION,
-  rootEntryKey,
-  useRootTabIndex,
-  useTabStopStore,
-} from "../internal/tab-stop.js";
+import { NO_SELECTION, useTabStopStore } from "../internal/tab-stop.js";
 import { MenubarContext, type MenubarContextValue, type MenubarItem } from "./menubar-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
@@ -27,11 +23,14 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
   // Tab returns there. It lives outside React state: an arrow press re-renders only the two
   // triggers whose tabIndex changes, not every trigger reading this context (bench:
   // collection-tab-stop.bench.tsx, PERFORMANCE.md).
-  const tabStops = useTabStopStore(collection);
-  const rootTabIndex = useRootTabIndex(tabStops);
+  // On the server and while hydrating, triggers record themselves in render order, so the
+  // first enabled one already holds the stop in server HTML.
+  const seed = useCollectionSeed();
+  const tabStops = useTabStopStore(collection, seed);
 
   const context: MenubarContextValue = {
     collection,
+    seed,
     tabStops,
     isAnyOpen() {
       return collection.items().some((item) => item.open);
@@ -63,7 +62,6 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
         {...props}
         ref={composeRefs(ref, menubarRef)}
         role={props.role ?? "menubar"}
-        tabIndex={props.tabIndex ?? rootTabIndex}
         onFocus={(event: FocusEvent<HTMLDivElement>) => {
           onFocus?.(event);
           if (event.defaultPrevented) return;
@@ -86,21 +84,6 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
             ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
           // Keys inside an open menu belong to that menu's popover.
           if (!target || target.closest("[role='menu']")) return;
-          if (target === event.currentTarget) {
-            // Focus is on the bar itself (focused before its triggers registered, or by a
-            // click between triggers): enter at the stop.
-            const entry = navigate(event.key, collection.items(), undefined, {
-              orientation: "horizontal",
-              dir: writingDirection(event.currentTarget),
-              typeahead: false,
-            });
-            const entryKey = rootEntryKey(event.key, tabStops.get(NO_SELECTION), entry);
-            if (!entryKey) return;
-            event.preventDefault();
-            tabStops.focus(entryKey, NO_SELECTION);
-            collection.get(entryKey)?.element?.focus();
-            return;
-          }
           const current = collection
             .items()
             .find((item) => item.element === target || item.element?.contains(target));

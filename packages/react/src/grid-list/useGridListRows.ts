@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { useCollection, type CollectionItem } from "@comp0/core";
-import { useRootTabIndex, useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
+import { useCollectionSeed } from "../internal/collection-pass.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import {
   type GridListContextValue,
   type GridListFocusRequest,
@@ -26,8 +27,10 @@ export function useGridListRows(options: {
   // re-renders only the two rows whose tabIndex changes, not every row reading this context
   // (bench: collection-tab-stop.bench.tsx, PERFORMANCE.md).
   const selection = useTabStopSelection(selected);
-  const tabStops = useTabStopStore(collection);
-  const rootTabIndex = useRootTabIndex(tabStops, selection);
+  // On the server and while hydrating, the rows are collected before they render, so the stop
+  // is already resolved in server HTML.
+  const seed = useCollectionSeed();
+  const tabStops = useTabStopStore(collection, seed);
   const handledFocusRequest = useRef<GridListFocusRequest | null>(null);
 
   const activateRow = (key: string) => {
@@ -103,15 +106,5 @@ export function useGridListRows(options: {
     unregister,
   };
 
-  const tabStop = () => tabStops.get(selection);
-
-  return {
-    collection,
-    context,
-    rootTabIndex,
-    tabStop,
-    activateRow,
-    focusRow,
-    refocusAfterReorder,
-  };
+  return { collection, context, seed, activateRow, focusRow, refocusAfterReorder };
 }

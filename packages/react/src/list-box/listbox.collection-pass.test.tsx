@@ -26,7 +26,7 @@ const tabStops = (container: Element) =>
   );
 
 /**
- * Prototype: on the server and while hydrating, ListBox renders its children once more ahead of
+ * On the server and while hydrating, ListBox renders its children once more ahead of
  * the real options, where each option only records its key and disabled state. The real options
  * therefore resolve the roving tab stop in server HTML, without waiting for DOM registration.
  */
