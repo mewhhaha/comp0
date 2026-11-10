@@ -5,24 +5,22 @@ import { type CollectionSeed } from "./collection-pass.js";
 /**
  * The first of `preferred` that is registered and enabled, else the first enabled item in
  * document order. Before any item registers (and on the server) it is resolved the same way
- * against `seed` when a collection pass filled one, else it is the first non-empty preferred key. The common case is one O(1) lookup per preferred key; only the fallback reads
- * document order.
+ * against `seed` when the root's items filled it, else it is the first non-empty preferred key.
+ * The common case is one O(1) lookup per preferred key; only the fallback reads document order.
  */
 function resolveTabStop<TItem extends CollectionItem<Element>>(
   collection: Collection<TItem>,
   preferred: readonly string[],
-  seed?: CollectionSeed,
+  seed: CollectionSeed,
 ) {
   for (const key of preferred) {
     const item = key ? collection.get(key) : undefined;
     if (item && !item.disabled) return key;
   }
   const items = collection.items();
-  if (items.length === 0 && seed && seed.size() > 0) {
-    return preferred.find((key) => seed.isEnabled(key)) ?? seed.firstEnabled();
-  }
-  if (items.length === 0) return preferred.find(Boolean) ?? "";
-  return items.find((item) => !item.disabled)?.key ?? "";
+  if (items.length > 0) return items.find((item) => !item.disabled)?.key ?? "";
+  if (seed.size() === 0) return preferred.find(Boolean) ?? "";
+  return preferred.find((key) => seed.isEnabled(key)) ?? seed.firstEnabled();
 }
 
 /**
@@ -62,7 +60,7 @@ export type TabStopStore = {
 
 function createTabStopStore<TItem extends CollectionItem<Element>>(
   collection: Collection<TItem>,
-  seed?: CollectionSeed,
+  seed: CollectionSeed,
 ): TabStopStore {
   const listeners = new Set<() => void>();
   let focused = { key: "", epoch: 0 };
@@ -118,7 +116,7 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
  */
 export function useTabStopStore<TItem extends CollectionItem<Element>>(
   collection: Collection<TItem>,
-  seed?: CollectionSeed,
+  seed: CollectionSeed,
 ) {
   const [store] = useState(() => createTabStopStore(collection, seed));
   return store;

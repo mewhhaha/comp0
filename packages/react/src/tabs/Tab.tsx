@@ -13,7 +13,7 @@ function TabPart({ as, value, disabled, onClick, ref, ...props }: TabProps) {
   const selected = tabs.selectedKey === value;
   const { tabId, panelId } = tabPairIds(tabs.baseId, value);
   // Read the stable registry outside the ref callback: depending on the whole context would
-  // re-register every tab whenever the stop moves, and each registration notifies Tabs.
+  // re-register every tab whenever the stop moves, and each registration notifies the store.
   const { collection } = tabs;
   const isTabStop = useIsTabStop(tabs.tabStops, value, tabs.selection);
   const tabRef = useComposedRefs(ref, (element: HTMLButtonElement | null) => {

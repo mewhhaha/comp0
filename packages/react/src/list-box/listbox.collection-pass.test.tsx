@@ -1,7 +1,6 @@
 import { act, StrictMode, type ReactElement } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { virtual } from "@guidepup/virtual-screen-reader";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ListBox, ListBoxOptGroup, ListBoxOption, ListBoxSeparator } from "../index.js";
 
@@ -26,13 +25,13 @@ const tabStops = (container: Element) =>
   );
 
 /**
- * On the server and while hydrating, ListBox renders its children once more ahead of
- * the real options, where each option only records its key and disabled state. The real options
- * therefore resolve the roving tab stop in server HTML, without waiting for DOM registration.
+ * On the server and while hydrating, ListBox renders its children once more ahead of the real
+ * options, where each option only records its key and disabled state. The real options therefore
+ * resolve the roving tab stop in server HTML, without waiting for DOM registration. What a screen
+ * reader announces there is covered for every family in `tab-stop.screen-reader.test.tsx`.
  */
 describe("ListBox collection pass", () => {
-  afterEach(async () => {
-    await virtual.stop();
+  afterEach(() => {
     document.body.innerHTML = "";
     vi.restoreAllMocks();
   });
@@ -107,25 +106,6 @@ describe("ListBox collection pass", () => {
     expect(container.querySelectorAll("[role='option']")).toHaveLength(3);
     expect(container.querySelectorAll("[role='group']")).toHaveLength(1);
     expect(container.querySelector("[role='listbox'] > [hidden]")!.childNodes).toHaveLength(0);
-  });
-
-  it("lets a screen reader reach the first option before any script runs", async () => {
-    const container = serverRender(
-      page(
-        <ListBox aria-label="Fruit">
-          <ListBoxOption value="apple">Apple</ListBoxOption>
-          <ListBoxOption value="pear">Pear</ListBoxOption>
-        </ListBox>,
-      ),
-    );
-    await virtual.start({ container });
-
-    await virtual.press("Tab");
-    expect(await virtual.lastSpokenPhrase()).toBe(
-      "option, Apple, not selected, position 1, set size 2",
-    );
-    await virtual.press("Tab");
-    expect(await virtual.lastSpokenPhrase()).toBe("button, After");
   });
 
   it("hydrates without a mismatch, keeps focus, and removes the pass", async () => {
