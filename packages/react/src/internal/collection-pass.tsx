@@ -128,8 +128,11 @@ export function useCollectedItem(
   present = true,
 ) {
   const pass = use(CollectionPassContext);
-  // A render-time write, which is why the pass only exists where a render runs once in order
-  // (the server) or replays that order (hydration). Recording is idempotent per key.
+  // A render-time write, which is why the pass only exists on the server and while hydrating,
+  // where a discarded render is replayed with the same items. Recording is idempotent per key.
+  // The order is render order, which on the server is not always document order: it renders
+  // past a component that suspends and comes back to it. `useHydrationRepair` covers the
+  // difference that makes between server HTML and the hydrated DOM.
   if (pass === seed && present) seed.add(key, Boolean(disabled));
 }
 

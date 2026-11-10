@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react";
+import { useRef, type ComponentProps } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import {
   useCollectedItem,
@@ -6,6 +6,7 @@ import {
   useRenderOrderSeed,
 } from "../internal/collection-pass.js";
 import { disabledProps } from "../internal/disabled.js";
+import { useHydrationRepair } from "../internal/hydration-repair.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
 import { tabPairIds, useTabsContext } from "./tabs-shared.js";
@@ -21,7 +22,11 @@ function TabPart({ as, value, disabled, onClick, ref, ...props }: TabProps) {
   const { collection } = tabs;
   useRenderOrderSeed(tabs.seed, value, resolvedDisabled);
   const isTabStop = useIsTabStop(tabs.tabStops, value, tabs.selection);
-  const tabRef = useComposedRefs(ref, (element: HTMLButtonElement | null) => {
+  const tabIndex = isTabStop && !resolvedDisabled ? 0 : -1;
+  const elementRef = useRef<HTMLButtonElement | null>(null);
+  // The stop depends on the whole collection, which the server can see in another order.
+  useHydrationRepair(elementRef, { tabindex: String(tabIndex) });
+  const tabRef = useComposedRefs(ref, elementRef, (element: HTMLButtonElement | null) => {
     if (!element) return;
     collection.register({
       key: value,
@@ -53,7 +58,7 @@ function TabPart({ as, value, disabled, onClick, ref, ...props }: TabProps) {
       id={tabId}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       role="tab"
-      tabIndex={isTabStop && !resolvedDisabled ? 0 : -1}
+      tabIndex={tabIndex}
       aria-selected={selected}
       aria-controls={panelId}
       data-selected={dataAttr(selected)}

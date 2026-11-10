@@ -9,6 +9,7 @@ import {
 import { useComposedRefs } from "@comp0/core";
 import { useRenderOrderSeed } from "../internal/collection-pass.js";
 import { useDisclosureTrigger } from "../internal/disclosure-trigger.js";
+import { useHydrationRepair } from "../internal/hydration-repair.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
 import { triggerAnchorStyle } from "../internal/overlay/index.js";
@@ -52,6 +53,9 @@ export function MenubarTrigger({
   const key = menu.triggerId;
   useRenderOrderSeed(menubar.seed, key, resolvedDisabled);
   const isTabStop = useIsTabStop(menubar.tabStops, key);
+  const tabIndex = isTabStop ? 0 : -1;
+  // The stop depends on the whole bar, which the server can see in another order.
+  useHydrationRepair(elementRef, { tabindex: String(tabIndex) });
   const registration = (element: HTMLElement | null) => {
     if (!element) return;
     // Guarded by element, so a stale cleanup cannot remove a replacement's registration.
@@ -127,7 +131,7 @@ export function MenubarTrigger({
       {...props}
       ref={setElement}
       role="menuitem"
-      tabIndex={isTabStop ? 0 : -1}
+      tabIndex={tabIndex}
       style={triggerAnchorStyle(menu.triggerId, style)}
       {...trigger}
       onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {

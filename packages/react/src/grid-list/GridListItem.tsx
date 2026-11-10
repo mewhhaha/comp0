@@ -16,6 +16,7 @@ import {
   useIsCollectionPass,
   useRenderOrderSeed,
 } from "../internal/collection-pass.js";
+import { useHydrationRepair } from "../internal/hydration-repair.js";
 import { focusableWithin } from "../internal/focusable.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { useIsTabStop } from "../internal/tab-stop.js";
@@ -83,6 +84,8 @@ function GridListItemPart({
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
   else if (isTabStop) tabIndex = 0;
+  // The stop depends on the whole collection, which the server can see in another order.
+  useHydrationRepair(rowRef, { tabindex: tabIndex === undefined ? null : String(tabIndex) });
 
   // Interactive children use the inline-forward arrow instead of Tab, so the
   // grid stays a single tab stop.

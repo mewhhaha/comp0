@@ -14,6 +14,7 @@ import {
   useIsCollectionPass,
   useRenderOrderSeed,
 } from "../internal/collection-pass.js";
+import { useHydrationRepair } from "../internal/hydration-repair.js";
 import { useWarnOnce } from "../internal/dev.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -79,6 +80,12 @@ function ListBoxOptionPart({
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
   else if (!virtualFocus && isTabStop) tabIndex = 0;
+
+  // The stop depends on the whole collection, which the server can see in another order.
+  useHydrationRepair(elementRef, {
+    tabindex: tabIndex === undefined ? null : String(tabIndex),
+    "data-active": active ? "" : null,
+  });
 
   const itemRef = useComposedRefs(elementRef, ref);
 
