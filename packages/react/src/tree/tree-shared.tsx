@@ -1,15 +1,26 @@
 import { createContext, useLayoutEffect, useState } from "react";
-import { useCollection, type Collection, type CollectionItem } from "@comp0/core";
+import { useCollection, type Collection } from "@comp0/core";
+import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
+import { type TabStopSelection, type TabStopStore } from "../internal/tab-stop.js";
 
 export type TreeContextValue = {
-  activeKey: string;
+  /** What the collection pass and the items fill on the server and while hydrating. */
+  seed: CollectionSeed;
+  /** The one item rendered with tabIndex 0; items read it with `useIsTabStop`. */
+  tabStops: TabStopStore;
+  /** The numbered selection the stop is resolved under. */
+  selection: TabStopSelection;
   selectedKey: string;
   open: string[];
-  setActiveKey: (key: string) => void;
+  /** Records the item that holds focus or was chosen, so the stop stays on it. */
+  setFocusedKey: (key: string) => void;
   setSelectedKey: (key: string) => void;
   toggleOpen: (key: string) => void;
-  register: (item: CollectionItem) => void;
+  /**
+   * Every item in the tree; each registers and unregisters itself on this stable object. An
+   * item inside a collapsed group registers as disabled, so the stop never lands on it.
+   */
   collection: Collection;
 };
 
@@ -18,6 +29,9 @@ export const [TreeContext, useTreeContext, useOptionalTreeContext] =
 
 /** The aria-level of items at the current depth; each TreeGroup provides depth + 1. */
 export const TreeLevelContext = createContext(1);
+
+/** Whether items at this depth sit inside a collapsed group; each TreeGroup provides it. */
+export const TreeCollapsedContext = createContext(false);
 
 export type TreeItemContextValue = {
   value: string;

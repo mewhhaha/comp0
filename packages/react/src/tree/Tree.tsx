@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
+import { type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { useCollection, useCollectionNavigation, useControllableState } from "@comp0/core";
+import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import {
   TreeContext,
   TreeGroupScopeContext,
@@ -31,6 +33,7 @@ export function Tree({
   open: openProp,
   defaultOpen,
   onOpenChange,
+  onFocus,
   onKeyDown,
   children,
   ...props
@@ -46,21 +49,23 @@ export function Tree({
     onChange: onOpenChange,
   });
   const navigate = useCollectionNavigation();
-  const [activeKey, setActiveKey] = useState(selected);
-  const activeKeyRef = useRef(activeKey);
   const collection = useCollection();
   const rootScope = useTreeGroupScope();
-
-  useEffect(() => {
-    if (selected) {
-      activeKeyRef.current = selected;
-      setActiveKey(selected);
-    }
-  }, [selected]);
-
-  useEffect(() => {
-    activeKeyRef.current = activeKey;
-  }, [activeKey]);
+  // The item that last held focus or was chosen, recorded under the selection current at the
+  // time, else the selected item, else the first enabled item. Items inside a collapsed group
+  // register as disabled, so the stop never sits in one: collapsing the group that holds it
+  // hands the stop to the first visible item. The stop lives outside React state, so a focus
+  // move re-renders only the two items whose tabIndex changes (bench:
+  // collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  const selection = useTabStopSelection(selected);
+  // On the server and while hydrating, the items are collected before they render, so the stop
+  // is already resolved in server HTML.
+  const seed = useCollectionSeed();
+  const pass = useCollectionPass(seed, children);
+  const tabStops = useTabStopStore(collection, seed);
+  const setFocusedKey = (key: string) => {
+    tabStops.focus(key, selection);
+  };
 
   // Arrow keys, Home/End, and typeahead walk VISIBLE rows only: a collapsed
   // TreeGroup renders with the hidden attribute, so checking each item's
@@ -70,17 +75,10 @@ export function Tree({
       .items()
       .filter((item) => item.element !== null && item.element.closest("[hidden]") === null);
 
-  // The roving tab stop must sit on a visible, enabled item: nothing is
-  // active on first render, and the selected item can live inside a
-  // collapsed group. Runs after every commit and bails when already valid.
-  useEffect(() => {
-    const visible = visibleItems().filter((item) => !item.disabled);
-    if (visible.some((item) => item.key === activeKeyRef.current)) return;
-    const first = visible[0];
-    if (!first) return;
-    activeKeyRef.current = first.key;
-    setActiveKey(first.key);
-  });
+  // Nested items contain their descendants, so the innermost registered element around the
+  // target is the item it belongs to.
+  const itemAround = (items: ReturnType<typeof visibleItems>, target: Node | null) =>
+    items.filter((item) => target && item.element?.contains(target)).at(-1);
 
   const setItemOpen = (key: string, nextOpen: boolean) => {
     setOpen((current) => {
@@ -101,19 +99,19 @@ export function Tree({
   const focusItem = (key: string) => {
     const element = collection.get(key)?.element;
     if (!element) return;
-    activeKeyRef.current = key;
-    setActiveKey(key);
+    setFocusedKey(key);
     element.focus();
   };
 
   const context: TreeContextValue = {
-    activeKey,
+    seed,
+    tabStops,
+    selection,
     selectedKey: selected,
     open,
-    setActiveKey,
+    setFocusedKey,
     setSelectedKey: setSelected,
     toggleOpen,
-    register: collection.register,
     collection,
   };
 
@@ -121,9 +119,16 @@ export function Tree({
   return (
     <TreeContext value={context}>
       <TreeGroupScopeContext value={rootScope}>
+        {pass}
         <Part
           {...props}
           role="tree"
+          onFocus={(event: FocusEvent<HTMLDivElement>) => {
+            onFocus?.(event);
+            if (event.defaultPrevented) return;
+            const item = itemAround(collection.items(), event.target);
+            if (item && !item.disabled) setFocusedKey(item.key);
+          }}
           onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
             onKeyDown?.(event);
             if (event.defaultPrevented) return;
@@ -131,11 +136,7 @@ export function Tree({
             const target =
               ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
             const visible = visibleItems();
-            // Nested items contain their descendants, so the innermost
-            // registered element around the target is the focused item.
-            const current = visible
-              .filter((item) => target && item.element?.contains(target))
-              .at(-1);
+            const current = itemAround(visible, target);
             const currentElement = current?.element;
             if (!current || !currentElement) return;
             const rtl = writingDirection(event.currentTarget) === "rtl";

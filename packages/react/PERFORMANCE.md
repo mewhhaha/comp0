@@ -61,6 +61,23 @@ What the numbers say:
 - **A moving stop re-renders only the items it moves between.** With the stop in React state and context, every trigger reads the context, so one ArrowRight re-rendered all of them: 24.5 ms wall at 1000 triggers and 0.29 ms at 10, with the React Compiler on. `useTabStopStore` keeps the stop outside React state and each trigger subscribes to `useIsTabStop`, a boolean, so a press re-renders the two triggers whose answer flips: 0.85 ms at 1000. The same narrowing makes the mount's second commit cheaper (108.6 → 79.7 ms wall at 1000). GridList arrows move focus only, so they gain the same way (34.0 ms with context → 0.76 ms at 1000 rows). Use it wherever many items read a value a key press moves.
 - **ListBox arrows still re-render every option.** Selection follows focus, and every option reads the selected key from context to render `aria-selected`, so each press re-renders all of them whatever holds the stop: 18.6 ms with the stop in context, 19.2 ms with the store, 18.2 ms imperative, at 1000 options. Narrowing it would mean copying the controlled `value` into a store after commit, which the DOM state rules rule out.
 
+### Tree
+
+The same bench measures Tree as a flat tree of leaves, ArrowDown from the first. Tree moved from an `activeKey` in React state and context, synced from the selection by an effect plus an effect after every commit that re-picked the first visible item, to `useTabStopStore` with a collection pass. Items inside a collapsed group register as disabled, so the store never resolves the stop to one. Both columns come from one session, the two implementations alternating over two rounds; the first round is shown, with the second's 1000-item wall time in brackets.
+
+| Scenario            | Items | Store: commits / render ms / wall ms | Context: commits / render ms / wall ms |
+| ------------------- | ----: | ------------------------------------ | -------------------------------------- |
+| mount, selected     |   100 | 2 / 9.3 / 10.9                       | 2 / 8.9 / 10.5                         |
+| mount, selected     |  1000 | 2 / 92.1 / 109.1 (119.0)             | 2 / 86.0 / 100.0 (99.4)                |
+| mount, no selection |   100 | 2 / 8.9 / 10.0                       | 3 / 8.1 / 10.9                         |
+| mount, no selection |  1000 | 2 / 143.0 / 161.0 (133.6)            | 3 / 84.2 / 231.5 (240.5)               |
+| ArrowDown           |   100 | 1 / 0.10 / 0.21                      | 2 / 3.03 / 5.48                        |
+| ArrowDown           |  1000 | 1 / 0.33 / 1.29 (1.14)               | 2 / 29.86 / 154.44 (159.53)            |
+
+- **An arrow press re-renders two items instead of all of them.** With the stop in context, every item re-rendered, re-crawled its row text in its registration effect, and the effect after every commit walked every item's ancestors for `[hidden]`: two commits and 154 ms wall at 1000 items. Now the press records the focused item in the store and only the two items whose `useIsTabStop` answer flips render: 1.3 ms. "re-renders only the two tree items the stop moves between, at any depth" in `tab-stop.composition.test.tsx` keeps it that way.
+- **An unselected mount is a commit shorter.** The effect that picked the first visible item is gone, so the mount is two commits instead of three (231.5 → 161.0 ms wall at 1000). Its render time is noisy: across four runs of the store version it ranged from 92 to 150 ms, so it is not a regression to read into.
+- **A selected mount costs about a tenth more.** Each item now subscribes to the store, seeds itself in render order, and runs a hydration repair, the same per-item hooks ListBox and GridList pay (100 → 109–119 ms wall at 1000). The second commit of every mount, here and before, is the scope's `aria-posinset` order, which re-renders every item once the items register.
+
 ### Table
 
 The same bench measures Table, whose items are cells: a header row and body rows of four (1000 is a header plus 249 rows). Arrow rows press ArrowDown from the first body cell, and Table has no selection, so its mount rows (the bench's "mount, no item selected") have no remembered cell. Three implementations, each run with the same command:
