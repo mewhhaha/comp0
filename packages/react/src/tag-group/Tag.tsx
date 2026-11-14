@@ -1,22 +1,19 @@
 import { useId, useLayoutEffect, useRef, type ComponentProps, type MouseEvent } from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
+import {
+  useCollectedItem,
+  useIsCollectionPass,
+  useRenderOrderSeed,
+} from "../internal/collection-pass.js";
+import { useHydrationRepair } from "../internal/hydration-repair.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { resolveItemLabel } from "../internal/item-label.js";
 import { focusableWithin } from "../internal/focusable.js";
+import { useIsTabStop } from "../internal/tab-stop.js";
 import { rowCell } from "../grid-list/grid-list-shared.js";
 import { useOptionalTagGroupContext, useTagListContext } from "./tag-shared.js";
 
-export type TagProps = Omit<ComponentProps<"div">, "id"> &
-  AsProp & {
-    /** This tag's identity. */
-    value: string;
-    id?: string | undefined;
-    disabled?: boolean | undefined;
-    /** Overrides the text crawled from children for typeahead. */
-    textValue?: string | undefined;
-  };
-
-export function Tag({
+function TagPart({
   as,
   id: idProp,
   value,
@@ -33,23 +30,35 @@ export function Tag({
   const id = idProp ?? `tag-${generatedId}`;
   const resolvedDisabled = Boolean(disabled);
   const selected = group?.selectionEnabled === true && group.selected.includes(value);
-  const active = list.activeKey === value;
+  useRenderOrderSeed(list.seed, value, resolvedDisabled);
+  const isTabStop = useIsTabStop(list.tabStops, value);
   const ariaLabel = props["aria-label"];
   const rowRef = useRef<HTMLElement | null>(null);
   let tabIndex: number | undefined = -1;
   if (resolvedDisabled) tabIndex = undefined;
-  else if (active) tabIndex = 0;
+  else if (isTabStop) tabIndex = 0;
+  // The stop depends on the whole collection, which the server can see in another order.
+  useHydrationRepair(
+    rowRef,
+    { tabindex: tabIndex === undefined ? undefined : String(tabIndex) },
+    () => {
+      if (!resolvedDisabled) list.setFocusedKey(value);
+    },
+  );
 
+  // Registration reads the two functions, not the whole context: "moves the tag stop in one
+  // commit without re-registering tags" in tab-stop.composition.test.tsx keeps it that way.
+  const { register, unregister } = list;
   const registerTag = (element: HTMLElement | null) => {
     if (!element) return;
-    list.register({
+    register({
       key: value,
       id,
       textValue: resolveItemLabel({ textValue, children, element, ariaLabel, fallback: value }),
       element,
       disabled: resolvedDisabled,
     });
-    return () => list.unregister(value, element);
+    return () => unregister(value, element);
   };
   const composedRef = useComposedRefs(registerTag, rowRef, ref);
 
@@ -59,7 +68,7 @@ export function Tag({
     const row = rowRef.current;
     if (!row) return;
     for (const element of focusableWithin(row)) element.tabIndex = -1;
-    list.register({
+    register({
       key: value,
       id,
       textValue: resolveItemLabel({
@@ -97,11 +106,31 @@ export function Tag({
         const target = event.target instanceof HTMLElement ? event.target : null;
         if (target && focusableWithin(event.currentTarget).some((el) => el.contains(target)))
           return;
-        list.setActiveKey(value);
+        list.setFocusedKey(value);
         if (group?.selectionEnabled) group.toggle(value);
       }}
     >
       {rowCell(as, children, "tag-cell")}
     </Part>
   );
+}
+
+export type TagProps = Omit<ComponentProps<"div">, "id"> &
+  AsProp & {
+    /** This tag's identity. */
+    value: string;
+    id?: string | undefined;
+    disabled?: boolean | undefined;
+    /** Overrides the text crawled from children for typeahead. */
+    textValue?: string | undefined;
+  };
+
+export function Tag(props: TagProps) {
+  // Inside a collection pass the tag only records itself, so the real tags know the whole
+  // collection before they render.
+  const list = useTagListContext("Tag");
+  const collecting = useIsCollectionPass();
+  useCollectedItem(list.seed, props.value, props.disabled);
+  if (collecting) return null;
+  return <TagPart {...props} />;
 }

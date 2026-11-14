@@ -1,4 +1,4 @@
-import { act } from "react";
+import { act, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, setup } from "../../test/render.js";
 import { Label } from "../field/Label.js";
@@ -116,6 +116,94 @@ describe("tag group composition", () => {
 
     expect(onRemove).toHaveBeenLastCalledWith("news");
     expect(document.activeElement).toBe(grid);
+  });
+
+  function RemovableTags({ initial }: { initial: string[] }) {
+    const [tags, setTags] = useState(initial);
+    return (
+      <TagGroup onRemove={(value) => setTags((current) => current.filter((tag) => tag !== value))}>
+        <TagList aria-label="Filters">
+          {tags.map((tag) => (
+            <Tag key={tag} value={tag}>
+              {tag}
+            </Tag>
+          ))}
+        </TagList>
+      </TagGroup>
+    );
+  }
+
+  const stops = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>("[role='row'][tabindex='0']")].map(
+      (tag) => tag.dataset["value"],
+    );
+
+  it("hands the stop to the next tag when the stop is removed", async () => {
+    const { container, user } = setup(<RemovableTags initial={["news", "sports", "arts"]} />);
+    const tags = [...container.querySelectorAll<HTMLElement>("[role='row']")];
+
+    await press(user, tags[1]!, "{Delete}");
+
+    expect(stops(container)).toEqual(["arts"]);
+    expect(document.activeElement).toBe(tags[2]);
+  });
+
+  it("hands the stop to the previous tag when the last tag is removed", async () => {
+    const { container, user } = setup(<RemovableTags initial={["news", "sports", "arts"]} />);
+    const tags = [...container.querySelectorAll<HTMLElement>("[role='row']")];
+
+    await press(user, tags[2]!, "{Backspace}");
+
+    expect(stops(container)).toEqual(["sports"]);
+    expect(document.activeElement).toBe(tags[1]);
+  });
+
+  it("keeps the stop on the first enabled tag when every remembered tag is gone", async () => {
+    const { container, user } = setup(<RemovableTags initial={["news", "sports"]} />);
+    const grid = container.querySelector<HTMLElement>("[role='grid']")!;
+    const tags = [...container.querySelectorAll<HTMLElement>("[role='row']")];
+
+    await press(user, tags[1]!, "{Delete}");
+    expect(stops(container)).toEqual(["news"]);
+    await press(user, tags[0]!, "{Delete}");
+    expect(document.activeElement).toBe(grid);
+    expect(stops(container)).toEqual([]);
+  });
+
+  it("moves the stop to a tag focused from outside the list", async () => {
+    const { container, tags, user } = renderTags();
+    const after = document.createElement("button");
+    container.append(after);
+
+    act(() => tags[2]!.focus());
+    expect(stops(container)).toEqual(["arts"]);
+    await user.click(after);
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(tags[2]);
+  });
+
+  it("roves in the reading direction of a right-to-left list and skips disabled tags", async () => {
+    const { container, user } = setup(
+      <div dir="rtl">
+        <TagGroup>
+          <TagList aria-label="Filters">
+            <Tag value="news">News</Tag>
+            <Tag value="sports" disabled>
+              Sports
+            </Tag>
+            <Tag value="arts">Arts</Tag>
+          </TagList>
+        </TagGroup>
+      </div>,
+    );
+    const tags = [...container.querySelectorAll<HTMLElement>("[role='row']")];
+
+    await press(user, tags[0]!, "{ArrowLeft}");
+    expect(document.activeElement).toBe(tags[2]);
+    expect(stops(container)).toEqual(["arts"]);
+    expect(tags[1]!.hasAttribute("tabindex")).toBe(false);
+    await press(user, tags[2]!, "{ArrowRight}");
+    expect(document.activeElement).toBe(tags[0]);
   });
 
   it("selects on tag click but not when clicking a control inside", async () => {

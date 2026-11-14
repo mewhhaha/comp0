@@ -1,7 +1,9 @@
-import { useState, type ComponentProps, type KeyboardEvent } from "react";
+import { type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { useCollectionNavigation, type CollectionItem } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
+import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { NO_SELECTION, useTabStopStore } from "../internal/tab-stop.js";
 import { writingDirection } from "../internal/writing-direction.js";
 import { TagListContext, useTagGroupContext, type TagListContextValue } from "./tag-shared.js";
 
@@ -14,6 +16,7 @@ export function TagList({
   "aria-labelledby": ariaLabelledBy,
   children,
   id,
+  onFocus,
   onKeyDown,
   ...props
 }: TagListProps) {
@@ -21,17 +24,26 @@ export function TagList({
   const field = useFieldContext();
   const navigate = useCollectionNavigation();
   const { collection } = group;
-  const [activeKey, setActiveKey] = useState("");
-
-  // The first registered, enabled tag becomes the tab stop.
-  const register = (item: CollectionItem) => {
-    collection.register(item);
-    if (item.element && !item.disabled) setActiveKey((current) => current || item.key);
+  // On the server and while hydrating, the tags are collected before they render, so the stop
+  // is already resolved in server HTML.
+  const seed = useCollectionSeed();
+  const pass = useCollectionPass(seed, children);
+  // The tag that last held focus or was chosen. Selection is multiple and never picks the stop,
+  // so the record holds until its tag unmounts or is disabled, and the stop falls back to the
+  // first enabled tag. It lives outside React state, so a focus move re-renders only the two
+  // tags whose tabIndex changes (bench: collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  const tabStops = useTabStopStore(collection, seed);
+  const setFocusedKey = (key: string) => {
+    tabStops.focus(key, NO_SELECTION);
   };
+
   const context: TagListContextValue = {
-    activeKey,
-    setActiveKey,
-    register,
+    seed,
+    tabStops,
+    setFocusedKey,
+    register: (item: CollectionItem) => {
+      collection.register(item);
+    },
     unregister: (key, element) => {
       collection.unregister(key, element);
     },
@@ -42,6 +54,7 @@ export function TagList({
   const Part = partElement(as, "div");
   return (
     <TagListContext value={context}>
+      {pass}
       <Part
         {...props}
         id={id ?? field?.controlId}
@@ -51,6 +64,16 @@ export function TagList({
         aria-label={ariaLabel}
         aria-labelledby={labelledBy}
         aria-multiselectable={group.selectionEnabled || undefined}
+        onFocus={(event: FocusEvent<HTMLDivElement>) => {
+          onFocus?.(event);
+          if (event.defaultPrevented) return;
+          // Covers focus that no key handler moved: a click, a remove control inside a tag, or
+          // TagPickerInput sending focus to the last tag.
+          const tag = collection
+            .items()
+            .find((item) => item.element?.contains(event.target as Node));
+          if (tag && !tag.disabled) setFocusedKey(tag.key);
+        }}
         onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
@@ -65,7 +88,7 @@ export function TagList({
             group.remove(current.key);
             const neighbor = tags[index + 1] ?? tags[index - 1];
             if (neighbor) {
-              setActiveKey(neighbor.key);
+              setFocusedKey(neighbor.key);
               neighbor.element?.focus();
             } else {
               event.currentTarget.focus();
@@ -75,7 +98,7 @@ export function TagList({
           if (group.selectionEnabled && (event.key === "Enter" || event.key === " ")) {
             if (current.disabled) return;
             event.preventDefault();
-            setActiveKey(current.key);
+            setFocusedKey(current.key);
             group.toggle(current.key);
             return;
           }
@@ -85,7 +108,7 @@ export function TagList({
           });
           if (!key) return;
           event.preventDefault();
-          setActiveKey(key);
+          setFocusedKey(key);
           collection.get(key)?.element?.focus();
         }}
       >

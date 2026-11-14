@@ -61,6 +61,21 @@ What the numbers say:
 - **A moving stop re-renders only the items it moves between.** With the stop in React state and context, every trigger reads the context, so one ArrowRight re-rendered all of them: 24.5 ms wall at 1000 triggers and 0.29 ms at 10, with the React Compiler on. `useTabStopStore` keeps the stop outside React state and each trigger subscribes to `useIsTabStop`, a boolean, so a press re-renders the two triggers whose answer flips: 0.85 ms at 1000. The same narrowing makes the mount's second commit cheaper (108.6 → 79.7 ms wall at 1000). GridList arrows move focus only, so they gain the same way (34.0 ms with context → 0.76 ms at 1000 rows). Use it wherever many items read a value a key press moves.
 - **ListBox arrows still re-render every option.** Selection follows focus, and every option reads the selected key from context to render `aria-selected`, so each press re-renders all of them whatever holds the stop: 18.6 ms with the stop in context, 19.2 ms with the store, 18.2 ms imperative, at 1000 options. Narrowing it would mean copying the controlled `value` into a store after commit, which the DOM state rules rule out.
 
+### TagGroup
+
+TagGroup moved from an `activeKey` in `TagList` state and context, set from each tag's registration, to `useTabStopStore` with each `Tag` reading `useIsTabStop`. Selection is multiple and never chooses the stop, so the store resolves it from the tag that last held focus, else the first enabled tag. Same bench and setup as above; the two columns were measured back to back in one session, alternating twice, and the second pair was within 0.4 ms of the first except the context column's unselected mount at 1000 (67.9 ms wall).
+
+| Scenario            | Tags | Store: commits / render ms / wall ms | Context: commits / render ms / wall ms |
+| ------------------- | ---: | ------------------------------------ | -------------------------------------- |
+| mount, selected     |  100 | 2 / 5.6 / 6.4                        | 3 / 6.5 / 7.4                          |
+| mount, selected     | 1000 | 2 / 47.1 / 55.1                      | 3 / 60.9 / 69.4                        |
+| mount, no selection | 1000 | 2 / 45.6 / 53.3                      | 3 / 54.2 / 61.7                        |
+| ArrowRight          |  100 | 1 / 0.06 / 0.18                      | 2 / 1.44 / 1.88                        |
+| ArrowRight          | 1000 | 1 / 0.20 / 0.80                      | 2 / 14.19 / 20.53                      |
+
+- **An arrow press re-renders two tags in one commit.** With the stop in context, every tag re-rendered on each press, and the state setter each tag's registration called scheduled a second commit: 20.5 ms wall at 1000 tags. With the store, only the tag the stop leaves and the one it reaches render: 0.80 ms. "re-renders only the two tags the stop moves between" in `tab-stop.composition.test.tsx` keeps it that way.
+- **Mount loses a commit.** Registration no longer sets state; the second commit is the store's, rendering only the tag that becomes the stop once tags register. Server HTML now has that stop too, through the collection pass, where before it had none.
+
 ### Table
 
 The same bench measures Table, whose items are cells: a header row and body rows of four (1000 is a header plus 249 rows). Arrow rows press ArrowDown from the first body cell, and Table has no selection, so its mount rows (the bench's "mount, no item selected") have no remembered cell. Three implementations, each run with the same command:

@@ -16,6 +16,9 @@ import { TableCell } from "./table/TableCell.js";
 import { TableRow } from "./table/TableRow.js";
 import { TabList } from "./tabs/TabList.js";
 import { Tabs } from "./tabs/Tabs.js";
+import { Tag } from "./tag-group/Tag.js";
+import { TagGroup } from "./tag-group/TagGroup.js";
+import { TagList } from "./tag-group/TagList.js";
 
 // Counts registry changes: a register or unregister that changed an entry. Registering an
 // unchanged item returns false and is not counted, so a stop move that re-registered every item
@@ -139,6 +142,38 @@ describe("roving tab stop registration", () => {
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[1]);
     expect(rows[1]!.tabIndex).toBe(0);
+    expect(commits).toBe(1);
+    expect(registry.changes).toBe(0);
+    unmount();
+  });
+
+  it("moves the tag stop in one commit without re-registering tags", async () => {
+    let commits = 0;
+    const { container, user, unmount } = setup(
+      <Profiler id="tag-group" onRender={() => (commits += 1)}>
+        <button type="button">Before</button>
+        <TagGroup>
+          <TagList aria-label="Bench">
+            {values.map((value) => (
+              <Tag key={value} value={value}>
+                {value}
+              </Tag>
+            ))}
+          </TagList>
+        </TagGroup>
+      </Profiler>,
+    );
+    const before = container.querySelector<HTMLElement>("button")!;
+    const tags = container.querySelectorAll<HTMLElement>("[role='row']");
+
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(tags[0]);
+    commits = 0;
+    registry.changes = 0;
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(tags[1]);
+    expect(tags[1]!.tabIndex).toBe(0);
     expect(commits).toBe(1);
     expect(registry.changes).toBe(0);
     unmount();
@@ -387,6 +422,28 @@ describe("roving tab stop re-renders", () => {
     rendered.clear();
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[2]);
+    expect([...rendered].sort()).toEqual(["three", "two"]);
+    unmount();
+  });
+
+  it("re-renders only the two tags the stop moves between", async () => {
+    const { rendered, onRender } = tracked();
+    const { container, user, unmount } = setup(
+      <TagGroup defaultValue={["one"]}>
+        <TagList aria-label="Tags">
+          {many.map((value) => (
+            <Profiler key={value} id={value} onRender={onRender}>
+              <Tag value={value}>{value}</Tag>
+            </Profiler>
+          ))}
+        </TagList>
+      </TagGroup>,
+    );
+    const tags = container.querySelectorAll<HTMLElement>("[role='row']");
+    act(() => tags[1]!.focus());
+    rendered.clear();
+    await user.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(tags[2]);
     expect([...rendered].sort()).toEqual(["three", "two"]);
     unmount();
   });
