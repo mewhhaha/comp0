@@ -118,6 +118,14 @@ export function useIsCollectionPass() {
 }
 
 /**
+ * Whether this render is inside the pass of the root that owns `seed`, for parts that record
+ * more than `useCollectedItem` does. A part reached through another root's pass records nothing.
+ */
+export function useIsCollectionPassOf(seed: CollectionSeed) {
+  return use(CollectionPassContext) === seed;
+}
+
+/**
  * For an item rendered inside a collection pass: records it in its own root's `seed`, unless it
  * is not `present` (an option an Autocomplete filter hides). An item reached through another
  * root's pass (a composite nested between that root and its items) records nothing. Either way

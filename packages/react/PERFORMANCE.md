@@ -78,6 +78,20 @@ The same bench measures Tree as a flat tree of leaves, ArrowDown from the first.
 - **An unselected mount is a commit shorter.** The effect that picked the first visible item is gone, so the mount is two commits instead of three (231.5 → 161.0 ms wall at 1000). Its render time is noisy: across four runs of the store version it ranged from 92 to 150 ms, so it is not a regression to read into.
 - **A selected mount costs about a tenth more.** Each item now subscribes to the store, seeds itself in render order, and runs a hydration repair, the same per-item hooks ListBox and GridList pay (100 → 109–119 ms wall at 1000). The second commit of every mount, here and before, is the scope's `aria-posinset` order, which re-renders every item once the items register.
 
+Later, `aria-posinset`, `aria-setsize`, and `aria-expanded` moved from layout-effect state to render. The collection pass also records each item's place among its siblings and which items render a group (`TreeShape`), and items read it as their `useSyncExternalStore` server snapshot, so server HTML has all three and hydrating writes none of them ("hydrates without a mismatch or a single attribute write" in `tree/tree.collection-pass.test.tsx`). After that, each group's scope store caches its items' positions once per registration change, so an item's snapshot is a map lookup instead of `order.indexOf` over its siblings, and a change re-renders only the items whose answer moved. Before is the `hasGroup` state plus the scope's `order` state, after is the stores; both columns come from one session, alternating over two rounds, with the second round's 1000-item wall time in brackets.
+
+| Scenario            | Items | Stores: commits / render ms / wall ms | Effect state: commits / render ms / wall ms |
+| ------------------- | ----: | ------------------------------------- | ------------------------------------------- |
+| mount, selected     |   100 | 2 / 8.8 / 10.6                        | 2 / 9.9 / 11.1                              |
+| mount, selected     |  1000 | 2 / 78.1 / 96.1 (96.3)                | 2 / 91.3 / 105.6 (105.7)                    |
+| mount, no selection |   100 | 2 / 7.5 / 8.8                         | 2 / 8.7 / 9.5                               |
+| mount, no selection |  1000 | 2 / 74.8 / 92.9 (93.7)                | 2 / 85.1 / 102.1 (99.2)                     |
+| ArrowDown           |   100 | 1 / 0.10 / 0.22                       | 1 / 0.07 / 0.18                             |
+| ArrowDown           |  1000 | 1 / 0.21 / 0.83 (0.94)                | 1 / 0.19 / 0.82 (0.85)                      |
+
+- **A client mount renders about a seventh faster and keeps its two commits.** The bench mounts on the client, where no pass runs: items still learn their positions only once they register, so the second commit re-renders every item as before, but it no longer scans each item's siblings (render 91 → 78 ms at 1000). The commit it saves is the hydration one, which the bench does not measure: the hydrated items' client snapshots already match their server snapshots, so `useSyncExternalStore` schedules no re-render.
+- **Arrow presses are unchanged.** Moving the stop touches neither store.
+
 ### Table
 
 The same bench measures Table, whose items are cells: a header row and body rows of four (1000 is a header plus 249 rows). Arrow rows press ArrowDown from the first body cell, and Table has no selection, so its mount rows (the bench's "mount, no item selected") have no remembered cell. Three implementations, each run with the same command:
