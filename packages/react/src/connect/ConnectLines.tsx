@@ -89,7 +89,7 @@ export function ConnectLines({ ref, ...props }: ConnectLinesProps) {
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
-      data-slot="connect-lines"
+      data-comp0="connect-lines"
       {...props}
       ref={composeRefs(ref, setSvg)}
       aria-hidden="true"

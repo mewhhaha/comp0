@@ -20,5 +20,5 @@ export function DrawerTrigger({ as, ref, ...props }: DrawerTriggerProps) {
   });
 
   const Part = partElement(as, "button");
-  return <Part data-slot="drawer-trigger" {...props} ref={triggerRef} {...trigger} />;
+  return <Part data-comp0="drawer-trigger" {...props} ref={triggerRef} {...trigger} />;
 }

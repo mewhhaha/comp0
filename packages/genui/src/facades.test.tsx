@@ -23,8 +23,8 @@ describe("layout", () => {
         },
       ],
     });
-    const root = container.querySelector("[data-slot='stack']")!;
-    const grid = container.querySelector("[data-slot='grid']")!;
+    const root = container.querySelector("[data-comp0='stack']")!;
+    const grid = container.querySelector("[data-comp0='grid']")!;
 
     expect(root.getAttribute("data-direction")).toBe("row");
     expect(root.getAttribute("data-gap")).toBe("sm");
@@ -47,8 +47,8 @@ describe("layout", () => {
         { type: "Grid", columns: -4, children: [{ type: "Text", text: "b" }] },
       ],
     });
-    const root = container.querySelector("[data-slot='stack']")!;
-    const grids = container.querySelectorAll("[data-slot='grid']");
+    const root = container.querySelector("[data-comp0='stack']")!;
+    const grids = container.querySelectorAll("[data-comp0='grid']");
 
     expect(root.hasAttribute("data-direction")).toBe(false);
     expect(root.hasAttribute("data-gap")).toBe(false);
@@ -111,19 +111,16 @@ describe("layout", () => {
       { type: "Heading", text: "Six", level: 6 },
     ]);
 
-    expect([...container.querySelectorAll("[data-slot='heading']")].map((h) => h.tagName)).toEqual([
-      "H1",
-      "H2",
-      "H3",
-      "H6",
-    ]);
+    expect([...container.querySelectorAll("[data-comp0='heading']")].map((h) => h.tagName)).toEqual(
+      ["H1", "H2", "H3", "H6"],
+    );
   });
 
   it("shows text literally with its tone and size", () => {
     const { container } = renderStack([
       { type: "Text", text: "**bold** <b>x</b>", tone: "danger", size: "sm" },
     ]);
-    const text = container.querySelector("[data-slot='text']")!;
+    const text = container.querySelector("[data-comp0='text']")!;
 
     expect(text.textContent).toBe("**bold** <b>x</b>");
     expect(text.querySelector("b")).toBeNull();
@@ -279,10 +276,10 @@ describe("data", () => {
 
     expect(getByRole("group", { name: `${label}: Growth` })).toBeTruthy();
     expect(container.querySelector("figcaption")?.textContent).toBe("Growth");
-    expect(container.querySelector("[data-slot='chart-description']")?.textContent).toBe(
+    expect(container.querySelector("[data-comp0='chart-description']")?.textContent).toBe(
       "B is larger.",
     );
-    const table = container.querySelector("table[data-slot='chart-table']")!;
+    const table = container.querySelector("table[data-comp0='chart-table']")!;
     expect(table.querySelector("caption")?.textContent).toBe("Growth");
     expect(table.textContent).toContain("5%");
   });
@@ -299,7 +296,7 @@ describe("data", () => {
         ],
       },
     ]);
-    const cells = [...container.querySelectorAll("table[data-slot='chart-table'] tbody th")];
+    const cells = [...container.querySelectorAll("table[data-comp0='chart-table'] tbody th")];
 
     expect(cells.map((cell) => cell.textContent)).toEqual(["1", "3"]);
   });
@@ -310,7 +307,7 @@ describe("data", () => {
       { type: "PieChart", title: "All zero", data: [{ label: "A", value: 0 }] },
     ]);
 
-    expect(container.querySelectorAll("[data-slot='chart-empty']")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-comp0='chart-empty']")).toHaveLength(2);
     expect(getByText("Nothing yet").tagName).toBe("FIGCAPTION");
     expect(container.querySelector("svg")).toBeNull();
   });

@@ -27,7 +27,7 @@ export function AccordionItem({ as, value, disabled = false, id, ...props }: Acc
       }}
     >
       <Part
-        data-slot="accordion-item"
+        data-comp0="accordion-item"
         {...props}
         id={id}
         data-open={dataAttr(open)}

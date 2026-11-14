@@ -39,7 +39,7 @@ export function StepsItem({ as, value, ref, ...props }: StepsItemProps) {
   return (
     <StepsItemContext value={{ value, current, completed }}>
       <Part
-        data-slot="steps-item"
+        data-comp0="steps-item"
         {...props}
         ref={composeRefs(ref, setElement)}
         id={itemId}

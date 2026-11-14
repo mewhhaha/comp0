@@ -35,7 +35,7 @@ export function Popover({
   const Root = rootElement(as);
   return (
     <PopoverContext value={context}>
-      <Root data-slot="popover" {...props} id={id} data-open={dataAttr(context.open)}>
+      <Root data-comp0="popover" {...props} id={id} data-open={dataAttr(context.open)}>
         {children}
       </Root>
     </PopoverContext>

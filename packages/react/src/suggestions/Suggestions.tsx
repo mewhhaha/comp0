@@ -21,7 +21,7 @@ export function Suggestions({ as, onSend, disabled = false, ...props }: Suggesti
   return (
     <SuggestionsContext value={{ disabled, send: (value) => onSend?.(value) }}>
       <Part
-        data-slot="suggestions"
+        data-comp0="suggestions"
         {...props}
         role={props.role ?? "group"}
         data-disabled={dataAttr(disabled)}

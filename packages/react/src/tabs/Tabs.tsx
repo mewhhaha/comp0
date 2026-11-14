@@ -50,7 +50,7 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
         setFocusedKey,
       }}
     >
-      <Root data-slot="tabs" {...props}>
+      <Root data-comp0="tabs" {...props}>
         {children}
       </Root>
     </TabsContext>

@@ -50,14 +50,14 @@ test("genui lab: server-streamed views finish, city refreshes its server compone
 
   const shader = page.getByRole("region", { name: "Shader explorer", exact: true });
   const forecast = page.getByRole("region", { name: "Forecast", exact: true });
-  const views = page.locator('[data-slot="genui-view"]');
+  const views = page.locator('[data-comp0="genui-view"]');
   await expect(views, "The lab streams five views").toHaveCount(5, { timeout: streamTimeout });
   for (const [name, view] of [
     ["Shader explorer", shader],
     ["Forecast", forecast],
   ] as const) {
     await expect(
-      view.locator('[data-slot="genui-view"]'),
+      view.locator('[data-comp0="genui-view"]'),
       `${name} must finish streaming`,
     ).not.toHaveAttribute("aria-busy", { timeout: streamTimeout });
   }

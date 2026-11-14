@@ -47,7 +47,7 @@ export function ComparisonOption({
   const Part = partElement(as, "th");
   return (
     <Part
-      data-slot="comparison-option"
+      data-comp0="comparison-option"
       {...props}
       ref={composeRefs(ref, setElement)}
       scope="col"

@@ -115,7 +115,7 @@ export function ScatterChartPlot({
   const yTicks = yScale.axisTicks(resolvedYTickCount, context.formatY);
 
   return (
-    <svg data-slot="scatter-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="scatter-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xGrid
         xLabel={context.xLabel}
@@ -128,7 +128,7 @@ export function ScatterChartPlot({
         getTargetIndex={getTargetIndex}
         orientation="both"
       >
-        <g role="presentation" data-slot="scatter-chart-points">
+        <g role="presentation" data-comp0="scatter-chart-points">
           {points.map((point) => {
             if (children)
               return (
@@ -136,7 +136,7 @@ export function ScatterChartPlot({
               );
             return (
               <Fragment key={`${point.value.label}-${point.index}`}>
-                <g aria-hidden="true" data-slot="scatter-chart-point">
+                <g aria-hidden="true" data-comp0="scatter-chart-point">
                   <circle cx={point.x} cy={point.y} r="2" fill="currentColor" />
                 </g>
               </Fragment>

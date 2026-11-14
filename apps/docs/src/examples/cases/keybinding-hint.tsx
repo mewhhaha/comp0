@@ -23,7 +23,7 @@ export function Example() {
         Search commands
         <KeybindingHint
           keys="Mod+K"
-          className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 [&_[data-slot=keybinding-key]]:rounded [&_[data-slot=keybinding-key]]:border [&_[data-slot=keybinding-key]]:border-zinc-950/15 [&_[data-slot=keybinding-key]]:px-1.5 [&_[data-slot=keybinding-key]]:py-0.5 dark:[&_[data-slot=keybinding-key]]:border-white/15"
+          className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 [&_[data-comp0=keybinding-key]]:rounded [&_[data-comp0=keybinding-key]]:border [&_[data-comp0=keybinding-key]]:border-zinc-950/15 [&_[data-comp0=keybinding-key]]:px-1.5 [&_[data-comp0=keybinding-key]]:py-0.5 dark:[&_[data-comp0=keybinding-key]]:border-white/15"
         />
       </Button>
       <TextField>

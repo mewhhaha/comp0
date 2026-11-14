@@ -165,7 +165,7 @@ function GridListItemPart({
           const ownerWindow = event.currentTarget.ownerDocument.defaultView;
           const target =
             ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
-          const dragHandle = target?.closest("[data-slot='grid-list-drag-handle']");
+          const dragHandle = target?.closest("[data-comp0='grid-list-drag-handle']");
           const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
           pointerStartedOnControl.current = Boolean(
             !startsFromHandle &&
@@ -183,7 +183,7 @@ function GridListItemPart({
           const ownerWindow = event.currentTarget.ownerDocument.defaultView;
           const eventTarget =
             ownerWindow && event.target instanceof ownerWindow.Element ? event.target : null;
-          const dragHandle = eventTarget?.closest("[data-slot='grid-list-drag-handle']");
+          const dragHandle = eventTarget?.closest("[data-comp0='grid-list-drag-handle']");
           const startsFromHandle = dragHandle?.closest("[role='row']") === event.currentTarget;
           const startsFromControl = focusableWithin(event.currentTarget).some((element) =>
             eventTarget ? element.contains(eventTarget) : false,

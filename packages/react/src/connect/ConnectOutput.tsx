@@ -67,7 +67,7 @@ export function ConnectOutput({
   return (
     <>
       <Part
-        data-slot="connect-output"
+        data-comp0="connect-output"
         {...props}
         ref={composeRefs(ref, setElement)}
         type={as === undefined || as === "button" ? (props.type ?? "button") : undefined}

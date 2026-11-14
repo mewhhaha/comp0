@@ -24,7 +24,7 @@ export function CalendarNextButton({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="calendar-next-button"
+      data-comp0="calendar-next-button"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       aria-label={props["aria-label"] ?? "Next month"}

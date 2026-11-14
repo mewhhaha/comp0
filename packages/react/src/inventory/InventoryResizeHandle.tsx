@@ -31,7 +31,7 @@ export function InventoryResizeHandle({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="inventory-resize-handle"
+      data-comp0="inventory-resize-handle"
       {...props}
       {...handle.eventProps}
       type="button"

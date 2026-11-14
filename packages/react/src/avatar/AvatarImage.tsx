@@ -22,7 +22,7 @@ export function AvatarImage({ as, alt, hidden, onError, onLoad, ref, ...props }:
   const Part = partElement(as, "img");
   return (
     <Part
-      data-slot="avatar-image"
+      data-comp0="avatar-image"
       {...props}
       ref={composeRefs(ref, imageRef)}
       alt={alt}

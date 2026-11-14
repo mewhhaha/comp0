@@ -119,7 +119,7 @@ export function ColorPicker({
           }}
         >
           <Root
-            data-slot="color-picker"
+            data-comp0="color-picker"
             {...props}
             aria-invalid={resolvedInvalid || undefined}
             data-open={dataAttr(popover.open)}

@@ -10,7 +10,7 @@ export function ComposerSend({ disabled, ...props }: ComposerSendProps) {
 
   return (
     <Button
-      data-slot="composer-send"
+      data-comp0="composer-send"
       type="submit"
       {...props}
       disabled={blocked || composer.value.trim() === ""}

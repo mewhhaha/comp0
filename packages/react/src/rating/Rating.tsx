@@ -56,7 +56,7 @@ export function Rating({
       }}
     >
       <Part
-        data-slot="rating"
+        data-comp0="rating"
         {...props}
         data-disabled={dataAttr(resolvedDisabled)}
         data-readonly={dataAttr(resolvedReadOnly)}

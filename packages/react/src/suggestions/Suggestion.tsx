@@ -12,7 +12,7 @@ export function Suggestion({ value, disabled, onClick, ...props }: SuggestionPro
 
   return (
     <Button
-      data-slot="suggestion"
+      data-comp0="suggestion"
       {...props}
       data-value={value}
       disabled={Boolean(disabled) || suggestions.disabled}

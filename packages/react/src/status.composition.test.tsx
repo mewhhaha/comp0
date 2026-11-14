@@ -203,7 +203,7 @@ describe("VisuallyHidden", () => {
         <a href="#target">Hidden link</a>
       </VisuallyHidden>,
     );
-    const wrapper = container.querySelector<HTMLElement>("[data-slot='visually-hidden']")!;
+    const wrapper = container.querySelector<HTMLElement>("[data-comp0='visually-hidden']")!;
 
     expect(wrapper.tagName).toBe("SPAN");
 
@@ -218,7 +218,7 @@ describe("VisuallyHidden", () => {
         <a href="#second">Second</a>
       </VisuallyHidden>,
     );
-    const wrapper = container.querySelector<HTMLElement>("[data-slot='visually-hidden']")!;
+    const wrapper = container.querySelector<HTMLElement>("[data-comp0='visually-hidden']")!;
     const links = wrapper.querySelectorAll("a");
 
     expect(wrapper.style.position).toBe("absolute");

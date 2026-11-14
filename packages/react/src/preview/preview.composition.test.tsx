@@ -58,10 +58,10 @@ describe("preview composition", () => {
     const { container } = render(<Example />);
     const trigger = container.querySelector("a")!;
     expect(trigger.getAttribute("href")).toBe("https://example.com/pkg");
-    expect(trigger.dataset["slot"]).toBe("preview-trigger");
+    expect(trigger.dataset["comp0"]).toBe("preview-trigger");
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(trigger.hasAttribute("aria-controls")).toBe(false);
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
     expect(card.getAttribute("popover")).toBe("manual");
     expect(card.hasAttribute("hidden")).toBe(true);
   });
@@ -69,7 +69,7 @@ describe("preview composition", () => {
   it("opens after the hover intent delay and wires the expansion to the card", () => {
     const { container } = render(<Example />);
     const trigger = container.querySelector("a")!;
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
     hoverStart(trigger);
     advance(599);
     expect(card.hasAttribute("hidden")).toBe(true);
@@ -88,7 +88,7 @@ describe("preview composition", () => {
     advance(300);
     hoverEnd(trigger);
     advance(2000);
-    expect(container.querySelector("[data-slot='preview-content']")!.hasAttribute("hidden")).toBe(
+    expect(container.querySelector("[data-comp0='preview-content']")!.hasAttribute("hidden")).toBe(
       true,
     );
   });
@@ -96,7 +96,7 @@ describe("preview composition", () => {
   it("opens immediately on focus and closes on Escape", () => {
     const { container } = render(<Example />);
     const trigger = container.querySelector("a")!;
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
     act(() => trigger.focus());
     expect(card.hasAttribute("hidden")).toBe(false);
     fireKeyDown(document.body, "Escape");
@@ -106,7 +106,7 @@ describe("preview composition", () => {
   it("stays open while the pointer travels onto the card", () => {
     const { container } = render(<Example />);
     const trigger = container.querySelector("a")!;
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
     hoverStart(trigger);
     advance(600);
     hoverEnd(trigger);
@@ -123,7 +123,7 @@ describe("preview composition", () => {
   it("stays open while focus is inside the card and closes after it leaves", () => {
     const { container } = render(<Example />);
     const trigger = container.querySelector("a")!;
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
     const star = card.querySelector("button")!;
     act(() => trigger.focus());
     act(() => star.focus());
@@ -137,7 +137,7 @@ describe("preview composition", () => {
   it("reports the next state through onOpenChange while controlled open pins the card", () => {
     const onOpenChange = vi.fn();
     const { container, rerender } = render(<Example open onOpenChange={onOpenChange} />);
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
     expect(card.hasAttribute("hidden")).toBe(false);
     fireKeyDown(document.body, "Escape");
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -149,7 +149,7 @@ describe("preview composition", () => {
   it("warns about negative delays and treats them as zero", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { container } = render(<Example openDelay={-5} />);
-    const card = container.querySelector("[data-slot='preview-content']")!;
+    const card = container.querySelector("[data-comp0='preview-content']")!;
 
     expect(error).toHaveBeenCalledWith(
       expect.stringContaining(

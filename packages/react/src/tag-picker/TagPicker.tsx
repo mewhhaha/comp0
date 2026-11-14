@@ -177,7 +177,7 @@ export function TagPicker({
             aria-disabled={props["aria-disabled"] ?? (resolvedDisabled || undefined)}
             data-disabled={dataAttr(resolvedDisabled)}
             data-empty={dataAttr(selectedValues.length === 0)}
-            data-slot="tag-picker"
+            data-comp0="tag-picker"
           >
             <>
               <FormValue

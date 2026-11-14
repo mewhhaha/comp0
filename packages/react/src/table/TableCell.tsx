@@ -12,7 +12,7 @@ export function TableCell({ as, ref, ...props }: TableCellProps) {
       {...props}
       ref={cellRef}
       tabIndex={tabIndex}
-      data-slot="table-cell"
+      data-comp0="table-cell"
       data-comp0-owner={owner}
     />
   );

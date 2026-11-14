@@ -50,7 +50,7 @@ export function GridListMoveButton({
     <Part
       type={as === undefined || as === "button" ? "button" : undefined}
       aria-label={props["aria-label"] ?? `Move ${row.label} to ${group.getListLabel(to)}`}
-      data-slot="grid-list-move-button"
+      data-comp0="grid-list-move-button"
       {...props}
       {...disabledAttributes}
     />

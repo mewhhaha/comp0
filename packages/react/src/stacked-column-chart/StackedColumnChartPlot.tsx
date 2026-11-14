@@ -135,7 +135,7 @@ export function StackedColumnChartPlot({
 
   return (
     <svg
-      data-slot="stacked-column-chart-plot"
+      data-comp0="stacked-column-chart-plot"
       {...props}
       ref={ref}
       viewBox="0 0 120 120"
@@ -152,7 +152,7 @@ export function StackedColumnChartPlot({
         getTargetIndex={getTargetIndex}
         orientation="both"
       >
-        <g role="presentation" data-slot="stacked-column-chart-segments">
+        <g role="presentation" data-comp0="stacked-column-chart-segments">
           {segments.map((segment) => {
             const key = JSON.stringify([
               segment.value.label,
@@ -163,7 +163,7 @@ export function StackedColumnChartPlot({
             if (children) return <Fragment key={key}>{children(segment)}</Fragment>;
             return (
               <Fragment key={key}>
-                <g aria-hidden="true" data-slot="stacked-column-chart-segment">
+                <g aria-hidden="true" data-comp0="stacked-column-chart-segment">
                   <rect
                     x={segment.x}
                     y={segment.y}

@@ -53,7 +53,7 @@ export function ProgressBar({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="progress-bar"
+      data-comp0="progress-bar"
       {...props}
       id={id ?? field?.controlId}
       role="progressbar"

@@ -21,7 +21,7 @@ export function CalendarHeader({ as, children, id, ...props }: CalendarHeaderPro
 
   const Part = partElement(as, "div");
   return (
-    <Part data-slot="calendar-header" {...props} id={id ?? calendar.headerId} aria-live="polite">
+    <Part data-comp0="calendar-header" {...props} id={id ?? calendar.headerId} aria-live="polite">
       {content}
     </Part>
   );

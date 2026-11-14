@@ -988,7 +988,7 @@ export const genuiDocs: GenUIDoc[] = [
         id: "styling",
         title: "Style the output",
         paragraphs: [
-          "comp0 ships no CSS. Every part carries a `data-slot`, and layout components carry token attributes that are absent when the model did not choose a value. The comp0 parts inside keep their own state attributes, such as `data-checked`, `data-selected`, `data-open`, and `data-focus-visible`, so one stylesheet themes everything a model can compose.",
+          "comp0 ships no CSS. Every part carries a `data-comp0`, and layout components carry token attributes that are absent when the model did not choose a value. The comp0 parts inside keep their own state attributes, such as `data-checked`, `data-selected`, `data-open`, and `data-focus-visible`, so one stylesheet themes everything a model can compose.",
         ],
         tables: [
           {
@@ -1033,7 +1033,7 @@ export const genuiDocs: GenUIDoc[] = [
             ],
           },
         ],
-        code: '[data-slot="stack"] {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n\n[data-slot="stack"][data-direction="row"] {\n  flex-direction: row;\n}\n\n[data-slot="grid"][data-columns="3"] {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n[data-slot="card"][data-tone="accent"] {\n  border-color: teal;\n}',
+        code: '[data-comp0="stack"] {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n\n[data-comp0="stack"][data-direction="row"] {\n  flex-direction: row;\n}\n\n[data-comp0="grid"][data-columns="3"] {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n[data-comp0="card"][data-tone="accent"] {\n  border-color: teal;\n}',
         language: "css",
         codeTitle: "genui.css",
         links: [{ label: "Styling lesson", to: "/learn/styling" }],

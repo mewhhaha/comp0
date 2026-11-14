@@ -25,7 +25,7 @@ describe("fragment triggers", () => {
     expect(buttons).toHaveLength(1);
     const trigger = buttons[0]!;
     expect(trigger.className).toBe("own");
-    expect(trigger.dataset["slot"]).toBe("tooltip-trigger");
+    expect(trigger.dataset["comp0"]).toBe("tooltip-trigger");
 
     const popover = container.ownerDocument.querySelector("[role='tooltip']")!;
     expect(popover.hasAttribute("hidden")).toBe(true);

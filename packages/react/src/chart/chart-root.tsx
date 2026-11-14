@@ -18,7 +18,7 @@ export function ChartFigure({ as, context, ...props }: ChartFigureProps) {
     <ChartInteractionProvider>
       <ChartContext value={context}>
         <ChartMetaContext value={{ title, setTitle, histogramBins, setHistogramBins }}>
-          <Part data-slot="chart" {...props} />
+          <Part data-comp0="chart" {...props} />
         </ChartMetaContext>
       </ChartContext>
     </ChartInteractionProvider>

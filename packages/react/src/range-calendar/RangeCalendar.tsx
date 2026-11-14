@@ -141,7 +141,7 @@ export function RangeCalendar({
     <CalendarContext value={calendarContext}>
       <RangeCalendarContext value={{ previewDate, value: range, setPreviewDate }}>
         <Root
-          data-slot="range-calendar"
+          data-comp0="range-calendar"
           {...props}
           id={id}
           data-disabled={dataAttr(resolvedDisabled)}

@@ -59,7 +59,7 @@ export function InventoryItem({
   return (
     <InventoryItemContext value={{ label, value }}>
       <Part
-        data-slot="inventory-item"
+        data-comp0="inventory-item"
         {...props}
         ref={composedRef}
         tabIndex={focused ? 0 : -1}

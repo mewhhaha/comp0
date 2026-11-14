@@ -63,7 +63,7 @@ export function Comparison({ as, ref, ...props }: ComparisonProps) {
   const Part = partElement(as, "table");
   return (
     <ComparisonContext value={{ options, collection }}>
-      <Part data-slot="comparison" {...props} ref={composeRefs(ref, setElement)} />
+      <Part data-comp0="comparison" {...props} ref={composeRefs(ref, setElement)} />
     </ComparisonContext>
   );
 }

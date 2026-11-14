@@ -10,5 +10,5 @@ export type FeedbackButtonProps = Omit<
 
 /** One rating. Give it a text name such as "Good response"; an icon alone has no name. */
 export function FeedbackButton(props: FeedbackButtonProps) {
-  return <ToggleButton data-slot="feedback-button" {...props} />;
+  return <ToggleButton data-comp0="feedback-button" {...props} />;
 }

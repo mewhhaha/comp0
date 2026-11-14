@@ -11,7 +11,7 @@ describe("inventory keyboard movement", () => {
     const { container, onChange, user } = renderInventory();
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
-    const move = revenue.querySelector("[data-slot='inventory-move-handle']")!;
+    const move = revenue.querySelector("[data-comp0='inventory-move-handle']")!;
 
     await pressKey(user, move!, "{ArrowRight}");
     expect(revenue.dataset.column).toBe("1");
@@ -31,13 +31,13 @@ describe("inventory keyboard movement", () => {
   it("keeps keyboard movement active until the handle is pressed again", async () => {
     const { container, user } = renderInventory();
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
-    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-comp0='inventory-move-handle']")!;
 
     await pressKey(user, move!, " ");
 
     expect(revenue.hasAttribute("data-dragging")).toBe(true);
     expect(
-      container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
+      container.querySelector<HTMLElement>("[data-comp0='inventory-preview']")?.dataset.column,
     ).toBe("1");
     expect(container.querySelector("output")?.textContent).toContain(
       "Moving Revenue. Use the arrow keys",
@@ -49,7 +49,7 @@ describe("inventory keyboard movement", () => {
     await pressKey(user, move!, "{Enter}");
 
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
-    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("[data-comp0='inventory-preview']")).toBeNull();
     expect(container.querySelector("output")?.textContent).toContain(
       "Revenue moved to column 2, row 1",
     );
@@ -59,7 +59,7 @@ describe("inventory keyboard movement", () => {
     const { container, onChange, user } = renderInventory();
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
-    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-comp0='inventory-move-handle']")!;
 
     await pressKey(user, move!, "{Enter}");
     await pressKey(user, move!, "{ArrowRight}");
@@ -69,7 +69,7 @@ describe("inventory keyboard movement", () => {
     expect(conversion.dataset.column).toBe("4");
     expect(conversion.dataset.row).toBe("1");
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
-    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("[data-comp0='inventory-preview']")).toBeNull();
     expect(container.querySelector("output")?.textContent).toContain("Revenue change cancelled");
     expect(onChange).toHaveBeenCalledTimes(2);
   });
@@ -86,7 +86,7 @@ describe("inventory keyboard movement", () => {
     expect(document.activeElement).toBe(resize);
     expect(revenue.dataset.column).toBe("1");
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
-    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("[data-comp0='inventory-preview']")).toBeNull();
     expect(container.querySelector("output")?.textContent).toContain("Revenue change cancelled");
     expect(onChange).toHaveBeenCalledTimes(2);
   });
@@ -94,7 +94,7 @@ describe("inventory keyboard movement", () => {
   it("resizes in row and column spans without marking a grid edge invalid", async () => {
     const { container, user } = renderInventory();
     const alerts = container.querySelector<HTMLElement>('[data-value="alerts"]')!;
-    const resize = alerts.querySelector("[data-slot='inventory-resize-handle']")!;
+    const resize = alerts.querySelector("[data-comp0='inventory-resize-handle']")!;
 
     await pressKey(user, resize, "{Enter}");
     await pressKey(user, resize, "{ArrowDown}");

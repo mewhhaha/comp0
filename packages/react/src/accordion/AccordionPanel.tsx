@@ -15,7 +15,7 @@ export function AccordionPanel({ as, role = "region", ...props }: AccordionPanel
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="accordion-panel"
+      data-comp0="accordion-panel"
       {...props}
       id={item.panelId}
       role={role}

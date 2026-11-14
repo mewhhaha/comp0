@@ -11,7 +11,7 @@ export function ColorAreaThumb({ as, style, ...props }: ColorAreaThumbProps) {
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="color-area-thumb"
+      data-comp0="color-area-thumb"
       {...props}
       aria-hidden={props["aria-hidden"] ?? true}
       data-disabled={dataAttr(colorArea.disabled)}

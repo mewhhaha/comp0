@@ -44,10 +44,10 @@ describe("Tour composition", () => {
   it("anchors each step to its named target and restores target attributes", async () => {
     const changed = vi.fn();
     const { container, user } = setup(<TourExample onStepChange={changed} />);
-    const trigger = container.querySelector<HTMLButtonElement>("[data-slot='tour-trigger']")!;
+    const trigger = container.querySelector<HTMLButtonElement>("[data-comp0='tour-trigger']")!;
     const search = container.querySelector<HTMLElement>("[data-tour-target='search']")!;
     const create = container.querySelector<HTMLElement>("[data-tour-target='create']")!;
-    const overlay = document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!;
+    const overlay = document.querySelector<HTMLDialogElement>("[data-comp0='tour-content']")!;
 
     await user.click(trigger);
     expect(changed).toHaveBeenLastCalledWith(0);
@@ -73,8 +73,8 @@ describe("Tour composition", () => {
 
   it("finishes on the last step and restores focus to the tour trigger", async () => {
     const { container, user } = setup(<TourExample />);
-    const trigger = container.querySelector<HTMLButtonElement>("[data-slot='tour-trigger']")!;
-    const overlay = document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!;
+    const trigger = container.querySelector<HTMLButtonElement>("[data-comp0='tour-trigger']")!;
+    const overlay = document.querySelector<HTMLDialogElement>("[data-comp0='tour-content']")!;
 
     await user.click(trigger);
     await user.click(
@@ -110,7 +110,7 @@ describe("Tour composition", () => {
         </TourContent>
       </Tour>,
     );
-    const overlay = document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!;
+    const overlay = document.querySelector<HTMLDialogElement>("[data-comp0='tour-content']")!;
     const close = overlay.querySelector<HTMLButtonElement>("button")!;
 
     await user.click(close);
@@ -152,12 +152,12 @@ describe("Tour composition", () => {
       </Tour>,
     );
 
-    await user.click(document.querySelector("[data-slot='tour-trigger']")!);
+    await user.click(document.querySelector("[data-comp0='tour-trigger']")!);
 
     expect(error).toHaveBeenCalledWith(
       'Tour target "missing-target" must match exactly one element; found 0. The step stays hidden.',
     );
-    expect(document.querySelector<HTMLDialogElement>("[data-slot='tour-content']")!.open).toBe(
+    expect(document.querySelector<HTMLDialogElement>("[data-comp0='tour-content']")!.open).toBe(
       false,
     );
 

@@ -56,7 +56,7 @@ export function ChartNavigationProvider({
           ref={setOverlayElement}
           aria-hidden="true"
           pointerEvents="none"
-          data-slot="chart-active-value-overlay"
+          data-comp0="chart-active-value-overlay"
         />
       )}
     </ChartNavigationContext>

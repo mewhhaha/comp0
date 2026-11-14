@@ -21,8 +21,8 @@ export function ChartTable({ as, children, ...props }: ChartTableProps) {
     const model = chartTableModel(warn, context, meta.histogramBins);
     content = (
       <>
-        <caption data-slot="chart-table-caption">{meta.title ?? model.caption}</caption>
-        <thead data-slot="chart-table-head">
+        <caption data-comp0="chart-table-caption">{meta.title ?? model.caption}</caption>
+        <thead data-comp0="chart-table-head">
           <tr>
             {model.columns.map((column, index) => (
               <th key={`${column}-${index}`} scope="col">
@@ -31,7 +31,7 @@ export function ChartTable({ as, children, ...props }: ChartTableProps) {
             ))}
           </tr>
         </thead>
-        <tbody data-slot="chart-table-body">
+        <tbody data-comp0="chart-table-body">
           {model.rows.map((row) => (
             <tr key={row.key}>
               <th scope="row">{row.header}</th>
@@ -46,7 +46,7 @@ export function ChartTable({ as, children, ...props }: ChartTableProps) {
   }
   const Part = partElement(as, "table");
   return (
-    <Part data-slot="chart-table" {...props}>
+    <Part data-comp0="chart-table" {...props}>
       {content}
     </Part>
   );

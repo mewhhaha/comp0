@@ -31,7 +31,7 @@ function renderAccordion(props: Record<string, unknown> = {}) {
   );
   const triggers = [...result.container.querySelectorAll<HTMLButtonElement>("button")];
   const panels = [
-    ...result.container.querySelectorAll<HTMLElement>("[data-slot='accordion-panel']"),
+    ...result.container.querySelectorAll<HTMLElement>("[data-comp0='accordion-panel']"),
   ];
   return { ...result, triggers, panels };
 }
@@ -123,7 +123,7 @@ describe("accordion composition", () => {
         </AccordionItem>
       </Accordion>,
     );
-    const trigger = container.querySelector<HTMLElement>("[data-slot='accordion-trigger']")!;
+    const trigger = container.querySelector<HTMLElement>("[data-comp0='accordion-trigger']")!;
 
     expect(container.querySelector("h2")).toBeTruthy();
     expect(trigger.tagName).toBe("DIV");

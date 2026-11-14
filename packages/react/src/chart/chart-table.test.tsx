@@ -424,7 +424,7 @@ describe("ChartTable default content", () => {
         <ChartTable as="table" />
       </BarChart>,
     );
-    expect(container.querySelector("section[data-slot='chart']")).not.toBeNull();
-    expect(container.querySelector("h2[data-slot='chart-title']")).not.toBeNull();
+    expect(container.querySelector("section[data-comp0='chart']")).not.toBeNull();
+    expect(container.querySelector("h2[data-comp0='chart-title']")).not.toBeNull();
   });
 });

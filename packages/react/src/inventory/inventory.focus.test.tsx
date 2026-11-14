@@ -11,9 +11,9 @@ describe("inventory structure and focus", () => {
     const { container } = renderInventory();
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
-    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-comp0='inventory-move-handle']")!;
     const resize = revenue.querySelector<HTMLButtonElement>(
-      "[data-slot='inventory-resize-handle']",
+      "[data-comp0='inventory-resize-handle']",
     )!;
 
     expect(inventory.getAttribute("aria-label")).toBe("Store overview");
@@ -25,7 +25,7 @@ describe("inventory structure and focus", () => {
     expect(move.getAttribute("aria-label")).toBe("Move Revenue");
     expect(move.getAttribute("aria-keyshortcuts")).toContain("Enter");
     expect(resize.getAttribute("aria-label")).toBe("Resize Revenue");
-    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("[data-comp0='inventory-preview']")).toBeNull();
     const items = container.querySelectorAll<HTMLElement>("li[data-value]");
     expect(items[0]!.tabIndex).toBe(0);
     expect([...items].slice(1).every((item) => item.tabIndex === -1)).toBe(true);

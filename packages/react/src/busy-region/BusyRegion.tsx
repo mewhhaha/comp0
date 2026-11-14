@@ -27,7 +27,7 @@ export function BusyRegion({ as, busy, ...props }: BusyRegionProps) {
   return (
     <BusyContext value={resolvedBusy}>
       <Part
-        data-slot="busy-region"
+        data-comp0="busy-region"
         {...props}
         aria-busy={Boolean(busy) || undefined}
         data-busy={dataAttr(resolvedBusy)}

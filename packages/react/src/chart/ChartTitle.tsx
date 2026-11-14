@@ -15,5 +15,5 @@ export function ChartTitle({ as, ref, ...props }: ChartTitleProps) {
   });
   useEffect(() => () => setTitle(null), [setTitle]);
   const Part = partElement(as, "figcaption");
-  return <Part data-slot="chart-title" {...props} ref={composedRef} />;
+  return <Part data-comp0="chart-title" {...props} ref={composedRef} />;
 }

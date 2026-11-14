@@ -14,7 +14,7 @@ test("recorded revisions update and append without replacing the person's work",
   const response = await page.goto("/labs/genui-edits", { waitUntil: "commit" });
   expect(response?.ok()).toBe(true);
   const answer = page.getByRole("region", { name: "Trip answer", exact: true });
-  const originalView = answer.locator('[data-slot="genui-view"]').first();
+  const originalView = answer.locator('[data-comp0="genui-view"]').first();
   await expect(originalView).not.toHaveAttribute("aria-busy");
   const note = answer.getByRole("textbox", { name: "Travel note" });
   await note.fill("Keep the window seat");
@@ -43,8 +43,8 @@ test("recorded revisions update and append without replacing the person's work",
   );
 
   await page.getByRole("button", { name: "Replay the revision", exact: true }).click();
-  await expect(answer.locator('[data-slot="genui-view"]')).toHaveCount(3);
-  await expect(answer.locator('[data-slot="genui-view"][aria-busy]')).toHaveCount(0);
+  await expect(answer.locator('[data-comp0="genui-view"]')).toHaveCount(3);
+  await expect(answer.locator('[data-comp0="genui-view"][aria-busy]')).toHaveCount(0);
   await expect(answer.getByRole("listitem")).toHaveText(["Book the flight", "Book the ferry"]);
   await expect(note).toHaveValue("Keep the window seat");
 

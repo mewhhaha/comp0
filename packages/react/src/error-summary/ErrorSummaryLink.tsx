@@ -13,5 +13,5 @@ export function ErrorSummaryLink<TElement extends ElementType = "a">({
   ...props
 }: ErrorSummaryLinkProps<TElement>) {
   const Part = partElement(as, "a");
-  return <Part data-slot="error-summary-link" {...(props as ComponentPropsWithRef<"a">)} />;
+  return <Part data-comp0="error-summary-link" {...(props as ComponentPropsWithRef<"a">)} />;
 }

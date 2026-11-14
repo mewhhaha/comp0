@@ -38,7 +38,7 @@ export function DateRangePickerPopover({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="date-range-picker-popover"
+      data-comp0="date-range-picker-popover"
       {...props}
       {...surface.props}
       role={props.role ?? "dialog"}

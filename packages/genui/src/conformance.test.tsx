@@ -112,16 +112,16 @@ describe.each([...answers, hostile].map((answer) => [answer.name, answer.source]
         expectSafeDom(container);
         // An element drawn for a finished component is never replaced as the response grows.
         for (const element of previous) {
-          expect(element.isConnected, `${element.getAttribute("data-slot")} at ${end}`).toBe(true);
+          expect(element.isConnected, `${element.getAttribute("data-comp0")} at ${end}`).toBe(true);
         }
-        if (atBoundary(prefix)) previous = [...container.querySelectorAll("[data-slot]")];
+        if (atBoundary(prefix)) previous = [...container.querySelectorAll("[data-comp0]")];
       }
       rerender(<GenUI response={source} streaming={false} />);
 
       expect(container.querySelector("[aria-busy]")).toBeNull();
       expectSafeDom(container);
       for (const element of previous) {
-        expect(element.isConnected, element.getAttribute("data-slot") ?? "").toBe(true);
+        expect(element.isConnected, element.getAttribute("data-comp0") ?? "").toBe(true);
       }
       expect(reported()).toEqual([]);
     }, 240_000);

@@ -87,12 +87,12 @@ describe("chart browser interactions", () => {
     await act(async () => userEvent.tab());
     expect(document.activeElement?.getAttribute("data-node-id")).toBe("visit");
     expect(
-      container.querySelectorAll("[data-slot='sankey-chart-link'][data-connected]"),
+      container.querySelectorAll("[data-comp0='sankey-chart-link'][data-connected]"),
     ).toHaveLength(2);
     await act(async () => userEvent.keyboard("{ArrowRight}"));
     expect(document.activeElement?.getAttribute("data-node-id")).toBe("cart");
     expect(
-      container.querySelectorAll("[data-slot='sankey-chart-link'][data-connected]"),
+      container.querySelectorAll("[data-comp0='sankey-chart-link'][data-connected]"),
     ).toHaveLength(2);
     await expectNoAxeViolations(container, "sankey with an active node");
     unmount();

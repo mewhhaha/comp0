@@ -31,7 +31,7 @@ describe("output composition", () => {
 
     const output = getByRole("status");
     expect(output.tagName).toBe("OUTPUT");
-    expect(output.getAttribute("data-slot")).toBe("output");
+    expect(output.getAttribute("data-comp0")).toBe("output");
   });
 
   it("joins a list of control ids into the for attribute", () => {
@@ -79,6 +79,6 @@ describe("output composition", () => {
     );
 
     expect(getByTestId("p").tagName).toBe("P");
-    expect(getByTestId("strong").getAttribute("data-slot")).toBe("output");
+    expect(getByTestId("strong").getAttribute("data-comp0")).toBe("output");
   });
 });

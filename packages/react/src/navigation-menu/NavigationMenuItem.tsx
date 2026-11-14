@@ -33,7 +33,7 @@ export function NavigationMenuItem({ as, value, id, ...props }: NavigationMenuIt
         panelId: `${itemId}-panel`,
       }}
     >
-      <Part data-slot="navigation-menu-item" {...props} id={id} data-open={dataAttr(open)} />
+      <Part data-comp0="navigation-menu-item" {...props} id={id} data-open={dataAttr(open)} />
     </NavigationMenuItemContext>
   );
 }

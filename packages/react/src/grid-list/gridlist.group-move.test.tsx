@@ -20,7 +20,7 @@ describe("grid list reorder group move controls", () => {
     const source = container.querySelector<HTMLElement>("[data-value='design']")!;
     const destination = container.querySelector<HTMLElement>("[aria-label='done']")!;
 
-    fireDrag(source.querySelector("[data-slot='grid-list-drag-handle']")!, "dragstart");
+    fireDrag(source.querySelector("[data-comp0='grid-list-drag-handle']")!, "dragstart");
     fireDrag(destination, "dragover");
     expect(destination.hasAttribute("data-drop-target")).toBe(true);
     fireDrag(destination, "drop");
@@ -43,7 +43,7 @@ describe("grid list reorder group move controls", () => {
       <GroupedLists initial={{ todo: ["design"], done: [] }} spy={spy} />,
     );
     const button = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
 
     expect(button.getAttribute("aria-label")).toBe("Move design to done");
@@ -65,7 +65,7 @@ describe("grid list reorder group move controls", () => {
       />,
     );
     const source = container.querySelector<HTMLElement>("[data-value='design']")!;
-    const button = source.querySelector<HTMLButtonElement>("[data-slot='grid-list-move-button']")!;
+    const button = source.querySelector<HTMLButtonElement>("[data-comp0='grid-list-move-button']")!;
 
     expect(button.disabled).toBe(true);
     await user.click(button);
@@ -90,7 +90,7 @@ describe("grid list reorder group move controls", () => {
     );
 
     expect(
-      container.querySelector("[data-slot='grid-list-move-button']")?.getAttribute("aria-label"),
+      container.querySelector("[data-comp0='grid-list-move-button']")?.getAttribute("aria-label"),
     ).toBe("Move Design task to Completed work");
   });
 
@@ -111,7 +111,7 @@ describe("grid list reorder group move controls", () => {
       </>,
     );
     const moveButton = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     const destination = container.querySelector<HTMLElement>("[aria-labelledby='done-label']")!;
     const label = container.querySelector<HTMLElement>("#done-label")!;
@@ -164,10 +164,10 @@ describe("grid list reorder group move controls", () => {
     );
     const source = container.querySelector<HTMLElement>("[data-value='design']")!;
     const destination = container.querySelector<HTMLElement>("[aria-label='done']")!;
-    const button = source.querySelector<HTMLButtonElement>("[data-slot='grid-list-move-button']")!;
+    const button = source.querySelector<HTMLButtonElement>("[data-comp0='grid-list-move-button']")!;
 
     expect(button.disabled).toBe(true);
-    fireDrag(source.querySelector("[data-slot='grid-list-drag-handle']")!, "dragstart");
+    fireDrag(source.querySelector("[data-comp0='grid-list-drag-handle']")!, "dragstart");
     fireDrag(destination, "dragover");
     expect(destination.hasAttribute("data-drop-target")).toBe(false);
     fireDrag(destination, "drop");

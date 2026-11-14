@@ -34,7 +34,7 @@ export function DatePickerTrigger({ as, ref, style, ...props }: DatePickerTrigge
 
   return (
     <Button
-      data-slot="date-picker-trigger"
+      data-comp0="date-picker-trigger"
       {...props}
       as={as}
       ref={composedRef}

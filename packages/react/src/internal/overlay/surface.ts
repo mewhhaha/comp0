@@ -165,7 +165,7 @@ export type OverlaySurfaceOptions<TElement extends HTMLElement = HTMLElement> =
  * DatePickerPopover, DateRangePickerPopover and MentionFieldPopover to adopt).
  *
  * Spread `props` on the surface element and add the part's own role, handlers
- * and `data-slot`. It supplies the composed `ref`, `id`, `popover`, `hidden`
+ * and `data-comp0`. It supplies the composed `ref`, `id`, `popover`, `hidden`
  * (closed unless the owner is open), anchor-positioned `style`, `data-open`
  * and an `onToggle` that mirrors native open/close back into the owner while
  * ignoring toggles bubbling from nested popovers.

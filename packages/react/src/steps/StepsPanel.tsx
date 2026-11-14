@@ -19,7 +19,7 @@ export function StepsPanel({ as, value, role = "region", ...props }: StepsPanelP
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="steps-panel"
+      data-comp0="steps-panel"
       {...props}
       id={panelId}
       role={role}

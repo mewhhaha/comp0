@@ -23,7 +23,7 @@ export function ColorSwatch({ as, color, style, ...props }: ColorSwatchProps) {
   const Part = partElement(as, "span");
   return (
     <Part
-      data-slot="color-swatch"
+      data-comp0="color-swatch"
       {...props}
       aria-hidden={props["aria-hidden"] ?? true}
       data-value={value}

@@ -24,7 +24,7 @@ export function PreviewTrigger({
   const Part = partElement(as, "a");
   return (
     <Part
-      data-slot="preview-trigger"
+      data-comp0="preview-trigger"
       {...props}
       ref={triggerRef}
       id={props.id ?? preview.triggerId}

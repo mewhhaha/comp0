@@ -17,7 +17,7 @@ describe("grid list controlled moves", () => {
       <PendingControlledGroupedLists order={initial} onChange={changed} />,
     );
     const moveButton = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     act(() => moveButton.focus());
 
@@ -61,7 +61,7 @@ describe("grid list controlled moves", () => {
     const order = { todo: ["design"], done: [] as string[] };
     const { container, user } = setup(<ControlledGroupedLists order={order} onChange={changed} />);
     const moveButton = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     act(() => moveButton.focus());
 
@@ -86,10 +86,10 @@ describe("grid list controlled moves", () => {
     );
 
     await user.click(
-      container.querySelector("[data-value='design'] [data-slot='grid-list-move-button']")!,
+      container.querySelector("[data-value='design'] [data-comp0='grid-list-move-button']")!,
     );
     const pendingButton = container.querySelector<HTMLButtonElement>(
-      "[data-value='build'] [data-slot='grid-list-move-button']",
+      "[data-value='build'] [data-comp0='grid-list-move-button']",
     )!;
     expect(pendingButton.disabled).toBe(true);
     await user.click(pendingButton);
@@ -97,7 +97,7 @@ describe("grid list controlled moves", () => {
 
     rerender(<PendingControlledGroupedLists order={afterDesign} onChange={changed} settled />);
     const acknowledgedButton = container.querySelector<HTMLButtonElement>(
-      "[data-value='build'] [data-slot='grid-list-move-button']",
+      "[data-value='build'] [data-comp0='grid-list-move-button']",
     )!;
     expect(acknowledgedButton.disabled).toBe(false);
     await user.click(acknowledgedButton);
@@ -115,19 +115,23 @@ describe("grid list controlled moves", () => {
       <PendingControlledGroupedLists order={initial} onChange={changed} />,
     );
     let moveButton = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
 
     await user.click(moveButton);
     rerender(<PendingControlledGroupedLists order={equivalent} onChange={changed} />);
 
-    moveButton = container.querySelector<HTMLButtonElement>("[data-slot='grid-list-move-button']")!;
+    moveButton = container.querySelector<HTMLButtonElement>(
+      "[data-comp0='grid-list-move-button']",
+    )!;
     expect(moveButton.disabled).toBe(true);
     expect(changed).toHaveBeenCalledTimes(1);
     expect(container.querySelector("[aria-live]")?.textContent).toBe("");
 
     rerender(<PendingControlledGroupedLists order={equivalent} onChange={changed} settled />);
-    moveButton = container.querySelector<HTMLButtonElement>("[data-slot='grid-list-move-button']")!;
+    moveButton = container.querySelector<HTMLButtonElement>(
+      "[data-comp0='grid-list-move-button']",
+    )!;
     expect(moveButton.disabled).toBe(false);
 
     await user.click(moveButton);
@@ -140,7 +144,7 @@ describe("grid list controlled moves", () => {
 
     const missing = setup(<PendingControlledGroupedLists order={initial} onChange={() => {}} />);
     const missingMoveButton = missing.container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     act(() => missingMoveButton.focus());
     await missing.user.click(missingMoveButton);
@@ -163,7 +167,7 @@ describe("grid list controlled moves", () => {
 
     const disabled = setup(<PendingControlledGroupedLists order={initial} onChange={() => {}} />);
     const disabledMoveButton = disabled.container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     act(() => disabledMoveButton.focus());
     await disabled.user.click(disabledMoveButton);
@@ -191,7 +195,7 @@ describe("grid list controlled moves", () => {
       <PendingControlledGroupedLists order={initial} onChange={() => {}} />,
     );
     const moveButton = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     act(() => moveButton.focus());
     await user.click(moveButton);
@@ -211,11 +215,11 @@ describe("grid list controlled moves", () => {
       <ControlledGroupedLists order={order} onChange={() => {}} canMove={allow} />,
     );
     const row = container.querySelector<HTMLElement>("[data-value='design']")!;
-    let moveButton = row.querySelector<HTMLButtonElement>("[data-slot='grid-list-move-button']")!;
+    let moveButton = row.querySelector<HTMLButtonElement>("[data-comp0='grid-list-move-button']")!;
     expect(moveButton.disabled).toBe(false);
 
     rerender(<ControlledGroupedLists order={order} onChange={() => {}} canMove={veto} />);
-    moveButton = row.querySelector<HTMLButtonElement>("[data-slot='grid-list-move-button']")!;
+    moveButton = row.querySelector<HTMLButtonElement>("[data-comp0='grid-list-move-button']")!;
     expect(moveButton.disabled).toBe(true);
 
     act(() => row.focus());

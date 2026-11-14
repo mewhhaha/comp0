@@ -46,7 +46,7 @@ export function Dialog({
   const Root = rootElement(as);
   return (
     <DialogContext value={context}>
-      <Root data-slot="dialog" {...props} id={id} data-open={dataAttr(open)}>
+      <Root data-comp0="dialog" {...props} id={id} data-open={dataAttr(open)}>
         {children}
       </Root>
     </DialogContext>

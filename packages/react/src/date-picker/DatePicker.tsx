@@ -92,7 +92,7 @@ export function DatePicker({
       <PopoverContext value={popover}>
         <DatePickerContext value={pickerContext}>
           <Root
-            data-slot="date-picker"
+            data-comp0="date-picker"
             {...props}
             aria-invalid={resolvedInvalid || undefined}
             data-disabled={dataAttr(resolvedDisabled)}

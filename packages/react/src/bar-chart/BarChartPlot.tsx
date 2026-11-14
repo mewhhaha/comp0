@@ -105,7 +105,7 @@ export function BarChartPlot({
   }));
 
   return (
-    <svg data-slot="bar-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="bar-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         bounds={bounds}
         xGrid
@@ -116,7 +116,7 @@ export function BarChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={bars.length} orientation="vertical">
-        <g role="presentation" data-slot="bar-chart-bars">
+        <g role="presentation" data-comp0="bar-chart-bars">
           {bars.map((bar) => {
             if (children)
               return <Fragment key={`${bar.value.label}-${bar.index}`}>{children(bar)}</Fragment>;
@@ -125,7 +125,7 @@ export function BarChartPlot({
                 <g
                   aria-hidden="true"
                   data-label={bar.value.label}
-                  data-slot="bar-chart-bar"
+                  data-comp0="bar-chart-bar"
                   data-value={bar.value.value}
                 >
                   <rect

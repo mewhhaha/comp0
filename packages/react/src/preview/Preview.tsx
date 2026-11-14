@@ -90,7 +90,7 @@ export function Preview({
   return (
     <PreviewContext value={context}>
       <PopoverContext value={popoverContext}>
-        <Root data-slot="preview" {...props} id={id} data-open={dataAttr(open)}>
+        <Root data-comp0="preview" {...props} id={id} data-open={dataAttr(open)}>
           {children}
         </Root>
       </PopoverContext>

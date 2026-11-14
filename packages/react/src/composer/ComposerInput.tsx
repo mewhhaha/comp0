@@ -16,7 +16,7 @@ export function ComposerInput({ onChange, onKeyDown, ref, ...props }: ComposerIn
       name="message"
       rows={1}
       enterKeyHint="send"
-      data-slot="composer-input"
+      data-comp0="composer-input"
       {...props}
       ref={composeRefs(ref, composer.inputRef)}
       value={composer.value}

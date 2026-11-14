@@ -29,7 +29,7 @@ export function StackFacade({
 }: CatalogProps<typeof stackProps>) {
   return (
     <div
-      data-slot="stack"
+      data-comp0="stack"
       data-direction={asToken(direction, ["column", "row"] as const)}
       data-gap={asToken(gap, gaps)}
       data-align={asToken(align, aligns)}
@@ -42,7 +42,7 @@ export function StackFacade({
 
 export function GridFacade({ children, columns, gap }: CatalogProps<typeof gridProps>) {
   return (
-    <div data-slot="grid" data-columns={clampInteger(columns, 1, 6)} data-gap={asToken(gap, gaps)}>
+    <div data-comp0="grid" data-columns={clampInteger(columns, 1, 6)} data-gap={asToken(gap, gaps)}>
       {children}
     </div>
   );
@@ -64,13 +64,13 @@ export function CardFacade({ title, children, description, tone }: CatalogProps<
   }
   return (
     <section
-      data-slot="card"
+      data-comp0="card"
       data-tone={asToken(tone, ["default", "muted", "accent"] as const)}
       // A card without a title is an unnamed group, not a region with an empty heading.
       aria-labelledby={named ? headingId : undefined}
     >
       {heading}
-      {descriptionText === "" ? null : <p data-slot="card-description">{descriptionText}</p>}
+      {descriptionText === "" ? null : <p data-comp0="card-description">{descriptionText}</p>}
       <HeadingLevelContext value={level + 1}>{children}</HeadingLevelContext>
     </section>
   );
@@ -81,36 +81,36 @@ type CardTitleProps = { id: string; level: 1 | 2 | 3 | 4 | 5 | 6; children: stri
 function CardTitle({ id, level, children }: CardTitleProps) {
   if (level === 1)
     return (
-      <h1 id={id} data-slot="card-title">
+      <h1 id={id} data-comp0="card-title">
         {children}
       </h1>
     );
   if (level === 2)
     return (
-      <h2 id={id} data-slot="card-title">
+      <h2 id={id} data-comp0="card-title">
         {children}
       </h2>
     );
   if (level === 3)
     return (
-      <h3 id={id} data-slot="card-title">
+      <h3 id={id} data-comp0="card-title">
         {children}
       </h3>
     );
   if (level === 4)
     return (
-      <h4 id={id} data-slot="card-title">
+      <h4 id={id} data-comp0="card-title">
         {children}
       </h4>
     );
   if (level === 5)
     return (
-      <h5 id={id} data-slot="card-title">
+      <h5 id={id} data-comp0="card-title">
         {children}
       </h5>
     );
   return (
-    <h6 id={id} data-slot="card-title">
+    <h6 id={id} data-comp0="card-title">
       {children}
     </h6>
   );
@@ -121,18 +121,18 @@ export function HeadingFacade({ text, level }: CatalogProps<typeof headingProps>
   const content = asText(text);
   // An empty heading is announced as a heading with no name.
   if (content.trim() === "") return null;
-  if (resolved === 1) return <h1 data-slot="heading">{content}</h1>;
-  if (resolved === 3) return <h3 data-slot="heading">{content}</h3>;
-  if (resolved === 4) return <h4 data-slot="heading">{content}</h4>;
-  if (resolved === 5) return <h5 data-slot="heading">{content}</h5>;
-  if (resolved === 6) return <h6 data-slot="heading">{content}</h6>;
-  return <h2 data-slot="heading">{content}</h2>;
+  if (resolved === 1) return <h1 data-comp0="heading">{content}</h1>;
+  if (resolved === 3) return <h3 data-comp0="heading">{content}</h3>;
+  if (resolved === 4) return <h4 data-comp0="heading">{content}</h4>;
+  if (resolved === 5) return <h5 data-comp0="heading">{content}</h5>;
+  if (resolved === 6) return <h6 data-comp0="heading">{content}</h6>;
+  return <h2 data-comp0="heading">{content}</h2>;
 }
 
 export function TextFacade({ text, tone, size }: CatalogProps<typeof textProps>) {
   return (
     <p
-      data-slot="text"
+      data-comp0="text"
       data-tone={asToken(tone, tones)}
       data-size={asToken(size, ["sm", "md", "lg"] as const)}
     >
@@ -147,7 +147,7 @@ export function ImageFacade({ src, alt, caption }: CatalogProps<typeof imageProp
   // While the URL streams in there is nothing safe to load yet.
   if (safeSrc === undefined) return null;
   return (
-    <figure data-slot="image">
+    <figure data-comp0="image">
       <img
         src={safeSrc}
         alt={asText(alt)}
@@ -163,8 +163,8 @@ export function ImageFacade({ src, alt, caption }: CatalogProps<typeof imageProp
 export function ListFacade({ items, ordered }: CatalogProps<typeof listProps>) {
   const entries = asStrings(useBound(items));
   const content = entries.map((item, index) => <li key={index}>{item}</li>);
-  if (ordered === true) return <ol data-slot="list">{content}</ol>;
-  return <ul data-slot="list">{content}</ul>;
+  if (ordered === true) return <ol data-comp0="list">{content}</ol>;
+  return <ul data-comp0="list">{content}</ul>;
 }
 
 /** The facades that render the layout components, by component name. */

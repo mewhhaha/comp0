@@ -78,7 +78,7 @@ export function ToggleButtonGroup({
   return (
     <ToggleButtonGroupContext value={context}>
       <Part
-        data-slot="toggle-button-group"
+        data-comp0="toggle-button-group"
         {...props}
         role={props.role ?? "group"}
         data-orientation={orientation}

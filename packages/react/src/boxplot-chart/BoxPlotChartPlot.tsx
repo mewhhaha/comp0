@@ -118,7 +118,7 @@ export function BoxPlotChartPlot({
   const yTicks = scale.axisTicks(tickCount, context.formatY);
 
   return (
-    <svg data-slot="boxplot-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="boxplot-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xLabel={context.categoryLabel}
         xTicks={xTicks}
@@ -126,13 +126,13 @@ export function BoxPlotChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={boxes.length} orientation="horizontal">
-        <g role="presentation" data-slot="boxplot-chart-boxes">
+        <g role="presentation" data-comp0="boxplot-chart-boxes">
           {boxes.map((box) => {
             if (children)
               return <Fragment key={`${box.value.label}-${box.index}`}>{children(box)}</Fragment>;
             return (
               <Fragment key={`${box.value.label}-${box.index}`}>
-                <g aria-hidden="true" data-slot="boxplot-chart-box">
+                <g aria-hidden="true" data-comp0="boxplot-chart-box">
                   <line
                     x1={box.x}
                     x2={box.x}

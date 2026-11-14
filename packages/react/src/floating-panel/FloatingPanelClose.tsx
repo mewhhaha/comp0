@@ -10,7 +10,7 @@ export function FloatingPanelClose({ as, onClick, ...props }: FloatingPanelClose
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="floating-panel-close"
+      data-comp0="floating-panel-close"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       aria-label={props["aria-label"] ?? "Close panel"}

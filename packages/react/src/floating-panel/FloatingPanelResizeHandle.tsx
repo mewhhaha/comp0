@@ -113,7 +113,7 @@ export function FloatingPanelResizeHandle({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="floating-panel-resize-handle"
+      data-comp0="floating-panel-resize-handle"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       disabled={disabled}

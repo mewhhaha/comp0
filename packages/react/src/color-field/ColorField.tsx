@@ -37,7 +37,7 @@ export function ColorField({
   const Part = partElement(as, "input");
   return (
     <Part
-      data-slot="color-field"
+      data-comp0="color-field"
       {...mergeProps(props, focusProps, hoverProps)}
       type="color"
       id={id ?? field?.controlId}

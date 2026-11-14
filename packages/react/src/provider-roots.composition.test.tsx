@@ -86,7 +86,7 @@ describe("provider roots", () => {
     const tabs = container.querySelectorAll<HTMLButtonElement>("[role='tab']");
 
     expect(container.querySelector("section")?.dataset.testid).toBe("field");
-    expect(container.querySelectorAll("[data-slot='accordion']")).toHaveLength(0);
+    expect(container.querySelectorAll("[data-comp0='accordion']")).toHaveLength(0);
     const firstPanel = container.querySelector<HTMLElement>("#shipping-panel")!;
     expect(accordionTriggers[0]!.id).toBe("shipping-trigger");
     expect(accordionTriggers[0]!.getAttribute("aria-controls")).toBe(firstPanel.id);

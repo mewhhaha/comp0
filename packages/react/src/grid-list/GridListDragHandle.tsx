@@ -37,7 +37,7 @@ export function GridListDragHandle({
       aria-label={props["aria-label"] ?? `Reorder ${item.label}`}
       aria-keyshortcuts={props["aria-keyshortcuts"] ?? "Alt+ArrowUp Alt+ArrowDown"}
       data-dragging={dataAttr(moving)}
-      data-slot="grid-list-drag-handle"
+      data-comp0="grid-list-drag-handle"
       onKeyDown={(event: KeyboardEvent<HTMLButtonElement>) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;

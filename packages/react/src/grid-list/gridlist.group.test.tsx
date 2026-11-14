@@ -17,7 +17,7 @@ describe("grid list reorder group transfers", () => {
       value: () => ({ top: 80, height: 40, bottom: 120, left: 0, right: 100, width: 100 }),
     });
 
-    fireDrag(source.querySelector("[data-slot='grid-list-drag-handle']")!, "dragstart");
+    fireDrag(source.querySelector("[data-comp0='grid-list-drag-handle']")!, "dragstart");
     fireDrag(target, "dragover", 85);
     expect(destination.hasAttribute("data-drop-target")).toBe(true);
     expect(target.hasAttribute("data-drop-before")).toBe(true);
@@ -58,7 +58,7 @@ describe("grid list reorder group transfers", () => {
     expect(tabStopValues("done"), "initial done tab stop").toEqual(["ship"]);
 
     await user.click(
-      container.querySelector("[data-value='design'] [data-slot='grid-list-move-button']")!,
+      container.querySelector("[data-value='design'] [data-comp0='grid-list-move-button']")!,
     );
     expect(document.activeElement?.getAttribute("data-value"), "focused row after first move").toBe(
       "design",
@@ -71,13 +71,13 @@ describe("grid list reorder group transfers", () => {
     expect(tabStopValues("done"), "done tab stop after first move").toEqual(["design"]);
 
     await user.click(
-      container.querySelector("[data-value='design'] [data-slot='grid-list-move-button']")!,
+      container.querySelector("[data-value='design'] [data-comp0='grid-list-move-button']")!,
     );
     expect(tabStopValues("todo"), "todo tab stop after return move").toEqual(["design"]);
     expect(tabStopValues("done"), "done tab stop after return move").toEqual(["ship"]);
 
     await user.click(
-      container.querySelector("[data-value='design'] [data-slot='grid-list-move-button']")!,
+      container.querySelector("[data-value='design'] [data-comp0='grid-list-move-button']")!,
     );
     expect(tabStopValues("todo"), "todo tab stop after repeated move").toEqual(["build"]);
     expect(tabStopValues("done"), "done tab stop after repeated move").toEqual(["design"]);
@@ -90,7 +90,7 @@ describe("grid list reorder group transfers", () => {
       <GroupedLists initial={{ todo: ["design", "build"], done: ["ship"] }} spy={spy} />,
     );
     const handle = container.querySelector<HTMLElement>(
-      "[data-value='design'] [data-slot='grid-list-drag-handle']",
+      "[data-value='design'] [data-comp0='grid-list-drag-handle']",
     )!;
     const designRow = () => container.querySelector<HTMLElement>("[data-value='design']")!;
     const todoList = container.querySelector<HTMLElement>("[aria-label='todo']")!;
@@ -141,7 +141,7 @@ describe("grid list reorder group transfers", () => {
       <GroupedLists initial={{ todo: ["design", "build"], done: ["ship"] }} spy={spy} />,
     );
     const handle = container.querySelector<HTMLElement>(
-      "[data-value='design'] [data-slot='grid-list-drag-handle']",
+      "[data-value='design'] [data-comp0='grid-list-drag-handle']",
     )!;
     const designRow = container.querySelector<HTMLElement>("[data-value='design']")!;
 

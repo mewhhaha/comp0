@@ -77,7 +77,7 @@ export function ChartValue({
         aria-hidden="true"
         pointerEvents="none"
         data-active=""
-        data-slot={`${fallbackSlot}-active`}
+        data-comp0={`${fallbackSlot}-active`}
       >
         <use href={`#${valueId}`} />
       </g>,
@@ -87,7 +87,7 @@ export function ChartValue({
   return (
     <>
       <g
-        data-slot={fallbackSlot}
+        data-comp0={fallbackSlot}
         {...props}
         ref={markRef}
         id={valueId}

@@ -37,7 +37,7 @@ export function TableColumn({
       scope={props.scope ?? "col"}
       ref={cellRef}
       tabIndex={tabIndex}
-      data-slot="table-column"
+      data-comp0="table-column"
       data-comp0-owner={owner}
       aria-sort={sort}
       data-sortable={dataAttr(Boolean(onSort))}

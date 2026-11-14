@@ -117,7 +117,7 @@ export function DateRangePicker({
           }}
         >
           <Root
-            data-slot="date-range-picker"
+            data-comp0="date-range-picker"
             {...props}
             aria-invalid={resolvedInvalid || undefined}
             data-disabled={dataAttr(resolvedDisabled)}

@@ -82,7 +82,7 @@ export function DropZone({
     <Part
       {...props}
       aria-disabled={disabled || undefined}
-      data-slot="drop-zone"
+      data-comp0="drop-zone"
       data-drop-target={dataAttr(active)}
       data-accept={dataAttr(active && dragAccepted)}
       data-reject={dataAttr(active && dragRejected)}

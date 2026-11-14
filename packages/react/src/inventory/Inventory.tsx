@@ -122,7 +122,7 @@ export function Inventory({
   return (
     <InventoryContext value={context}>
       <Part
-        data-slot="inventory"
+        data-comp0="inventory"
         {...props}
         ref={composedRef}
         data-dragging={dataAttr(session.interaction === "move")}

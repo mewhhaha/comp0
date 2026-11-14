@@ -11,7 +11,7 @@ export function Avatar({ as, ...props }: AvatarProps) {
   return (
     <AvatarContext value={{ status, setStatus }}>
       <Part
-        data-slot="avatar"
+        data-comp0="avatar"
         {...props}
         data-error={dataAttr(status === "error")}
         data-loaded={dataAttr(status === "loaded")}

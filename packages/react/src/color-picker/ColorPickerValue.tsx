@@ -9,7 +9,7 @@ export function ColorPickerValue({ as, children, ...props }: ColorPickerValuePro
 
   const Part = partElement(as, "span");
   return (
-    <Part data-slot="color-picker-value" {...props} data-value={colorPicker.value}>
+    <Part data-comp0="color-picker-value" {...props} data-value={colorPicker.value}>
       {children ?? colorPicker.value}
     </Part>
   );

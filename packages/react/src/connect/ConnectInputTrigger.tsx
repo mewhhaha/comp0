@@ -43,7 +43,7 @@ export function ConnectInputTrigger({
   return (
     <>
       <Part
-        data-slot="connect-input-trigger"
+        data-comp0="connect-input-trigger"
         {...props}
         ref={composeRefs(ref, input.setTrigger)}
         type={as === undefined || as === "button" ? (props.type ?? "button") : undefined}

@@ -102,7 +102,7 @@ describe("chart data validation", () => {
       "LineChart y value at index 2 must be finite; received NaN. It was skipped.",
     ]);
     expect(tableRows(container)).toEqual(["210", "440"]);
-    expect(container.querySelectorAll("[data-slot='line-chart-line']")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-comp0='line-chart-line']")).toHaveLength(1);
   });
 
   it("skips candlesticks whose high and low do not bound open and close", () => {
@@ -178,9 +178,9 @@ describe("chart data validation", () => {
       "PieChart values must have a finite positive total; received Infinity. No slices were drawn.",
       'PieChart value "Loss" must not be negative; received -1. It was skipped.',
     ]);
-    const plots = container.querySelectorAll("[data-slot='pie-chart-plot']");
-    expect(plots[0]?.querySelectorAll("[data-slot='pie-chart-slice']")).toHaveLength(0);
-    expect(plots[1]?.querySelectorAll("[data-slot='pie-chart-slice']")).toHaveLength(1);
+    const plots = container.querySelectorAll("[data-comp0='pie-chart-plot']");
+    expect(plots[0]?.querySelectorAll("[data-comp0='pie-chart-slice']")).toHaveLength(0);
+    expect(plots[1]?.querySelectorAll("[data-comp0='pie-chart-slice']")).toHaveLength(1);
   });
 
   it("skips stacked categories with duplicate or mismatched segments", () => {
@@ -284,9 +284,9 @@ describe("chart data validation", () => {
       'MapChartPlot region "nowhere" has no matching MapChart value. It was skipped.',
       'MapChart value "east" has no matching MapChartPlot region. It was not drawn.',
     ]);
-    const plot = container.querySelector("[data-slot='map-chart-plot']");
+    const plot = container.querySelector("[data-comp0='map-chart-plot']");
     expect(plot?.getAttribute("viewBox")).toBe("0 0 100 100");
-    expect(plot?.querySelectorAll("[data-slot='map-chart-region']")).toHaveLength(1);
+    expect(plot?.querySelectorAll("[data-comp0='map-chart-region']")).toHaveLength(1);
   });
 
   it("breaks sankey cycles by skipping the link that closes them", () => {
@@ -332,7 +332,7 @@ describe("chart data validation", () => {
     expect(messages(error)).toEqual([
       "SankeyChartPlot layer 1 with 11 nodes exceeds the available height of 92. Its nodes and gaps were shrunk to fit.",
     ]);
-    const rects = [...container.querySelectorAll("[data-slot='sankey-chart-node'] rect")];
+    const rects = [...container.querySelectorAll("[data-comp0='sankey-chart-node'] rect")];
     const bottoms = rects.map(
       (rect) => Number(rect.getAttribute("y")) + Number(rect.getAttribute("height")),
     );
@@ -353,7 +353,7 @@ describe("chart data validation", () => {
       "ColumnChartPlot yTickCount must be an integer of at least 2; received 1. It was replaced by 5.",
     ]);
     // Five tick labels plus the axis label.
-    expect(container.querySelectorAll("[data-slot='chart-y-axis'] text")).toHaveLength(6);
+    expect(container.querySelectorAll("[data-comp0='chart-y-axis'] text")).toHaveLength(6);
   });
 
   it("throws when a shared or chart-specific part has no matching root", () => {

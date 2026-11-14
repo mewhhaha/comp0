@@ -39,7 +39,7 @@ export function Citation({
     const Missing = partElement(undefined, "span");
     return (
       <Missing
-        data-slot="citation"
+        data-comp0="citation"
         data-value={value}
         data-missing={dataAttr(!busy)}
         data-pending={dataAttr(busy)}
@@ -54,7 +54,7 @@ export function Citation({
   const Part = partElement(as, "a");
   return (
     <Part
-      data-slot="citation"
+      data-comp0="citation"
       {...props}
       href={`#${sourceId(baseId, value)}`}
       aria-label={ariaLabel ?? `Source ${number}: ${source.title}`}

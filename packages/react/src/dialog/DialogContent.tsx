@@ -31,7 +31,7 @@ export function DialogContent({
   const Part = partElement(as, "dialog");
   const content = (
     <Part
-      data-slot="dialog-content"
+      data-comp0="dialog-content"
       {...props}
       {...modal}
       id={props.id ?? dialog.contentId}

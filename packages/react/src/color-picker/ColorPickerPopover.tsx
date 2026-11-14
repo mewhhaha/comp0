@@ -40,7 +40,7 @@ export function ColorPickerPopover({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="color-picker-popover"
+      data-comp0="color-picker-popover"
       {...props}
       {...surface.props}
       role={props.role ?? "dialog"}

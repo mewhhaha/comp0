@@ -58,7 +58,7 @@ export function Composer({
   return (
     <ComposerContext value={{ value, setValue, generating, disabled, inputRef, submit, stop }}>
       <Part
-        data-slot="composer"
+        data-comp0="composer"
         {...props}
         ref={composeRefs(ref, formRef)}
         data-generating={dataAttr(generating)}

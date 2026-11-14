@@ -121,7 +121,7 @@ export function Connect({
       }}
     >
       <Part
-        data-slot="connect"
+        data-comp0="connect"
         {...props}
         ref={composeRefs(ref, setElement)}
         role={props.role ?? "group"}

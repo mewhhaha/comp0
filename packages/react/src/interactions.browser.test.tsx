@@ -409,7 +409,7 @@ describe("real-browser interaction contracts", () => {
             {order["todo"]!.map((rowValue) => (
               <GridListItem key={rowValue} value={rowValue} textValue={rowValue}>
                 <GridListDragHandle>Move</GridListDragHandle>
-                <span data-slot="row-body">{rowValue}</span>
+                <span data-comp0="row-body">{rowValue}</span>
                 <button type="button">Share</button>
                 <a href="#review" draggable>
                   Open
@@ -430,10 +430,10 @@ describe("real-browser interaction contracts", () => {
     }
 
     const { container, unmount } = render(<Board />);
-    const handle = container.querySelector<HTMLElement>("[data-slot='grid-list-drag-handle']")!;
+    const handle = container.querySelector<HTMLElement>("[data-comp0='grid-list-drag-handle']")!;
     const source = container.querySelector<HTMLElement>("[data-value='review']")!;
-    const body = source.querySelector<HTMLElement>("[data-slot='row-body']")!;
-    const button = source.querySelector<HTMLButtonElement>("button:not([data-slot])")!;
+    const body = source.querySelector<HTMLElement>("[data-comp0='row-body']")!;
+    const button = source.querySelector<HTMLButtonElement>("button:not([data-comp0])")!;
     const link = source.querySelector<HTMLAnchorElement>("a")!;
     const destination = container.querySelector<HTMLElement>("[aria-label='Done']")!;
     const transfer = new DataTransfer();
@@ -555,7 +555,7 @@ describe("real-browser interaction contracts", () => {
 
     const { container, unmount } = render(<Board />);
     const button = container.querySelector<HTMLButtonElement>(
-      "[data-slot='grid-list-move-button']",
+      "[data-comp0='grid-list-move-button']",
     )!;
     const destination = container.querySelector<HTMLElement>("[aria-label='Done']")!;
 

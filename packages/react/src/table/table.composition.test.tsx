@@ -470,17 +470,17 @@ describe("table tab stop", () => {
       <Table aria-label="People" data-comp0-root="mine">
         <TableHeader>
           <TableRow>
-            <TableColumn data-comp0-owner="other" data-slot="name">
+            <TableColumn data-comp0-owner="other" data-comp0="name">
               Name
             </TableColumn>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableRowHeader data-comp0-owner="other" data-slot="person">
+            <TableRowHeader data-comp0-owner="other" data-comp0="person">
               Ada
             </TableRowHeader>
-            <TableCell data-comp0-owner="other" data-slot="role">
+            <TableCell data-comp0-owner="other" data-comp0="role">
               Engineer
             </TableCell>
           </TableRow>
@@ -493,7 +493,7 @@ describe("table tab stop", () => {
     // A consumer's props cannot rename the table or move a cell to another table.
     expect(id).not.toBe("mine");
     expect(cells.map((cell) => cell.getAttribute("data-comp0-owner"))).toEqual([id, id, id]);
-    expect(cells.map((cell) => cell.dataset["slot"])).toEqual([
+    expect(cells.map((cell) => cell.dataset["comp0"])).toEqual([
       "table-column",
       "table-row-header",
       "table-cell",

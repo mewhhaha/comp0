@@ -61,7 +61,7 @@ export function CharacterCount({ as, children, maxLength, ...props }: CharacterC
   const Part = partElement(as, "output");
   return (
     <Part
-      data-slot="character-count"
+      data-comp0="character-count"
       {...props}
       id={props.id ?? characterCountId}
       htmlFor={props.htmlFor ?? field.controlId}

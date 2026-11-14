@@ -25,7 +25,7 @@ describe("message composition", () => {
     expect(message.getAttribute("data-status")).toBe("complete");
     expect(message.hasAttribute("aria-busy")).toBe(false);
     expect(message.querySelector("time")?.getAttribute("datetime")).toBe("2026-10-09T10:00:00Z");
-    expect(message.querySelector("[data-slot='message-content']")?.textContent).toBe("Hello");
+    expect(message.querySelector("[data-comp0='message-content']")?.textContent).toBe("Hello");
   });
 
   it("is busy for its content only while streaming", () => {

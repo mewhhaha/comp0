@@ -119,7 +119,7 @@ export function HistogramChartPlot({
   const yTicks = yScale.axisTicks(resolvedYTickCount, (value) => String(Math.round(value)));
 
   return (
-    <svg data-slot="histogram-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="histogram-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xLabel={context.valueLabel}
         xTicks={xTicks}
@@ -127,12 +127,12 @@ export function HistogramChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={bins.length} orientation="horizontal">
-        <g role="presentation" data-slot="histogram-chart-bins">
+        <g role="presentation" data-comp0="histogram-chart-bins">
           {bins.map((bin) => {
             if (children) return <Fragment key={bin.index}>{children(bin)}</Fragment>;
             return (
               <Fragment key={bin.index}>
-                <g aria-hidden="true" data-slot="histogram-chart-bin">
+                <g aria-hidden="true" data-comp0="histogram-chart-bin">
                   <rect
                     x={bin.x}
                     y={bin.y}

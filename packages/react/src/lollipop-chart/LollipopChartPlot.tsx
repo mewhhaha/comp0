@@ -93,7 +93,7 @@ export function LollipopChartPlot({
   }));
 
   return (
-    <svg data-slot="lollipop-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="lollipop-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         bounds={bounds}
         xGrid
@@ -104,7 +104,7 @@ export function LollipopChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={lollipops.length} orientation="vertical">
-        <g role="presentation" data-slot="lollipop-chart-lollipops">
+        <g role="presentation" data-comp0="lollipop-chart-lollipops">
           {lollipops.map((lollipop) => {
             if (children)
               return (
@@ -114,7 +114,7 @@ export function LollipopChartPlot({
               );
             return (
               <Fragment key={`${lollipop.value.label}-${lollipop.index}`}>
-                <g aria-hidden="true" data-slot="lollipop-chart-lollipop">
+                <g aria-hidden="true" data-comp0="lollipop-chart-lollipop">
                   <line
                     x1={lollipop.baseline}
                     x2={lollipop.x}

@@ -19,5 +19,5 @@ export function Output({ as, htmlFor, ...props }: OutputProps) {
   if (Array.isArray(htmlFor)) controls = htmlFor.join(" ");
 
   const Part = partElement(as, "output");
-  return <Part data-slot="output" {...props} htmlFor={controls as string | undefined} />;
+  return <Part data-comp0="output" {...props} htmlFor={controls as string | undefined} />;
 }

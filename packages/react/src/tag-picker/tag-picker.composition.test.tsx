@@ -175,7 +175,7 @@ describe("tag picker composition", () => {
         <FrameworkPicker defaultValue={["react"]} onChange={changed} name="framework" disabled />
       </form>,
     );
-    const picker = container.querySelector<HTMLElement>("[data-slot='tag-picker']")!;
+    const picker = container.querySelector<HTMLElement>("[data-comp0='tag-picker']")!;
     const input = container.querySelector<HTMLInputElement>("input[aria-label='Add framework']")!;
     const option = container.querySelector<HTMLElement>("[role='option'][data-value='vue']")!;
     const tag = container.querySelector<HTMLElement>("[role='row']")!;

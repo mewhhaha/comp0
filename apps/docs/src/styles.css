@@ -263,12 +263,12 @@
   }
 }
 
-/* Styles for the headless output of @comp0/genui, keyed off its data-slot and token attributes. */
+/* Styles for the headless output of @comp0/genui, keyed off its data-comp0 and token attributes. */
 @layer components {
   [data-intelligent-ui] {
     @apply text-base/7 text-zinc-800 sm:text-sm/6 dark:text-zinc-200;
 
-    [data-slot="stack"] {
+    [data-comp0="stack"] {
       @apply flex flex-col gap-4;
       &[data-direction="row"] {
         @apply flex-row items-center;
@@ -290,24 +290,24 @@
       }
     }
 
-    [data-slot="stack"][data-gap="xs"],
-    [data-slot="grid"][data-gap="xs"] {
+    [data-comp0="stack"][data-gap="xs"],
+    [data-comp0="grid"][data-gap="xs"] {
       @apply gap-1;
     }
-    [data-slot="stack"][data-gap="sm"],
-    [data-slot="grid"][data-gap="sm"] {
+    [data-comp0="stack"][data-gap="sm"],
+    [data-comp0="grid"][data-gap="sm"] {
       @apply gap-2;
     }
-    [data-slot="stack"][data-gap="lg"],
-    [data-slot="grid"][data-gap="lg"] {
+    [data-comp0="stack"][data-gap="lg"],
+    [data-comp0="grid"][data-gap="lg"] {
       @apply gap-6;
     }
-    [data-slot="stack"][data-gap="xl"],
-    [data-slot="grid"][data-gap="xl"] {
+    [data-comp0="stack"][data-gap="xl"],
+    [data-comp0="grid"][data-gap="xl"] {
       @apply gap-8;
     }
 
-    [data-slot="grid"] {
+    [data-comp0="grid"] {
       @apply grid grid-cols-1 gap-4 sm:grid-cols-[repeat(var(--columns,2),minmax(0,1fr))];
       --columns: 2;
       &[data-columns="1"] {
@@ -327,7 +327,7 @@
       }
     }
 
-    [data-slot="card"] {
+    [data-comp0="card"] {
       @apply min-w-0 rounded-xl border border-zinc-950/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-900;
       &[data-tone="muted"] {
         @apply bg-zinc-950/3 dark:bg-white/5;
@@ -336,21 +336,21 @@
         @apply border-teal-600/40 bg-teal-50 dark:border-teal-400/40 dark:bg-teal-950;
       }
     }
-    [data-slot="card-title"] {
+    [data-comp0="card-title"] {
       @apply text-base/6 font-semibold text-zinc-950 dark:text-white;
     }
-    [data-slot="card-description"] {
+    [data-comp0="card-description"] {
       @apply mt-1 text-sm/6 text-zinc-600 dark:text-zinc-300;
     }
-    [data-slot="card"] > :not([data-slot="card-title"], [data-slot="card-description"]) {
+    [data-comp0="card"] > :not([data-comp0="card-title"], [data-comp0="card-description"]) {
       @apply mt-3;
     }
 
-    [data-slot="heading"] {
+    [data-comp0="heading"] {
       @apply text-xl/7 font-semibold tracking-tight text-zinc-950 dark:text-white;
     }
 
-    [data-slot="text"] {
+    [data-comp0="text"] {
       @apply text-pretty;
       &[data-size="sm"] {
         @apply text-sm/6;
@@ -372,17 +372,17 @@
       }
     }
 
-    [data-slot="list"] {
+    [data-comp0="list"] {
       @apply grid gap-1 pl-5;
     }
-    ul[data-slot="list"] {
+    ul[data-comp0="list"] {
       @apply list-disc;
     }
-    ol[data-slot="list"] {
+    ol[data-comp0="list"] {
       @apply list-decimal;
     }
 
-    [data-slot="image"] {
+    [data-comp0="image"] {
       @apply grid gap-2;
       img {
         @apply max-w-full rounded-lg;
@@ -392,16 +392,16 @@
       }
     }
 
-    [data-slot="link"] {
+    [data-comp0="link"] {
       @apply font-medium text-teal-700 underline underline-offset-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:text-teal-300 dark:focus-visible:outline-teal-400;
     }
 
-    [data-slot="separator"] {
+    [data-comp0="separator"] {
       @apply border-zinc-950/10 dark:border-white/10;
     }
 
     /* Tabs: an underlined row of triggers that scrolls sideways on a narrow screen. */
-    [data-slot="tabs"] {
+    [data-comp0="tabs"] {
       @apply grid min-w-0 gap-4;
       [role="tablist"] {
         @apply flex gap-1 overflow-x-auto border-b border-zinc-950/10 dark:border-white/10;
@@ -418,41 +418,41 @@
     }
 
     /* Accordion: full-width section triggers with a chevron that turns when the section opens. */
-    [data-slot="accordion"] {
+    [data-comp0="accordion"] {
       @apply grid border-y border-zinc-950/10 dark:border-white/10;
     }
-    [data-slot="accordion-item"] + [data-slot="accordion-item"] {
+    [data-comp0="accordion-item"] + [data-comp0="accordion-item"] {
       @apply border-t border-zinc-950/10 dark:border-white/10;
     }
-    [data-slot="accordion-header"] {
+    [data-comp0="accordion-header"] {
       @apply m-0 text-base/6 font-medium;
     }
-    [data-slot="accordion-trigger"] {
+    [data-comp0="accordion-trigger"] {
       @apply flex min-h-11 w-full items-center justify-between gap-3 py-3 text-left font-medium text-zinc-950 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 dark:text-white dark:focus-visible:outline-teal-400;
       &::after {
         content: "";
         @apply size-2 shrink-0 -translate-y-0.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-current opacity-60 transition-transform motion-reduce:transition-none;
       }
     }
-    [data-slot="accordion-item"][data-open]
-      > [data-slot="accordion-header"]
-      [data-slot="accordion-trigger"]::after {
+    [data-comp0="accordion-item"][data-open]
+      > [data-comp0="accordion-header"]
+      [data-comp0="accordion-trigger"]::after {
       @apply translate-y-0.5 rotate-[225deg];
     }
-    [data-slot="accordion-panel"] {
+    [data-comp0="accordion-panel"] {
       @apply grid gap-3 pb-4;
     }
 
-    [data-slot="suggestions"] {
+    [data-comp0="suggestions"] {
       @apply flex flex-wrap gap-2;
     }
 
-    [data-slot="button"],
-    [data-slot="form-submit"],
-    [data-slot="suggestion"] {
+    [data-comp0="button"],
+    [data-comp0="form-submit"],
+    [data-comp0="suggestion"] {
       @apply inline-flex min-h-11 items-center justify-center rounded-lg px-3 py-2 font-medium ring-1 ring-zinc-950/15 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 aria-disabled:opacity-60 disabled:opacity-60 sm:min-h-9 dark:ring-white/20 dark:focus-visible:outline-teal-400;
       &[data-variant="primary"],
-      &[data-slot="form-submit"] {
+      &[data-comp0="form-submit"] {
         @apply bg-teal-700 text-white ring-teal-700 hover:bg-teal-800 dark:bg-teal-400 dark:text-zinc-950 dark:ring-teal-400 dark:hover:bg-teal-300;
       }
       &[data-variant="secondary"] {
@@ -462,7 +462,7 @@
         @apply bg-red-700 text-white ring-red-700 hover:bg-red-600 dark:bg-red-600 dark:ring-red-600;
       }
       /* Quick replies are pills, so a row of them reads as choices rather than commands. */
-      &[data-slot="suggestion"] {
+      &[data-comp0="suggestion"] {
         @apply rounded-full hover:bg-zinc-950/5 dark:hover:bg-white/10;
       }
     }
@@ -480,33 +480,33 @@
         @apply border-red-200 bg-red-50 text-red-950 dark:border-red-300/40 dark:bg-red-950 dark:text-red-50;
       }
     }
-    [data-slot="alert-title"] {
+    [data-comp0="alert-title"] {
       @apply font-semibold;
     }
 
-    [data-slot="form"] {
+    [data-comp0="form"] {
       @apply grid gap-4 rounded-xl border border-zinc-950/10 p-4 dark:border-white/10;
     }
 
     input:not([type="checkbox"], [type="radio"], [type="range"]),
     textarea,
     select,
-    [data-slot="select"] > button {
+    [data-comp0="select"] > button {
       @apply min-h-11 w-full rounded-lg border border-zinc-950/20 bg-white px-3 py-2 text-zinc-950 outline-none placeholder:text-zinc-500 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal-600 sm:min-h-9 dark:border-white/20 dark:bg-zinc-800 dark:text-white dark:focus-visible:outline-teal-400;
     }
     /* A Select is a plain trigger button and a listbox popover beside it; neither part carries a
-       data-slot of its own, so they are reached through the select root. */
-    [data-slot="select"] > button {
+       data-comp0 of its own, so they are reached through the select root. */
+    [data-comp0="select"] > button {
       @apply flex items-center justify-between gap-2 text-left;
       &::after {
         content: "";
         @apply size-2 shrink-0 -translate-y-0.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-current opacity-60;
       }
     }
-    [data-slot="select"] > [role="listbox"] {
+    [data-comp0="select"] > [role="listbox"] {
       @apply max-h-60 min-w-[anchor-size(width)] overflow-y-auto rounded-lg border-0 bg-white p-1 text-zinc-800 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-800 dark:text-zinc-100 dark:shadow-none dark:ring-white/15;
     }
-    [data-slot="select"] [role="option"] {
+    [data-comp0="select"] [role="option"] {
       @apply flex min-h-11 cursor-default items-center rounded-md px-3 py-2 outline-none hover:bg-zinc-950/5 focus-visible:bg-zinc-950/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 data-selected:font-semibold data-selected:text-teal-800 sm:min-h-9 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 dark:focus-visible:outline-teal-400 dark:data-selected:text-teal-300;
     }
     label,
@@ -531,16 +531,16 @@
       }
     }
 
-    [data-slot="meter-field"],
-    [data-slot="progress-bar-field"],
-    [data-slot="slider"] {
+    [data-comp0="meter-field"],
+    [data-comp0="progress-bar-field"],
+    [data-comp0="slider"] {
       @apply grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1;
       label {
         @apply col-span-2 text-sm/6;
       }
     }
-    [data-slot="meter"],
-    [data-slot="progress-bar"] {
+    [data-comp0="meter"],
+    [data-comp0="progress-bar"] {
       @apply h-2 overflow-hidden rounded-full bg-zinc-950/10 dark:bg-white/15;
       background-image: linear-gradient(
         to right,
@@ -549,8 +549,8 @@
       );
     }
     @media (prefers-color-scheme: dark) {
-      [data-slot="meter"],
-      [data-slot="progress-bar"] {
+      [data-comp0="meter"],
+      [data-comp0="progress-bar"] {
         background-image: linear-gradient(
           to right,
           var(--color-teal-400)
@@ -559,21 +559,21 @@
         );
       }
     }
-    [data-slot="meter-field-value"],
-    [data-slot="progress-bar-field-value"],
-    [data-slot="slider-value"] {
+    [data-comp0="meter-field-value"],
+    [data-comp0="progress-bar-field-value"],
+    [data-comp0="slider-value"] {
       @apply text-sm/6 text-zinc-600 tabular-nums dark:text-zinc-300;
     }
 
-    [data-slot="output-field"] {
+    [data-comp0="output-field"] {
       @apply flex flex-wrap items-baseline gap-x-3;
-      [data-slot="output"] {
+      [data-comp0="output"] {
         @apply text-lg/8 font-semibold text-zinc-950 tabular-nums dark:text-white;
       }
     }
 
-    [data-slot="radio-group"],
-    [data-slot="checkbox-group"] {
+    [data-comp0="radio-group"],
+    [data-comp0="checkbox-group"] {
       @apply m-0 flex flex-wrap gap-2 border-0 p-0;
       legend {
         @apply mb-1 w-full p-0;
@@ -586,7 +586,7 @@
       }
     }
 
-    [data-slot="number-field"] {
+    [data-comp0="number-field"] {
       @apply flex flex-wrap items-center gap-2;
       label {
         @apply w-full;
@@ -599,35 +599,35 @@
       }
     }
 
-    [data-slot="date-picker-trigger"] {
+    [data-comp0="date-picker-trigger"] {
       @apply mt-1 block text-sm/6 text-teal-700 underline dark:text-teal-300;
     }
 
-    figure[data-slot="chart"] {
+    figure[data-comp0="chart"] {
       @apply m-0 grid gap-2;
-      [data-slot="chart-title"] {
+      [data-comp0="chart-title"] {
         @apply font-semibold text-zinc-950 dark:text-white;
       }
-      [data-slot="chart-description"] {
+      [data-comp0="chart-description"] {
         @apply text-sm/6 text-zinc-600 dark:text-zinc-300;
       }
       svg {
         @apply max-h-64 w-full text-zinc-500 dark:text-zinc-400;
       }
-      [data-slot="line-chart-line"] path {
+      [data-comp0="line-chart-line"] path {
         @apply stroke-teal-600 stroke-2 dark:stroke-teal-400;
       }
-      [data-slot="bar-chart-bar"] rect,
-      [data-slot="column-chart-column"] rect {
+      [data-comp0="bar-chart-bar"] rect,
+      [data-comp0="column-chart-column"] rect {
         @apply fill-teal-600 dark:fill-teal-400;
       }
-      [data-slot="chart-table"] {
+      [data-comp0="chart-table"] {
         @apply text-sm/6;
       }
     }
     /* Shown until the first datum arrives; it matches the chart that replaces it, so the title
        stays put when the plot pops in. */
-    figure[data-slot="chart-empty"] {
+    figure[data-comp0="chart-empty"] {
       @apply m-0 grid gap-2;
       figcaption {
         @apply font-semibold text-zinc-950 dark:text-white;
@@ -664,84 +664,84 @@
     );
 
     /* Blocks and repeated rows rise into place from their top-left corner. */
-    [data-slot="heading"],
-    [data-slot="text"],
-    [data-slot="image"],
-    [data-slot="separator"],
-    [data-slot="list"] > li,
-    [data-slot="table"],
-    [data-slot="comparison-table"],
-    :is([data-slot="table"], [data-slot="comparison-table"], [data-slot="chart-table"])
+    [data-comp0="heading"],
+    [data-comp0="text"],
+    [data-comp0="image"],
+    [data-comp0="separator"],
+    [data-comp0="list"] > li,
+    [data-comp0="table"],
+    [data-comp0="comparison-table"],
+    :is([data-comp0="table"], [data-comp0="comparison-table"], [data-comp0="chart-table"])
       > tbody
       > tr,
-    [data-slot="cited-text"],
-    [data-slot="source"],
-    [data-slot="status"],
-    [data-slot="alert"],
-    [data-slot="form"],
-    [data-slot="text-field"],
-    [data-slot="text-area"],
-    [data-slot="number-field"],
-    [data-slot="select"],
-    [data-slot="date-picker"],
-    [data-slot="radio-group"],
-    [data-slot="checkbox-group"],
-    [data-slot="slider"],
-    [data-slot="meter-field"],
-    [data-slot="progress-bar-field"],
-    [data-slot="output-field"],
-    [data-slot="tabs"],
-    [data-slot="accordion-item"],
-    [data-slot="disclosure"],
-    [data-slot="chart-empty"],
-    figure[data-slot="chart"] > svg,
-    [data-slot="chart-description"],
-    [data-slot="chart-table"],
+    [data-comp0="cited-text"],
+    [data-comp0="source"],
+    [data-comp0="status"],
+    [data-comp0="alert"],
+    [data-comp0="form"],
+    [data-comp0="text-field"],
+    [data-comp0="text-area"],
+    [data-comp0="number-field"],
+    [data-comp0="select"],
+    [data-comp0="date-picker"],
+    [data-comp0="radio-group"],
+    [data-comp0="checkbox-group"],
+    [data-comp0="slider"],
+    [data-comp0="meter-field"],
+    [data-comp0="progress-bar-field"],
+    [data-comp0="output-field"],
+    [data-comp0="tabs"],
+    [data-comp0="accordion-item"],
+    [data-comp0="disclosure"],
+    [data-comp0="chart-empty"],
+    figure[data-comp0="chart"] > svg,
+    [data-comp0="chart-description"],
+    [data-comp0="chart-table"],
     /* A link is plain text until its href is safe, then React swaps in an anchor. Only the
        first element animates, so the link pops in once instead of blinking at the swap. */
-    span[data-slot="link"] {
+    span[data-comp0="link"] {
       transform-origin: 0 0;
       animation: genui-rise 420ms var(--genui-spring);
     }
     /* A plot is centred in its figure, so it rises from its own baseline. */
-    figure[data-slot="chart"] > svg {
+    figure[data-comp0="chart"] > svg {
       transform-origin: 50% 100%;
     }
 
     /* Cards and compact controls pop out from their centre. */
-    [data-slot="card"],
-    [data-slot="button"],
-    [data-slot="copy-button"],
-    [data-slot="suggestion"],
-    [data-slot="checkbox"],
-    [data-slot="switch"],
-    :is([data-slot="radio-group"], [data-slot="checkbox-group"]) > label {
+    [data-comp0="card"],
+    [data-comp0="button"],
+    [data-comp0="copy-button"],
+    [data-comp0="suggestion"],
+    [data-comp0="checkbox"],
+    [data-comp0="switch"],
+    :is([data-comp0="radio-group"], [data-comp0="checkbox-group"]) > label {
       animation: genui-pop 420ms var(--genui-spring);
     }
 
     /* Bars grow out of the baseline; negative values grow the other way. */
-    [data-slot="bar-chart-bar"] rect,
-    [data-slot="column-chart-column"] rect {
+    [data-comp0="bar-chart-bar"] rect,
+    [data-comp0="column-chart-column"] rect {
       transform-box: fill-box;
       animation: genui-grow-x 600ms var(--genui-spring);
     }
-    [data-slot="bar-chart-bar"] rect {
+    [data-comp0="bar-chart-bar"] rect {
       transform-origin: left;
     }
-    [data-slot="bar-chart-bar"][data-value^="-"] rect {
+    [data-comp0="bar-chart-bar"][data-value^="-"] rect {
       transform-origin: right;
     }
-    [data-slot="column-chart-column"] rect {
+    [data-comp0="column-chart-column"] rect {
       transform-origin: bottom;
       animation-name: genui-grow-y;
     }
-    [data-slot="column-chart-column"][data-value^="-"] rect {
+    [data-comp0="column-chart-column"][data-value^="-"] rect {
       transform-origin: top;
     }
 
     /* Fills sweep up to their value: the fill is a hard-stop gradient, so its size scales it. */
-    [data-slot="meter"],
-    [data-slot="progress-bar"] {
+    [data-comp0="meter"],
+    [data-comp0="progress-bar"] {
       background-size: 100% 100%;
       background-repeat: no-repeat;
       animation: genui-fill 650ms var(--genui-spring);

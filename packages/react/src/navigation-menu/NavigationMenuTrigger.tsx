@@ -47,7 +47,7 @@ export function NavigationMenuTrigger({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="navigation-menu-trigger"
+      data-comp0="navigation-menu-trigger"
       {...props}
       ref={triggerRef}
       // Focus must reach non-native triggers or keyboard users cannot toggle

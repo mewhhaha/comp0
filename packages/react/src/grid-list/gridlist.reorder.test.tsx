@@ -50,7 +50,7 @@ describe("grid list reordering", () => {
       <ReorderableList spy={spy} withHandle canReorder={(next) => next.at(-1) === "notes.txt"} />,
     );
     const handle = container.querySelector<HTMLElement>(
-      "[data-value='report.pdf'] [data-slot='grid-list-drag-handle']",
+      "[data-value='report.pdf'] [data-comp0='grid-list-drag-handle']",
     )!;
     const reportRow = () => container.querySelector<HTMLElement>("[data-value='report.pdf']")!;
     const announcement = () => container.querySelector("[aria-live]")?.textContent;
@@ -89,7 +89,7 @@ describe("grid list reordering", () => {
     const spy = vi.fn();
     const { container, user } = setup(<ReorderableList spy={spy} withHandle />);
     const handle = container.querySelector<HTMLElement>(
-      "[data-value='report.pdf'] [data-slot='grid-list-drag-handle']",
+      "[data-value='report.pdf'] [data-comp0='grid-list-drag-handle']",
     )!;
     const reportRow = container.querySelector<HTMLElement>("[data-value='report.pdf']")!;
 
@@ -168,7 +168,7 @@ describe("grid list reordering", () => {
 
     expect(notes.draggable).toBe(false);
     expect(notes.hasAttribute("aria-keyshortcuts")).toBe(false);
-    expect(notes.querySelector("[data-slot='grid-list-drag-handle']")).toBeNull();
+    expect(notes.querySelector("[data-comp0='grid-list-drag-handle']")).toBeNull();
 
     await user.click(notes);
     expect(onChange).toHaveBeenLastCalledWith("notes");
@@ -183,8 +183,8 @@ describe("grid list reordering", () => {
     const { container, user } = setup(<ReorderableList spy={spy} withHandle />);
     const row = container.querySelector<HTMLElement>("[role='row']")!;
     const cell = row.querySelector<HTMLElement>("[role='gridcell']")!;
-    const label = row.querySelector<HTMLElement>("[data-slot='row-label']")!;
-    const handle = row.querySelector<HTMLButtonElement>("[data-slot='grid-list-drag-handle']")!;
+    const label = row.querySelector<HTMLElement>("[data-comp0='row-label']")!;
+    const handle = row.querySelector<HTMLButtonElement>("[data-comp0='grid-list-drag-handle']")!;
 
     expect(row.draggable).toBe(true);
     expect(handle.draggable).toBe(true);
@@ -212,7 +212,7 @@ describe("grid list reordering", () => {
       <GridList aria-label="Files" onReorder={() => {}}>
         <GridListItem value="report" textValue="Report">
           <GridListDragHandle>Move</GridListDragHandle>
-          <span data-slot="row-body">Report</span>
+          <span data-comp0="row-body">Report</span>
           <button type="button">
             Share
             <svg aria-hidden="true">
@@ -227,7 +227,7 @@ describe("grid list reordering", () => {
       </GridList>,
     );
     const row = container.querySelector<HTMLElement>("[role='row']")!;
-    const button = row.querySelector<HTMLButtonElement>("button:not([data-slot])")!;
+    const button = row.querySelector<HTMLButtonElement>("button:not([data-comp0])")!;
     const icon = button.querySelector("svg")!;
     const link = row.querySelector("a")!;
     const input = row.querySelector("input")!;
@@ -247,7 +247,7 @@ describe("grid list reordering", () => {
     fireDrag(row, "dragstart");
     expect(row.hasAttribute("data-dragging")).toBe(false);
 
-    fireDrag(row.querySelector("[data-slot='row-body']")!, "dragstart");
+    fireDrag(row.querySelector("[data-comp0='row-body']")!, "dragstart");
     expect(row.hasAttribute("data-dragging")).toBe(true);
   });
 

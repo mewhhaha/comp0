@@ -246,7 +246,7 @@ describe("expressions", () => {
         { type: "Output", label: "O", value: { $expr: source } },
       ]);
       // Either the expression is rejected, or it reads a name nothing binds and shows nothing.
-      const output = container.querySelector("[data-slot=output]");
+      const output = container.querySelector("[data-comp0=output]");
       expect(output === null || output.textContent === "", source).toBe(true);
       unmount();
     }
@@ -261,7 +261,7 @@ describe("expressions", () => {
 
     await user.type(getByRole("textbox", { name: "Name" }), "<img src=x onerror=alert(1)>");
 
-    expect(container.querySelector("[data-slot=text]")?.textContent).toBe(
+    expect(container.querySelector("[data-comp0=text]")?.textContent).toBe(
       "Hello <img src=x onerror=alert(1)>",
     );
     expect(container.querySelector("img")).toBeNull();
@@ -272,7 +272,7 @@ describe("expressions", () => {
     const start = performance.now();
     const { container } = renderStack([{ type: "Output", label: "O", value: { $expr: source } }]);
 
-    expect(container.querySelector("[data-slot=output]")).toBeNull();
+    expect(container.querySelector("[data-comp0=output]")).toBeNull();
     expect(performance.now() - start).toBeLessThan(2000);
   });
 });

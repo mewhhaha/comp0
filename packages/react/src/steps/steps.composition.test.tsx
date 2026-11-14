@@ -52,7 +52,7 @@ describe("steps composition", () => {
     expect(onChange).toHaveBeenCalledWith("payment");
     expect(trigger("shipping").hasAttribute("aria-current")).toBe(false);
     expect(trigger("payment").getAttribute("aria-current")).toBe("step");
-    const panels = [...container.querySelectorAll("[data-slot='steps-panel']")];
+    const panels = [...container.querySelectorAll("[data-comp0='steps-panel']")];
     expect(panels.map((panel) => panel.hasAttribute("hidden"))).toEqual([true, false, true]);
   });
 
@@ -90,8 +90,8 @@ describe("steps composition", () => {
   it("labels each panel by its step item", () => {
     const { container } = render(<Checkout defaultValue="shipping" />);
 
-    const item = container.querySelector("[data-slot='steps-item']")!;
-    const panel = container.querySelector("[data-slot='steps-panel']")!;
+    const item = container.querySelector("[data-comp0='steps-item']")!;
+    const panel = container.querySelector("[data-comp0='steps-panel']")!;
     expect(item.id).not.toBe("");
     expect(panel.getAttribute("aria-labelledby")).toBe(item.id);
     expect(panel.getAttribute("role")).toBe("region");

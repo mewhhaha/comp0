@@ -31,7 +31,7 @@ export function SkipLink<TElement extends ElementType = "a">({
   return (
     <Part
       {...props}
-      data-slot="skip-link"
+      data-comp0="skip-link"
       data-focused={dataAttr(revealed)}
       style={mergedStyle}
       onFocus={(event: FocusEvent<HTMLAnchorElement>) => {

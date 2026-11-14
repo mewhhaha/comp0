@@ -31,7 +31,7 @@ export function InventoryMoveHandle({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="inventory-move-handle"
+      data-comp0="inventory-move-handle"
       {...props}
       {...handle.eventProps}
       type="button"

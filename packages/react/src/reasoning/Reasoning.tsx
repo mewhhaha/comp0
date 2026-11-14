@@ -20,7 +20,7 @@ export function Reasoning({ busy, ...props }: ReasoningProps) {
   return (
     <BusyContext value={resolvedBusy}>
       <Disclosure
-        data-slot="reasoning"
+        data-comp0="reasoning"
         {...props}
         aria-busy={Boolean(busy) || undefined}
         data-busy={dataAttr(resolvedBusy)}

@@ -78,7 +78,7 @@ describe("overlay composition", () => {
     );
 
     expect(container.querySelector("section")).not.toBeNull();
-    const trigger = container.querySelector("[data-slot='popover-trigger']")!;
+    const trigger = container.querySelector("[data-comp0='popover-trigger']")!;
     expect(trigger.tagName).toBe("DIV");
     expect(trigger.hasAttribute("type")).toBe(false);
     expect(trigger.getAttribute("aria-haspopup")).toBe("dialog");

@@ -117,10 +117,10 @@ export function LineChartPlot({
   if (children) content = children(state);
 
   return (
-    <svg data-slot="line-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="line-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes xLabel={context.xLabel} xTicks={xTicks} yLabel={context.yLabel} yTicks={yTicks} />
       <ChartNavigationProvider count={points.length} orientation="horizontal">
-        <g role="presentation" data-slot="line-chart-line">
+        <g role="presentation" data-comp0="line-chart-line">
           {content}
         </g>
       </ChartNavigationProvider>

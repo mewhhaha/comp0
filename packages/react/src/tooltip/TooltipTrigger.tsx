@@ -23,7 +23,7 @@ export function TooltipTrigger({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="tooltip-trigger"
+      data-comp0="tooltip-trigger"
       {...props}
       ref={triggerRef}
       id={props.id ?? tooltip.triggerId}

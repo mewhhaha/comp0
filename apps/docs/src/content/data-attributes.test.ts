@@ -58,12 +58,12 @@ describe("data attribute contract", () => {
   it("finds emitted attributes but not selectors or comments", () => {
     const source = [
       "// data-commented={1}",
-      '<div data-slot="x" data-open={dataAttr(o)} />',
+      '<div data-comp0="x" data-open={dataAttr(o)} />',
       'const style = { "data-state": 1 };',
       'el.closest("[data-popover-root]");',
     ].join("\n");
     expect(emittedDataAttributes(source)).toEqual([
-      { name: "data-slot", line: 2 },
+      { name: "data-comp0", line: 2 },
       { name: "data-open", line: 2 },
       { name: "data-state", line: 3 },
     ]);

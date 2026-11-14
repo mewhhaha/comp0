@@ -8,6 +8,6 @@ export function AvatarFallback({ as, hidden, ...props }: AvatarFallbackProps) {
   const avatar = useAvatarContext("AvatarFallback");
   const Part = partElement(as, "span");
   return (
-    <Part data-slot="avatar-fallback" {...props} hidden={hidden || avatar.status === "loaded"} />
+    <Part data-comp0="avatar-fallback" {...props} hidden={hidden || avatar.status === "loaded"} />
   );
 }

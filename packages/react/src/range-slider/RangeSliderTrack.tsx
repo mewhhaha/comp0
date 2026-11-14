@@ -17,7 +17,7 @@ export function RangeSliderTrack({ as, onPointerDown, ref, ...props }: RangeSlid
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="range-slider-track"
+      data-comp0="range-slider-track"
       {...props}
       ref={composedRef}
       data-orientation={context.orientation}

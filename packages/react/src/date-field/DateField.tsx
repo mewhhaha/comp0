@@ -40,7 +40,7 @@ export function DateField({
   const Part = partElement(as, "input");
   return (
     <Part
-      data-slot="date-field"
+      data-comp0="date-field"
       {...mergeProps(props, focusProps, hoverProps)}
       type="date"
       id={id ?? field?.controlId}

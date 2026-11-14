@@ -4,7 +4,7 @@ import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { ComparisonRowContext } from "./comparison-shared.js";
 
 function rowDiffers(row: HTMLElement) {
-  const values = [...row.querySelectorAll("[data-slot='comparison-value']")].map(
+  const values = [...row.querySelectorAll("[data-comp0='comparison-value']")].map(
     (cell) => cell.textContent?.trim() ?? "",
   );
   return new Set(values).size > 1;
@@ -39,7 +39,7 @@ export function ComparisonRow({ as, ref, ...props }: ComparisonRowProps) {
   return (
     <ComparisonRowContext value={{ differs }}>
       <Part
-        data-slot="comparison-row"
+        data-comp0="comparison-row"
         {...props}
         ref={composeRefs(ref, setElement)}
         data-differs={dataAttr(differs)}
