@@ -41,7 +41,7 @@ export function Citations({ as, children, ...props }: CitationsProps) {
   const Root = rootElement(as);
   return (
     <CitationsContext value={{ baseId, sources, collection }}>
-      <Root data-slot="citations" {...props}>
+      <Root data-comp0="citations" {...props}>
         {children}
       </Root>
     </CitationsContext>

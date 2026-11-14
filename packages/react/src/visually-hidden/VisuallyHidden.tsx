@@ -25,7 +25,7 @@ export function VisuallyHidden({
   return (
     <Part
       {...props}
-      data-slot="visually-hidden"
+      data-comp0="visually-hidden"
       style={mergedStyle}
       onFocus={(event: FocusEvent<HTMLSpanElement>) => {
         onFocus?.(event);

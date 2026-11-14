@@ -150,13 +150,13 @@ export function MapChartPlot({ children, regions, ref, viewBox, ...props }: MapC
   };
 
   return (
-    <svg data-slot="map-chart-plot" {...props} ref={ref} viewBox={safeViewBox} role="group">
+    <svg data-comp0="map-chart-plot" {...props} ref={ref} viewBox={safeViewBox} role="group">
       <ChartNavigationProvider
         count={regionStates.length}
         getTargetIndex={getTargetIndex}
         orientation="both"
       >
-        <g role="presentation" data-slot="map-chart-regions">
+        <g role="presentation" data-comp0="map-chart-regions">
           {regionStates.map((region) => {
             if (children)
               return (

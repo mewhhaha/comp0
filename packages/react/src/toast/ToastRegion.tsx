@@ -73,7 +73,7 @@ export function ToastRegion({
   return (
     <ToastRegionContext value={{ collection, regionRef, restoreFocusRef }}>
       <Part
-        data-slot="toast-region"
+        data-comp0="toast-region"
         {...props}
         {...surfaceProps}
         // The region only exists while mounted, so an open marker would carry no information.

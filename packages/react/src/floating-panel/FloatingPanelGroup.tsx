@@ -127,7 +127,7 @@ export function FloatingPanelGroup({
       }}
     >
       <Root
-        data-slot="floating-panel-group"
+        data-comp0="floating-panel-group"
         {...props}
         ref={composedRef}
         style={bounded ? { ...style, position: style?.position ?? "relative" } : style}

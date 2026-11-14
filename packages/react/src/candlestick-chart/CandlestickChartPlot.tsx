@@ -138,7 +138,13 @@ export function CandlestickChartPlot({
   const yTicks = yScale.axisTicks(tickCount, context.formatY);
 
   return (
-    <svg data-slot="candlestick-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg
+      data-comp0="candlestick-chart-plot"
+      {...props}
+      ref={ref}
+      viewBox="0 0 120 120"
+      role="group"
+    >
       <ChartAxes
         bounds={bounds}
         xLabel={context.xLabel}
@@ -147,7 +153,7 @@ export function CandlestickChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={candles.length} orientation="horizontal">
-        <g role="presentation" data-slot="candlestick-chart-candles">
+        <g role="presentation" data-comp0="candlestick-chart-candles">
           {candles.map((candle) => {
             let body: ReactNode = (
               <rect
@@ -181,7 +187,7 @@ export function CandlestickChartPlot({
                 <g
                   aria-hidden="true"
                   data-direction={candle.direction}
-                  data-slot="candlestick-chart-candle"
+                  data-comp0="candlestick-chart-candle"
                 >
                   <line
                     x1={candle.x}

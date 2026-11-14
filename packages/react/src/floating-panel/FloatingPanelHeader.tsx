@@ -28,7 +28,7 @@ export function FloatingPanelHeader({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="floating-panel-header"
+      data-comp0="floating-panel-header"
       {...props}
       data-moving={dataAttr(panel.moving)}
       style={{ touchAction: "none", ...props.style }}

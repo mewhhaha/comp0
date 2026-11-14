@@ -67,7 +67,7 @@ export function RangeCalendarCell({
   const Part = partElement(as, "td");
   return (
     <Part
-      data-slot="range-calendar-cell"
+      data-comp0="range-calendar-cell"
       {...props}
       aria-selected={selected || undefined}
       data-outside-month={dataAttr(Boolean(outsideMonth))}

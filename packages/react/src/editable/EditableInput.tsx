@@ -20,7 +20,7 @@ export function EditableInput({
   const Part = partElement(as, "input");
   return (
     <Part
-      data-slot="editable-input"
+      data-comp0="editable-input"
       {...props}
       ref={composedRef}
       // Stays in the DOM while hidden so its native name always submits the

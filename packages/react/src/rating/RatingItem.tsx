@@ -45,7 +45,7 @@ export function RatingItem({
   const Part = partElement(as, "label");
   return (
     <Part
-      data-slot="rating-item"
+      data-comp0="rating-item"
       {...props}
       data-active={dataAttr(active)}
       data-selected={dataAttr(selected)}

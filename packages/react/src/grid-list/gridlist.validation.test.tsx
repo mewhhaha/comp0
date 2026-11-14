@@ -82,7 +82,7 @@ describe("grid list validation", () => {
           </GridList>
         </GridListReorderGroup>,
       );
-      expect(container.querySelector("[data-slot='grid-list-move-button']")).toBeNull();
+      expect(container.querySelector("[data-comp0='grid-list-move-button']")).toBeNull();
       expect(container.querySelector("[data-value='row']")).toBeTruthy();
       expect(consoleError).toHaveBeenCalledWith(
         expect.stringContaining(

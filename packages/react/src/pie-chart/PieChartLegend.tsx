@@ -21,7 +21,7 @@ export function PieChartLegend({ as, children, ...props }: PieChartLegendProps) 
 
   const Part = partElement(as, "ul");
   return (
-    <Part data-slot="pie-chart-legend" {...props}>
+    <Part data-comp0="pie-chart-legend" {...props}>
       {context.values.map((value, index) => {
         const item = {
           value,
@@ -31,7 +31,7 @@ export function PieChartLegend({ as, children, ...props }: PieChartLegendProps) 
         };
         let content: ReactNode = (
           <>
-            <span aria-hidden="true" data-slot="pie-chart-legend-swatch" />
+            <span aria-hidden="true" data-comp0="pie-chart-legend-swatch" />
             <span>{value.label}</span>
             <span>{item.formattedValue}</span>
             <span>{item.percentage.toFixed(1)}%</span>
@@ -42,7 +42,7 @@ export function PieChartLegend({ as, children, ...props }: PieChartLegendProps) 
           <li
             key={`${value.label}-${index}`}
             data-label={value.label}
-            data-slot="pie-chart-legend-item"
+            data-comp0="pie-chart-legend-item"
             data-value={value.value}
           >
             {content}

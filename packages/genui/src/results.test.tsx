@@ -3,7 +3,7 @@ import { expectNoAxeViolations } from "../../react/test/axe.js";
 import { renderResponse, renderStack } from "../test/render.js";
 
 function result(container: HTMLElement) {
-  return container.querySelector("[data-slot=output]")?.textContent;
+  return container.querySelector("[data-comp0=output]")?.textContent;
 }
 
 describe("Output", () => {
@@ -150,11 +150,11 @@ describe("Output", () => {
       { type: "NumberField", label: "Seats", name: "seats", value: { $bind: "seats", initial: 2 } },
       { type: "Text", text: { $expr: '"Seats: " + seats' } },
     ]);
-    expect(container.querySelector("[data-slot=text]")?.textContent).toBe("Seats: 2");
+    expect(container.querySelector("[data-comp0=text]")?.textContent).toBe("Seats: 2");
 
     await user.type(getByRole("spinbutton", { name: "Seats" }), "5");
 
-    expect(container.querySelector("[data-slot=text]")?.textContent).toBe("Seats: 25");
+    expect(container.querySelector("[data-comp0=text]")?.textContent).toBe("Seats: 25");
   });
 
   it("shows nothing for an expression that cannot be computed", () => {
@@ -199,9 +199,9 @@ describe("Comparison", () => {
     const { container } = renderStack([plans]);
 
     expect(
-      container.querySelector("[data-slot=comparison-option][data-recommended]")?.textContent,
+      container.querySelector("[data-comp0=comparison-option][data-recommended]")?.textContent,
     ).toContain("Pro");
-    const cells = [...container.querySelectorAll("[data-slot=comparison-value]")].map(
+    const cells = [...container.querySelectorAll("[data-comp0=comparison-value]")].map(
       (cell) => cell.textContent,
     );
     expect(cells.some((text) => text?.includes("Not included"))).toBe(true);
@@ -220,7 +220,7 @@ describe("Comparison", () => {
         ],
       },
     ]);
-    expect(container.querySelectorAll("[data-slot=comparison-value]")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-comp0=comparison-value]")).toHaveLength(2);
     unmount();
 
     const empty = renderStack([
@@ -319,7 +319,7 @@ describe("Suggestions", () => {
     streaming.unmount();
 
     const empty = renderStack([{ type: "Suggestions", label: "Next", items: [] }]);
-    expect(empty.container.querySelector("[data-slot=suggestions]")).toBeNull();
+    expect(empty.container.querySelector("[data-comp0=suggestions]")).toBeNull();
   });
 });
 

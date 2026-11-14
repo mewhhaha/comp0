@@ -65,7 +65,7 @@ export function Meter({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="meter"
+      data-comp0="meter"
       {...props}
       id={id ?? field?.controlId}
       role="meter"

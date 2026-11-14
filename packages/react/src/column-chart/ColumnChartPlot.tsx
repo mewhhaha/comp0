@@ -104,7 +104,7 @@ export function ColumnChartPlot({
   const yTicks = scale.axisTicks(tickCount, context.formatY);
 
   return (
-    <svg data-slot="column-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="column-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xLabel={context.categoryLabel}
         xTicks={xTicks}
@@ -112,7 +112,7 @@ export function ColumnChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={columns.length} orientation="horizontal">
-        <g role="presentation" data-slot="column-chart-columns">
+        <g role="presentation" data-comp0="column-chart-columns">
           {columns.map((column) => {
             if (children)
               return (
@@ -125,7 +125,7 @@ export function ColumnChartPlot({
                 <g
                   aria-hidden="true"
                   data-label={column.value.label}
-                  data-slot="column-chart-column"
+                  data-comp0="column-chart-column"
                   data-value={column.value.value}
                 >
                   <rect

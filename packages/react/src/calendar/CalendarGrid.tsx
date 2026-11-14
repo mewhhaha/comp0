@@ -25,7 +25,7 @@ export function CalendarGrid({ as, children, onKeyDown, ...props }: CalendarGrid
   const Part = partElement(as, "table");
   return (
     <Part
-      data-slot="calendar-grid"
+      data-comp0="calendar-grid"
       {...props}
       role="grid"
       aria-labelledby={labelledBy}

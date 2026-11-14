@@ -21,7 +21,7 @@ describe("recorded Intelligent UI responses", () => {
       for (const [errors] of onError.mock.calls) expect(errors).toEqual([]);
       expect(warn).not.toHaveBeenCalled();
       warn.mockRestore();
-      expect(container.querySelector("[data-slot]")).not.toBeNull();
+      expect(container.querySelector("[data-comp0]")).not.toBeNull();
     },
   );
 

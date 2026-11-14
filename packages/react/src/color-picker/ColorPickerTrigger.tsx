@@ -33,7 +33,7 @@ export function ColorPickerTrigger({ as, ref, style, ...props }: ColorPickerTrig
 
   return (
     <Button
-      data-slot="color-picker-trigger"
+      data-comp0="color-picker-trigger"
       {...props}
       as={as}
       ref={composedRef}

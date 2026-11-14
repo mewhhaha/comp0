@@ -24,9 +24,9 @@ function Fixture() {
 describe("avatar composition", () => {
   it("shows the fallback and hides the image until the load event fires", () => {
     const { container } = render(<Fixture />);
-    const root = container.querySelector("[data-slot='avatar']")!;
+    const root = container.querySelector("[data-comp0='avatar']")!;
     const image = container.querySelector("img")!;
-    const fallback = container.querySelector("[data-slot='avatar-fallback']")!;
+    const fallback = container.querySelector("[data-comp0='avatar-fallback']")!;
     expect(image.hasAttribute("hidden")).toBe(true);
     expect(fallback.hasAttribute("hidden")).toBe(false);
     expect(root.hasAttribute("data-loaded")).toBe(false);
@@ -40,12 +40,12 @@ describe("avatar composition", () => {
 
   it("keeps the fallback and hides the image after a load error", () => {
     const { container } = render(<Fixture />);
-    const root = container.querySelector("[data-slot='avatar']")!;
+    const root = container.querySelector("[data-comp0='avatar']")!;
     const image = container.querySelector("img")!;
 
     fireImageEvent(image, "error");
     expect(image.hasAttribute("hidden")).toBe(true);
-    expect(container.querySelector("[data-slot='avatar-fallback']")!.hasAttribute("hidden")).toBe(
+    expect(container.querySelector("[data-comp0='avatar-fallback']")!.hasAttribute("hidden")).toBe(
       false,
     );
     expect(root.hasAttribute("data-error")).toBe(true);
@@ -60,7 +60,9 @@ describe("avatar composition", () => {
 
     const { container } = render(<Fixture />);
     expect(container.querySelector("img")!.hasAttribute("hidden")).toBe(false);
-    expect(container.querySelector("[data-slot='avatar']")!.hasAttribute("data-loaded")).toBe(true);
+    expect(container.querySelector("[data-comp0='avatar']")!.hasAttribute("data-loaded")).toBe(
+      true,
+    );
 
     complete.mockRestore();
     naturalWidth.mockRestore();
@@ -77,7 +79,7 @@ describe("avatar composition", () => {
 
     fireImageEvent(container.querySelector("img")!, "load");
     expect(onLoad).toHaveBeenCalledOnce();
-    expect(container.querySelector("[data-slot='avatar']")!.hasAttribute("data-loaded")).toBe(
+    expect(container.querySelector("[data-comp0='avatar']")!.hasAttribute("data-loaded")).toBe(
       false,
     );
     expect(container.querySelector("img")!.hasAttribute("hidden")).toBe(true);
@@ -96,7 +98,7 @@ describe("avatar composition", () => {
     const markup = renderToString(<Fixture />);
     expect(markup).toContain("AK");
     expect(markup).toMatch(/<img[^>]* hidden/);
-    expect(markup).not.toMatch(/<span[^>]*data-slot="avatar-fallback"[^>]* hidden/);
+    expect(markup).not.toMatch(/<span[^>]*data-comp0="avatar-fallback"[^>]* hidden/);
     expect(markup).not.toContain("data-loaded");
     expect(markup).not.toContain("data-error");
   });

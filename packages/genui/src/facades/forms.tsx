@@ -138,7 +138,7 @@ export function FormFacade({
   let failure = null;
   if (error !== "") {
     failure = (
-      <p data-slot="form-error" role="alert">
+      <p data-comp0="form-error" role="alert">
         {error}
       </p>
     );
@@ -148,7 +148,7 @@ export function FormFacade({
   // form, whose submit reports its controls too.
   if (enclosing !== null) {
     return (
-      <fieldset data-slot="form" aria-label={asText(title)}>
+      <fieldset data-comp0="form" aria-label={asText(title)}>
         {children}
       </fieldset>
     );
@@ -156,12 +156,12 @@ export function FormFacade({
   return (
     <FormNameContext value={formName}>
       <FieldRegistryContext value={registry}>
-        <form data-slot="form" aria-label={asText(title)} onSubmit={submit}>
+        <form data-comp0="form" aria-label={asText(title)} onSubmit={submit}>
           {children}
           {failure}
           <Button
             type="submit"
-            data-slot="form-submit"
+            data-comp0="form-submit"
             disabled={streaming || pending}
             aria-busy={pending || undefined}
           >
@@ -209,7 +209,7 @@ export function TextFieldFacade({
   return (
     <TextField
       as="div"
-      data-slot="text-field"
+      data-comp0="text-field"
       value={asText(field.value)}
       onChange={field.setValue}
       required={required === true}
@@ -243,7 +243,7 @@ export function TextAreaFacade({
   return (
     <TextField
       as="div"
-      data-slot="text-area"
+      data-comp0="text-area"
       value={asText(field.value)}
       onChange={field.setValue}
       required={required === true}
@@ -270,7 +270,7 @@ export function NumberFieldFacade({
   const labelText = asText(label);
   return (
     <NumberField
-      data-slot="number-field"
+      data-comp0="number-field"
       name={key}
       // An empty field is NaN, which the input shows as no text.
       value={asNumber(field.value) ?? Number.NaN}
@@ -351,7 +351,7 @@ export function RadioGroupFacade({
   const hint = asText(description);
   return (
     <RadioGroup
-      data-slot="radio-group"
+      data-comp0="radio-group"
       name={key}
       value={asText(field.value)}
       onChange={field.setValue}
@@ -391,7 +391,7 @@ export function CheckboxGroupFacade({
   const hint = asText(description);
   return (
     <CheckboxGroup
-      data-slot="checkbox-group"
+      data-comp0="checkbox-group"
       name={key}
       value={stringValues(field.value) ?? []}
       onChange={field.setValue}
@@ -416,7 +416,7 @@ export function CheckboxFacade({
   const { key, field } = useControl<boolean>(name, label, asBoolean(checked) ?? false, checked);
   return (
     <Checkbox
-      data-slot="checkbox"
+      data-comp0="checkbox"
       name={key}
       checked={field.value === true}
       onChange={field.setValue}
@@ -430,7 +430,7 @@ export function CheckboxFacade({
 export function SwitchFacade({ label, name, checked }: CatalogProps<typeof switchProps>) {
   const { key, field } = useControl<boolean>(name, label, asBoolean(checked) ?? false, checked);
   return (
-    <Switch data-slot="switch" name={key} checked={field.value === true} onChange={field.setValue}>
+    <Switch data-comp0="switch" name={key} checked={field.value === true} onChange={field.setValue}>
       {asText(label)}
     </Switch>
   );
@@ -451,7 +451,7 @@ export function SliderFacade({
   const { key, field } = useControl<number>(name, label, initial, value);
   const current = asNumber(field.value) ?? initial;
   return (
-    <div data-slot="slider">
+    <div data-comp0="slider">
       <Label htmlFor={id}>{asText(label)}</Label>
       <Slider
         id={id}
@@ -462,7 +462,7 @@ export function SliderFacade({
         value={current}
         onChange={field.setValue}
       />
-      <span data-slot="slider-value" aria-hidden="true">
+      <span data-comp0="slider-value" aria-hidden="true">
         {current}
       </span>
     </div>

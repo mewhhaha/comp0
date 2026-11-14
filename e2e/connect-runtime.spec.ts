@@ -15,9 +15,9 @@ const wiresMeetPorts = () => {
   const start = path.getPointAtLength(0).matrixTransform(matrix);
   const end = path.getPointAtLength(path.getTotalLength()).matrixTransform(matrix);
   const output = root
-    .querySelector('[data-slot="connect-output"][value="rain"]')!
+    .querySelector('[data-comp0="connect-output"][value="rain"]')!
     .getBoundingClientRect();
-  const input = root.querySelector('[data-slot="connect-input-trigger"]')!.getBoundingClientRect();
+  const input = root.querySelector('[data-comp0="connect-input-trigger"]')!.getBoundingClientRect();
   return (
     Math.abs(start.x - output.right) < 1 &&
     Math.abs(start.y - output.top - output.height / 2) < 1 &&
@@ -38,7 +38,7 @@ const shaderWiresMeetPorts = () => {
         .querySelector(`button[value="${path.dataset.from}"]`)!
         .getBoundingClientRect();
       const input = root
-        .querySelector(`button[data-slot="connect-input-trigger"][value="${path.dataset.to}"]`)!
+        .querySelector(`button[data-comp0="connect-input-trigger"][value="${path.dataset.to}"]`)!
         .getBoundingClientRect();
       const matrix = path.getScreenCTM() ?? undefined;
       const start = path.getPointAtLength(0).matrixTransform(matrix);
@@ -70,13 +70,13 @@ test("connect runtime: clicks, drag and cancel, native selectors, focus, layout 
   const example = page.getByRole("region", { name: "Live example", exact: true });
   const shader = page.getByRole("region", { name: "Shader connections", exact: true });
   await expect(
-    shader.locator('[data-slot="connect-card"]'),
+    shader.locator('[data-comp0="connect-card"]'),
     "Offscreen cards must remain mounted",
   ).toHaveCount(3);
   await expect(shader.getByRole("dialog")).toHaveCount(0);
   expect(
     await page
-      .locator('[data-slot="connect-card"]')
+      .locator('[data-comp0="connect-card"]')
       .evaluateAll((cards) => cards.some((card) => card.contains(document.activeElement))),
     "Mounting cards must not move focus",
   ).toBe(false);
@@ -134,7 +134,7 @@ test("connect runtime: clicks, drag and cancel, native selectors, focus, layout 
     await shader.getByRole("spinbutton", { name: "Texture Coordinate row", exact: true }).fill("3");
     const apply = shader.getByRole("button", { name: "Apply Texture Coordinate", exact: true });
     await apply.click();
-    const coordinates = shader.locator('[data-slot="inventory-item"][data-value="coordinates"]');
+    const coordinates = shader.locator('[data-comp0="inventory-item"][data-value="coordinates"]');
     await expect(coordinates).toHaveAttribute("data-row", "3");
     await expect(apply, "Applying layout must preserve focus").toBeFocused();
     await expect(wire).not.toHaveAttribute("d", originalPath!);
@@ -165,7 +165,7 @@ test("connect runtime: clicks, drag and cancel, native selectors, focus, layout 
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await expect(
-      shader.locator('[data-slot="inventory-item"][data-value="noise"]'),
+      shader.locator('[data-comp0="inventory-item"][data-value="noise"]'),
     ).toHaveAttribute("data-row", "2");
     await expect(
       shader.getByRole("spinbutton", { name: "Noise Texture row", exact: true }),

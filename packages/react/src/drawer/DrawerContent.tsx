@@ -88,7 +88,7 @@ export function DrawerContent({
   const Part = partElement(as, "dialog");
   const content = (
     <Part
-      data-slot="drawer-content"
+      data-comp0="drawer-content"
       {...props}
       {...modal}
       id={props.id ?? drawer.contentId}

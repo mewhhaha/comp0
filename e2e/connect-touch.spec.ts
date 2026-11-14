@@ -126,7 +126,7 @@ test("connect touch: taps, finger movement, drag, cancellation, native menus, di
   await test.step("canvas view moves, resizes, and pans by touch", async () => {
     await shader.getByRole("button", { name: "Canvas", exact: true }).tap();
     await expect(vectorSource, "Changing views must preserve connections").toHaveValue("generated");
-    const coordinates = shader.locator('[data-slot="inventory-item"][data-value="coordinates"]');
+    const coordinates = shader.locator('[data-comp0="inventory-item"][data-value="coordinates"]');
     let start = await center(
       shader.getByRole("button", { name: "Move Texture Coordinate", exact: true }),
     );
@@ -144,7 +144,7 @@ test("connect touch: taps, finger movement, drag, cancellation, native menus, di
       "Touch dragging the resize grip must commit the new height",
     ).toHaveAttribute("data-row-span", "10");
 
-    const canvas = shader.locator('[data-slot="connect"]');
+    const canvas = shader.locator('[data-comp0="connect"]');
     await canvas.evaluate((element) => element.scrollIntoView({ block: "end" }));
     const bounds = await canvas.boundingBox();
     expect(bounds).toBeTruthy();

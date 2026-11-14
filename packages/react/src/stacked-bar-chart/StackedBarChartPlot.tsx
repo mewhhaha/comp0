@@ -132,7 +132,13 @@ export function StackedBarChartPlot({
   }));
 
   return (
-    <svg data-slot="stacked-bar-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg
+      data-comp0="stacked-bar-chart-plot"
+      {...props}
+      ref={ref}
+      viewBox="0 0 120 120"
+      role="group"
+    >
       <ChartAxes
         bounds={bounds}
         xGrid
@@ -147,7 +153,7 @@ export function StackedBarChartPlot({
         getTargetIndex={getTargetIndex}
         orientation="both"
       >
-        <g role="presentation" data-slot="stacked-bar-chart-segments">
+        <g role="presentation" data-comp0="stacked-bar-chart-segments">
           {segments.map((segment) => {
             const key = JSON.stringify([
               segment.value.label,
@@ -158,7 +164,7 @@ export function StackedBarChartPlot({
             if (children) return <Fragment key={key}>{children(segment)}</Fragment>;
             return (
               <Fragment key={key}>
-                <g aria-hidden="true" data-slot="stacked-bar-chart-segment">
+                <g aria-hidden="true" data-comp0="stacked-bar-chart-segment">
                   <rect
                     x={segment.x}
                     y={segment.y}

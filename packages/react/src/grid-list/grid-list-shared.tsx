@@ -132,13 +132,13 @@ export function rowCell(as: ElementType | undefined, children: ReactNode, slot: 
     return cloneElement(
       children,
       undefined,
-      <div role="gridcell" data-slot={slot}>
+      <div role="gridcell" data-comp0={slot}>
         {children.props.children}
       </div>,
     );
   }
   return (
-    <div role="gridcell" data-slot={slot}>
+    <div role="gridcell" data-comp0={slot}>
       {children}
     </div>
   );

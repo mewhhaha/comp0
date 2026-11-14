@@ -17,7 +17,7 @@ export function TourContent({ children, offset, onClose, style, ...props }: Tour
 
   return (
     <DialogContent
-      data-slot="tour-content"
+      data-comp0="tour-content"
       {...props}
       style={placementSurfaceStyle(
         state?.step.placement ?? "bottom",

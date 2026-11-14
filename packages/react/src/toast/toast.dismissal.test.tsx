@@ -33,7 +33,7 @@ function App() {
 }
 
 function dismissButtons() {
-  return document.querySelectorAll<HTMLButtonElement>("[data-slot='toast-close']");
+  return document.querySelectorAll<HTMLButtonElement>("[data-comp0='toast-close']");
 }
 
 describe("toast dismissal", () => {
@@ -70,7 +70,7 @@ describe("toast dismissal", () => {
 
     // Dismiss through the keyboard-free path: focus stays on Notify.
     notify.focus();
-    document.querySelector<HTMLButtonElement>("[data-slot='toast-close']")!.click();
+    document.querySelector<HTMLButtonElement>("[data-comp0='toast-close']")!.click();
 
     expect(document.activeElement).toBe(notify);
   });

@@ -48,7 +48,7 @@ export function ColorArea({
   return (
     <ColorAreaContext value={{ color, disabled: resolvedDisabled }}>
       <Part
-        data-slot="color-area"
+        data-comp0="color-area"
         {...props}
         role={props.role ?? "group"}
         aria-label={areaLabel}

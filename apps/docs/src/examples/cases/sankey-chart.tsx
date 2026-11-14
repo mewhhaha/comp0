@@ -73,7 +73,7 @@ export function Example() {
       >
         {({ links, nodes }) => (
           <>
-            <g role="presentation" data-slot="sankey-chart-links">
+            <g role="presentation" data-comp0="sankey-chart-links">
               {links.map((link) => {
                 const targetColor = linkColors[link.value.target] ?? "stroke-zinc-400/45";
                 return (
@@ -83,7 +83,7 @@ export function Example() {
                 );
               })}
             </g>
-            <g role="presentation" data-slot="sankey-chart-nodes">
+            <g role="presentation" data-comp0="sankey-chart-nodes">
               {nodes.map((node) => (
                 <SankeyChartNode key={node.value.id} node={node} className="group outline-none">
                   <rect
@@ -99,7 +99,7 @@ export function Example() {
                 </SankeyChartNode>
               ))}
             </g>
-            <g aria-hidden="true" pointerEvents="none" data-slot="sankey-chart-labels">
+            <g aria-hidden="true" pointerEvents="none" data-comp0="sankey-chart-labels">
               {nodes.map((node) => (
                 <text
                   key={node.value.id}

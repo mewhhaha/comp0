@@ -20,5 +20,5 @@ export function DialogTrigger({ as, ref, ...props }: DialogTriggerProps) {
   });
 
   const Part = partElement(as, "button");
-  return <Part data-slot="dialog-trigger" {...props} ref={triggerRef} {...trigger} />;
+  return <Part data-comp0="dialog-trigger" {...props} ref={triggerRef} {...trigger} />;
 }

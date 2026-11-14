@@ -87,7 +87,7 @@ export function SankeyChartLink({ link, ref, ...props }: SankeyChartLinkProps) {
     (active.value.id === link.value.source || active.value.id === link.value.target);
   return (
     <g
-      data-slot="sankey-chart-link"
+      data-comp0="sankey-chart-link"
       {...props}
       ref={ref}
       aria-hidden="true"
@@ -272,7 +272,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
   const state = { nodes: nodeStates, links: linkStates };
   let content: ReactNode = (
     <>
-      <g role="presentation" data-slot="sankey-chart-links">
+      <g role="presentation" data-comp0="sankey-chart-links">
         {linkStates.map((link) => (
           <path
             key={link.index}
@@ -285,9 +285,9 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
           />
         ))}
       </g>
-      <g role="presentation" data-slot="sankey-chart-nodes">
+      <g role="presentation" data-comp0="sankey-chart-nodes">
         {nodeStates.map((node) => (
-          <g key={node.value.id} aria-hidden="true" data-slot="sankey-chart-node">
+          <g key={node.value.id} aria-hidden="true" data-comp0="sankey-chart-node">
             <rect
               x={node.x}
               y={node.y}
@@ -303,7 +303,7 @@ export function SankeyChartPlot({ children, ref, ...props }: SankeyChartPlotProp
   if (children) content = children(state);
 
   return (
-    <svg data-slot="sankey-chart-plot" {...props} ref={ref} viewBox="0 0 120 100" role="group">
+    <svg data-comp0="sankey-chart-plot" {...props} ref={ref} viewBox="0 0 120 100" role="group">
       <ChartNavigationProvider
         count={nodeStates.length}
         getTargetIndex={getTargetIndex}

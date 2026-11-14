@@ -42,7 +42,7 @@ export function CalendarCell({ as, date, outsideMonth, children, ...props }: Cal
   const Part = partElement(as, "td");
   return (
     <Part
-      data-slot="calendar-cell"
+      data-comp0="calendar-cell"
       {...props}
       aria-selected={selected || undefined}
       data-outside-month={dataAttr(Boolean(outsideMonth))}

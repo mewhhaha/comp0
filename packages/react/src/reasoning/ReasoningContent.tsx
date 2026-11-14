@@ -4,5 +4,5 @@ export type ReasoningContentProps = DisclosurePanelProps;
 
 /** The revealed reasoning or tool activity. */
 export function ReasoningContent(props: ReasoningContentProps) {
-  return <DisclosurePanel data-slot="reasoning-content" {...props} />;
+  return <DisclosurePanel data-comp0="reasoning-content" {...props} />;
 }

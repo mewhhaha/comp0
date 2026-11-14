@@ -144,7 +144,7 @@ export function NavigationMenu({
   return (
     <NavigationMenuContext value={context}>
       <Part
-        data-slot="navigation-menu"
+        data-comp0="navigation-menu"
         {...props}
         data-open={dataAttr(value !== "")}
         onKeyDown={(event: KeyboardEvent<HTMLElement>) => {

@@ -87,7 +87,7 @@ export function Resizer({
   const Part = partElement(as, "span");
   return (
     <Part
-      data-slot="resizer"
+      data-comp0="resizer"
       {...props}
       ref={composedRef}
       role="separator"

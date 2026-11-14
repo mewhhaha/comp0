@@ -16,7 +16,7 @@ function Stars(props: RatingProps) {
 }
 
 const activeStars = (container: HTMLElement) =>
-  container.querySelectorAll("[data-slot='rating-item'][data-active]").length;
+  container.querySelectorAll("[data-comp0='rating-item'][data-active]").length;
 
 describe("rating composition", () => {
   it("groups hidden native radios under one name and submits the selected value", () => {
@@ -60,7 +60,7 @@ describe("rating composition", () => {
 
   it("previews the hovered rating with data-active and clears it on pointer leave", async () => {
     const { container, user } = setup(<Stars defaultValue={2} />);
-    const items = container.querySelectorAll("[data-slot='rating-item']");
+    const items = container.querySelectorAll("[data-comp0='rating-item']");
     await user.hover(items[3]!);
     expect(activeStars(container)).toBe(4);
     await user.unhover(items[3]!);
@@ -76,7 +76,7 @@ describe("rating composition", () => {
     expect(onChange).not.toHaveBeenCalled();
     expect(radios[4]!.checked).toBe(false);
     expect(radios[1]!.checked).toBe(true);
-    expect(container.querySelector("[data-slot='rating']")?.hasAttribute("data-readonly")).toBe(
+    expect(container.querySelector("[data-comp0='rating']")?.hasAttribute("data-readonly")).toBe(
       true,
     );
   });

@@ -121,7 +121,7 @@ export function OpenToCloseChartPlot({
 
   return (
     <svg
-      data-slot="open-to-close-chart-plot"
+      data-comp0="open-to-close-chart-plot"
       {...props}
       ref={ref}
       viewBox="0 0 120 120"
@@ -135,7 +135,7 @@ export function OpenToCloseChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={ranges.length} orientation="horizontal">
-        <g role="presentation" data-slot="open-to-close-chart-ranges">
+        <g role="presentation" data-comp0="open-to-close-chart-ranges">
           {ranges.map((range) => {
             if (children)
               return (
@@ -148,7 +148,7 @@ export function OpenToCloseChartPlot({
                 <g
                   aria-hidden="true"
                   data-direction={range.direction}
-                  data-slot="open-to-close-chart-range"
+                  data-comp0="open-to-close-chart-range"
                 >
                   <line
                     x1={range.x}

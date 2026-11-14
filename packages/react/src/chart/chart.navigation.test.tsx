@@ -70,8 +70,8 @@ describe("chart keyboard navigation", () => {
       </LineChart>,
     );
 
-    const points = [...container.querySelectorAll<SVGGElement>("[data-slot='line-chart-point']")];
-    const tooltip = container.querySelector<HTMLElement>("[data-slot='chart-tooltip']")!;
+    const points = [...container.querySelectorAll<SVGGElement>("[data-comp0='line-chart-point']")];
+    const tooltip = container.querySelector<HTMLElement>("[data-comp0='chart-tooltip']")!;
     expect(points.map((point) => point.tabIndex)).toEqual([0, -1, -1]);
     expect(points[0]?.getAttribute("aria-label")).toBe("Quarter: Q1, Revenue: $40k");
 
@@ -105,7 +105,7 @@ describe("chart keyboard navigation", () => {
         </BarChartPlot>
       </BarChart>,
     );
-    const bars = [...container.querySelectorAll<SVGGElement>("[data-slot='bar-chart-bar']")];
+    const bars = [...container.querySelectorAll<SVGGElement>("[data-comp0='bar-chart-bar']")];
     act(() => bars[0]!.focus());
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(bars[0]);
@@ -148,27 +148,27 @@ describe("chart keyboard navigation", () => {
       </PieChart>,
     );
 
-    const slices = [...container.querySelectorAll("[data-slot='pie-chart-slice'] path")];
+    const slices = [...container.querySelectorAll("[data-comp0='pie-chart-slice'] path")];
     for (const slice of slices) expect(slice.getAttribute("d")).not.toMatch(/\.\d{7}/);
     expect(Number(slices[0]?.getAttribute("data-percentage"))).toBeCloseTo(200 / 3);
     expect(Number(slices[1]?.getAttribute("data-percentage"))).toBeCloseTo(100 / 3);
-    expect(container.querySelector("[data-slot='pie-chart-legend']")?.textContent).toContain(
+    expect(container.querySelector("[data-comp0='pie-chart-legend']")?.textContent).toContain(
       "First quarter40%66.7%",
     );
     expect(container.querySelector("tbody")?.textContent).toContain("Second quarter20%");
 
     const sliceGroups = [
-      ...container.querySelectorAll<SVGGElement>("[data-slot='pie-chart-slice']"),
+      ...container.querySelectorAll<SVGGElement>("[data-comp0='pie-chart-slice']"),
     ];
     act(() => sliceGroups[0]!.focus());
     await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(sliceGroups[1]);
-    const activeOutline = container.querySelector("[data-slot='pie-chart-active-slice']");
+    const activeOutline = container.querySelector("[data-comp0='pie-chart-active-slice']");
     expect(activeOutline?.getAttribute("d")).toBe(slices[1]?.getAttribute("d"));
-    expect(container.querySelector("[data-slot='pie-chart-slices']")?.nextElementSibling).toBe(
+    expect(container.querySelector("[data-comp0='pie-chart-slices']")?.nextElementSibling).toBe(
       activeOutline,
     );
-    expect(container.querySelector("[data-slot='chart-active-value-overlay']")).toBeNull();
+    expect(container.querySelector("[data-comp0='chart-active-value-overlay']")).toBeNull();
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(sliceGroups[0]);
   });
@@ -192,7 +192,7 @@ describe("chart keyboard navigation", () => {
     );
 
     const points = [
-      ...container.querySelectorAll<SVGGElement>("[data-slot='scatter-chart-point']"),
+      ...container.querySelectorAll<SVGGElement>("[data-comp0='scatter-chart-point']"),
     ];
     expect(points[0]?.getAttribute("aria-label")).toBe("Alpha, Effort: 1, Impact: 1");
     expect(points[1]?.querySelector("circle")?.getAttribute("cx")).toBe("116");
@@ -224,7 +224,7 @@ describe("chart keyboard navigation", () => {
       </MapChart>,
     );
     const mapRegions = [
-      ...container.querySelectorAll<SVGGElement>("[data-slot='map-chart-region']"),
+      ...container.querySelectorAll<SVGGElement>("[data-comp0='map-chart-region']"),
     ];
     expect(mapRegions).toHaveLength(2);
     expect(mapRegions[0]?.getAttribute("role")).toBe("img");
@@ -282,7 +282,7 @@ describe("chart keyboard navigation", () => {
     );
 
     const bars = [
-      ...container.querySelectorAll<SVGGElement>("[data-slot='stacked-bar-chart-segment']"),
+      ...container.querySelectorAll<SVGGElement>("[data-comp0='stacked-bar-chart-segment']"),
     ];
     expect(bars.map((bar) => bar.getAttribute("aria-label"))).toEqual([
       "Channel: Web, Segment: New, Orders: 30",
@@ -297,7 +297,7 @@ describe("chart keyboard navigation", () => {
     expect(document.activeElement).toBe(bars[3]);
 
     const columns = [
-      ...container.querySelectorAll<SVGGElement>("[data-slot='stacked-column-chart-segment']"),
+      ...container.querySelectorAll<SVGGElement>("[data-comp0='stacked-column-chart-segment']"),
     ];
     act(() => columns[0]!.focus());
     await user.keyboard("{ArrowUp}");
@@ -331,9 +331,9 @@ describe("chart keyboard navigation", () => {
       </HeatmapChart>,
     );
 
-    const cells = [...container.querySelectorAll<SVGGElement>("[data-slot='heatmap-chart-cell']")];
-    const cellsGroup = container.querySelector("[data-slot='heatmap-chart-cells']");
-    const activeOverlay = container.querySelector("[data-slot='chart-active-value-overlay']");
+    const cells = [...container.querySelectorAll<SVGGElement>("[data-comp0='heatmap-chart-cell']")];
+    const cellsGroup = container.querySelector("[data-comp0='heatmap-chart-cells']");
+    const activeOverlay = container.querySelector("[data-comp0='chart-active-value-overlay']");
     expect(cells[0]?.getAttribute("aria-label")).toBe("Time: Morning, Day: Monday, Requests: 4k");
     expect(cellsGroup?.nextElementSibling).toBe(activeOverlay);
     act(() => cells[0]!.focus());
@@ -366,7 +366,7 @@ describe("chart keyboard navigation", () => {
         </HeatmapChartPlot>
       </HeatmapChart>,
     );
-    const cells = [...container.querySelectorAll<SVGGElement>("[data-slot='heatmap-chart-cell']")];
+    const cells = [...container.querySelectorAll<SVGGElement>("[data-comp0='heatmap-chart-cell']")];
     act(() => cells[0]!.focus());
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(cells[1]);
@@ -411,7 +411,7 @@ describe("chart keyboard navigation", () => {
     );
 
     const nodesInPlot = [
-      ...container.querySelectorAll<SVGGElement>("[data-slot='sankey-chart-node']"),
+      ...container.querySelectorAll<SVGGElement>("[data-comp0='sankey-chart-node']"),
     ];
     const visit = nodesInPlot.find((node) => node.getAttribute("data-node-id") === "visit")!;
     const cart = nodesInPlot.find((node) => node.getAttribute("data-node-id") === "cart")!;
@@ -420,13 +420,13 @@ describe("chart keyboard navigation", () => {
     );
     expect(visit.getAttribute("pointer-events")).toBe("bounding-box");
     expect(
-      [...container.querySelectorAll("[data-slot='sankey-chart-link']")].every(
+      [...container.querySelectorAll("[data-comp0='sankey-chart-link']")].every(
         (link) => link.getAttribute("pointer-events") === "none",
       ),
     ).toBe(true);
     act(() => visit.focus());
     const connectedLinks = [
-      ...container.querySelectorAll("[data-slot='sankey-chart-link'][data-connected]"),
+      ...container.querySelectorAll("[data-comp0='sankey-chart-link'][data-connected]"),
     ];
     expect(connectedLinks).toHaveLength(2);
     await user.keyboard("{ArrowRight}");

@@ -22,7 +22,7 @@ export function PopoverTrigger({ as, ref, style, ...props }: PopoverTriggerProps
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="popover-trigger"
+      data-comp0="popover-trigger"
       {...props}
       ref={triggerRef}
       style={triggerAnchorStyle(popover.triggerId, style)}

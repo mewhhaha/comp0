@@ -58,7 +58,7 @@ export function ColorPickerInput({
   const Part = partElement(as, "input");
   return (
     <Part
-      data-slot="color-picker-input"
+      data-comp0="color-picker-input"
       {...props}
       id={props.id ?? colorPicker.inputId}
       type="text"

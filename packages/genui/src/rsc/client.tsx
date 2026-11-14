@@ -184,7 +184,7 @@ export function GenUIViewScope({ children }: { children?: ReactNode }) {
   return (
     <ViewContext value={{ streaming, setStreaming }}>
       <GenUIContext value={context}>
-        <BusyRegion busy={streaming} data-slot="genui-view">
+        <BusyRegion busy={streaming} data-comp0="genui-view">
           {children}
         </BusyRegion>
       </GenUIContext>
@@ -393,7 +393,7 @@ export function GenUIServerNode({
   }
   return (
     <BusyRegion
-      data-slot="server-component"
+      data-comp0="server-component"
       busy={signature !== result.signature && message === undefined}
     >
       {result.content}

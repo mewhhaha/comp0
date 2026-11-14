@@ -57,7 +57,7 @@ export function AccordionTrigger({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="accordion-trigger"
+      data-comp0="accordion-trigger"
       {...props}
       ref={triggerRef}
       {...trigger}

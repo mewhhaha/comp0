@@ -30,7 +30,7 @@ export function Message({ as, from, status = "complete", ...props }: MessageProp
   return (
     <BusyContext value={streaming || parentBusy}>
       <Part
-        data-slot="message"
+        data-comp0="message"
         {...props}
         aria-busy={streaming || undefined}
         data-busy={dataAttr(streaming)}
@@ -46,7 +46,7 @@ export type MessageAuthorProps = ComponentProps<"span"> & AsProp;
 /** The visible name of the message's author. Keep it visible so the speaker is never implied by layout alone. */
 export function MessageAuthor({ as, ...props }: MessageAuthorProps) {
   const Part = partElement(as, "span");
-  return <Part data-slot="message-author" {...props} />;
+  return <Part data-comp0="message-author" {...props} />;
 }
 
 export type MessageTimeProps = ComponentProps<"time"> & AsProp;
@@ -54,7 +54,7 @@ export type MessageTimeProps = ComponentProps<"time"> & AsProp;
 /** When the message was sent; pass a machine-readable `dateTime`. */
 export function MessageTime({ as, ...props }: MessageTimeProps) {
   const Part = partElement(as, "time");
-  return <Part data-slot="message-time" {...props} />;
+  return <Part data-comp0="message-time" {...props} />;
 }
 
 export type MessageContentProps = ComponentProps<"div"> & AsProp;
@@ -62,5 +62,5 @@ export type MessageContentProps = ComponentProps<"div"> & AsProp;
 /** The body of the message. */
 export function MessageContent({ as, ...props }: MessageContentProps) {
   const Part = partElement(as, "div");
-  return <Part data-slot="message-content" {...props} />;
+  return <Part data-comp0="message-content" {...props} />;
 }

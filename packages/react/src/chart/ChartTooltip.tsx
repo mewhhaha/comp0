@@ -90,7 +90,7 @@ export function ChartTooltip({
         })}
       />
       <Part
-        data-slot="chart-tooltip"
+        data-comp0="chart-tooltip"
         {...props}
         ref={composedRef}
         id={props.id ?? interaction.contentId}

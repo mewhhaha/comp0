@@ -91,7 +91,7 @@ export function Editable({
   return (
     <EditableContext value={context}>
       <Root
-        data-slot="editable"
+        data-comp0="editable"
         {...props}
         data-open={dataAttr(open)}
         data-disabled={dataAttr(disabled)}

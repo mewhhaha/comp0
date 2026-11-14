@@ -34,7 +34,7 @@ describe("DropZone", () => {
     const { container } = render(
       <DropZone accept="image/*" aria-label="Profile image" onDrop={dropped} />,
     );
-    const dropZone = container.querySelector<HTMLElement>("[data-slot='drop-zone']")!;
+    const dropZone = container.querySelector<HTMLElement>("[data-comp0='drop-zone']")!;
 
     const drag = fireFileDrag(dropZone, "dragenter", [image]);
     expect(drag.event.defaultPrevented).toBe(true);
@@ -57,7 +57,7 @@ describe("DropZone", () => {
     const { container } = render(
       <DropZone accept="image/*,.png" onDrop={dropped} onDropRejected={rejected} />,
     );
-    const dropZone = container.querySelector<HTMLElement>("[data-slot='drop-zone']")!;
+    const dropZone = container.querySelector<HTMLElement>("[data-comp0='drop-zone']")!;
 
     fireFileDrag(dropZone, "dragenter", [text]);
     expect(dropZone.hasAttribute("data-drop-target")).toBe(true);
@@ -80,7 +80,7 @@ describe("DropZone", () => {
         <span>Drop an image</span>
       </DropZone>,
     );
-    const dropZone = container.querySelector<HTMLElement>("[data-slot='drop-zone']")!;
+    const dropZone = container.querySelector<HTMLElement>("[data-comp0='drop-zone']")!;
     const child = dropZone.querySelector("span")!;
 
     fireFileDrag(dropZone, "dragenter", [image]);
@@ -96,7 +96,7 @@ describe("DropZone", () => {
     const dropped = vi.fn();
     const image = new File(["image"], "profile.png", { type: "image/png" });
     const { container } = render(<DropZone disabled onDrop={dropped} />);
-    const dropZone = container.querySelector<HTMLElement>("[data-slot='drop-zone']")!;
+    const dropZone = container.querySelector<HTMLElement>("[data-comp0='drop-zone']")!;
 
     const drag = fireFileDrag(dropZone, "dragenter", [image]);
     fireFileDrag(dropZone, "drop", [image]);

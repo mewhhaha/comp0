@@ -50,7 +50,7 @@ export function Drawer({
   const Root = rootElement(as);
   return (
     <DrawerContext value={context}>
-      <Root data-slot="drawer" {...props} id={id} data-open={dataAttr(open)}>
+      <Root data-comp0="drawer" {...props} id={id} data-open={dataAttr(open)}>
         {children}
       </Root>
     </DrawerContext>

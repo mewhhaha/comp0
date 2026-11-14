@@ -34,7 +34,7 @@ export function DateRangePickerTrigger({ as, ref, style, ...props }: DateRangePi
 
   return (
     <Button
-      data-slot="date-range-picker-trigger"
+      data-comp0="date-range-picker-trigger"
       {...props}
       as={as}
       ref={composedRef}

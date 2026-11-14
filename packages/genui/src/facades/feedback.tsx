@@ -9,8 +9,8 @@ export function AlertFacade({ message, tone, title }: CatalogProps<typeof alertP
   const lead = asText(title);
   const content = (
     <>
-      {lead === "" ? null : <strong data-slot="alert-title">{lead}</strong>}
-      <span data-slot="alert-message">{asText(message)}</span>
+      {lead === "" ? null : <strong data-comp0="alert-title">{lead}</strong>}
+      <span data-comp0="alert-message">{asText(message)}</span>
     </>
   );
   // Warnings and errors interrupt; information and confirmations wait their turn.
@@ -23,7 +23,7 @@ export function AlertFacade({ message, tone, title }: CatalogProps<typeof alertP
 export function SeparatorFacade({ orientation }: CatalogProps<typeof separatorProps>) {
   return (
     <Separator
-      data-slot="separator"
+      data-comp0="separator"
       orientation={asToken(orientation, ["horizontal", "vertical"] as const) ?? "horizontal"}
     />
   );

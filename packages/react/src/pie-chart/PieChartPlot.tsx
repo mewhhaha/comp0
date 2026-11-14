@@ -94,14 +94,14 @@ export function PieChartPlot({ children, ref, ...props }: PieChartPlotProps) {
   const activeSlice = activeValue?.kind === "pie" ? slices[activeValue.index] : undefined;
 
   return (
-    <svg data-slot="pie-chart-plot" {...props} ref={ref} viewBox="0 0 100 100" role="group">
+    <svg data-comp0="pie-chart-plot" {...props} ref={ref} viewBox="0 0 100 100" role="group">
       <ChartNavigationProvider
         count={slices.length}
         loop
         orientation="both"
         paintActiveLast={false}
       >
-        <g role="presentation" data-slot="pie-chart-slices">
+        <g role="presentation" data-comp0="pie-chart-slices">
           {slices.map((slice) => {
             const { index, path, value } = slice;
             if (children)
@@ -111,7 +111,7 @@ export function PieChartPlot({ children, ref, ...props }: PieChartPlotProps) {
                 <g
                   aria-hidden="true"
                   data-label={value.label}
-                  data-slot="pie-chart-slice"
+                  data-comp0="pie-chart-slice"
                   data-value={value.value}
                 >
                   {path && <path d={path} fill="currentColor" />}
@@ -129,7 +129,7 @@ export function PieChartPlot({ children, ref, ...props }: PieChartPlotProps) {
             strokeWidth="3"
             vectorEffect="non-scaling-stroke"
             pointerEvents="none"
-            data-slot="pie-chart-active-slice"
+            data-comp0="pie-chart-active-slice"
           />
         )}
       </ChartNavigationProvider>

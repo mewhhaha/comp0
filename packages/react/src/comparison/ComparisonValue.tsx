@@ -50,7 +50,7 @@ export function ComparisonValue({
     content = (
       <>
         <VisuallyHidden>{label ?? text}</VisuallyHidden>
-        <span aria-hidden="true" data-slot="comparison-mark">
+        <span aria-hidden="true" data-comp0="comparison-mark">
           {children}
         </span>
       </>
@@ -60,7 +60,7 @@ export function ComparisonValue({
   const Part = partElement(as, "td");
   return (
     <Part
-      data-slot="comparison-value"
+      data-comp0="comparison-value"
       {...props}
       data-option={option}
       data-recommended={dataAttr(match?.recommended)}

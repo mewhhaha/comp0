@@ -20,7 +20,7 @@ export type FeedbackProps = Omit<ComponentProps<"div">, "defaultValue" | "onChan
 export function Feedback({ value, defaultValue, onChange, ...props }: FeedbackProps) {
   return (
     <ToggleButtonGroup
-      data-slot="feedback"
+      data-comp0="feedback"
       {...props}
       type="single"
       value={value}

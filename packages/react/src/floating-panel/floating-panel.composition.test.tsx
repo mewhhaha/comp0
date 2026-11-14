@@ -37,10 +37,10 @@ describe("floating panel composition", () => {
       </FloatingPanelGroup>,
     );
     const trigger = container.querySelector<HTMLButtonElement>(
-      "[data-slot='floating-panel-trigger']",
+      "[data-comp0='floating-panel-trigger']",
     )!;
-    const surface = container.querySelector<HTMLElement>("[data-slot='floating-panel-surface']")!;
-    const title = container.querySelector<HTMLElement>("[data-slot='floating-panel-title']")!;
+    const surface = container.querySelector<HTMLElement>("[data-comp0='floating-panel-surface']")!;
+    const title = container.querySelector<HTMLElement>("[data-comp0='floating-panel-title']")!;
 
     expect(surface.hidden).toBe(true);
     expect(surface.getAttribute("role")).toBe("dialog");
@@ -75,10 +75,10 @@ describe("floating panel composition", () => {
         </FloatingPanel>
       </FloatingPanelGroup>,
     );
-    const surface = container.querySelector<HTMLElement>("[data-slot='floating-panel-surface']")!;
-    const move = container.querySelector<HTMLElement>("[data-slot='floating-panel-drag-handle']")!;
+    const surface = container.querySelector<HTMLElement>("[data-comp0='floating-panel-surface']")!;
+    const move = container.querySelector<HTMLElement>("[data-comp0='floating-panel-drag-handle']")!;
     const resize = container.querySelector<HTMLElement>(
-      "[data-slot='floating-panel-resize-handle']",
+      "[data-comp0='floating-panel-resize-handle']",
     )!;
 
     await press(user, move, "ArrowRight");
@@ -123,7 +123,7 @@ describe("floating panel composition", () => {
             height: 200,
           } as DOMRect;
         }
-        if (this.dataset.slot === "floating-panel-surface") {
+        if (this.dataset.comp0 === "floating-panel-surface") {
           return {
             left: 104,
             top: 104,
@@ -151,9 +151,9 @@ describe("floating panel composition", () => {
         </FloatingPanel>
       </FloatingPanelGroup>,
     );
-    const move = container.querySelector<HTMLElement>("[data-slot='floating-panel-drag-handle']")!;
+    const move = container.querySelector<HTMLElement>("[data-comp0='floating-panel-drag-handle']")!;
     const resize = container.querySelector<HTMLElement>(
-      "[data-slot='floating-panel-resize-handle']",
+      "[data-comp0='floating-panel-resize-handle']",
     )!;
     await press(user, move, "Enter");
     await press(user, move, "ArrowLeft");
@@ -185,7 +185,9 @@ describe("floating panel composition", () => {
         </FloatingPanel>
       </FloatingPanelGroup>,
     );
-    const surface = baseElement.querySelector<HTMLElement>("[data-slot='floating-panel-surface']")!;
+    const surface = baseElement.querySelector<HTMLElement>(
+      "[data-comp0='floating-panel-surface']",
+    )!;
 
     expect(boundary.current?.contains(surface)).toBe(true);
     expect(surface.style.position).toBe("absolute");
@@ -215,7 +217,7 @@ describe("floating panel composition", () => {
         </FloatingPanel>
       </FloatingPanelGroup>,
     );
-    const header = container.querySelector<HTMLElement>("[data-slot='floating-panel-header']")!;
+    const header = container.querySelector<HTMLElement>("[data-comp0='floating-panel-header']")!;
     const action = header.querySelector("button")!;
     header.setPointerCapture = vi.fn();
     header.hasPointerCapture = vi.fn(() => true);
@@ -262,13 +264,13 @@ describe("floating panel composition", () => {
       </FloatingPanelGroup>,
     );
     const surfaces = container.querySelectorAll<HTMLElement>(
-      "[data-slot='floating-panel-surface']",
+      "[data-comp0='floating-panel-surface']",
     );
     const triggers = container.querySelectorAll<HTMLButtonElement>(
-      "[data-slot='floating-panel-trigger']",
+      "[data-comp0='floating-panel-trigger']",
     );
     const firstClose = surfaces[0]!.querySelector<HTMLButtonElement>(
-      "[data-slot='floating-panel-close']",
+      "[data-comp0='floating-panel-close']",
     )!;
 
     act(() => firstClose.focus());
@@ -293,7 +295,7 @@ describe("floating panel composition", () => {
         </FloatingPanel>
       </FloatingPanelGroup>,
     );
-    const surface = container.querySelector<HTMLElement>("[data-slot='floating-panel-surface']")!;
+    const surface = container.querySelector<HTMLElement>("[data-comp0='floating-panel-surface']")!;
 
     expect(error).toHaveBeenCalledWith(
       "FloatingPanel defaultPosition must contain finite x and y coordinates. It was ignored.",
@@ -317,7 +319,7 @@ describe("floating panel composition", () => {
       </FloatingPanelGroup>,
     );
     const surfaces = container.querySelectorAll<HTMLElement>(
-      "[data-slot='floating-panel-surface']",
+      "[data-comp0='floating-panel-surface']",
     );
 
     // Opening a surface focuses it; start from the application instead.

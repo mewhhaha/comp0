@@ -13,7 +13,7 @@ export function InventoryPreview({ as, style, ...props }: InventoryPreviewProps)
   const Part = partElement(as, "li");
   return (
     <Part
-      data-slot="inventory-preview"
+      data-comp0="inventory-preview"
       {...props}
       aria-hidden="true"
       data-column={entry.column}

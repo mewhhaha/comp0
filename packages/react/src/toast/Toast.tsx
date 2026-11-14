@@ -32,7 +32,7 @@ export function Toast({ as, children, ref, toast, ...props }: ToastProps) {
   return (
     <ToastItemContext value={{ itemRef, toast }}>
       <Part
-        data-slot="toast"
+        data-comp0="toast"
         {...props}
         ref={composeRefs(itemRef, setElement, ref)}
         role={role}

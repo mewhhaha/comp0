@@ -339,7 +339,7 @@ export function FloatingPanel({
         stackIndex,
       }}
     >
-      <Root data-slot="floating-panel" {...props} id={id} data-open={dataAttr(open)}>
+      <Root data-comp0="floating-panel" {...props} id={id} data-open={dataAttr(open)}>
         {children}
       </Root>
     </FloatingPanelContext>

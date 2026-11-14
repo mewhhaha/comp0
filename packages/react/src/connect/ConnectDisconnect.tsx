@@ -16,7 +16,7 @@ export function ConnectDisconnect({ as, onClick, disabled, ...props }: ConnectDi
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="connect-disconnect"
+      data-comp0="connect-disconnect"
       {...props}
       type={as === undefined || as === "button" ? (props.type ?? "button") : undefined}
       disabled={disabled || input.disabled || !connected}

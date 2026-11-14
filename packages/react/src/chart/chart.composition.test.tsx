@@ -84,8 +84,12 @@ describe("chart composition", () => {
     expect(chartRef.current).toBe(container.querySelector("figure"));
     expect(plotRef.current?.getAttribute("role")).toBe("group");
     expect(container.querySelector("figcaption")?.textContent).toBe("Quarterly revenue");
-    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("Revenue");
-    expect(container.querySelector("[data-slot='chart-y-axis']")?.textContent).toContain("Quarter");
+    expect(container.querySelector("[data-comp0='chart-x-axis']")?.textContent).toContain(
+      "Revenue",
+    );
+    expect(container.querySelector("[data-comp0='chart-y-axis']")?.textContent).toContain(
+      "Quarter",
+    );
     expect(
       [...container.querySelectorAll("tbody tr")].map((row) =>
         [...row.children].map((cell) => cell.textContent),
@@ -154,10 +158,10 @@ describe("chart composition", () => {
       </LineChart>,
     );
 
-    const line = container.querySelector("[data-slot='line-chart-line'] path");
+    const line = container.querySelector("[data-comp0='line-chart-line'] path");
     expect(line?.getAttribute("d")).toMatch(/^M 20 .* L 52 .* L 116 .*/);
     expect(line?.getAttribute("data-points")).toBe("1,2,4");
-    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("Q4");
+    expect(container.querySelector("[data-comp0='chart-x-axis']")?.textContent).toContain("Q4");
     expect(container.querySelector("tbody")?.textContent).toContain("Q2");
   });
 
@@ -172,7 +176,7 @@ describe("chart composition", () => {
       </AreaChart>,
     );
 
-    const area = container.querySelector("[data-slot='area-chart-area'] path");
+    const area = container.querySelector("[data-comp0='area-chart-area'] path");
     expect(Number(area?.getAttribute("data-baseline"))).toBeCloseTo(64);
     expect(area?.getAttribute("data-line")).toMatch(/^M 20 .* L 52 .* L 116 .*/);
     expect(area?.getAttribute("d")).toMatch(/^M 20 64 L 20 .* L 52 .* L 116 .* L 116 64 Z$/);
@@ -229,12 +233,12 @@ describe("chart composition", () => {
       </CandlestickChart>,
     );
 
-    const candles = [...container.querySelectorAll("[data-slot='candlestick-chart-candle']")];
+    const candles = [...container.querySelectorAll("[data-comp0='candlestick-chart-candle']")];
     expect(candles.map((candle) => candle.getAttribute("data-direction"))).toEqual(["up", "down"]);
     expect(candles[0]?.querySelectorAll("line")).toHaveLength(1);
     expect(candles[0]?.querySelector("rect")).not.toBeNull();
     const candleBodies = [
-      ...container.querySelectorAll("[data-slot='candlestick-chart-candle'] rect"),
+      ...container.querySelectorAll("[data-comp0='candlestick-chart-candle'] rect"),
     ];
     const firstBodyX = Number(candleBodies[0]?.getAttribute("x"));
     const lastBody = candleBodies.at(-1)!;
@@ -273,7 +277,7 @@ describe("chart composition", () => {
       </DumbbellChart>,
     );
     const dumbbells = [
-      ...dumbbellContainer.querySelectorAll<SVGGElement>("[data-slot='dumbbell-chart-dumbbell']"),
+      ...dumbbellContainer.querySelectorAll<SVGGElement>("[data-comp0='dumbbell-chart-dumbbell']"),
     ];
     expect(dumbbells).toHaveLength(2);
     expect(dumbbells[0]?.getAttribute("aria-label")).toBe(
@@ -299,7 +303,7 @@ describe("chart composition", () => {
       </BoxPlotChart>,
     );
     expect(
-      boxContainer.querySelector("[data-slot='boxplot-chart-box']")?.getAttribute("aria-label"),
+      boxContainer.querySelector("[data-comp0='boxplot-chart-box']")?.getAttribute("aria-label"),
     ).toBe(
       "Operation: Read, Latency min: 1, Latency first quartile: 2, Latency median: 3, Latency third quartile: 4, Latency max: 6",
     );
@@ -325,7 +329,7 @@ describe("chart composition", () => {
     expect(
       [
         ...openToCloseContainer.querySelectorAll<SVGGElement>(
-          "[data-slot='open-to-close-chart-range']",
+          "[data-comp0='open-to-close-chart-range']",
         ),
       ].map((range) => range.getAttribute("data-direction")),
     ).toEqual(["up", "down"]);
@@ -347,7 +351,7 @@ describe("chart composition", () => {
     );
     expect(
       lollipopContainer
-        .querySelector("[data-slot='lollipop-chart-lollipop']")
+        .querySelector("[data-comp0='lollipop-chart-lollipop']")
         ?.getAttribute("data-value"),
     ).toBe("82");
   });
@@ -358,7 +362,7 @@ describe("chart composition", () => {
         <BarChartPlot aria-label="Empty values" xMin={5} />
       </BarChart>,
     );
-    expect(container.querySelector("[data-slot='chart-x-axis']")?.textContent).toContain("5");
+    expect(container.querySelector("[data-comp0='chart-x-axis']")?.textContent).toContain("5");
   });
 
   it("groups histogram observations into inclusive end bins", () => {
@@ -374,7 +378,7 @@ describe("chart composition", () => {
       </HistogramChart>,
     );
 
-    const bins = [...container.querySelectorAll("[data-slot='histogram-chart-bin']")];
+    const bins = [...container.querySelectorAll("[data-comp0='histogram-chart-bin']")];
     expect(bins.map((bin) => bin.getAttribute("data-count"))).toEqual(["2", "3"]);
     expect(bins[1]?.getAttribute("aria-label")).toBe("Duration: 2 to 4, Sessions: 3");
   });

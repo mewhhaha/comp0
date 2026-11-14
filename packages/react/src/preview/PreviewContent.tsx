@@ -35,7 +35,7 @@ export function PreviewContent({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="preview-content"
+      data-comp0="preview-content"
       {...props}
       {...surface.props}
       // Hovering the card keeps the preview open (WCAG 1.4.13).

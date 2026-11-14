@@ -153,7 +153,7 @@ export function Select({
       <PopoverContext value={popover}>
         <SelectContext value={context}>
           <Root
-            data-slot="select"
+            data-comp0="select"
             {...props}
             id={id}
             aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}

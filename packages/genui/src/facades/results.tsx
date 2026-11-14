@@ -26,7 +26,7 @@ export function OutputFacade({ label, value, unit }: CatalogProps<typeof outputP
   const text = asResult(useComputed(value));
   const suffix = text === "" ? "" : asText(unit);
   return (
-    <div data-slot="output-field">
+    <div data-comp0="output-field">
       <Label htmlFor={id}>{asText(label)}</Label>
       <Output id={id}>
         {text}
@@ -47,7 +47,7 @@ export function ComparisonFacade({
   const suggested = asText(recommended).trim().toLowerCase();
   const rows = asRecords(features, 60).filter((feature) => asText(feature.name) !== "");
   return (
-    <Comparison data-slot="comparison-table">
+    <Comparison data-comp0="comparison-table">
       <TableCaption>{asText(caption)}</TableCaption>
       <ComparisonHeader>
         <tr>
@@ -130,14 +130,14 @@ export function CitedTextFacade({ text, sources }: CatalogProps<typeof citedText
       <Sources aria-label="Sources">
         {cited.map((source, index) => (
           <Source key={index} value={String(index)} title={source.title} href={source.href}>
-            {source.note === "" ? null : <span data-slot="source-note"> {source.note}</span>}
+            {source.note === "" ? null : <span data-comp0="source-note"> {source.note}</span>}
           </Source>
         ))}
       </Sources>
     );
   }
   return (
-    <Citations as="div" data-slot="cited-text">
+    <Citations as="div" data-comp0="cited-text">
       {paragraphs.map((paragraph, index) => (
         <p key={index}>{segments(paragraph, cited.length)}</p>
       ))}
