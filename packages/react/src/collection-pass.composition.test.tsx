@@ -375,6 +375,21 @@ describe("collection pass", () => {
     expect(container.querySelector("a")!.getAttribute("data-active")).toBe("route");
   });
 
+  it("keeps a numeric data-active an inactive ListBoxOption as={Fragment} child renders", () => {
+    const { container } = setup(
+      <ListBox aria-label="Pages">
+        <ListBoxOption value="home">Home</ListBoxOption>
+        <ListBoxOption as={Fragment} value="docs">
+          <a href="/docs" data-active={2}>
+            Docs
+          </a>
+        </ListBoxOption>
+      </ListBox>,
+    );
+
+    expect(container.querySelector("a")!.getAttribute("data-active")).toBe("2");
+  });
+
   it("keeps an empty data-active an as={Fragment} child renders, and shows it once the option is the stop", async () => {
     const { container, user } = setup(
       <ListBox aria-label="Pages">

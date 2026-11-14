@@ -88,7 +88,9 @@ function ListBoxOptionPart({
   let renderedActive: string | null = active ? "" : null;
   if (!active && as === Fragment && isValidElement<{ "data-active"?: unknown }>(children)) {
     const own = children.props["data-active"];
+    // React serializes a boolean or number data attribute, so the repair compares the same text.
     if (typeof own === "string") renderedActive = own;
+    else if (typeof own === "boolean" || typeof own === "number") renderedActive = String(own);
   }
   useHydrationRepair(
     elementRef,

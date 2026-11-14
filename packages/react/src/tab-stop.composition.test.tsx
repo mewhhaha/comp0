@@ -68,6 +68,8 @@ describe("roving tab stop registration", () => {
     await user.click(before);
     await user.tab();
     expect(document.activeElement).toBe(triggers[0]);
+    // Mounting registered the triggers, so the counter does see this collection.
+    expect(registry.changes).toBeGreaterThan(0);
     commits = 0;
     registry.changes = 0;
     await user.keyboard("{ArrowRight}");
