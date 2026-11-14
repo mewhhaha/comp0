@@ -1,12 +1,8 @@
-import {
-  useLayoutEffect,
-  useRef,
-  type ComponentProps,
-  type FocusEvent,
-  type KeyboardEvent,
-} from "react";
+import { useRef, type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { composeRefs, useCollection, useCollectionNavigation } from "@comp0/core";
+import { useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { NO_SELECTION, useTabStopStore } from "../internal/tab-stop.js";
 import { MenubarContext, type MenubarContextValue, type MenubarItem } from "./menubar-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
 
@@ -22,29 +18,20 @@ export type MenubarProps = ComponentProps<"div"> & AsProp;
 export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps) {
   const collection = useCollection<MenubarItem>();
   const navigate = useCollectionNavigation();
-  const tabStopKey = useRef("");
   const menubarRef = useRef<HTMLElement | null>(null);
-
-  const syncTabStops = (nextKey?: string) => {
-    const all = collection.items();
-    let active = collection.get(nextKey ?? tabStopKey.current);
-    if (!active || active.disabled) active = collection.enabledItems()[0];
-    tabStopKey.current = active?.key ?? "";
-    for (const item of all) {
-      if (!item.element) continue;
-      let tabIndex = -1;
-      if (item.key === tabStopKey.current) tabIndex = 0;
-      item.element.tabIndex = tabIndex;
-    }
-  };
-
-  // Keep exactly one tab stop as items mount, unmount, or change state.
-  useLayoutEffect(() => {
-    syncTabStops();
-  });
+  // The stop follows the item that last held focus and is remembered after focus leaves, so
+  // Tab returns there. It lives outside React state: an arrow press re-renders only the two
+  // triggers whose tabIndex changes, not every trigger reading this context (bench:
+  // collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  // On the server and while hydrating, triggers record themselves in render order, so the
+  // first enabled one already holds the stop in server HTML.
+  const seed = useCollectionSeed();
+  const tabStops = useTabStopStore(collection, seed);
 
   const context: MenubarContextValue = {
     collection,
+    seed,
+    tabStops,
     isAnyOpen() {
       return collection.items().some((item) => item.open);
     },
@@ -52,9 +39,6 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
       for (const item of collection.items()) {
         if (item.key !== key && item.open) item.setOpen(false);
       }
-    },
-    syncTabStops() {
-      syncTabStops();
     },
     moveFocus(currentKey, eventKey, options) {
       const targetKey = navigate(eventKey, collection.items(), currentKey, {
@@ -64,7 +48,7 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
         typeahead: false,
       });
       if (!targetKey || targetKey === currentKey) return false;
-      syncTabStops(targetKey);
+      tabStops.focus(targetKey, NO_SELECTION);
       collection.get(targetKey)?.element?.focus();
       if (options?.open) collection.get(targetKey)?.setOpen(true);
       return true;
@@ -90,7 +74,7 @@ export function Menubar({ as, onFocus, onKeyDown, ref, ...props }: MenubarProps)
             .find(
               (candidate) => candidate.element === target || candidate.element?.contains(target),
             );
-          if (item && item.key !== tabStopKey.current) syncTabStops(item.key);
+          if (item && !item.disabled) tabStops.focus(item.key, NO_SELECTION);
         }}
         onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
           onKeyDown?.(event);

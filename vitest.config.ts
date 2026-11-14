@@ -35,6 +35,7 @@ export const browserProject = {
       "axe-core",
       "react-dom",
       "react-dom/client",
+      "react-dom/server",
     ],
   },
   test: {

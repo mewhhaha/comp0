@@ -1,5 +1,6 @@
 import { type ComponentProps, type DragEvent, type KeyboardEvent } from "react";
 import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
+import { useCollectionPass } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { VisuallyHidden } from "../visually-hidden/VisuallyHidden.js";
 import { groupDndContext, groupDropPreviewLabel } from "./grid-list-group-dnd.js";
@@ -59,12 +60,15 @@ export function GridList({
     defaultValue: defaultValue ?? "",
     onChange,
   });
-  const { collection, context, activateRow, focusRow, refocusAfterReorder } = useGridListRows({
-    selected,
-    select: setSelected,
-    name,
-    group: reorderGroup,
-  });
+  const { collection, context, seed, activateRow, focusRow, refocusAfterReorder } = useGridListRows(
+    {
+      selected,
+      select: setSelected,
+      name,
+      group: reorderGroup,
+    },
+  );
+  const pass = useCollectionPass(seed, children);
   const listRef = useGridListMembership(name, reorderGroup);
   const composedRef = useComposedRefs(listRef, ref);
   const local = useGridListReorder({ collection, onReorder, canReorder, refocusAfterReorder });
@@ -87,6 +91,7 @@ export function GridList({
   return (
     <GridListContext value={context}>
       <GridListDndContext value={dnd}>
+        {pass}
         <Part
           {...props}
           ref={composedRef}

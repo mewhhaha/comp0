@@ -1,16 +1,22 @@
-import { type CollectionItem } from "@comp0/core";
+import { type Collection } from "@comp0/core";
+import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
+import { type TabStopSelection, type TabStopStore } from "../internal/tab-stop.js";
 
 export type ListBoxContextValue = {
-  activeKey: string;
+  /** What the collection pass and the options fill on the server and while hydrating. */
+  seed: CollectionSeed;
+  /** The one option rendered with tabIndex 0; options read it with `useIsTabStop`. */
+  tabStops: TabStopStore;
+  /** The numbered selection the stop is resolved under. */
+  selection: TabStopSelection;
   selectedKey: string;
-  setActiveKey: (key: string) => void;
+  /** Records the option that holds focus or was chosen, so the stop stays on it. */
+  setFocusedKey: (key: string) => void;
   setSelectedKey: (key: string) => void;
-  close?: (() => void) | undefined;
-  /** Registers, updates, or (with a null element) unregisters one item. */
-  register: (item: CollectionItem) => void;
-  items: () => CollectionItem[];
+  /** The option registry; each option registers and unregisters itself on this stable object. */
+  collection: Collection;
 };
 
-export const [ListBoxContext, useListBoxContext, useOptionalListBoxContext] =
+export const [ListBoxContext, useListBoxContext] =
   createRequiredContext<ListBoxContextValue>("ListBox");

@@ -1,11 +1,19 @@
 import { cloneElement, Fragment, isValidElement, type ElementType, type ReactNode } from "react";
 import { type CollectionItem } from "@comp0/core";
+import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
+import { type TabStopSelection, type TabStopStore } from "../internal/tab-stop.js";
 
 export type GridListContextValue = {
-  activeKey: string;
+  /** What the collection pass and the rows fill on the server and while hydrating. */
+  seed: CollectionSeed;
+  /** The one row rendered with tabIndex 0; rows read it with `useIsTabStop`. */
+  tabStops: TabStopStore;
+  /** The numbered selection the stop is resolved under. */
+  selection: TabStopSelection;
   selectedKey: string;
-  setActiveKey: (key: string) => void;
+  /** Records the row that holds focus or was activated, so the stop stays on it. */
+  setFocusedKey: (key: string) => void;
   setSelectedKey: (key: string) => void;
   /** Registers or updates one row; registering an unchanged row is a no-op. */
   register: (item: CollectionItem) => void;

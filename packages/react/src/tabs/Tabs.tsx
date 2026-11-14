@@ -1,6 +1,8 @@
-import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
-import { type Collection, useCollection, useControllableState } from "@comp0/core";
+import { useId, type ReactNode } from "react";
+import { useCollection, useControllableState } from "@comp0/core";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
+import { useCollectionSeed } from "../internal/collection-pass.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import { TabsContext } from "./tabs-shared.js";
 
 export type TabsProps = RootProps<{
@@ -19,16 +21,20 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
     onChange,
   });
   const collection = useCollection();
-  // The tab holding focus while focus is inside the list, so Shift+Tab leaves from it in one
-  // press even when a controlled value rejected the arrow move that focused it.
-  const [focusedKey, setFocusedKey] = useState("");
-  // Registration, unregistration, and a tab's own disabled change all notify the collection,
-  // so the stop follows them without Tabs re-rendering first.
-  const tabStopKey = useSyncExternalStore(
-    collection.subscribe,
-    () => resolveTabStop(collection, focusedKey, selected),
-    () => selected,
-  );
+  // On the server and while hydrating, TabList collects the tabs before they render, so the
+  // stop is already resolved in server HTML.
+  const seed = useCollectionSeed();
+  // The stop is the tab holding focus while focus is inside the list, so Shift+Tab leaves from
+  // it in one press even when a controlled value rejected the arrow move that focused it, and
+  // the selected tab otherwise. Registration, unregistration, and a tab's own disabled change
+  // all notify the store, and each tab reads its own boolean, so a move re-renders two tabs.
+  // The focus record is cleared when focus leaves the list, so it is kept across a selection
+  // the owner changes while a tab holds focus.
+  const selection = useTabStopSelection(selected, true);
+  const tabStops = useTabStopStore(collection, seed);
+  const setFocusedKey = (key: string) => {
+    tabStops.focus(key, selection);
+  };
 
   const Root = rootElement(as);
   return (
@@ -38,7 +44,9 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
         selectedKey: selected,
         setSelectedKey: setSelected,
         collection,
-        tabStopKey,
+        seed,
+        tabStops,
+        selection,
         setFocusedKey,
       }}
     >
@@ -47,21 +55,4 @@ export function Tabs({ as, children, value, defaultValue, onChange, ...props }: 
       </Root>
     </TabsContext>
   );
-}
-
-/**
- * The one tab in the sequence: the focused tab, else the selected tab, else the first enabled
- * tab. Before any tab registers it is the selected key, matching the server render.
- *
- * Runs on every Tabs render and every registry change, so the common case is two O(1) lookups;
- * only the fallback reads document order.
- */
-function resolveTabStop(collection: Collection, focusedKey: string, selectedKey: string) {
-  for (const key of [focusedKey, selectedKey]) {
-    const tab = collection.get(key);
-    if (tab && !tab.disabled) return key;
-  }
-  const items = collection.items();
-  if (items.length === 0) return selectedKey;
-  return items.find((tab) => !tab.disabled)?.key ?? "";
 }

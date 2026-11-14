@@ -250,6 +250,14 @@ export const learnDocs: LearnDoc[] = [
         code: '// Keep this shape on server and client\n<TextField>\n  <Label>Name</Label>\n  <Input name="name" />\n</TextField>;',
         language: "tsx",
       },
+      {
+        id: "collections-render-twice",
+        title: "Keep wrappers around collection items pure",
+        explanation:
+          "ListBox, GridList, TabList, and Menubar decide which item is the tab stop before the browser has any elements to look at. To do that, on the server and while hydrating they render their children once more inside a hidden div, where items only report themselves. The div is removed after hydration. Your own components between the root and its items therefore render twice and must be pure, and a hard-coded id inside them appears twice in server HTML until hydration. Do not render these parts as table elements on the server, because a div is not valid there. If a Suspense boundary sits among the items, two items can be tab stops until that boundary hydrates.",
+        code: '<ListBox aria-label="Fruit" defaultValue="plum">\n  {/* Rendered twice on the server: keep it free of side effects */}\n  <Section>\n    <ListBoxOption value="apple">Apple</ListBoxOption>\n    <ListBoxOption value="plum">Plum</ListBoxOption>\n  </Section>\n</ListBox>;',
+        language: "tsx",
+      },
     ],
   },
   {
