@@ -1,8 +1,17 @@
-import { useRef, useState, type ComponentProps, type KeyboardEvent, type MouseEvent } from "react";
-import { useCollection, useComposedRefs, type CollectionItem } from "@comp0/core";
+import {
+  useId,
+  useRef,
+  type ComponentProps,
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
+import { useCollection, useComposedRefs } from "@comp0/core";
+import { useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { primaryStop, rowStops, TableContext, type TableContextValue } from "./table-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
+import { attachGrid, focusStop, moveStop, ownerCell, primaryStop, rowStops } from "./table-dom.js";
+import { TableContext, type TableContextValue } from "./table-shared.js";
 
 export type TableProps = ComponentProps<"table"> &
   AsProp & {
@@ -16,6 +25,7 @@ export type TableProps = ComponentProps<"table"> &
 export function Table({
   as,
   onRangeSelect,
+  onFocus,
   onKeyDown,
   onClick,
   onMouseDown,
@@ -24,9 +34,13 @@ export function Table({
   ...props
 }: TableProps) {
   const tableRef = useRef<HTMLTableElement | null>(null);
-  const composedRef = useComposedRefs(tableRef, ref);
-  const [activeKey, setActiveKey] = useState("");
-  const cells = useCollection();
+  const composedRef = useComposedRefs(tableRef, ref, attachGrid);
+  // On the server and while hydrating, cells record themselves in render order, so the first
+  // cell renders the stop in server HTML.
+  const seed = useCollectionSeed();
+  // Cells render it as their owner, which is how the table tells its cells from a nested
+  // table's and from a consumer's plain cells (`table-dom.ts`).
+  const id = useId();
   const valuedRows = useCollection();
   const anchorRef = useRef<string | null>(null);
 
@@ -41,22 +55,13 @@ export function Table({
     return keys.slice(low, high + 1);
   };
 
-  // The first registered cell becomes the roving tab stop.
-  const register = (item: CollectionItem) => {
-    cells.register(item);
-    if (!item.element) return;
-    setActiveKey((current) => current || item.key);
+  // The cell of this table an event target sits in; see `ownerCell`.
+  const cellOf = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return null;
+    return ownerCell(target, tableRef.current);
   };
 
-  const keyFor = (element: Element) => cells.items().find((item) => item.element === element)?.key;
-
-  const context: TableContextValue = {
-    activeKey,
-    setActiveKey,
-    register,
-    keyFor,
-    rows: valuedRows,
-  };
+  const context: TableContextValue = { id, seed, rows: valuedRows };
 
   const Part = partElement(as, "table");
   return (
@@ -65,6 +70,16 @@ export function Table({
         {...props}
         ref={composedRef}
         role="grid"
+        data-comp0-root={id}
+        onFocus={(event: FocusEvent<HTMLTableElement>) => {
+          onFocus?.(event);
+          if (event.defaultPrevented) return;
+          // A click or programmatic focus on a cell, or on a widget inside one, moves the stop.
+          // Cells of a grid nested inside a cell belong to that grid, not this one.
+          const table = tableRef.current;
+          const stop = table ? focusStop(table, event.target) : null;
+          if (table && stop) moveStop(table, stop);
+        }}
         onMouseDown={(event: MouseEvent<HTMLTableElement>) => {
           onMouseDown?.(event);
           // Keep shift-clicks from smearing a text selection over the range.
@@ -74,7 +89,7 @@ export function Table({
           onClick?.(event);
           if (event.defaultPrevented) return;
           const target = event.target instanceof Element ? event.target : null;
-          const row = target?.closest("tr") ?? null;
+          const row = cellOf(target)?.parentElement ?? target?.closest("tr") ?? null;
           const value = valuedRows.items().find((item) => item.element === row)?.key;
           if (!row || !value) return;
           if (event.shiftKey && onRangeSelect && anchorRef.current) {
@@ -92,9 +107,9 @@ export function Table({
           // Shift+ArrowUp/Down extends the selection while moving.
           if ((event.shiftKey && !extending) || event.altKey || event.metaKey) return;
           const table = tableRef.current;
-          const target = event.target instanceof Element ? event.target.closest("td, th") : null;
-          if (!table || !target || !table.contains(target)) return;
-          const cell = target as HTMLTableCellElement;
+          // Keys from a grid nested inside a cell belong to that grid, even the ones it leaves.
+          const cell = cellOf(event.target);
+          if (!table || !cell) return;
           const row = cell.parentElement as HTMLTableRowElement;
           const rows = [...table.rows];
           const rowIndex = rows.indexOf(row);
@@ -131,10 +146,10 @@ export function Table({
           }
           if (!next || next === focused) return;
           event.preventDefault();
-          const nextCell = next.closest<HTMLTableCellElement>("td, th");
-          const key = nextCell ? keyFor(nextCell) : undefined;
-          if (key) setActiveKey(key);
+          const stop = focusStop(table, next);
+          if (stop) moveStop(table, stop);
           next.focus();
+          const nextCell = cellOf(next);
           const landedRow = nextCell?.parentElement ?? null;
           const landedValue = valuedRows.items().find((item) => item.element === landedRow)?.key;
           if (extending) {

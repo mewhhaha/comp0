@@ -10,6 +10,10 @@ import { Menu } from "./menu/Menu.js";
 import { MenuTrigger } from "./menu/MenuTrigger.js";
 import { Menubar } from "./menubar/Menubar.js";
 import { Tab } from "./tabs/Tab.js";
+import { Table } from "./table/Table.js";
+import { TableBody } from "./table/TableBody.js";
+import { TableCell } from "./table/TableCell.js";
+import { TableRow } from "./table/TableRow.js";
 import { TabList } from "./tabs/TabList.js";
 import { Tabs } from "./tabs/Tabs.js";
 
@@ -384,6 +388,40 @@ describe("roving tab stop re-renders", () => {
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[2]);
     expect([...rendered].sort()).toEqual(["three", "two"]);
+    unmount();
+  });
+
+  it("moves the table stop without rendering any cell", async () => {
+    // The stop is the tabindex attribute itself, which the table moves in the DOM.
+    let commits = 0;
+    const { container, user, unmount } = setup(
+      <Profiler id="table" onRender={() => (commits += 1)}>
+        <button type="button">Before</button>
+        <Table aria-label="Cells">
+          <TableBody>
+            {many.map((value) => (
+              <TableRow key={value}>
+                <TableCell>{value}</TableCell>
+                <TableCell>{`${value} detail`}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Profiler>,
+    );
+    const before = container.querySelector<HTMLElement>("button")!;
+    const cells = container.querySelectorAll<HTMLElement>("td");
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(cells[0]);
+    commits = 0;
+
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(cells[2]);
+    expect([...cells].filter((cell) => cell.tabIndex === 0)).toEqual([cells[2]]);
+    await user.click(cells[5]!);
+    expect([...cells].filter((cell) => cell.tabIndex === 0)).toEqual([cells[5]]);
+    expect(commits).toBe(0);
     unmount();
   });
 

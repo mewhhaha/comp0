@@ -2,7 +2,19 @@ import { Suspense, use, type ReactElement } from "react";
 import { renderToPipeableStream } from "react-dom/server";
 import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { GridList, GridListItem, ListBox, ListBoxOption, Tab, TabList, Tabs } from "./index.js";
+import {
+  GridList,
+  GridListItem,
+  ListBox,
+  ListBoxOption,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  TabList,
+  Tabs,
+} from "./index.js";
 
 function stream(ui: ReactElement, onShell: () => void) {
   let html = "";
@@ -31,6 +43,10 @@ const streamedStops = (html: string, role: string) =>
   [...html.matchAll(new RegExp(`<[a-z]+[^>]*role="${role}"[^>]*>`, "g"))].filter((match) =>
     match[0].includes('tabindex="0"'),
   );
+
+// Table cells carry no role; their stop is the one cell with tabindex="0".
+const streamedCellStops = (html: string) =>
+  [...html.matchAll(/<t[dh][\s>][^>]*>/g)].filter((match) => match[0].includes('tabindex="0"'));
 
 function gate() {
   let open!: () => void;
@@ -112,5 +128,35 @@ describe("collection pass with streaming", () => {
     );
 
     expect(streamedStops(html, "row")).toHaveLength(1);
+  });
+
+  it("streams one tab stop when the first table row suspends on the server", async () => {
+    const late = gate();
+    const Late = () => {
+      use(late.promise);
+      return (
+        <TableRow>
+          <TableCell>Ada</TableCell>
+          <TableCell>Engineer</TableCell>
+        </TableRow>
+      );
+    };
+
+    const html = await stream(
+      <Table aria-label="People">
+        <TableBody>
+          <Suspense fallback={null}>
+            <Late />
+          </Suspense>
+          <TableRow>
+            <TableCell>Grace</TableCell>
+            <TableCell>Admiral</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+      late.open,
+    );
+
+    expect(streamedCellStops(html)).toHaveLength(1);
   });
 });

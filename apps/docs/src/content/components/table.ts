@@ -81,6 +81,7 @@ export default component({
     p("TableFooter", "root", "Native tfoot for totals or summary rows.", true, true),
   ],
   keyboard: [
+    { keys: ["Tab"], action: "Moves into the table to the last focused cell; Tab again leaves." },
     { keys: ["ArrowRight"], action: "Moves visually right through cells and their controls." },
     { keys: ["ArrowLeft"], action: "Moves visually left through cells and their controls." },
     { keys: ["ArrowDown"], action: "Moves one cell down the column." },

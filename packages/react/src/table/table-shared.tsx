@@ -1,13 +1,14 @@
-import { useId, useLayoutEffect, useRef, type Ref } from "react";
-import { assignRef, type Collection, type CollectionItem } from "@comp0/core";
-import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
+import { useId, useRef, useState, type Ref } from "react";
+import { useComposedRefs, type Collection } from "@comp0/core";
+import { useRenderOrderSeed, type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
+import { adoptCell } from "./table-dom.js";
 
 export type TableContextValue = {
-  activeKey: string;
-  setActiveKey: (key: string) => void;
-  register: (item: CollectionItem) => void;
-  keyFor: (element: Element) => string | undefined;
+  /** The id the table renders as `data-comp0-root` and its cells as `data-comp0-owner`. */
+  id: string;
+  /** The render-order record cells fill on the server and while hydrating. */
+  seed: CollectionSeed;
   /** Rows that carry a value, in document order, for range selection. */
   rows: Collection;
 };
@@ -23,69 +24,42 @@ export type TableColumnContextValue = {
 export const [TableColumnContext, useTableColumnContext, useOptionalTableColumnContext] =
   createRequiredContext<TableColumnContextValue>("TableColumn");
 
-/** The interactive elements inside a cell, in document order. */
-function cellWidgets(cell: HTMLTableCellElement) {
-  return [...cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
-    (element) => element.getAttribute("aria-hidden") !== "true",
-  );
-}
+// A cell rendered outside a Table records nothing, never holds a stop, and leaves its widgets
+// alone, but its hooks still run unconditionally.
+const DETACHED_SEED: CollectionSeed = {
+  add() {},
+  resolve: () => null,
+  clear() {},
+};
 
 /**
- * A body cell holding exactly one widget hands its grid stop to the widget
- * (the checkbox-column case). Header cells always stay stops themselves so
- * sorting and resizing remain reachable.
+ * The `tabIndex` a cell renders, decided once and never changed: rendered once, then owned by
+ * the DOM. The table keeps its roving stop in the cells' tabindex attributes (`table-dom.ts`),
+ * and because the cell passes React the same value on every render, React never writes the
+ * attribute again after mount, so the table's handlers can move it without React undoing it.
+ *
+ * On the server and while hydrating, cells record themselves in render order and the first one
+ * renders 0, so server HTML already has exactly one stop and hydration matches it. There is no
+ * collection pass because its hidden div is invalid inside table markup. On a client-only mount
+ * the seed is empty and every cell renders -1; the table puts the stop in the DOM on mount.
+ *
+ * The value belongs to the component, not to its element: when React replaces the element (its
+ * `as` changes, a header gains `onResize`) the new one renders the same value again. Each element
+ * therefore repairs itself from the DOM when it attaches (`adoptCell`), which is also when a cell
+ * inside a Suspense boundary has hydrated and may be written.
  */
-function delegatedWidget(cell: HTMLTableCellElement) {
-  if (cell.tagName !== "TD") return undefined;
-  const widgets = cellWidgets(cell);
-  return widgets.length === 1 ? widgets[0] : undefined;
-}
-
-/** Where vertical navigation and the roving tab stop land for a cell. */
-export function primaryStop(cell: HTMLTableCellElement) {
-  return delegatedWidget(cell) ?? cell;
-}
-
-/**
- * The inline-axis stops of a row: each cell, then the widgets inside it, with
- * delegated single-widget cells collapsing to the widget.
- */
-export function rowStops(row: HTMLTableRowElement) {
-  const stops: HTMLElement[] = [];
-  for (const cell of row.cells) {
-    const delegated = delegatedWidget(cell);
-    if (delegated) {
-      stops.push(delegated);
-      continue;
-    }
-    stops.push(cell, ...cellWidgets(cell));
-  }
-  return stops;
-}
-
-/** Registration and roving tabindex shared by header and body cells. */
 export function useTableCell(ref: Ref<HTMLTableCellElement> | undefined) {
   const table = useOptionalTableContext();
-  const key = useId().replace(/:/g, "");
-  const register = table?.register;
+  const seed = table?.seed ?? DETACHED_SEED;
+  const key = useId();
+  // Cells are never disabled.
+  useRenderOrderSeed(seed, key, false);
+  const [tabIndex] = useState(() => (seed.resolve([]) === key ? 0 : -1));
   const elementRef = useRef<HTMLTableCellElement | null>(null);
-  const cellRef = (element: HTMLTableCellElement | null) => {
-    elementRef.current = element;
-    register?.({ key, textValue: "", element });
-    assignRef(ref, element);
-  };
-  const tabIndex = table?.activeKey === key ? 0 : -1;
-
-  // Widgets inside cells are reachable with the arrow keys, never with Tab,
-  // so the table exposes exactly one tab stop. A delegated single-widget
-  // body cell hands its roving stop to the widget.
-  useLayoutEffect(() => {
-    const cell = elementRef.current;
-    if (!cell) return;
-    const delegated = delegatedWidget(cell);
-    for (const widget of cellWidgets(cell)) widget.tabIndex = widget === delegated ? tabIndex : -1;
-    if (delegated) cell.tabIndex = -1;
-  });
-
-  return { cellRef, elementRef, tabIndex };
+  const cellRef = useComposedRefs<HTMLTableCellElement>(
+    ref,
+    elementRef,
+    table ? adoptCell : undefined,
+  );
+  return { cellRef, elementRef, tabIndex, owner: table?.id };
 }
