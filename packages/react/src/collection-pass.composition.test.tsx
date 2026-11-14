@@ -110,6 +110,41 @@ describe("collection pass", () => {
     await act(async () => root.unmount());
   });
 
+  it("leaves consumer refs on the real elements after the pass unmounts", async () => {
+    // The pass renders the children a second time; its copy must not own their refs, or
+    // unmounting it after hydration would leave them null.
+    const wrapper = { current: null as HTMLDivElement | null };
+    const merged = { current: null as HTMLUListElement | null };
+    const calls: (string | null)[] = [];
+    const ui = (
+      <>
+        <ListBox aria-label="Fruit">
+          <div ref={wrapper} data-probe="wrapper">
+            <ListBoxOption value="apple">Apple</ListBoxOption>
+          </div>
+        </ListBox>
+        <ListBox as={Fragment} aria-label="Merged">
+          <ul ref={merged} data-probe="merged">
+            <ListBoxOption value="plum">Plum</ListBoxOption>
+          </ul>
+        </ListBox>
+        <GridList aria-label="Rows">
+          <div ref={(node) => void calls.push(node ? node.dataset.probe! : null)} data-probe="row">
+            <GridListItem value="one">One</GridListItem>
+          </div>
+        </GridList>
+      </>
+    );
+    const container = serverRender(ui);
+    const root = await hydrate(container, ui);
+
+    expect(wrapper.current).toBe(container.querySelector("[data-probe='wrapper']"));
+    expect(merged.current).toBe(container.querySelector("[data-probe='merged']"));
+    expect(calls).toEqual(["row"]);
+    expect(container.querySelectorAll("[data-probe]")).toHaveLength(3);
+    root.unmount();
+  });
+
   it("hydrates options inside a Suspense boundary without a mismatch", async () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});
     const ui = (

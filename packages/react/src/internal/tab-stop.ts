@@ -81,6 +81,11 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
     for (const listener of listeners) listener();
   };
   const resolve = (selection: TabStopSelection) => {
+    // Selecting the item that holds the record keeps the record current, so clearing that
+    // selection afterwards leaves the stop on it. Idempotent, like the seed writes below.
+    if (focused.key && focused.key === selection.value && focused.epoch < selection.epoch) {
+      focused = { key: focused.key, epoch: selection.epoch };
+    }
     let key = "";
     if (focused.epoch === selection.epoch) key = focused.key;
     // A record survives one change of selection, and only when that change cleared it.

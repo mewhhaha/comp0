@@ -234,6 +234,102 @@ describe("roving tab stop registration", () => {
     expect([...rows].map((row) => row.tabIndex)).toEqual([0, -1, -1]);
     unmount();
   });
+
+  it("keeps a stop record through one clearing of the value and no further in a list box", async () => {
+    const list = (value: string) => (
+      <ListBox aria-label="Bench" value={value}>
+        {values.map((item) => (
+          <ListBoxOption key={item} value={item}>
+            {item}
+          </ListBoxOption>
+        ))}
+      </ListBox>
+    );
+    const { container, rerender, user, unmount } = setup(list("one"));
+    const options = container.querySelectorAll<HTMLElement>("[role='option']");
+    const tabStops = () => [...options].map((item) => item.tabIndex);
+
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+    rerender(list(""));
+    expect(tabStops()).toEqual([-1, 0, -1]);
+    rerender(list("three"));
+    expect(tabStops()).toEqual([-1, -1, 0]);
+    rerender(list(""));
+    expect(tabStops()).toEqual([0, -1, -1]);
+    unmount();
+  });
+
+  it("keeps the stop on the focused item when its own selection is cleared in a list box", async () => {
+    const list = (value: string) => (
+      <ListBox aria-label="Bench" value={value}>
+        {values.map((item) => (
+          <ListBoxOption key={item} value={item}>
+            {item}
+          </ListBoxOption>
+        ))}
+      </ListBox>
+    );
+    const { container, rerender, user, unmount } = setup(list("one"));
+    const options = container.querySelectorAll<HTMLElement>("[role='option']");
+
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+    // The owner accepts the focused item, then clears the value while focus stays on it.
+    rerender(list("two"));
+    rerender(list(""));
+    expect(document.activeElement).toBe(options[1]);
+    expect([...options].map((item) => item.tabIndex)).toEqual([-1, 0, -1]);
+    unmount();
+  });
+
+  it("keeps a stop record through one clearing of the value and no further in a grid list", async () => {
+    const list = (value: string) => (
+      <GridList aria-label="Bench" value={value}>
+        {values.map((item) => (
+          <GridListItem key={item} value={item}>
+            {item}
+          </GridListItem>
+        ))}
+      </GridList>
+    );
+    const { container, rerender, user, unmount } = setup(list("one"));
+    const rows = container.querySelectorAll<HTMLElement>("[role='row']");
+    const tabStops = () => [...rows].map((item) => item.tabIndex);
+
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+    rerender(list(""));
+    expect(tabStops()).toEqual([-1, 0, -1]);
+    rerender(list("three"));
+    expect(tabStops()).toEqual([-1, -1, 0]);
+    rerender(list(""));
+    expect(tabStops()).toEqual([0, -1, -1]);
+    unmount();
+  });
+
+  it("keeps the stop on the focused item when its own selection is cleared in a grid list", async () => {
+    const list = (value: string) => (
+      <GridList aria-label="Bench" value={value}>
+        {values.map((item) => (
+          <GridListItem key={item} value={item}>
+            {item}
+          </GridListItem>
+        ))}
+      </GridList>
+    );
+    const { container, rerender, user, unmount } = setup(list("one"));
+    const rows = container.querySelectorAll<HTMLElement>("[role='row']");
+
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+    // The owner accepts the focused item, then clears the value while focus stays on it.
+    rerender(list("two"));
+    rerender(list(""));
+    expect(document.activeElement).toBe(rows[1]);
+    expect([...rows].map((item) => item.tabIndex)).toEqual([-1, 0, -1]);
+    unmount();
+  });
 });
 
 // A stop move should re-render the item it leaves and the item it reaches, not every item that

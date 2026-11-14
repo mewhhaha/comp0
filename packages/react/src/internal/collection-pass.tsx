@@ -1,4 +1,13 @@
-import { createContext, use, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  Children,
+  cloneElement,
+  createContext,
+  isValidElement,
+  use,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 /**
  * The items a root's children will render, in render order, known before the real items render.
@@ -45,6 +54,23 @@ function createCollectionSeed(): CollectionSeed {
   };
 }
 
+/**
+ * The same elements with every `ref` dropped, for the pass's copy of the children. The copy
+ * unmounts after hydration, and React would then detach a ref it shares with the real element,
+ * leaving the consumer's ref `null`. It reaches elements written in the children, not a ref a
+ * consumer component forwards under another prop name.
+ */
+function withoutRefs(children: ReactNode): ReactNode {
+  return Children.map(children, (child) => {
+    if (!isValidElement<{ children?: ReactNode; ref?: unknown }>(child)) return child;
+    const nested = child.props.children;
+    if (nested === undefined || typeof nested === "function") {
+      return cloneElement(child, { ref: null });
+    }
+    return cloneElement(child, { ref: null }, withoutRefs(nested));
+  });
+}
+
 const CollectionPassContext = createContext<CollectionSeed | null>(null);
 CollectionPassContext.displayName = "CollectionPassContext";
 
@@ -81,7 +107,7 @@ export function useCollectionPass(seed: CollectionSeed, children: ReactNode) {
   return (
     <CollectionPassContext value={seed}>
       {/* Holds whatever consumer elements sit between the root and its items. */}
-      <div hidden>{children}</div>
+      <div hidden>{withoutRefs(children)}</div>
     </CollectionPassContext>
   );
 }
