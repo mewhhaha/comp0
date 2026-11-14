@@ -34,7 +34,7 @@ export function ConnectCard({
   return (
     <ConnectCardContext value={{ value, label, disabled }}>
       <Part
-        data-slot="connect-card"
+        data-comp0="connect-card"
         {...props}
         ref={composeRefs(ref, setElement)}
         disabled={disabled}

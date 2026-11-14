@@ -121,7 +121,7 @@ describe("inventory browser interactions", () => {
     await act(async () => userEvent.keyboard("{Enter}{ArrowRight}"));
     const card = move.closest("li")!;
     expect(card.hasAttribute("data-dragging")).toBe(true);
-    expect(container.querySelector("[data-slot='inventory-preview']")).not.toBeNull();
+    expect(container.querySelector("[data-comp0='inventory-preview']")).not.toBeNull();
 
     await expectNoAxeViolations(container, "inventory moving");
     unmount();

@@ -20,7 +20,7 @@ export function ColorSlider({ as, channel, disabled, style, ...props }: ColorSli
   const Part = partElement(as, "input");
   return (
     <Part
-      data-slot="color-slider"
+      data-comp0="color-slider"
       {...props}
       type="range"
       min={0}

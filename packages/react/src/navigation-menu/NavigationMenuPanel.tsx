@@ -19,7 +19,7 @@ export function NavigationMenuPanel({ as, hidden, id, ...props }: NavigationMenu
   return (
     <NavigationMenuPanelContext value={{ value: item.value }}>
       <Part
-        data-slot="navigation-menu-panel"
+        data-comp0="navigation-menu-panel"
         {...props}
         id={id ?? item.panelId}
         hidden={hidden ?? !item.open}

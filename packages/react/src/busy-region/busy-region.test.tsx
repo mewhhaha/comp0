@@ -48,7 +48,7 @@ describe("BusyRegion", () => {
         <BusyProbe />
       </BusyRegion>,
     );
-    const region = container.querySelector("[data-slot='busy-region']")!;
+    const region = container.querySelector("[data-comp0='busy-region']")!;
 
     expect(region.tagName).toBe("DIV");
     expect(region.getAttribute("aria-busy")).toBe("true");
@@ -67,7 +67,7 @@ describe("BusyRegion", () => {
 
   it("adds no live region of its own, so completion is not announced by the region", () => {
     const { container } = render(<BusyRegion busy>text</BusyRegion>);
-    const region = container.querySelector("[data-slot='busy-region']")!;
+    const region = container.querySelector("[data-comp0='busy-region']")!;
 
     expect(region.hasAttribute("role")).toBe(false);
     expect(region.hasAttribute("aria-live")).toBe(false);
@@ -223,7 +223,7 @@ describe("focus while a region is busy", () => {
       ),
     );
 
-    await user.click(container.querySelector("[data-slot='popover-trigger']")!);
+    await user.click(container.querySelector("[data-comp0='popover-trigger']")!);
 
     expect(document.activeElement?.textContent).toBe("Inside");
   });
@@ -276,7 +276,7 @@ describe("focus while a region is busy", () => {
       ),
     );
 
-    await user.click(container.querySelector("[data-slot='dialog-trigger']")!);
+    await user.click(container.querySelector("[data-comp0='dialog-trigger']")!);
 
     expect(container.querySelector<HTMLDialogElement>("[role='dialog']")!.open).toBe(true);
   });
@@ -295,7 +295,7 @@ describe("focus while a region is busy", () => {
     automatic.unmount();
 
     const { container, user } = setup(ui());
-    await user.click(container.querySelector("[data-slot='editable-view']")!);
+    await user.click(container.querySelector("[data-comp0='editable-view']")!);
     expect(document.activeElement).toBe(container.querySelector("input"));
   });
 

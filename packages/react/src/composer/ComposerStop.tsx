@@ -10,7 +10,7 @@ export function ComposerStop({ onClick, ...props }: ComposerStopProps) {
 
   return (
     <Button
-      data-slot="composer-stop"
+      data-comp0="composer-stop"
       type="button"
       {...props}
       onClick={(event) => {

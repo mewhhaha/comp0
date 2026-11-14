@@ -41,7 +41,7 @@ export function ConnectInput({
   return (
     <ConnectInputContext value={{ value, label, kind, disabled, select, setTrigger, setSelect }}>
       <Part
-        data-slot="connect-input"
+        data-comp0="connect-input"
         {...props}
         ref={composeRefs(ref, setElement)}
         data-connected={dataAttr(context.connections.some((connection) => connection.to === value))}

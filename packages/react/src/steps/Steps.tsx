@@ -43,7 +43,7 @@ export function Steps({ as, children, value, defaultValue, onChange, ...props }:
   const Root = rootElement(as);
   return (
     <StepsContext value={{ baseId, currentValue, order, setCurrentValue, collection }}>
-      <Root data-slot="steps" {...props}>
+      <Root data-comp0="steps" {...props}>
         {children}
       </Root>
     </StepsContext>

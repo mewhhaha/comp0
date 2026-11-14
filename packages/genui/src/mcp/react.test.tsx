@@ -19,7 +19,7 @@ async function connect(host: ReturnType<typeof createFakeHost>) {
 }
 
 function busyRegion(container: HTMLElement) {
-  return container.querySelector("[data-slot='busy-region']");
+  return container.querySelector("[data-comp0='busy-region']");
 }
 
 const flights = (title: string, children: unknown[] = []) => ({

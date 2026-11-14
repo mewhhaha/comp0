@@ -80,7 +80,7 @@ export function CopyButton<TElement extends ElementType = "button">({
   return (
     <>
       <Button
-        data-slot="copy-button"
+        data-comp0="copy-button"
         {...(props as ButtonProps)}
         data-copied={dataAttr(state.phase === "copied")}
         data-failed={dataAttr(state.phase === "failed")}

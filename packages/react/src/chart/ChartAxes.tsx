@@ -41,8 +41,8 @@ export function ChartAxes({
   const height = bottom - top;
 
   return (
-    <g aria-hidden="true" data-slot="chart-axes" fill="currentColor" fontSize="4">
-      <g data-slot="chart-y-axis">
+    <g aria-hidden="true" data-comp0="chart-axes" fill="currentColor" fontSize="4">
+      <g data-comp0="chart-y-axis">
         {yTicks.map((tick, index) => {
           const y = bottom - tick.position * height;
           return (
@@ -73,7 +73,7 @@ export function ChartAxes({
           {yLabel}
         </text>
       </g>
-      <g data-slot="chart-x-axis">
+      <g data-comp0="chart-x-axis">
         <line
           x1={left}
           x2={right}

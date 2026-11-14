@@ -118,7 +118,7 @@ export function HeatmapChartPlot({ children, ref, ...props }: HeatmapChartPlotPr
   }));
 
   return (
-    <svg data-slot="heatmap-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="heatmap-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         xLabel={context.xLabel}
         xTicks={xTicks}
@@ -131,7 +131,7 @@ export function HeatmapChartPlot({ children, ref, ...props }: HeatmapChartPlotPr
         getTargetIndex={getTargetIndex}
         orientation="both"
       >
-        <g role="presentation" data-slot="heatmap-chart-cells">
+        <g role="presentation" data-comp0="heatmap-chart-cells">
           {cells.map((cell) => {
             if (children)
               return (
@@ -141,7 +141,7 @@ export function HeatmapChartPlot({ children, ref, ...props }: HeatmapChartPlotPr
               );
             return (
               <Fragment key={JSON.stringify([cell.value.x, cell.value.y])}>
-                <g aria-hidden="true" data-slot="heatmap-chart-cell">
+                <g aria-hidden="true" data-comp0="heatmap-chart-cell">
                   <rect
                     x={cell.x}
                     y={cell.y}

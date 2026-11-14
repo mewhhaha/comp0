@@ -70,7 +70,7 @@ export function Tooltip({
   return (
     <TooltipContext value={context}>
       <PopoverContext value={popoverContext}>
-        <Root data-slot="tooltip" {...props} id={id} data-open={dataAttr(open)}>
+        <Root data-comp0="tooltip" {...props} id={id} data-open={dataAttr(open)}>
           {children}
         </Root>
       </PopoverContext>

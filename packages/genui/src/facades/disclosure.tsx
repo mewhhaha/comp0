@@ -83,7 +83,7 @@ export function DisclosureFacade({
 }: CatalogProps<typeof disclosureProps>) {
   const [chosen, setChosen] = useState<boolean | null>(null);
   return (
-    <Disclosure data-slot="disclosure" open={chosen ?? open === true} onOpenChange={setChosen}>
+    <Disclosure data-comp0="disclosure" open={chosen ?? open === true} onOpenChange={setChosen}>
       <DisclosureTrigger>{asText(summary)}</DisclosureTrigger>
       <DisclosurePanel>{children}</DisclosurePanel>
     </Disclosure>

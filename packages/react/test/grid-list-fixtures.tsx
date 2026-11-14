@@ -192,7 +192,7 @@ export function ReorderableList({
     >
       {files.map((name) => (
         <GridListItem key={name} value={name} textValue={name}>
-          <span data-slot="row-label">{name}</span>
+          <span data-comp0="row-label">{name}</span>
           {withHandle && <GridListDragHandle>⋮⋮</GridListDragHandle>}
         </GridListItem>
       ))}

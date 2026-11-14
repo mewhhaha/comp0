@@ -165,7 +165,7 @@ export function Combobox({
       <PopoverContext value={popover}>
         <ComboboxContext value={context}>
           <Root
-            data-slot="combobox"
+            data-comp0="combobox"
             {...props}
             id={id}
             aria-invalid={props["aria-invalid"] ?? (resolvedInvalid || undefined)}

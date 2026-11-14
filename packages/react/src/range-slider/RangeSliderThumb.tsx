@@ -57,7 +57,7 @@ export function RangeSliderThumb({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="range-slider-thumb"
+      data-comp0="range-slider-thumb"
       {...props}
       ref={composedRef}
       role="slider"

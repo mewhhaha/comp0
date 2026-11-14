@@ -63,7 +63,7 @@ export function TableFacade({
     : [];
   if (headings.length === 0) return null;
   return (
-    <Table data-slot="table">
+    <Table data-comp0="table">
       <TableCaption>{asText(caption)}</TableCaption>
       <TableHeader>
         <TableRow>
@@ -137,7 +137,7 @@ function formatter(unit: unknown) {
 /** What a chart shows while it has no usable data: its title and an accessible note. */
 function ChartEmpty({ title }: { title: unknown }) {
   return (
-    <figure data-slot="chart-empty">
+    <figure data-comp0="chart-empty">
       <figcaption>{asText(title)}</figcaption>
       <p>No data to chart yet.</p>
     </figure>
@@ -301,7 +301,7 @@ export function MeterFacade({
   const upper = Math.max(lower, asNumber(max) ?? 100);
   const current = asNumber(useComputed(value));
   return (
-    <div data-slot="meter-field">
+    <div data-comp0="meter-field">
       <Label id={labelId}>{asText(label)}</Label>
       {current !== undefined && (
         <>
@@ -314,7 +314,7 @@ export function MeterFacade({
             high={asNumber(high)}
             optimum={asNumber(optimum)}
           />
-          <span data-slot="meter-field-value">{current}</span>
+          <span data-comp0="meter-field-value">{current}</span>
         </>
       )}
     </div>
@@ -325,14 +325,14 @@ export function ProgressBarFacade({ label, value }: CatalogProps<typeof progress
   const labelId = useId();
   const percent = asNumber(useComputed(value));
   return (
-    <div data-slot="progress-bar-field">
+    <div data-comp0="progress-bar-field">
       <Label id={labelId}>{asText(label)}</Label>
       <ProgressBar
         aria-labelledby={labelId}
         value={percent === undefined ? undefined : Math.min(100, Math.max(0, percent))}
         max={100}
       />
-      {percent === undefined ? null : <span data-slot="progress-bar-field-value">{percent}%</span>}
+      {percent === undefined ? null : <span data-comp0="progress-bar-field-value">{percent}%</span>}
     </div>
   );
 }

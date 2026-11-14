@@ -53,7 +53,7 @@ export function PopoverContent({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="popover-content"
+      data-comp0="popover-content"
       {...props}
       {...surface.props}
       role={props.role ?? "dialog"}

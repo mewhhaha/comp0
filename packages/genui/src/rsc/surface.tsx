@@ -167,7 +167,7 @@ function renderStaticNode({
   if (node.name === "Stack") {
     return (
       <div
-        data-slot="stack"
+        data-comp0="stack"
         data-direction={props.direction}
         data-gap={props.gap}
         data-align={props.align}
@@ -179,7 +179,7 @@ function renderStaticNode({
   }
   if (node.name === "Grid")
     return (
-      <div data-slot="grid" data-columns={props.columns} data-gap={props.gap}>
+      <div data-comp0="grid" data-columns={props.columns} data-gap={props.gap}>
         {children}
       </div>
     );
@@ -187,24 +187,24 @@ function renderStaticNode({
     let level = 2;
     if (typeof props.level === "number") level = Math.min(6, Math.max(1, Math.round(props.level)));
     const Heading = `h${level}` as "h2";
-    return <Heading data-slot="heading">{children}</Heading>;
+    return <Heading data-comp0="heading">{children}</Heading>;
   }
   if (node.name === "Text")
     return (
-      <p data-slot="text" data-tone={props.tone} data-size={props.size}>
+      <p data-comp0="text" data-tone={props.tone} data-size={props.size}>
         {children}
       </p>
     );
   if (node.name === "List") {
-    if (props.ordered === true) return <ol data-slot="list">{children}</ol>;
-    return <ul data-slot="list">{children}</ul>;
+    if (props.ordered === true) return <ol data-comp0="list">{children}</ol>;
+    return <ul data-comp0="list">{children}</ul>;
   }
   if (node.name === "Item") return <li>{children}</li>;
   if (node.name === "Image") {
     const src = safeImageSrc(props.src);
     if (!src) return null;
     return (
-      <figure data-slot="image">
+      <figure data-comp0="image">
         <img
           src={src}
           alt={String(props.alt)}

@@ -8,5 +8,5 @@ export type StatusProps = Omit<ComponentProps<"div">, "role"> & AsProp;
 /** A polite live message for advisory feedback that does not interrupt. */
 export function Status({ as, ...props }: StatusProps) {
   const Part = partElement(as, "div");
-  return <Part data-slot="status" {...props} role="status" />;
+  return <Part data-comp0="status" {...props} role="status" />;
 }

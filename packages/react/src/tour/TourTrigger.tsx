@@ -20,5 +20,5 @@ export function TourTrigger({ as, ref, ...props }: TourTriggerProps) {
   });
 
   const Part = partElement(as, "button");
-  return <Part data-slot="tour-trigger" {...props} ref={triggerRef} {...trigger} />;
+  return <Part data-comp0="tour-trigger" {...props} ref={triggerRef} {...trigger} />;
 }

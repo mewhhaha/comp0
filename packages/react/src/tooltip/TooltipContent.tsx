@@ -36,7 +36,7 @@ export function TooltipContent({
   const Part = partElement(as, "div");
   return (
     <Part
-      data-slot="tooltip-content"
+      data-comp0="tooltip-content"
       {...props}
       {...surface.props}
       role={props.role ?? "tooltip"}

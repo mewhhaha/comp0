@@ -26,7 +26,7 @@ export function ConnectInputSelect({ onChange, disabled, ref, ...props }: Connec
   const connection = context.connections.find((entry) => entry.to === input.value);
   return (
     <select
-      data-slot="connect-input-select"
+      data-comp0="connect-input-select"
       {...props}
       ref={composeRefs(ref, input.setSelect)}
       disabled={disabled || input.disabled}

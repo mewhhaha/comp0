@@ -81,7 +81,7 @@ export function Accordion({
   const Root = rootElement(as);
   return (
     <AccordionContext value={context}>
-      <Root data-slot="accordion" {...props} data-orientation="vertical">
+      <Root data-comp0="accordion" {...props} data-orientation="vertical">
         {children}
       </Root>
     </AccordionContext>

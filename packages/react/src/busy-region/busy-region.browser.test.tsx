@@ -36,13 +36,13 @@ describe("busy region browser behavior", () => {
     button.focus();
     await act(async () => rerender(answer(3, true)));
     expect(document.activeElement).toBe(button);
-    expect(container.querySelector("[data-slot='busy-region']")?.getAttribute("aria-busy")).toBe(
+    expect(container.querySelector("[data-comp0='busy-region']")?.getAttribute("aria-busy")).toBe(
       "true",
     );
     await expectNoAxeViolations(container, "busy region with more content");
 
     await act(async () => rerender(answer(3, false)));
-    expect(container.querySelector("[data-slot='busy-region']")?.hasAttribute("aria-busy")).toBe(
+    expect(container.querySelector("[data-comp0='busy-region']")?.hasAttribute("aria-busy")).toBe(
       false,
     );
     await expectNoAxeViolations(container, "busy region settled");

@@ -53,7 +53,7 @@ export function TagGroup({
   return (
     <FieldProvider value={{ ...ids, ...feedback }}>
       <TagGroupContext value={context}>
-        <Root data-slot="tag-group" {...props}>
+        <Root data-comp0="tag-group" {...props}>
           {children}
         </Root>
       </TagGroupContext>

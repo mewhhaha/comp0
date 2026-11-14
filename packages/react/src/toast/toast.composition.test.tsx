@@ -131,7 +131,7 @@ describe("toast composition", () => {
     });
     expect(document.querySelector("[role='status']")).not.toBeNull();
 
-    fireClick(document.querySelector("[data-slot='toast-close']")!);
+    fireClick(document.querySelector("[data-comp0='toast-close']")!);
     expect(document.querySelector("[role='status']")).toBeNull();
   });
 
@@ -164,7 +164,7 @@ describe("toast composition", () => {
     const { container } = render(<App />);
     fireClick(notifyButton(container));
 
-    const dismiss = document.querySelector<HTMLButtonElement>("[data-slot='toast-close']")!;
+    const dismiss = document.querySelector<HTMLButtonElement>("[data-comp0='toast-close']")!;
     act(() => {
       dismiss.focus();
     });
@@ -187,7 +187,7 @@ describe("toast composition", () => {
     fireClick(notifyButton(container));
     const region = document.querySelector("[role='region']")!;
     hoverStart(region);
-    fireClick(region.querySelector("[data-slot='toast-close']")!);
+    fireClick(region.querySelector("[data-comp0='toast-close']")!);
 
     fireClick(notifyButton(container));
     act(() => {
@@ -199,7 +199,7 @@ describe("toast composition", () => {
   it("releases a focus pause when dismissing the last toast", () => {
     const { container } = render(<App options={{ timeout: 100 }} />);
     fireClick(notifyButton(container));
-    const dismiss = document.querySelector<HTMLButtonElement>("[data-slot='toast-close']")!;
+    const dismiss = document.querySelector<HTMLButtonElement>("[data-comp0='toast-close']")!;
     act(() => dismiss.focus());
     fireClick(dismiss);
 

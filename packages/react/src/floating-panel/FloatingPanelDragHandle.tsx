@@ -61,7 +61,7 @@ export function FloatingPanelDragHandle({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="floating-panel-drag-handle"
+      data-comp0="floating-panel-drag-handle"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       disabled={disabled}

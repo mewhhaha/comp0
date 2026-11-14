@@ -13,7 +13,7 @@ export function TableRowHeader({ as, ref, ...props }: TableRowHeaderProps) {
       {...props}
       ref={cellRef}
       tabIndex={tabIndex}
-      data-slot="table-row-header"
+      data-comp0="table-row-header"
       data-comp0-owner={owner}
     />
   );

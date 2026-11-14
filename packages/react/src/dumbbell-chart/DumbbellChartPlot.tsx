@@ -98,7 +98,7 @@ export function DumbbellChartPlot({
   }));
 
   return (
-    <svg data-slot="dumbbell-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
+    <svg data-comp0="dumbbell-chart-plot" {...props} ref={ref} viewBox="0 0 120 120" role="group">
       <ChartAxes
         bounds={bounds}
         xGrid
@@ -109,7 +109,7 @@ export function DumbbellChartPlot({
         yTicks={yTicks}
       />
       <ChartNavigationProvider count={dumbbells.length} orientation="vertical">
-        <g role="presentation" data-slot="dumbbell-chart-dumbbells">
+        <g role="presentation" data-comp0="dumbbell-chart-dumbbells">
           {dumbbells.map((dumbbell) => {
             if (children)
               return (
@@ -119,7 +119,7 @@ export function DumbbellChartPlot({
               );
             return (
               <Fragment key={`${dumbbell.value.label}-${dumbbell.index}`}>
-                <g aria-hidden="true" data-slot="dumbbell-chart-dumbbell">
+                <g aria-hidden="true" data-comp0="dumbbell-chart-dumbbell">
                   <line
                     x1={dumbbell.startX}
                     x2={dumbbell.endX}

@@ -39,7 +39,7 @@ export function TimeField({
   const Part = partElement(as, "input");
   return (
     <Part
-      data-slot="time-field"
+      data-comp0="time-field"
       {...mergeProps(props, focusProps, hoverProps)}
       type="time"
       id={id ?? field?.controlId}

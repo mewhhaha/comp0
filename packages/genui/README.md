@@ -218,6 +218,6 @@ RSC composition uses `parsePartialJsx`, `validateJsx`, vocabularies, typed state
 
 The model can name only vocabulary components and declared state. No imports, event handlers, spreads, native HTML tags, or executable JavaScript are accepted. Undeclared props are dropped. Links and images use vetted URLs; text is never interpreted as HTML. Required accessible names and props are enforced before rendering. Collections and response depth are bounded.
 
-No CSS ships. Components expose `data-slot`, token attributes such as `data-gap` and `data-tone`, and the underlying comp0 state attributes (`data-selected`, `data-checked`, `data-open`, `data-focus-visible`).
+No CSS ships. Components expose `data-comp0`, token attributes such as `data-gap` and `data-tone`, and the underlying comp0 state attributes (`data-selected`, `data-checked`, `data-open`, `data-focus-visible`).
 
 MIT licensed.

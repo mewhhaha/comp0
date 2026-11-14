@@ -13,7 +13,7 @@ describe("inventory pointer gestures", () => {
     const { container, onChange } = renderInventory();
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
-    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-comp0='inventory-move-handle']")!;
     mockPointerGeometry(inventory, move, { width: 600, height: 480 });
 
     act(() => {
@@ -32,7 +32,7 @@ describe("inventory pointer gestures", () => {
     expect(revenue.dataset.column).toBe("2");
     expect(revenue.hasAttribute("data-dragging")).toBe(true);
     expect(
-      container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
+      container.querySelector<HTMLElement>("[data-comp0='inventory-preview']")?.dataset.column,
     ).toBe("2");
 
     act(() => {
@@ -40,7 +40,7 @@ describe("inventory pointer gestures", () => {
     });
     expect(revenue.dataset.column).toBe("1");
     expect(revenue.hasAttribute("data-dragging")).toBe(false);
-    expect(container.querySelector("[data-slot='inventory-preview']")).toBeNull();
+    expect(container.querySelector("[data-comp0='inventory-preview']")).toBeNull();
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
@@ -49,7 +49,7 @@ describe("inventory pointer gestures", () => {
     const inventory = container.querySelector<HTMLOListElement>("ol")!;
     const revenue = container.querySelector<HTMLElement>('[data-value="revenue"]')!;
     const conversion = container.querySelector<HTMLElement>('[data-value="conversion"]')!;
-    const move = revenue.querySelector<HTMLButtonElement>("[data-slot='inventory-move-handle']")!;
+    const move = revenue.querySelector<HTMLButtonElement>("[data-comp0='inventory-move-handle']")!;
     mockPointerGeometry(inventory, move, { width: 600, height: 480 });
 
     act(() => {
@@ -78,7 +78,7 @@ describe("inventory pointer gestures", () => {
     expect(conversion.dataset.column).toBe("4");
     expect(conversion.dataset.row).toBe("1");
     expect(
-      container.querySelector<HTMLElement>("[data-slot='inventory-preview']")?.dataset.column,
+      container.querySelector<HTMLElement>("[data-comp0='inventory-preview']")?.dataset.column,
     ).toBe("1");
     expect(onChange).toHaveBeenCalledTimes(2);
   });
@@ -117,7 +117,7 @@ describe("inventory pointer gestures", () => {
 
     expect(card.dataset.column).toBe("3");
     expect(card.dataset.row).toBe("1");
-    const preview = container.querySelector<HTMLElement>("[data-slot='inventory-preview']")!;
+    const preview = container.querySelector<HTMLElement>("[data-comp0='inventory-preview']")!;
     expect(preview.dataset.column).toBe("3");
     expect(preview.dataset.row).toBe("1");
     expect(preview.hasAttribute("data-invalid-placement")).toBe(false);
@@ -157,7 +157,7 @@ describe("inventory pointer gestures", () => {
 
     expect(card.dataset.columnSpan).toBe("3");
     expect(card.dataset.rowSpan).toBe("3");
-    const preview = container.querySelector<HTMLElement>("[data-slot='inventory-preview']")!;
+    const preview = container.querySelector<HTMLElement>("[data-comp0='inventory-preview']")!;
     expect(preview.dataset.columnSpan).toBe("3");
     expect(preview.dataset.rowSpan).toBe("3");
     expect(preview.hasAttribute("data-invalid-placement")).toBe(false);
@@ -201,7 +201,7 @@ describe("inventory pointer gestures", () => {
 
     expect(first.dataset.columnSpan).toBe("1");
     expect(first.hasAttribute("data-invalid-placement")).toBe(false);
-    const preview = container.querySelector<HTMLElement>("[data-slot='inventory-preview']")!;
+    const preview = container.querySelector<HTMLElement>("[data-comp0='inventory-preview']")!;
     expect(preview.dataset.columnSpan).toBe("2");
     expect(preview.hasAttribute("data-invalid-placement")).toBe(true);
     expect(container.querySelector("output")?.textContent).toBe("");

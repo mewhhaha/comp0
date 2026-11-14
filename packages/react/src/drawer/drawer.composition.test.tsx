@@ -47,10 +47,10 @@ describe("drawer composition", () => {
     const trigger = container.querySelector("button")!;
     const panel = container.querySelector("dialog")!;
 
-    expect(trigger.dataset.slot).toBe("drawer-trigger");
+    expect(trigger.dataset.comp0).toBe("drawer-trigger");
     expect(trigger.getAttribute("aria-controls")).toBe(panel.id);
     expect(trigger.getAttribute("aria-haspopup")).toBe("dialog");
-    expect(panel.dataset.slot).toBe("drawer-content");
+    expect(panel.dataset.comp0).toBe("drawer-content");
     expect(panel.dataset.side).toBe("right");
     expect(panel.open).toBe(false);
 

@@ -24,7 +24,7 @@ export function StepsTrigger({ as, disabled, onClick, onKeyDown, ...props }: Ste
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="steps-trigger"
+      data-comp0="steps-trigger"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       // Focus must reach non-native triggers or the step can never be activated

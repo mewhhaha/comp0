@@ -41,7 +41,7 @@ export function ToastClose({ as, onClick, ...props }: ToastCloseProps) {
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="toast-close"
+      data-comp0="toast-close"
       {...props}
       type={isNativeButton ? (props.type ?? "button") : undefined}
       aria-label={props["aria-label"] ?? "Dismiss notification"}

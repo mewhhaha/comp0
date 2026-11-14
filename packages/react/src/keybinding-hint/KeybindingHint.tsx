@@ -49,7 +49,7 @@ export function KeybindingHint({ as, keys, ...props }: KeybindingHintProps) {
   chords.forEach((chord, chordIndex) => {
     if (chordIndex > 0) {
       content.push(
-        <span key={`then-${chordIndex}`} aria-hidden="true" data-slot="keybinding-separator">
+        <span key={`then-${chordIndex}`} aria-hidden="true" data-comp0="keybinding-separator">
           then
         </span>,
       );
@@ -71,7 +71,7 @@ export function KeybindingHint({ as, keys, ...props }: KeybindingHintProps) {
           <kbd
             key={`${chordIndex}-${keyIndex}-${key}`}
             aria-hidden="true"
-            data-slot="keybinding-key"
+            data-comp0="keybinding-key"
           >
             {visibleKey}
           </kbd>,
@@ -81,7 +81,7 @@ export function KeybindingHint({ as, keys, ...props }: KeybindingHintProps) {
 
   const Part = partElement(as, "span");
   return (
-    <Part data-slot="keybinding-hint" {...props} aria-label={props["aria-label"] ?? spokenLabel}>
+    <Part data-comp0="keybinding-hint" {...props} aria-label={props["aria-label"] ?? spokenLabel}>
       {content}
     </Part>
   );

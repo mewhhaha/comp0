@@ -26,7 +26,7 @@ export function FloatingPanelTrigger({ as, ref, style, ...props }: FloatingPanel
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="floating-panel-trigger"
+      data-comp0="floating-panel-trigger"
       {...props}
       ref={triggerRef}
       style={triggerAnchorStyle(panel.triggerId, style)}

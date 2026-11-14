@@ -42,7 +42,7 @@ export function NavigationMenuLink<TElement extends ElementType = "a">({
   const Part = partElement(as, "a");
   return (
     <Part
-      data-slot="navigation-menu-link"
+      data-comp0="navigation-menu-link"
       {...props}
       ref={linkRef}
       aria-current={current ? "page" : undefined}

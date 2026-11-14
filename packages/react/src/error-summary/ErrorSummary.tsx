@@ -35,7 +35,7 @@ export function ErrorSummary({
   return (
     <ErrorSummaryContext value={{ titleId }}>
       <Part
-        data-slot="error-summary"
+        data-comp0="error-summary"
         {...props}
         ref={composedRef}
         id={summaryId}

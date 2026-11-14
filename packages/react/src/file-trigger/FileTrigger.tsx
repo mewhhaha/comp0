@@ -33,7 +33,7 @@ export function FileTrigger({
 }: FileTriggerProps) {
   const Part = partElement(as, "label");
   return (
-    <Part className={className} style={style} data-slot="file-trigger">
+    <Part className={className} style={style} data-comp0="file-trigger">
       <>
         <input {...inputProps} type="file" style={visuallyHiddenInput} hidden={hidden} />
         {children}

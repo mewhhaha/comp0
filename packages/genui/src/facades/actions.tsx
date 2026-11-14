@@ -25,7 +25,7 @@ export function ButtonFacade({
   let failure = null;
   if (error !== "") {
     failure = (
-      <p data-slot="button-error" role="alert">
+      <p data-comp0="button-error" role="alert">
         {error}
       </p>
     );
@@ -33,7 +33,7 @@ export function ButtonFacade({
   return (
     <>
       <Button
-        data-slot="button"
+        data-comp0="button"
         data-variant={asToken(variant, variants)}
         // Pressing a button during streaming would act on a half-written interface.
         disabled={streaming || pending || text === ""}
@@ -64,10 +64,10 @@ export function LinkFacade({ label, href }: CatalogProps<typeof linkProps>) {
   const text = asText(label);
   const safe = safeHref(href);
   // Without a safe target (or while it is still streaming) the text stays but is not a link.
-  if (safe === undefined) return <span data-slot="link">{text}</span>;
+  if (safe === undefined) return <span data-comp0="link">{text}</span>;
   const external = /^https?:/i.test(safe);
   return (
-    <Link data-slot="link" href={safe} rel={external ? "noopener noreferrer" : undefined}>
+    <Link data-comp0="link" href={safe} rel={external ? "noopener noreferrer" : undefined}>
       {text}
     </Link>
   );
@@ -101,7 +101,7 @@ export function CopyButtonFacade({ label, value }: CatalogProps<typeof copyButto
   const copied = asText(value);
   return (
     <CopyButton
-      data-slot="copy-button"
+      data-comp0="copy-button"
       value={copied}
       disabled={streaming || text === "" || copied === ""}
     >

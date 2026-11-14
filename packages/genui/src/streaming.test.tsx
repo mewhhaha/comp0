@@ -31,14 +31,14 @@ describe("busy region", () => {
   it("marks the output busy while streaming and settled after", () => {
     const response = JSON.stringify(text);
     const { container, rerender } = renderResponse(response, { streaming: true });
-    const region = container.querySelector("[data-slot='busy-region']");
+    const region = container.querySelector("[data-comp0='busy-region']");
 
     expect(region?.getAttribute("aria-busy")).toBe("true");
     expect(region?.hasAttribute("data-busy")).toBe(true);
 
     rerender(<GenUI response={response} streaming={false} />);
 
-    const settled = container.querySelector("[data-slot='busy-region']");
+    const settled = container.querySelector("[data-comp0='busy-region']");
     expect(settled?.hasAttribute("aria-busy")).toBe(false);
     expect(settled?.hasAttribute("data-busy")).toBe(false);
   });
@@ -52,7 +52,7 @@ describe("busy region", () => {
   it("renders an empty response", () => {
     for (const response of [null, "", undefined]) {
       const { container, unmount } = renderResponse(response as never);
-      expect(container.querySelector("[data-slot='busy-region']")).not.toBeNull();
+      expect(container.querySelector("[data-comp0='busy-region']")).not.toBeNull();
       expect(container.textContent).toBe("");
       unmount();
     }
@@ -155,7 +155,7 @@ describe("streaming a response", () => {
     ];
     for (const component of minimal) {
       const { container, unmount } = renderStack([component]);
-      expect(container.querySelector("[data-slot='stack']"), component.type).not.toBeNull();
+      expect(container.querySelector("[data-comp0='stack']"), component.type).not.toBeNull();
       unmount();
     }
 

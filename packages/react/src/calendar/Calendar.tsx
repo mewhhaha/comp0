@@ -117,7 +117,7 @@ export function Calendar({
   return (
     <CalendarContext value={context}>
       <Root
-        data-slot="calendar"
+        data-comp0="calendar"
         {...props}
         id={id}
         data-disabled={dataAttr(resolvedDisabled)}

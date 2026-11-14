@@ -7,5 +7,5 @@ export type FloatingPanelTitleProps = ComponentProps<"h2"> & AsProp;
 export function FloatingPanelTitle({ as, ...props }: FloatingPanelTitleProps) {
   const panel = useFloatingPanelContext("FloatingPanelTitle");
   const Part = partElement(as, "h2");
-  return <Part data-slot="floating-panel-title" {...props} id={props.id ?? panel.titleId} />;
+  return <Part data-comp0="floating-panel-title" {...props} id={props.id ?? panel.titleId} />;
 }

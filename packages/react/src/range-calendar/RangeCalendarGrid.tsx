@@ -19,7 +19,7 @@ export function RangeCalendarGrid({ children, ...props }: RangeCalendarGridProps
 
   return (
     <CalendarGrid
-      data-slot="range-calendar-grid"
+      data-comp0="range-calendar-grid"
       {...props}
       aria-multiselectable={props["aria-multiselectable"] ?? true}
     >

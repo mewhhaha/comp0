@@ -34,10 +34,10 @@ export function Source({ as, children, href, ref, title, value, ...props }: Sour
   let number: number | undefined;
   if (position >= 0) number = position + 1;
 
-  let heading = <span data-slot="source-title">{title}</span>;
+  let heading = <span data-comp0="source-title">{title}</span>;
   if (href) {
     heading = (
-      <a data-slot="source-title" href={href}>
+      <a data-comp0="source-title" href={href}>
         {title}
       </a>
     );
@@ -46,7 +46,7 @@ export function Source({ as, children, href, ref, title, value, ...props }: Sour
   const Part = partElement(as, "li");
   return (
     <Part
-      data-slot="source"
+      data-comp0="source"
       {...props}
       ref={composeRefs(ref, setElement)}
       id={id}

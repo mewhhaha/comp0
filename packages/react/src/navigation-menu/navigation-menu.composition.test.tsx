@@ -65,7 +65,7 @@ describe("navigation menu composition", () => {
     expect(triggerNamed(container, "Products").getAttribute("aria-expanded")).toBe("false");
     expect(triggerNamed(container, "Resources").getAttribute("aria-expanded")).toBe("true");
     expect(
-      container.querySelectorAll("[data-slot='navigation-menu-panel']:not([hidden])"),
+      container.querySelectorAll("[data-comp0='navigation-menu-panel']:not([hidden])"),
     ).toHaveLength(1);
   });
 
@@ -300,7 +300,7 @@ describe("navigation menu composition", () => {
     await user.click(trigger);
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(
-      container.querySelector<HTMLElement>("[data-slot='navigation-menu-panel']")?.hidden,
+      container.querySelector<HTMLElement>("[data-comp0='navigation-menu-panel']")?.hidden,
     ).toBe(true);
     expect(error.mock.calls.flat().join(" ")).toContain(
       'NavigationMenuItem requires a non-empty value; received "".',

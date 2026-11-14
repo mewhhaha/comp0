@@ -123,7 +123,7 @@ const computed = JSON.stringify({
 describe("computed results", () => {
   it("recalculates the output when the slider moves with the keyboard", async () => {
     const { container, unmount } = render(<GenUI response={computed} />);
-    const result = () => container.querySelector("[data-slot='output']")?.textContent;
+    const result = () => container.querySelector("[data-comp0='output']")?.textContent;
 
     expect(result()).toBe("36 USD");
     (page.getByRole("slider", { name: "Seats" }).element() as HTMLElement).focus();
@@ -138,7 +138,7 @@ describe("computed results", () => {
   it("keeps a bound value, focus, and the output in step while the response keeps streaming", async () => {
     const head = computed.slice(0, computed.indexOf('{"type":"Comparison"'));
     const { container, rerender, unmount } = render(<GenUI response={`${head}]}`} streaming />);
-    const result = () => container.querySelector("[data-slot='output']")?.textContent;
+    const result = () => container.querySelector("[data-comp0='output']")?.textContent;
 
     const slider = page.getByRole("slider", { name: "Seats" }).element() as HTMLElement;
     slider.focus();

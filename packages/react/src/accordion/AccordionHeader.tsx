@@ -8,5 +8,5 @@ export type AccordionHeaderProps = ComponentProps<"h3"> &
 
 export function AccordionHeader({ as, level = 3, ...props }: AccordionHeaderProps) {
   const Part = partElement(as, `h${level}`);
-  return <Part data-slot="accordion-header" {...props} />;
+  return <Part data-comp0="accordion-header" {...props} />;
 }

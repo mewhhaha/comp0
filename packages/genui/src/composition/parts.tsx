@@ -59,13 +59,13 @@ export type HeadingPartProps = InputOf<typeof headingSpec.props> & Children;
 export function HeadingPart({ level, children }: HeadingPartProps) {
   const resolved = Math.min(6, Math.max(1, Math.round(asNumber(level) ?? 2)));
   const Heading = `h${resolved}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-  return <Heading data-slot="heading">{children}</Heading>;
+  return <Heading data-comp0="heading">{children}</Heading>;
 }
 
 export type TextPartProps = InputOf<typeof textSpec.props> & Children;
 export function TextPart({ tone, size, children }: TextPartProps) {
   return (
-    <p data-slot="text" data-tone={tone ?? undefined} data-size={size ?? undefined}>
+    <p data-comp0="text" data-tone={tone ?? undefined} data-size={size ?? undefined}>
       {children}
     </p>
   );
@@ -73,8 +73,8 @@ export function TextPart({ tone, size, children }: TextPartProps) {
 
 export type ListPartProps = InputOf<typeof listSpec.props> & Children;
 export function ListPart({ ordered, children }: ListPartProps) {
-  if (ordered === true) return <ol data-slot="list">{children}</ol>;
-  return <ul data-slot="list">{children}</ul>;
+  if (ordered === true) return <ol data-comp0="list">{children}</ol>;
+  return <ul data-comp0="list">{children}</ul>;
 }
 
 export type ItemPartProps = Children;
@@ -102,14 +102,14 @@ export function ButtonPart({ variant, message, action, children }: ButtonPartPro
   let failure = null;
   if (error !== "")
     failure = (
-      <p data-slot="button-error" role="alert">
+      <p data-comp0="button-error" role="alert">
         {error}
       </p>
     );
   return (
     <>
       <Button
-        data-slot="button"
+        data-comp0="button"
         data-variant={variant ?? undefined}
         disabled={streaming || pending}
         aria-busy={pending || undefined}
@@ -139,11 +139,11 @@ export function ButtonPart({ variant, message, action, children }: ButtonPartPro
 export type LinkPartProps = InputOf<typeof linkSpec.props> & Children;
 export function LinkPart({ href, children }: LinkPartProps) {
   const safe = safeHref(href);
-  if (safe === undefined) return <span data-slot="link">{children}</span>;
+  if (safe === undefined) return <span data-comp0="link">{children}</span>;
   let rel: string | undefined;
   if (/^https?:/i.test(safe)) rel = "noopener noreferrer";
   return (
-    <Link data-slot="link" href={safe} rel={rel}>
+    <Link data-comp0="link" href={safe} rel={rel}>
       {children}
     </Link>
   );

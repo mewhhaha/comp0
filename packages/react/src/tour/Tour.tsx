@@ -191,7 +191,7 @@ export function Tour({
           },
         }}
       >
-        <Root data-slot="tour" {...props} data-open={dataAttr(open)}>
+        <Root data-comp0="tour" {...props} data-open={dataAttr(open)}>
           {children}
         </Root>
       </TourContext>

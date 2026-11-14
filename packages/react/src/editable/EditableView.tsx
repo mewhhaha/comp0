@@ -32,7 +32,7 @@ export function EditableView({
   const Part = partElement(as, "button");
   return (
     <Part
-      data-slot="editable-view"
+      data-comp0="editable-view"
       {...props}
       ref={composedRef}
       type={isNativeButton ? "button" : undefined}

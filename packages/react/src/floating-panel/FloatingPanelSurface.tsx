@@ -86,7 +86,7 @@ export function FloatingPanelSurface({
   const Part = partElement(as, "div");
   const surface = (
     <Part
-      data-slot="floating-panel-surface"
+      data-comp0="floating-panel-surface"
       {...props}
       ref={composedRef}
       id={props.id ?? panel.contentId}
