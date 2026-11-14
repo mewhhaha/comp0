@@ -25,7 +25,7 @@ export function TableColumn({
   ref,
   ...props
 }: TableColumnProps) {
-  const { cellRef, elementRef, tabIndex } = useTableCell(ref);
+  const { cellRef, elementRef, tabIndex, owner } = useTableCell(ref);
   const columnContext = {
     resize: (width: number) => onResize?.(width),
     element: () => elementRef.current,
@@ -38,6 +38,7 @@ export function TableColumn({
       ref={cellRef}
       tabIndex={tabIndex}
       data-slot="table-column"
+      data-comp0-owner={owner}
       aria-sort={sort}
       data-sortable={dataAttr(Boolean(onSort))}
       onClick={(event: MouseEvent<HTMLTableCellElement>) => {

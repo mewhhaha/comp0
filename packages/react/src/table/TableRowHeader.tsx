@@ -5,9 +5,16 @@ import { useTableCell } from "./table-shared.js";
 export type TableRowHeaderProps = ComponentProps<"th"> & AsProp;
 
 export function TableRowHeader({ as, ref, ...props }: TableRowHeaderProps) {
-  const { cellRef, tabIndex } = useTableCell(ref);
+  const { cellRef, tabIndex, owner } = useTableCell(ref);
   const Part = partElement(as, "th");
   return (
-    <Part scope="row" {...props} ref={cellRef} tabIndex={tabIndex} data-slot="table-row-header" />
+    <Part
+      scope="row"
+      {...props}
+      ref={cellRef}
+      tabIndex={tabIndex}
+      data-slot="table-row-header"
+      data-comp0-owner={owner}
+    />
   );
 }

@@ -1,4 +1,5 @@
 import {
+  useId,
   useRef,
   type ComponentProps,
   type FocusEvent,
@@ -37,6 +38,9 @@ export function Table({
   // On the server and while hydrating, cells record themselves in render order, so the first
   // cell renders the stop in server HTML.
   const seed = useCollectionSeed();
+  // Cells render it as their owner, which is how the table tells its cells from a nested
+  // table's and from a consumer's plain cells (`table-dom.ts`).
+  const id = useId();
   const valuedRows = useCollection();
   const anchorRef = useRef<string | null>(null);
 
@@ -57,7 +61,7 @@ export function Table({
     return ownerCell(target, tableRef.current);
   };
 
-  const context: TableContextValue = { seed, rows: valuedRows };
+  const context: TableContextValue = { id, seed, rows: valuedRows };
 
   const Part = partElement(as, "table");
   return (
@@ -66,6 +70,7 @@ export function Table({
         {...props}
         ref={composedRef}
         role="grid"
+        data-comp0-root={id}
         onFocus={(event: FocusEvent<HTMLTableElement>) => {
           onFocus?.(event);
           if (event.defaultPrevented) return;

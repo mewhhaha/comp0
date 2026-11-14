@@ -5,7 +5,15 @@ import { useTableCell } from "./table-shared.js";
 export type TableCellProps = ComponentProps<"td"> & AsProp;
 
 export function TableCell({ as, ref, ...props }: TableCellProps) {
-  const { cellRef, tabIndex } = useTableCell(ref);
+  const { cellRef, tabIndex, owner } = useTableCell(ref);
   const Part = partElement(as, "td");
-  return <Part {...props} ref={cellRef} tabIndex={tabIndex} data-slot="table-cell" />;
+  return (
+    <Part
+      {...props}
+      ref={cellRef}
+      tabIndex={tabIndex}
+      data-slot="table-cell"
+      data-comp0-owner={owner}
+    />
+  );
 }

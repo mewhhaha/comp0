@@ -5,6 +5,8 @@ import { createRequiredContext } from "../internal/context.js";
 import { adoptCell } from "./table-dom.js";
 
 export type TableContextValue = {
+  /** The id the table renders as `data-comp0-root` and its cells as `data-comp0-owner`. */
+  id: string;
   /** The render-order record cells fill on the server and while hydrating. */
   seed: CollectionSeed;
   /** Rows that carry a value, in document order, for range selection. */
@@ -59,5 +61,5 @@ export function useTableCell(ref: Ref<HTMLTableCellElement> | undefined) {
     elementRef,
     table ? adoptCell : undefined,
   );
-  return { cellRef, elementRef, tabIndex };
+  return { cellRef, elementRef, tabIndex, owner: table?.id };
 }

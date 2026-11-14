@@ -465,23 +465,34 @@ describe("table tab stop", () => {
     expect(tableStops(container)).toEqual(["Name"]);
   });
 
-  it("keeps its own data-slot on each cell, which is how the table finds its cells", async () => {
+  it("names its table on each cell, which is how the table finds its cells", async () => {
     const { container, user } = setup(
-      <Table aria-label="People">
+      <Table aria-label="People" data-comp0-root="mine">
         <TableHeader>
           <TableRow>
-            <TableColumn data-slot="name">Name</TableColumn>
+            <TableColumn data-comp0-owner="other" data-slot="name">
+              Name
+            </TableColumn>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableRowHeader data-slot="person">Ada</TableRowHeader>
-            <TableCell data-slot="role">Engineer</TableCell>
+            <TableRowHeader data-comp0-owner="other" data-slot="person">
+              Ada
+            </TableRowHeader>
+            <TableCell data-comp0-owner="other" data-slot="role">
+              Engineer
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>,
     );
+    const table = container.querySelector("table")!;
+    const id = table.getAttribute("data-comp0-root");
     const cells = [...container.querySelectorAll<HTMLElement>("th, td")];
+    // A consumer's props cannot rename the table or move a cell to another table.
+    expect(id).not.toBe("mine");
+    expect(cells.map((cell) => cell.getAttribute("data-comp0-owner"))).toEqual([id, id, id]);
     expect(cells.map((cell) => cell.dataset["slot"])).toEqual([
       "table-column",
       "table-row-header",

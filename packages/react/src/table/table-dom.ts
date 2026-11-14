@@ -20,12 +20,29 @@ import { FOCUSABLE_SELECTOR } from "../internal/focusable.js";
  * later pass could tell when those widgets may be written instead.
  */
 
-/** A grid owns its cells and their widgets under its own tab stop, even nested in a cell. */
+/**
+ * A grid owns its cells and their widgets under its own tab stop, even nested in a cell. That
+ * includes a grid that is not a Table (a Calendar), whose cells carry no owner id.
+ */
 export const GRID_SELECTOR = "[role='grid'], [role='treegrid']";
 
-/** The cells comp0 renders, which is what a grid owns; a consumer's plain `td` is content. */
-export const CELL_SELECTOR =
-  "[data-slot='table-cell'], [data-slot='table-column'], [data-slot='table-row-header']";
+/**
+ * The table renders its id as `data-comp0-root` and each cell renders the same id as
+ * `data-comp0-owner`, so a cell names the table it belongs to. A consumer's plain `td` carries
+ * none and is content; a Table nested in a cell has its own id.
+ */
+export const ROOT_ATTRIBUTE = "data-comp0-root";
+export const OWNER_ATTRIBUTE = "data-comp0-owner";
+const CELL_SELECTOR = `[${OWNER_ATTRIBUTE}]`;
+
+/** An attribute selector value in quotes; `useId` never emits a quote or backslash. */
+const quoted = (value: string) => `"${value.replace(/["\\]/g, "\\$&")}"`;
+
+/** The Table a cell names as its owner, if it sits inside it. */
+function gridOf(cell: Element) {
+  const id = cell.getAttribute(OWNER_ATTRIBUTE);
+  return id === null ? null : cell.closest(`[${ROOT_ATTRIBUTE}=${quoted(id)}]`);
+}
 
 /** The attributes that make a cell's content focusable or not; see `cellWidgets`. */
 export const CELL_WIDGET_ATTRIBUTES = ["aria-hidden", "disabled", "href", "tabindex"];
@@ -39,15 +56,15 @@ export const CELL_WIDGET_ATTRIBUTES = ["aria-hidden", "disabled", "href", "tabin
 export function ownerCell(element: Element, grid: Element | null): HTMLTableCellElement | null {
   if (!grid || element.closest(GRID_SELECTOR) !== grid) return null;
   const cell = element.closest<HTMLTableCellElement>(CELL_SELECTOR);
-  // A grid nested in another grid's cell finds the outer cell above itself.
-  return cell && grid.contains(cell) ? cell : null;
+  const id = grid.getAttribute(ROOT_ATTRIBUTE);
+  return cell && id !== null && cell.getAttribute(OWNER_ATTRIBUTE) === id ? cell : null;
 }
 
 /** The cells `grid` owns, in document order. */
 export function ownedCells(grid: Element) {
-  return [...grid.querySelectorAll<HTMLTableCellElement>(CELL_SELECTOR)].filter(
-    (cell) => cell.closest(GRID_SELECTOR) === grid,
-  );
+  const id = grid.getAttribute(ROOT_ATTRIBUTE);
+  if (id === null) return [];
+  return [...grid.querySelectorAll<HTMLTableCellElement>(`[${OWNER_ATTRIBUTE}=${quoted(id)}]`)];
 }
 
 /** An element that takes part in a grid's arrow-key navigation as a widget inside a cell. */
@@ -64,7 +81,7 @@ function isWidget(element: HTMLElement) {
  * table nested in it. A nested grid keeps its own widgets under its own tab stop.
  */
 export function cellWidgets(cell: HTMLTableCellElement) {
-  const grid = cell.closest(GRID_SELECTOR);
+  const grid = gridOf(cell);
   return [...cell.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
     (element) => isWidget(element) && ownerCell(element, grid) === cell,
   );
@@ -350,7 +367,7 @@ export function attachGrid(grid: HTMLTableElement | null) {
  * a widget in that time is not lowered, and on a delegated widget it can take the stop on show.
  */
 export function adoptCell(cell: HTMLTableCellElement | null) {
-  const grid = cell?.closest(GRID_SELECTOR);
+  const grid = cell ? gridOf(cell) : null;
   if (!cell || !grid || ownerCell(cell, grid) !== cell) return;
   const reattached = attachedElements.has(cell);
   attachedElements.add(cell);

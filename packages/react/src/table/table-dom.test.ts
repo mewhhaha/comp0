@@ -17,7 +17,7 @@ import {
 /** Mounts `html` (rows of a grid) and returns the grid with lookup helpers. */
 function grid(html: string) {
   const container = document.createElement("div");
-  container.innerHTML = `<table role="grid"><tbody>${html}</tbody></table>`;
+  container.innerHTML = `<table role="grid" data-comp0-root="outer"><tbody>${html}</tbody></table>`;
   document.body.append(container);
   const table = container.querySelector("table")!;
   const byText = (text: string) =>
@@ -33,10 +33,11 @@ function grid(html: string) {
   return { container, table, byText, cellOf, stops };
 }
 
-const td = (content: string, tabIndex = -1) =>
-  `<td data-slot="table-cell" tabindex="${tabIndex}">${content}</td>`;
-const th = (content: string, tabIndex = -1) =>
-  `<th data-slot="table-column" tabindex="${tabIndex}">${content}</th>`;
+/** A cell of the table whose id is `owner`; `grid` renders the one with id "outer". */
+const td = (content: string, tabIndex = -1, owner = "outer") =>
+  `<td data-comp0-owner="${owner}" tabindex="${tabIndex}">${content}</td>`;
+const th = (content: string, tabIndex = -1, owner = "outer") =>
+  `<th data-comp0-owner="${owner}" tabindex="${tabIndex}">${content}</th>`;
 
 /** Every tabindex attribute write inside `target` while `run` runs. */
 function writesDuring(target: Element, run: () => void) {
@@ -65,7 +66,7 @@ describe("ownership", () => {
 
   it("leaves the cells and widgets of a nested grid to that grid", () => {
     const { table, byText } = grid(
-      `<tr>${td("a")}${td(`<table role="grid"><caption>cap</caption><tbody><tr>${td('<button type="button">deep</button>')}</tr></tbody></table>`)}</tr>`,
+      `<tr>${td("a")}${td(`<table role="grid" data-comp0-root="inner"><caption>cap</caption><tbody><tr>${td('<button type="button">deep</button>', -1, "inner")}</tr></tbody></table>`)}</tr>`,
     );
     const inner = table.querySelector("table")!;
     expect(ownerCell(byText("deep"), table)).toBeNull();
@@ -74,6 +75,17 @@ describe("ownership", () => {
     expect(ownerCell(byText("cap"), inner)).toBeNull();
     expect(ownedCells(table)).toHaveLength(2);
     expect(ownedCells(inner)).toHaveLength(1);
+  });
+
+  it("owns only the cells that name it, not a grid that is not a Table", () => {
+    const { table, byText } = grid(
+      `<tr>${td("a")}${td(`<div role="grid"><div role="row"><button type="button" role="gridcell">day</button></div></div>`)}</tr>`,
+    );
+    const calendar = table.querySelector<HTMLElement>("[role='grid'] [role='grid']")!;
+    // A Calendar in a cell keeps its own widgets, and renders no owner ids for this table.
+    expect(ownerCell(byText("day"), table)).toBeNull();
+    expect(ownedCells(calendar)).toEqual([]);
+    expect(ownedCells(table)).toHaveLength(2);
   });
 
   it("owns only comp0 cells, not a consumer's plain cells", () => {
@@ -550,7 +562,7 @@ describe("normalize", () => {
 
   it("leaves a nested grid's stop alone", () => {
     const { table, stops } = grid(
-      `<tr>${td("a", 0)}${td(`<table role="grid"><tbody><tr>${td("i", 0)}</tr></tbody></table>`)}</tr>`,
+      `<tr>${td("a", 0)}${td(`<table role="grid" data-comp0-root="inner"><tbody><tr>${td("i", 0, "inner")}</tr></tbody></table>`)}</tr>`,
     );
     normalize(table);
     expect(stops()).toEqual(["a", "i"]);
