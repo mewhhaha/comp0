@@ -8,6 +8,12 @@ import {
   Menu,
   Menubar,
   MenuTrigger,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from "../src/index.js";
 import { keyDown, median, mountMeasured, report, type Row, type Sample } from "./measure.js";
 
@@ -22,6 +28,8 @@ type Family = {
   name: string;
   /** Selector for the items that share the one tab stop. */
   item: string;
+  /** Selector for the items the next key walks through, in order; defaults to `item`. */
+  axis?: string;
   /** The key that moves the stop to the next item. */
   next: string;
   /** Whether that key wraps from the last item to the first. */
@@ -30,6 +38,9 @@ type Family = {
 };
 
 const values = (size: number) => Array.from({ length: size }, (_, index) => `item-${index}`);
+
+const COLUMNS = 4;
+const columns = Array.from({ length: COLUMNS }, (_, index) => `column-${index}`);
 
 const families: Family[] = [
   {
@@ -77,6 +88,35 @@ const families: Family[] = [
       </GridList>
     ),
   },
+  {
+    // A header row plus enough body rows for about `size` cells in all (12 at size 10).
+    // ArrowDown walks the first column from the first body cell.
+    name: "Table",
+    item: "td, th",
+    axis: "tbody td:first-child",
+    next: "ArrowDown",
+    loop: false,
+    ui: (size) => (
+      <Table aria-label="Bench">
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableColumn key={column}>{column}</TableColumn>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {values(Math.max(1, Math.round(size / COLUMNS) - 1)).map((row) => (
+            <TableRow key={row}>
+              {columns.map((column, index) => (
+                <TableCell key={column}>{index === 0 ? row : `${row} ${column}`}</TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    ),
+  },
 ];
 
 function expectOneStop(container: HTMLElement, family: Family) {
@@ -94,11 +134,12 @@ function mountSample(family: Family, size: number, value: string | undefined) {
   return sample;
 }
 
-/** Cost per arrow press from the first item, averaged over PRESSES presses. */
+/** Cost per arrow press from the first item on the axis, averaged over PRESSES presses. */
 function arrowSample(family: Family, size: number) {
   const view = mountMeasured();
   view.render(family.ui(size, "item-0"));
-  const first = view.container.querySelector<HTMLElement>(family.item)!;
+  const axis = view.container.querySelectorAll<HTMLElement>(family.axis ?? family.item);
+  const first = axis[0]!;
   view.measure(() => first.focus());
   const total: Sample = { commits: 0, renderMs: 0, wallMs: 0 };
   for (let press = 0; press < PRESSES; press += 1) {
@@ -107,7 +148,7 @@ function arrowSample(family: Family, size: number) {
     total.renderMs += sample.renderMs;
     total.wallMs += sample.wallMs;
   }
-  const landed = family.loop ? PRESSES % size : Math.min(PRESSES, size - 1);
+  const landed = family.loop ? PRESSES % axis.length : Math.min(PRESSES, axis.length - 1);
   expect(document.activeElement?.textContent).toBe(`item-${landed}`);
   expectOneStop(view.container, family);
   view.unmount();

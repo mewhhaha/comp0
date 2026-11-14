@@ -10,6 +10,12 @@ import {
   ListBox,
   ListBoxOption,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
   TabList,
   TabPanel,
   Tabs,
@@ -51,6 +57,27 @@ const cases: { name: string; role: string; forward: string; ui: ReactElement }[]
         <TabPanel value="one">First panel</TabPanel>
         <TabPanel value="two">Second panel</TabPanel>
       </Tabs>
+    ),
+  },
+  {
+    name: "Table",
+    role: "grid",
+    forward: "{ArrowRight}",
+    ui: (
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn>Name</TableColumn>
+            <TableColumn>Role</TableColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Ada</TableCell>
+            <TableCell>Engineer</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     ),
   },
 ];

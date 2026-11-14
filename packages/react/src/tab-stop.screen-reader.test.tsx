@@ -15,6 +15,12 @@ import {
   MenuPopover,
   MenuTrigger,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
   TabList,
   Tabs,
 } from "./index.js";
@@ -111,6 +117,27 @@ const cases: Case[] = [
       </Tabs>
     ),
   },
+  {
+    name: "Table",
+    firstItem: "columnheader, Name",
+    forward: "ArrowRight",
+    ui: (
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn>Name</TableColumn>
+            <TableColumn>Role</TableColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Ada</TableCell>
+            <TableCell>Engineer</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    ),
+  },
 ];
 
 const page = (ui: ReactElement) => (
@@ -131,7 +158,7 @@ function mountContainer() {
  * What a screen reader user hears around the roving tab stop, through guidepup's virtual
  * screen reader. The first enabled item holds the stop in server HTML, before any item has
  * registered an element: ListBox, GridList, and TabList collect their items in a pass ahead of
- * the real ones, and Menubar triggers record themselves in render order.
+ * the real ones, and Menubar triggers and Table cells record themselves in render order.
  */
 describe.each(cases)(
   "$name tab stop for a screen reader",

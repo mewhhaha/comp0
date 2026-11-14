@@ -16,6 +16,10 @@ import {
   MenuPopover,
   MenuTrigger,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
   TabList,
   Tabs,
 } from "./index.js";
@@ -186,6 +190,132 @@ describe("hydrating HTML the server rendered out of order", () => {
     )!;
     await act(async () => view.focus());
     expect(stops(container, "menuitem")).toEqual(["View"]);
+    await act(async () => root.unmount());
+  });
+
+  it("puts the stop on the first cell when its row suspended on the server", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const late = gate();
+    const Late = () => {
+      use(late.promise);
+      return (
+        <TableRow>
+          <TableCell>Ada</TableCell>
+          <TableCell>Engineer</TableCell>
+        </TableRow>
+      );
+    };
+    const { container, root } = await streamThenHydrate(
+      <Table aria-label="People">
+        <TableBody>
+          <Late />
+          <TableRow>
+            <TableCell>Grace</TableCell>
+            <TableCell>Admiral</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+      late.open,
+    );
+    const cellStops = () =>
+      [...container.querySelectorAll<HTMLElement>("td[tabindex='0']")].map(
+        (cell) => cell.textContent,
+      );
+
+    expect(cellStops()).toEqual(["Ada"]);
+    await userEvent.setup().click(container.querySelectorAll("td")[3]!);
+    expect(cellStops()).toEqual(["Admiral"]);
+    await act(async () => root.unmount());
+  });
+
+  it("gives the stop to the cell whose widget the user focused before hydration", async () => {
+    // Before hydration only the first cell is a stop, while the widgets inside later cells keep
+    // their native Tab stops, so a widget is where the user usually lands in server HTML.
+    const page = (
+      <>
+        <button type="button">Before</button>
+        <Table aria-label="People">
+          <TableBody>
+            <TableRow>
+              <TableCell>Ada</TableCell>
+              <TableCell>Engineer</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Grace</TableCell>
+              <TableCell>
+                <button type="button">Edit</button>
+                <button type="button">Delete</button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+        <button type="button">After</button>
+      </>
+    );
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = await stream(page, () => {});
+    const edit = container.querySelector<HTMLElement>("td button")!;
+    const editCell = edit.closest("td")!;
+    const user = userEvent.setup();
+    await user.click(edit);
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, page);
+    });
+    await act(async () => {});
+
+    expect(document.activeElement).toBe(edit);
+    expect([...container.querySelectorAll("td[tabindex='0']")]).toEqual([editCell]);
+    await user.tab();
+    expect(document.activeElement?.textContent).toBe("After");
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(editCell);
+    await act(async () => root.unmount());
+  });
+
+  it("leaves the stop alone when focus before hydration sits in a grid nested in a cell", async () => {
+    const page = (
+      <Table aria-label="Teams">
+        <TableBody>
+          <TableRow>
+            <TableCell>Platform</TableCell>
+            <TableCell>
+              <Table aria-label="Members">
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Ada</TableCell>
+                    <TableCell>
+                      <button type="button">Edit</button>
+                      <button type="button">Delete</button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    );
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = await stream(page, () => {});
+    const [outer, inner] = container.querySelectorAll<HTMLElement>("[role='grid']");
+    const edit = container.querySelector<HTMLElement>("button")!;
+    await userEvent.setup().click(edit);
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, page);
+    });
+    await act(async () => {});
+
+    const ownStops = (grid: Element) =>
+      [...grid.querySelectorAll<HTMLElement>("td[tabindex='0']")]
+        .filter((cell) => cell.closest("[role='grid']") === grid)
+        .map((cell) => cell.textContent);
+    // The inner table records the focus; the outer table's stop stays on its first cell.
+    expect(ownStops(outer!)).toEqual(["Platform"]);
+    expect(ownStops(inner!)).toEqual(["EditDelete"]);
     await act(async () => root.unmount());
   });
 

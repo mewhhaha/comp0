@@ -10,6 +10,10 @@ import { Menu } from "./menu/Menu.js";
 import { MenuTrigger } from "./menu/MenuTrigger.js";
 import { Menubar } from "./menubar/Menubar.js";
 import { Tab } from "./tabs/Tab.js";
+import { Table } from "./table/Table.js";
+import { TableBody } from "./table/TableBody.js";
+import { TableCell } from "./table/TableCell.js";
+import { TableRow } from "./table/TableRow.js";
 import { TabList } from "./tabs/TabList.js";
 import { Tabs } from "./tabs/Tabs.js";
 
@@ -135,6 +139,40 @@ describe("roving tab stop registration", () => {
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[1]);
     expect(rows[1]!.tabIndex).toBe(0);
+    expect(commits).toBe(1);
+    expect(registry.changes).toBe(0);
+    unmount();
+  });
+
+  it("moves the table stop in one commit without re-registering cells", async () => {
+    let commits = 0;
+    const { container, user, unmount } = setup(
+      <Profiler id="table" onRender={() => (commits += 1)}>
+        <button type="button">Before</button>
+        <Table aria-label="Bench">
+          <TableBody>
+            {values.map((value) => (
+              <TableRow key={value}>
+                <TableCell>{value}</TableCell>
+                <TableCell>{`${value} detail`}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Profiler>,
+    );
+    const before = container.querySelector<HTMLElement>("button")!;
+    const cells = container.querySelectorAll<HTMLElement>("td");
+
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(cells[0]);
+    expect(registry.changes).toBeGreaterThan(0);
+    commits = 0;
+    registry.changes = 0;
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(cells[2]);
+    expect(cells[2]!.tabIndex).toBe(0);
     expect(commits).toBe(1);
     expect(registry.changes).toBe(0);
     unmount();
@@ -383,6 +421,33 @@ describe("roving tab stop re-renders", () => {
     rendered.clear();
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[2]);
+    expect([...rendered].sort()).toEqual(["three", "two"]);
+    unmount();
+  });
+
+  it("re-renders only the two table cells the stop moves between", async () => {
+    const { rendered, onRender } = tracked();
+    const { container, user, unmount } = setup(
+      <Table aria-label="Cells">
+        <TableBody>
+          {many.map((value) => (
+            <TableRow key={value}>
+              <Profiler id={value} onRender={onRender}>
+                <TableCell>{value}</TableCell>
+              </Profiler>
+              <Profiler id={`${value} detail`} onRender={onRender}>
+                <TableCell>{`${value} detail`}</TableCell>
+              </Profiler>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>,
+    );
+    const cells = container.querySelectorAll<HTMLElement>("td");
+    act(() => cells[2]!.focus());
+    rendered.clear();
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(cells[4]);
     expect([...rendered].sort()).toEqual(["three", "two"]);
     unmount();
   });
