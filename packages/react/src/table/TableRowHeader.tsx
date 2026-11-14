@@ -7,5 +7,7 @@ export type TableRowHeaderProps = ComponentProps<"th"> & AsProp;
 export function TableRowHeader({ as, ref, ...props }: TableRowHeaderProps) {
   const { cellRef, tabIndex } = useTableCell(ref);
   const Part = partElement(as, "th");
-  return <Part scope="row" {...props} ref={cellRef} tabIndex={tabIndex} />;
+  return (
+    <Part scope="row" {...props} ref={cellRef} tabIndex={tabIndex} data-slot="table-row-header" />
+  );
 }

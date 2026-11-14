@@ -37,6 +37,7 @@ export function TableColumn({
       scope={props.scope ?? "col"}
       ref={cellRef}
       tabIndex={tabIndex}
+      data-slot="table-column"
       aria-sort={sort}
       data-sortable={dataAttr(Boolean(onSort))}
       onClick={(event: MouseEvent<HTMLTableCellElement>) => {

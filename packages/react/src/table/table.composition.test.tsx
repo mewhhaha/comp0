@@ -1,9 +1,22 @@
-import { act, Fragment, useSyncExternalStore, type ReactElement } from "react";
+import {
+  act,
+  Activity,
+  Fragment,
+  Suspense,
+  use,
+  useLayoutEffect,
+  useState,
+  useSyncExternalStore,
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, setup, userEvent } from "../../test/render.js";
 import { pressKey } from "../../test/press-key.js";
+import { Link } from "../link/Link.js";
 import { Table } from "./Table.js";
 import { TableBody } from "./TableBody.js";
 import { TableCaption } from "./TableCaption.js";
@@ -401,16 +414,7 @@ describe("table tab stop", () => {
     expect(document.activeElement).toBe(cells[1]);
   });
 
-  it("renders a delegating cell with tabIndex -1 while its single widget holds the stop", async () => {
-    const tabIndexWrites: Element[] = [];
-    const setter = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "tabIndex")!.set!;
-    vi.spyOn(HTMLElement.prototype, "tabIndex", "set").mockImplementation(function (
-      this: HTMLElement,
-      value: number,
-    ) {
-      tabIndexWrites.push(this);
-      setter.call(this, value);
-    });
+  it("gives a delegating cell tabIndex -1 while its single widget holds the stop", async () => {
     const files = (label: string) =>
       page(
         <Table aria-label={label}>
@@ -446,8 +450,6 @@ describe("table tab stop", () => {
     await user.tab();
     await user.tab({ shift: true });
     expect(document.activeElement).toBe(notes);
-    // Only the consumer's widgets are written to; the cells render their own tabIndex.
-    expect(tabIndexWrites.filter((element) => element.tagName === "TD")).toEqual([]);
   });
 
   it("moves the stop to the first cell when the row holding it is removed", async () => {
@@ -459,7 +461,35 @@ describe("table tab stop", () => {
     await user.click(grace);
     expect(tableStops(container)).toEqual(["Grace role"]);
     rerender(people(["Ada"]));
+    await settle();
     expect(tableStops(container)).toEqual(["Name"]);
+  });
+
+  it("keeps its own data-slot on each cell, which is how the table finds its cells", async () => {
+    const { container, user } = setup(
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn data-slot="name">Name</TableColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableRowHeader data-slot="person">Ada</TableRowHeader>
+            <TableCell data-slot="role">Engineer</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const cells = [...container.querySelectorAll<HTMLElement>("th, td")];
+    expect(cells.map((cell) => cell.dataset["slot"])).toEqual([
+      "table-column",
+      "table-row-header",
+      "table-cell",
+    ]);
+    expect(tableStops(container)).toEqual(["Name"]);
+    await user.click(cells[2]!);
+    expect(tableStops(container)).toEqual(["Engineer"]);
   });
 
   it("keeps a cell outside a Table a plain cell", () => {
@@ -504,6 +534,9 @@ describe("table tab stop", () => {
     rerender(ui(() => {}));
     const [name, role] = container.querySelectorAll<HTMLTableCellElement>("th");
     expect(name).not.toBe(before);
+    // The new th renders the -1 its column decided at mount; the table puts the stop back.
+    await settle();
+    expect(tableStops(container)).toEqual(["Name"]);
 
     await user.click(name!);
     await user.keyboard("{ArrowRight}");
@@ -511,6 +544,82 @@ describe("table tab stop", () => {
     await user.tab();
     await user.tab({ shift: true });
     expect(document.activeElement).toBe(role);
+  });
+
+  it("renders each cell's tabIndex once while the stop moves in the DOM", async () => {
+    // Every tabIndex a cell passes to its element, by cell, through a custom `as` element.
+    const passed = new Map<string, Set<number | undefined>>();
+    function Probe({ children, ...props }: ComponentProps<"td">) {
+      const name = String(children);
+      passed.set(name, (passed.get(name) ?? new Set()).add(props.tabIndex));
+      return <td {...props}>{children}</td>;
+    }
+    const ui = (rows: string[]) =>
+      page(
+        <Table aria-label="People">
+          <TableBody>
+            {rows.map((name) => (
+              <TableRow key={name}>
+                <TableCell as={Probe}>{name}</TableCell>
+                <TableCell as={Probe}>{`${name} role`}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>,
+      );
+    const { container, rerender, user } = setup(ui(["Ada", "Grace"]));
+    const cells = container.querySelectorAll<HTMLElement>("td");
+    await user.click(cells[0]!);
+    await user.keyboard("{ArrowDown}{ArrowRight}");
+    expect(tableStops(container)).toEqual(["Grace role"]);
+
+    const written: Element[] = [];
+    const writes = new MutationObserver((records) => {
+      for (const record of records) written.push(record.target as Element);
+    });
+    writes.observe(container, { subtree: true, attributeFilter: ["tabindex"] });
+    // New elements for every part, so every cell renders again; React has nothing to write.
+    rerender(ui(["Ada", "Grace", "Mary"]));
+    await settle();
+    writes.disconnect();
+    expect(written).toEqual([]);
+    expect(tableStops(container)).toEqual(["Grace role"]);
+    expect([...passed.values()].map((values) => [...values])).toEqual(
+      Array.from({ length: 6 }, () => [-1]),
+    );
+  });
+
+  it("hydrates a delegating first cell and hands its stop to the widget", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const files = (
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell>
+              <input aria-label="Select report" type="checkbox" />
+            </TableCell>
+            <TableCell>
+              <button type="button">Share</button>
+              <button type="button">Delete</button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    );
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = renderToString(files);
+    // The server cannot see the checkbox, so the first cell carries the stop in its HTML.
+    expect([...container.querySelectorAll("td")].map((cell) => cell.tabIndex)).toEqual([0, -1]);
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, files);
+    });
+
+    expect(errors).not.toHaveBeenCalled();
+    expect([...container.querySelectorAll("td")].map((cell) => cell.tabIndex)).toEqual([-1, -1]);
+    expect(tabbables(container)).toEqual(["Select report"]);
+    await act(async () => root.unmount());
   });
 });
 
@@ -732,6 +841,81 @@ describe("table tab stop with consumer-owned cell content", () => {
     expect(cell!.tabIndex).toBe(0);
     expect(tabbables(container)).toEqual(["SaveCancel"]);
   });
+
+  it("keeps the stop when a consumer renders a widget with tabIndex 0 in an earlier cell", async () => {
+    const pinned = createFlag();
+    function Actions() {
+      const tabIndex = useFlag(pinned) ? 0 : undefined;
+      return (
+        <>
+          <button type="button" tabIndex={tabIndex}>
+            Edit
+          </button>
+          <button type="button">Delete</button>
+        </>
+      );
+    }
+    const { container, user } = setup(
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell>
+              <Actions />
+            </TableCell>
+            <TableCell>a</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>b</TableCell>
+            <TableCell>c</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const c = [...container.querySelectorAll<HTMLElement>("td")].at(-1)!;
+    await user.click(c);
+    expect(tabbables(container)).toEqual(["c"]);
+
+    await act(async () => pinned.set(true));
+    await settle();
+    expect(tabbables(container)).toEqual(["c"]);
+  });
+  it("keeps the stop when a consumer enables a widget with tabIndex 0 in an earlier cell", async () => {
+    const enabled = createFlag();
+    function Notify() {
+      const on = useFlag(enabled);
+      return <span role="switch" aria-checked={on} aria-label="Notify" tabIndex={on ? 0 : -1} />;
+    }
+    const { container, user } = setup(
+      <>
+        <button type="button">Before</button>
+        <Table aria-label="Files">
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <input aria-label="Select notes" type="checkbox" />
+              </TableCell>
+              <TableCell>
+                <Notify />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <input aria-label="Select report" type="checkbox" />
+              </TableCell>
+              <TableCell>report.pdf</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </>,
+    );
+    await user.click(container.querySelector("[aria-label='Select report']")!);
+    await user.click(container.querySelector("button")!);
+    expect(tabbables(container)).toEqual(["Select report"]);
+
+    await act(async () => enabled.set(true));
+    await settle();
+    expect(tabbables(container)).toEqual(["Select report"]);
+  });
 });
 
 describe("nested tables", () => {
@@ -856,5 +1040,849 @@ describe("nested tables", () => {
     expect(document.activeElement).toBe(i4);
     await pressKey(user, i4, "{ArrowRight}");
     expect(document.activeElement).toBe(i4);
+  });
+});
+
+describe("table tab stop against consumer tabIndex and replaced elements", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+    vi.restoreAllMocks();
+  });
+
+  // A consumer's own focusable element, such as a custom button rendered with tabIndex 0.
+  const Chip = (props: ComponentProps<"span">) => <span {...props} />;
+  /** People rows; `widget` fills Ada's role cell and `roleAs` renders Ada's role cell. */
+  function roster({
+    first = [] as string[],
+    widget,
+    roleAs,
+    onResize,
+  }: {
+    first?: string[];
+    widget?: ReactElement | undefined;
+    roleAs?: ComponentProps<typeof TableCell>["as"];
+    onResize?: ((width: number) => void) | undefined;
+  } = {}) {
+    return page(
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn onResize={onResize}>Name</TableColumn>
+            <TableColumn>Role</TableColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {first.map((name) => (
+            <TableRow key={name}>
+              <TableCell>{name}</TableCell>
+              <TableCell>
+                <Chip tabIndex={0}>{`${name} info`}</Chip>
+              </TableCell>
+            </TableRow>
+          ))}
+          <TableRow key="Ada">
+            <TableCell>Ada</TableCell>
+            <TableCell as={roleAs}>{widget ?? "Engineer"}</TableCell>
+          </TableRow>
+          <TableRow key="Grace">
+            <TableCell>Grace</TableCell>
+            <TableCell>Admiral</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+  }
+  const CustomCell = (props: ComponentProps<"td">) => <td {...props} />;
+  const RouterLink = ({ to, ...props }: ComponentProps<"span"> & { to: string }) => (
+    <span data-to={to} {...props} />
+  );
+
+  it("starts a client-only mount on the first cell when a body cell's one widget has tabIndex 0", async () => {
+    const { container } = setup(
+      roster({
+        widget: <Chip tabIndex={0}>info</Chip>,
+      }),
+    );
+    await settle();
+    expect(tableStops(container)).toEqual(["Name"]);
+    expect(tabbables(container)).toEqual(["Name"]);
+  });
+
+  it("starts a client-only mount on the first cell when a body cell holds a router Link", async () => {
+    const { container } = setup(
+      roster({
+        widget: (
+          <Link as={RouterLink} to="/ada">
+            Ada's page
+          </Link>
+        ),
+      }),
+    );
+    await settle();
+    expect(tableStops(container)).toEqual(["Name"]);
+  });
+
+  it("keeps the stop when a row whose one widget has tabIndex 0 is inserted above it", async () => {
+    const { container, rerender, user } = setup(roster());
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+    const engineer = [...container.querySelectorAll<HTMLElement>("td")].find(
+      (cell) => cell.textContent === "Engineer",
+    )!;
+    await user.click(engineer);
+    await user.click(before!);
+
+    rerender(roster({ first: ["Zed"] }));
+    await settle();
+    expect(tableStops(container)).toEqual(["Engineer"]);
+    expect(tabbables(container)).toEqual(["Engineer"]);
+  });
+
+  it("keeps the stop on a cell whose element React replaces", async () => {
+    const { container, rerender, user } = setup(roster());
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+    const engineer = () =>
+      [...container.querySelectorAll<HTMLElement>("td")].find(
+        (cell) => cell.textContent === "Engineer",
+      )!;
+    const old = engineer();
+    await user.click(old);
+    await user.click(before!);
+
+    rerender(roster({ roleAs: CustomCell }));
+    await settle();
+    expect(engineer()).not.toBe(old);
+    expect(tableStops(container)).toEqual(["Engineer"]);
+    await user.tab();
+    expect(document.activeElement).toBe(engineer());
+  });
+
+  it("keeps the stop on a header whose element React replaces", async () => {
+    const ui = (onResize?: (width: number) => void) =>
+      page(
+        <Table aria-label="People">
+          <TableHeader>
+            <TableRow>
+              <TableColumn>Name</TableColumn>
+              <TableColumn onResize={onResize}>Role</TableColumn>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell>Ada</TableCell>
+              <TableCell>Engineer</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>,
+      );
+    const { container, rerender, user } = setup(ui());
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+    const old = container.querySelectorAll<HTMLElement>("th")[1]!;
+    await user.click(old);
+    await user.click(before!);
+
+    rerender(ui(() => {}));
+    await settle();
+    const role = container.querySelectorAll<HTMLElement>("th")[1]!;
+    expect(role).not.toBe(old);
+    expect(tableStops(container)).toEqual(["Role"]);
+  });
+
+  /** Renders `ui(false)` on the server, hydrates it, then returns a rerender to `ui(true)`. */
+  async function hydrated(ui: (changed: boolean) => ReactElement) {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = renderToString(ui(false));
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, ui(false));
+    });
+    const change = () => act(async () => root.render(ui(true)));
+    return { container, errors, change, unmount: () => act(async () => root.unmount()) };
+  }
+
+  it("keeps the stop when the server's first cell gets a new element after hydration", async () => {
+    const { container, errors, change, unmount } = await hydrated((changed) =>
+      roster({ onResize: changed ? () => {} : undefined }),
+    );
+    const user = userEvent.setup();
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+    const name = container.querySelector("th");
+    await user.click(
+      [...container.querySelectorAll("td")].find((cell) => cell.textContent === "Engineer")!,
+    );
+    await user.click(before!);
+
+    await change();
+    await settle();
+    expect(container.querySelector("th")).not.toBe(name);
+    expect(tableStops(container)).toEqual(["Engineer"]);
+    expect(errors).not.toHaveBeenCalled();
+    await unmount();
+  });
+
+  it("keeps the stop on a cell whose element React replaces after hydration", async () => {
+    const { container, errors, change, unmount } = await hydrated((changed) =>
+      roster({ roleAs: changed ? CustomCell : undefined }),
+    );
+    const user = userEvent.setup();
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+    await user.click(
+      [...container.querySelectorAll("td")].find((cell) => cell.textContent === "Engineer")!,
+    );
+    await user.click(before!);
+
+    await change();
+    await settle();
+    expect(tableStops(container)).toEqual(["Engineer"]);
+    expect(errors).not.toHaveBeenCalled();
+    await unmount();
+  });
+});
+
+describe("table tab stop with rows in a Suspense boundary", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+    vi.restoreAllMocks();
+  });
+
+  /** Suspends its children on the client while `held` is pending. */
+  let held: Promise<void> | null = null;
+  function Held({ children }: { children: ReactElement }) {
+    if (held) use(held);
+    return children;
+  }
+
+  async function hydrateWithHeldBoundary(ui: ReactElement) {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = document.createElement("div");
+    document.body.append(container);
+    held = null;
+    container.innerHTML = renderToString(ui);
+    const server = container.innerHTML;
+    let release!: () => void;
+    held = new Promise<void>((resolve) => {
+      release = () => {
+        held = null;
+        resolve();
+      };
+    });
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, ui);
+    });
+    return { container, errors, server, release, root };
+  }
+
+  it("leaves server HTML in a boundary alone until it hydrates, then repairs it", async () => {
+    const ui = (
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell>report.pdf</TableCell>
+            <TableCell>ready</TableCell>
+          </TableRow>
+          <Suspense fallback={null}>
+            <Held>
+              <TableRow>
+                <TableCell>
+                  <input aria-label="Select notes" type="checkbox" />
+                </TableCell>
+                <TableCell>
+                  <button type="button">Edit</button>
+                  <button type="button">Delete</button>
+                </TableCell>
+              </TableRow>
+            </Held>
+          </Suspense>
+        </TableBody>
+      </Table>
+    );
+    const { container, errors, server, release, root } = await hydrateWithHeldBoundary(ui);
+    const boundaryHtml = (html: string) => html.slice(html.indexOf("<!--$-->"));
+
+    expect(boundaryHtml(container.innerHTML)).toBe(boundaryHtml(server));
+    await act(async () => release());
+    await settle();
+    expect(errors).not.toHaveBeenCalled();
+    expect(tabbables(container)).toEqual(["report.pdf"]);
+    await act(async () => root.unmount());
+  });
+
+  it("hands the server's stop in a boundary to its widget once the boundary hydrates", async () => {
+    // Every row sits in the boundary: a cell outside it would be the first the client hydration
+    // render sees, and would render the stop where the server did not (a limit of the seed).
+    const ui = (
+      <Table aria-label="Files">
+        <TableBody>
+          <Suspense fallback={null}>
+            <Held>
+              <>
+                <TableRow>
+                  <TableCell>
+                    <input aria-label="Select notes" type="checkbox" />
+                  </TableCell>
+                  <TableCell>notes.txt</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <input aria-label="Select report" type="checkbox" />
+                  </TableCell>
+                  <TableCell>report.pdf</TableCell>
+                </TableRow>
+              </>
+            </Held>
+          </Suspense>
+        </TableBody>
+      </Table>
+    );
+    const { container, errors, server, release, root } = await hydrateWithHeldBoundary(ui);
+
+    expect(container.innerHTML).toBe(server);
+    await act(async () => release());
+    await settle();
+    expect(errors).not.toHaveBeenCalled();
+    expect([...container.querySelectorAll("td")].map((cell) => cell.tabIndex)).toEqual([
+      -1, -1, -1, -1,
+    ]);
+    expect(tabbables(container)).toEqual(["Select notes"]);
+    await act(async () => root.unmount());
+  });
+
+  it("writes nothing into a held boundary when the user moves the stop in the shell", async () => {
+    const ui = (
+      <Table aria-label="Files">
+        <TableHeader>
+          <TableRow>
+            <TableColumn>Name</TableColumn>
+            <TableColumn>Info</TableColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <Suspense fallback={null}>
+            <Held>
+              <TableRow>
+                <TableCell>notes.txt</TableCell>
+                <TableCell>
+                  {/* A consumer's own control rendered with tabIndex 0, such as a tooltip trigger. */}
+                  <button type="button" tabIndex={0}>
+                    tip
+                  </button>
+                </TableCell>
+              </TableRow>
+            </Held>
+          </Suspense>
+        </TableBody>
+      </Table>
+    );
+    const { container, errors, server, release, root } = await hydrateWithHeldBoundary(ui);
+    const boundaryHtml = (html: string) => html.slice(html.indexOf("<!--$-->"));
+    const user = userEvent.setup();
+    const [name, info] = container.querySelectorAll("th");
+
+    await user.click(info!);
+    await user.keyboard("{ArrowLeft}");
+    expect(document.activeElement).toBe(name);
+    expect(boundaryHtml(container.innerHTML)).toBe(boundaryHtml(server));
+
+    await act(async () => release());
+    await settle();
+    expect(errors).not.toHaveBeenCalled();
+    expect(tabbables(container)).toEqual(["Name"]);
+    await act(async () => root.unmount());
+  });
+
+  it("writes nothing into a held boundary that holds the first cell when the shell changes", async () => {
+    // Hydration renders the server snapshot, then the client switches to its own and changes
+    // the caption while the boundary is still held.
+    const updated = createFlag();
+    updated.set(true);
+    function Updated() {
+      const ready = useSyncExternalStore(updated.subscribe, updated.get, () => false);
+      return ready ? <span>updated 3 files</span> : "files";
+    }
+    const ui = (
+      <Table aria-label="Files">
+        <TableCaption>
+          <Updated />
+        </TableCaption>
+        <TableBody>
+          <Suspense fallback={null}>
+            <Held>
+              <>
+                <TableRow>
+                  <TableCell>
+                    <input aria-label="Select notes" type="checkbox" />
+                  </TableCell>
+                  <TableCell>notes.txt</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <input aria-label="Select report" type="checkbox" />
+                  </TableCell>
+                  <TableCell>report.pdf</TableCell>
+                </TableRow>
+              </>
+            </Held>
+          </Suspense>
+        </TableBody>
+      </Table>
+    );
+    const { container, errors, server, release, root } = await hydrateWithHeldBoundary(ui);
+    const boundaryHtml = (html: string) => html.slice(html.indexOf("<!--$-->"));
+    await settle();
+
+    expect(container.querySelector("caption")!.textContent).toBe("updated 3 files");
+    expect(boundaryHtml(container.innerHTML)).toBe(boundaryHtml(server));
+    await act(async () => release());
+    await settle();
+    expect(errors).not.toHaveBeenCalled();
+    expect(tabbables(container)).toEqual(["Select notes"]);
+    await act(async () => root.unmount());
+  });
+
+  it("hydrates rows that each sit in their own boundary without scanning the table per cell", async () => {
+    const names = Array.from({ length: 100 }, (_, index) => `row-${index}`);
+    const ui = (
+      <Table aria-label="Files">
+        <TableBody>
+          {names.map((name) => (
+            <Suspense key={name} fallback={null}>
+              <TableRow>
+                <TableCell>{name}</TableCell>
+                <TableCell>
+                  <button type="button">Open {name}</button>
+                </TableCell>
+              </TableRow>
+            </Suspense>
+          ))}
+        </TableBody>
+      </Table>
+    );
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = renderToString(ui);
+    // React and the DOM make a few comparisons per row while hydrating; placing every cell
+    // against every boundary would make cells × boundaries of them (about 20,000 here).
+    const compare = vi.spyOn(Node.prototype, "compareDocumentPosition");
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, ui);
+    });
+    await settle();
+
+    expect(compare.mock.calls.length).toBeLessThan(names.length * 10);
+    expect(errors).not.toHaveBeenCalled();
+    expect(tabbables(container)).toEqual(["row-0"]);
+    await act(async () => root.unmount());
+  });
+
+  it("hydrates a boundary among the rows without a mismatch", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const ui = (
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell>report.pdf</TableCell>
+            <TableCell>ready</TableCell>
+          </TableRow>
+          <Suspense fallback={null}>
+            <TableRow>
+              <TableCell>
+                <button type="button">Edit</button>
+                <button type="button">Delete</button>
+              </TableCell>
+              <TableCell>x</TableCell>
+            </TableRow>
+          </Suspense>
+        </TableBody>
+      </Table>
+    );
+    const container = document.createElement("div");
+    document.body.append(container);
+    container.innerHTML = renderToString(ui);
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, ui);
+    });
+    await settle();
+
+    expect(errors).not.toHaveBeenCalled();
+    expect(tabbables(container)).toEqual(["report.pdf"]);
+    await act(async () => root.unmount());
+  });
+});
+
+describe("table tab stop across reattaches, late content, and replaced rows", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+    vi.restoreAllMocks();
+  });
+
+  const findCell = (container: Element, text: string) =>
+    [...container.querySelectorAll<HTMLElement>("th, td")].find(
+      (cell) => cell.textContent === text,
+    )!;
+
+  it("keeps the stop when an Activity hides and shows the table", async () => {
+    const ui = (visible: boolean) =>
+      page(<Activity mode={visible ? "visible" : "hidden"}>{people()}</Activity>);
+    const { container, rerender, user } = setup(ui(true));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "Ada role"));
+    await user.click(before!);
+    rerender(ui(false));
+    await settle();
+    rerender(ui(true));
+    await settle();
+    expect(tableStops(container)).toEqual(["Ada role"]);
+    await user.tab();
+    expect(document.activeElement).toBe(findCell(container, "Ada role"));
+  });
+
+  it("keeps the stop on a delegated widget when an Activity hides and shows the table", async () => {
+    const ui = (visible: boolean) =>
+      page(
+        <Activity mode={visible ? "visible" : "hidden"}>
+          <Table aria-label="Files">
+            <TableBody>
+              {["report", "notes"].map((name) => (
+                <TableRow key={name}>
+                  <TableCell>
+                    <input aria-label={`Select ${name}`} type="checkbox" />
+                  </TableCell>
+                  <TableCell>{name}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Activity>,
+      );
+    const { container, rerender, user } = setup(ui(true));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(container.querySelector<HTMLElement>("[aria-label='Select notes']")!);
+    await user.click(before!);
+    rerender(ui(false));
+    await settle();
+    rerender(ui(true));
+    await settle();
+    expect(tabbables(container)).toEqual(["Select notes"]);
+  });
+
+  it("keeps one stop when a new row's widgets appear in a layout effect of the same task", async () => {
+    // A consumer gate that shows its children only after its first layout effect, through a
+    // store of its own, so they commit in a second render of the same task.
+    function LayoutGate({ children }: { children: ReactNode }) {
+      const [shown] = useState(createFlag);
+      useLayoutEffect(() => shown.set(true), [shown]);
+      return useFlag(shown) ? children : null;
+    }
+    const ui = (rows: string[]) => (
+      <Table aria-label="Jobs">
+        <TableBody>
+          {rows.map((name) => (
+            <TableRow key={name}>
+              <TableCell>{name}</TableCell>
+              <TableCell>
+                <LayoutGate>
+                  <button type="button">{`${name} a`}</button>
+                  <button type="button">{`${name} b`}</button>
+                </LayoutGate>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+    const { container, rerender } = setup(ui(["r0"]));
+    await settle();
+    expect(tabbables(container)).toEqual(["r0"]);
+
+    rerender(ui(["r0", "r1"]));
+    await settle();
+    expect(container.querySelectorAll("button")).toHaveLength(4);
+    expect(tabbables(container)).toEqual(["r0"]);
+  });
+
+  it("puts the stop on the first cell when data rows replace a loading row", async () => {
+    const ui = (rows = ["Loading"]) => (
+      <Table aria-label="People">
+        <TableBody>
+          {rows.map((name) => (
+            <TableRow key={name}>
+              <TableCell>{name}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+    const { container, rerender } = setup(ui());
+    expect(tableStops(container)).toEqual(["Loading"]);
+
+    rerender(ui(["Ada", "Grace", "Mary"]));
+    await settle();
+    expect(tableStops(container)).toEqual(["Ada"]);
+  });
+
+  it("puts the stop on the first cell when the next page replaces the row holding it", async () => {
+    const { container, rerender, user } = setup(page(people(["a", "b", "c"])));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "c role"));
+    await user.click(before!);
+    rerender(page(people(["d", "e", "f"])));
+    await settle();
+    expect(tableStops(container)).toEqual(["Name"]);
+  });
+
+  it("mounts and inserts rows whose one widget has tabIndex 0 without scanning the table per cell", async () => {
+    // A consumer's own focusable control rendered with tabIndex 0, such as a custom checkbox.
+    const Check = (props: ComponentProps<"span">) => <span {...props} />;
+    const names = (count: number, from = 0) =>
+      Array.from({ length: count }, (_, index) => `row-${from + index}`);
+    const ui = (rows: string[]) => (
+      <Table aria-label="Checks">
+        <TableBody>
+          {rows.map((name) => (
+            <TableRow key={name}>
+              <TableCell>
+                <Check aria-label={name} tabIndex={0} />
+              </TableCell>
+              <TableCell>{name}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+    const all = vi.spyOn(Element.prototype, "querySelectorAll");
+    const one = vi.spyOn(Element.prototype, "querySelector");
+    const { container, rerender } = setup(ui(names(100)));
+    await settle();
+    const table = container.querySelector("table")!;
+    // Queries on the whole table: a pass over every cell from each of 100 cells would show here.
+    const tableQueries = () =>
+      [...all.mock.contexts, ...one.mock.contexts].filter((context) => context === table).length;
+
+    expect(tableQueries()).toBeLessThan(10);
+    expect(tabbables(container)).toEqual(["row-0"]);
+
+    all.mockClear();
+    one.mockClear();
+    rerender(ui([...names(100, 100), ...names(100)]));
+    await settle();
+    expect(tableQueries()).toBeLessThan(10);
+    expect(tabbables(container)).toEqual(["row-0"]);
+  });
+});
+
+describe("table tab stop when React hides rows or cells", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+    vi.restoreAllMocks();
+  });
+
+  const findCell = (container: Element, text: string) =>
+    [...container.querySelectorAll<HTMLElement>("th, td")].find(
+      (cell) => cell.textContent === text,
+    )!;
+
+  function grid(lastRow: (row: ReactElement) => ReactNode) {
+    return (
+      <Table aria-label="People">
+        <TableHeader>
+          <TableRow>
+            <TableColumn>Name</TableColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Ada</TableCell>
+          </TableRow>
+          {lastRow(
+            <TableRow>
+              <TableCell>Grace</TableCell>
+            </TableRow>,
+          )}
+        </TableBody>
+      </Table>
+    );
+  }
+
+  it("moves the stop off a row an Activity hides, so Tab still enters the grid", async () => {
+    const ui = (visible: boolean) =>
+      page(grid((row) => <Activity mode={visible ? "visible" : "hidden"}>{row}</Activity>));
+    const { container, rerender, user } = setup(ui(true));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "Grace"));
+    await user.click(before!);
+    rerender(ui(false));
+    await settle();
+    await user.click(before!);
+    await user.tab();
+    expect(document.activeElement).toBe(findCell(container, "Name"));
+
+    rerender(ui(true));
+    await settle();
+    expect(tableStops(container)).toEqual(["Name"]);
+  });
+
+  it("moves the stop off a row whose Suspense boundary suspends again", async () => {
+    let pending: Promise<void> | null = null;
+    function Gate({ children }: { children: ReactElement }) {
+      if (pending) use(pending);
+      return children;
+    }
+    const ui = () =>
+      page(
+        grid((row) => (
+          <Suspense
+            fallback={
+              <TableRow>
+                <TableCell>Loading</TableCell>
+              </TableRow>
+            }
+          >
+            <Gate>{row}</Gate>
+          </Suspense>
+        )),
+      );
+    const { container, rerender, user } = setup(ui());
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "Grace"));
+    await user.click(before!);
+    let resolve!: () => void;
+    pending = new Promise<void>((done) => {
+      resolve = done;
+    });
+    rerender(ui());
+    await settle();
+    await user.click(before!);
+    await user.tab();
+    expect(document.activeElement).toBe(findCell(container, "Name"));
+
+    pending = null;
+    await act(async () => resolve());
+    await settle();
+    expect(tableStops(container)).toEqual(["Name"]);
+  });
+
+  it("keeps the stop when rows whose one widget has tabIndex 0 arrive while an Activity hides the table", async () => {
+    // A consumer's own focusable element, such as a custom button rendered with tabIndex 0.
+    const Chip = (props: ComponentProps<"span">) => <span {...props} />;
+    const ui = (visible: boolean, extra: string[]) =>
+      page(
+        <Activity mode={visible ? "visible" : "hidden"}>
+          <Table aria-label="People">
+            <TableBody>
+              {["Ada", "Grace"].map((name) => (
+                <TableRow key={name}>
+                  <TableCell>{name}</TableCell>
+                  <TableCell>{`${name} role`}</TableCell>
+                </TableRow>
+              ))}
+              {extra.map((name) => (
+                <TableRow key={name}>
+                  <TableCell>{name}</TableCell>
+                  <TableCell>
+                    <Chip tabIndex={0}>{`${name} info`}</Chip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Activity>,
+      );
+    const { container, rerender, user } = setup(ui(true, []));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "Grace"));
+    await user.click(before!);
+    rerender(ui(false, []));
+    await settle();
+    rerender(ui(false, ["Mary", "Lin"]));
+    await settle();
+    rerender(ui(true, ["Mary", "Lin"]));
+    await settle();
+    expect(tableStops(container)).toEqual(["Grace"]);
+    await user.tab();
+    expect(document.activeElement).toBe(findCell(container, "Grace"));
+  });
+
+  it("moves the stop off a row hidden while an Activity hid the whole table", async () => {
+    const ui = (table: boolean, row: boolean) =>
+      page(
+        <Activity mode={table ? "visible" : "hidden"}>
+          {grid((last) => (
+            <Activity mode={row ? "visible" : "hidden"}>{last}</Activity>
+          ))}
+        </Activity>,
+      );
+    const { container, rerender, user } = setup(ui(true, true));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "Grace"));
+    await user.click(before!);
+    rerender(ui(false, true));
+    await settle();
+    rerender(ui(false, false));
+    await settle();
+    rerender(ui(true, false));
+    await settle();
+    await user.click(before!);
+    await user.tab();
+    expect(document.activeElement).toBe(findCell(container, "Name"));
+  });
+
+  it("falls back past a hidden first row when the row holding the stop is removed", async () => {
+    const ui = (rows: string[]) =>
+      page(
+        <Table aria-label="People">
+          <TableBody>
+            <Activity mode="hidden">
+              <TableRow>
+                <TableCell>First</TableCell>
+              </TableRow>
+            </Activity>
+            {rows.map((name) => (
+              <TableRow key={name}>
+                <TableCell>{name}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>,
+      );
+    const { container, rerender, user } = setup(ui(["a", "b", "c"]));
+    const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+
+    await user.click(findCell(container, "c"));
+    await user.click(before!);
+    rerender(ui(["a", "b"]));
+    await settle();
+    await user.click(before!);
+    await user.tab();
+    expect(document.activeElement).toBe(findCell(container, "a"));
+  });
+
+  it("leaves the widgets of a cell outside a Table alone inside a consumer's own grid", () => {
+    const { container } = render(
+      <div role="grid">
+        <table>
+          <tbody>
+            <tr>
+              <TableCell>
+                <button type="button">Act</button>
+              </TableCell>
+            </tr>
+          </tbody>
+        </table>
+      </div>,
+    );
+
+    expect(container.querySelector("button")!.getAttribute("tabindex")).toBeNull();
   });
 });

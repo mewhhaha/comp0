@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ComponentProps, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import {
   GridList,
@@ -41,6 +41,9 @@ const values = (size: number) => Array.from({ length: size }, (_, index) => `ite
 
 const COLUMNS = 4;
 const columns = Array.from({ length: COLUMNS }, (_, index) => `column-${index}`);
+
+// A consumer's own focusable control, such as a custom checkbox or a router link.
+const Check = (props: ComponentProps<"span">) => <span {...props} />;
 
 const families: Family[] = [
   {
@@ -110,6 +113,41 @@ const families: Family[] = [
             <TableRow key={row}>
               {columns.map((column, index) => (
                 <TableCell key={column}>{index === 0 ? row : `${row} ${column}`}</TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    ),
+  },
+  {
+    // The same table with a consumer's own focusable control, rendered with tabIndex 0, as the
+    // one widget of each first-column cell: every one of those cells carries a 0 as it attaches,
+    // which the table must not answer with a scan of the whole grid per cell.
+    name: "Table, widgets at tabIndex 0",
+    item: "td, th, .check",
+    axis: "tbody .check",
+    next: "ArrowDown",
+    loop: false,
+    ui: (size) => (
+      <Table aria-label="Bench">
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableColumn key={column}>{column}</TableColumn>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {values(Math.max(1, Math.round(size / COLUMNS) - 1)).map((row) => (
+            <TableRow key={row}>
+              <TableCell>
+                <Check className="check" tabIndex={0}>
+                  {row}
+                </Check>
+              </TableCell>
+              {columns.slice(1).map((column) => (
+                <TableCell key={column}>{`${row} ${column}`}</TableCell>
               ))}
             </TableRow>
           ))}

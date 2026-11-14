@@ -2,6 +2,7 @@ import { act, Fragment, Suspense, use, type ReactElement } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToPipeableStream } from "react-dom/server";
 import { Writable } from "node:stream";
+import { runInThisContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "../test/render.js";
 import {
@@ -47,6 +48,74 @@ function stream(ui: ReactElement, afterStart: () => void) {
   });
 }
 
+/**
+ * Streams `ui` as a browser receives it: the shell is in the document and hydrating while a
+ * boundary is still pending (`<!--$?-->`), and the boundary's HTML arrives later with React's
+ * script that swaps it in, which then runs. `open` lets the server finish the boundary.
+ */
+async function streamShellThenBoundary(ui: ReactElement, open: () => void) {
+  const chunks: string[] = [];
+  let shellReady!: () => void;
+  const shell = new Promise<void>((resolve) => {
+    shellReady = resolve;
+  });
+  let ended!: () => void;
+  const end = new Promise<void>((resolve) => {
+    ended = resolve;
+  });
+  const sink = new Writable({
+    write(chunk, _encoding, callback) {
+      chunks.push(String(chunk));
+      callback();
+    },
+    final(callback) {
+      callback();
+      ended();
+    },
+  });
+  const pipeable = renderToPipeableStream(ui, {
+    onShellReady() {
+      pipeable.pipe(sink);
+      shellReady();
+    },
+  });
+  await shell;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const container = document.createElement("div");
+  document.body.append(container);
+  container.innerHTML = chunks.splice(0).join("");
+  // While the document still loads, React waits for a pending boundary instead of rendering it
+  // on the client.
+  Object.defineProperty(document, "readyState", { configurable: true, get: () => "loading" });
+  let root!: ReturnType<typeof hydrateRoot>;
+  await act(async () => {
+    root = hydrateRoot(container, ui);
+  });
+  const shellHtml = container.innerHTML;
+
+  open();
+  await end;
+  const rest = document.createElement("template");
+  rest.innerHTML = chunks.join("");
+  const scripts = [...rest.content.querySelectorAll("script")].map((script) => {
+    script.remove();
+    return script.textContent ?? "";
+  });
+  document.body.append(rest.content);
+  await act(async () => {
+    // The scripts the server sent, run as a browser runs them: in the global scope. jsdom here
+    // does not run scripts, so Node runs them in the same global.
+    for (const script of scripts) runInThisContext(script);
+    // React reveals the boundary and retries its hydration in animation frames.
+    for (let frame = 0; frame < 5; frame += 1) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+  });
+  await act(async () => {});
+  Reflect.deleteProperty(document, "readyState");
+  return { container, root, shellHtml };
+}
+
 function gate() {
   let open!: () => void;
   const promise = new Promise<void>((resolve) => {
@@ -76,8 +145,9 @@ async function streamThenHydrate(ui: ReactElement, afterStart: () => void) {
  * The server renders past a component that suspends and comes back to it, so it can see the
  * items out of document order and give the stop to a later one, while the client hydrates them
  * in order. React leaves a mismatched attribute as the server sent it, so each item writes what
- * it rendered once after hydrating (`internal/hydration-repair.ts`). What must hold is the
- * state after hydration and after the next interaction: one stop, on the right item. Kept apart
+ * it rendered once after hydrating (`internal/hydration-repair.ts`); Table keeps its stop in the
+ * DOM instead and puts it on its first cell when it mounts. What must hold is the state after
+ * hydration and after the next interaction: one stop, on the right item. Kept apart
  * from the other suites because `renderToPipeableStream` makes React log a "multiple renderers"
  * error in later tests of the same file.
  */
@@ -228,6 +298,92 @@ describe("hydrating HTML the server rendered out of order", () => {
     await act(async () => root.unmount());
   });
 
+  it("keeps one table stop when a row inside a Suspense boundary hydrates after the table", async () => {
+    // React hydrates the boundary after the table mounts; its cells repair themselves then, so
+    // nothing writes to its server HTML before React has hydrated it.
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container, root } = await streamThenHydrate(
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell>report.pdf</TableCell>
+            <TableCell>ready</TableCell>
+          </TableRow>
+          <Suspense fallback={null}>
+            <TableRow>
+              <TableCell>
+                <input aria-label="Select notes" type="checkbox" />
+              </TableCell>
+              <TableCell>
+                <button type="button">Edit</button>
+                <button type="button">Delete</button>
+              </TableCell>
+            </TableRow>
+          </Suspense>
+        </TableBody>
+      </Table>,
+      () => {},
+    );
+    const tabbable = [...container.querySelectorAll<HTMLElement>("td, input, button")]
+      .filter((element) => element.tabIndex === 0)
+      .map((element) => element.textContent);
+
+    expect(tabbable).toEqual(["report.pdf"]);
+    // `renderToPipeableStream` makes React log a "multiple renderers" error, which is not ours.
+    const mismatches = errors.mock.calls.filter(([message]) =>
+      String(message).includes("didn't match"),
+    );
+    expect(mismatches).toEqual([]);
+    const checkbox = container.querySelector<HTMLElement>("input")!;
+    await userEvent.setup().click(checkbox);
+    expect(checkbox.tabIndex).toBe(0);
+    expect(container.querySelector<HTMLElement>("td")!.tabIndex).toBe(-1);
+    await act(async () => root.unmount());
+  });
+
+  it("writes nothing to a table boundary React's script swaps in before it hydrates", async () => {
+    // The shell has no cell, so the streamed first cell is the table's first: the stop belongs
+    // there, but only once React has hydrated it.
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const late = gate();
+    const Late = ({ children }: { children: ReactElement }) => {
+      use(late.promise);
+      return children;
+    };
+    const { container, root, shellHtml } = await streamShellThenBoundary(
+      <Table aria-label="Files">
+        <TableBody>
+          <Suspense fallback={null}>
+            <Late>
+              <TableRow>
+                <TableCell>
+                  <input aria-label="Select notes" type="checkbox" />
+                </TableCell>
+                <TableCell>
+                  <button type="button">Edit</button>
+                  <button type="button">Delete</button>
+                </TableCell>
+              </TableRow>
+            </Late>
+          </Suspense>
+        </TableBody>
+      </Table>,
+      late.open,
+    );
+
+    expect(shellHtml).toContain("<!--$?-->");
+    expect(container.querySelectorAll("td")).toHaveLength(2);
+    const mismatches = errors.mock.calls.filter(([message]) =>
+      String(message).includes("didn't match"),
+    );
+    expect(mismatches).toEqual([]);
+    const tabbable = [...container.querySelectorAll<HTMLElement>("td, input, button")]
+      .filter((element) => element.tabIndex === 0)
+      .map((element) => element.textContent || element.getAttribute("aria-label"));
+    expect(tabbable).toEqual(["Select notes"]);
+    await act(async () => root.unmount());
+  });
+
   it("gives the stop to the cell whose widget the user focused before hydration", async () => {
     // Before hydration only the first cell is a stop, while the widgets inside later cells keep
     // their native Tab stops, so a widget is where the user usually lands in server HTML.
@@ -313,7 +469,7 @@ describe("hydrating HTML the server rendered out of order", () => {
       [...grid.querySelectorAll<HTMLElement>("td[tabindex='0']")]
         .filter((cell) => cell.closest("[role='grid']") === grid)
         .map((cell) => cell.textContent);
-    // The inner table records the focus; the outer table's stop stays on its first cell.
+    // The inner table moves its stop to the focused cell; the outer stop stays on its first cell.
     expect(ownStops(outer!)).toEqual(["Platform"]);
     expect(ownStops(inner!)).toEqual(["EditDelete"]);
     await act(async () => root.unmount());

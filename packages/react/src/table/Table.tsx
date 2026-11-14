@@ -1,6 +1,5 @@
 import {
   useRef,
-  useState,
   type ComponentProps,
   type FocusEvent,
   type KeyboardEvent,
@@ -9,16 +8,9 @@ import {
 import { useCollection, useComposedRefs } from "@comp0/core";
 import { useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { NO_SELECTION, useTabStopStore } from "../internal/tab-stop.js";
-import {
-  CELL_WIDGET_ATTRIBUTES,
-  ownerCell,
-  primaryStop,
-  rowStops,
-  TableContext,
-  type TableContextValue,
-} from "./table-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
+import { attachGrid, focusStop, moveStop, ownerCell, primaryStop, rowStops } from "./table-dom.js";
+import { TableContext, type TableContextValue } from "./table-shared.js";
 
 export type TableProps = ComponentProps<"table"> &
   AsProp & {
@@ -41,44 +33,10 @@ export function Table({
   ...props
 }: TableProps) {
   const tableRef = useRef<HTMLTableElement | null>(null);
-  const cells = useCollection();
-  const [cellSyncs] = useState(() => new Map<Element, () => void>());
-  // Whether a cell hands its stop to a single widget, and which widgets Tab skips, depends on
-  // consumer content that can change without re-rendering the cell (a component inside it
-  // updating its own state), so one observer re-measures the cells whose content changed.
-  const observeCellContent = (table: HTMLTableElement | null) => {
-    const Observer = table?.ownerDocument.defaultView?.MutationObserver;
-    if (!table || !Observer) return;
-    const observer = new Observer((records) => {
-      const touched = new Set<() => void>();
-      for (const record of records) {
-        // Only childList and attribute records are observed, so the target is an element. A
-        // change inside a grid nested in a cell belongs to that grid and finds no cell here.
-        const target = record.target as Element;
-        const cell = ownerCell(target, table, (candidate) => cellSyncs.has(candidate));
-        const sync = cell ? cellSyncs.get(cell) : undefined;
-        if (sync) touched.add(sync);
-      }
-      for (const sync of touched) sync();
-    });
-    observer.observe(table, {
-      subtree: true,
-      childList: true,
-      attributeFilter: CELL_WIDGET_ATTRIBUTES,
-    });
-    return () => {
-      observer.disconnect();
-    };
-  };
-  const composedRef = useComposedRefs(tableRef, ref, observeCellContent);
-  // The stop follows the cell that last held focus (itself or a widget inside it) and is
-  // remembered after focus leaves, so Tab returns there; with no record it is the first cell.
-  // It lives outside React state: an arrow press re-renders only the two cells whose tabIndex
-  // changes, not every cell reading this context (bench: collection-tab-stop.bench.tsx,
-  // PERFORMANCE.md). On the server and while hydrating, cells record themselves in render
-  // order, so the first cell already holds the stop in server HTML.
+  const composedRef = useComposedRefs(tableRef, ref, attachGrid);
+  // On the server and while hydrating, cells record themselves in render order, so the first
+  // cell renders the stop in server HTML.
   const seed = useCollectionSeed();
-  const tabStops = useTabStopStore(cells, seed);
   const valuedRows = useCollection();
   const anchorRef = useRef<string | null>(null);
 
@@ -93,14 +51,13 @@ export function Table({
     return keys.slice(low, high + 1);
   };
 
-  const keyFor = (element: Element) => cells.items().find((item) => item.element === element)?.key;
   // The cell of this table an event target sits in; see `ownerCell`.
   const cellOf = (target: EventTarget | null) => {
     if (!(target instanceof Element)) return null;
-    return ownerCell(target, tableRef.current, (cell) => cellSyncs.has(cell));
+    return ownerCell(target, tableRef.current);
   };
 
-  const context: TableContextValue = { cells, seed, tabStops, rows: valuedRows, cellSyncs };
+  const context: TableContextValue = { seed, rows: valuedRows };
 
   const Part = partElement(as, "table");
   return (
@@ -114,9 +71,9 @@ export function Table({
           if (event.defaultPrevented) return;
           // A click or programmatic focus on a cell, or on a widget inside one, moves the stop.
           // Cells of a grid nested inside a cell belong to that grid, not this one.
-          const cell = cellOf(event.target);
-          const key = cell ? keyFor(cell) : undefined;
-          if (key) tabStops.focus(key, NO_SELECTION);
+          const table = tableRef.current;
+          const stop = table ? focusStop(table, event.target) : null;
+          if (table && stop) moveStop(table, stop);
         }}
         onMouseDown={(event: MouseEvent<HTMLTableElement>) => {
           onMouseDown?.(event);
@@ -184,10 +141,10 @@ export function Table({
           }
           if (!next || next === focused) return;
           event.preventDefault();
-          const nextCell = cellOf(next);
-          const key = nextCell ? keyFor(nextCell) : undefined;
-          if (key) tabStops.focus(key, NO_SELECTION);
+          const stop = focusStop(table, next);
+          if (stop) moveStop(table, stop);
           next.focus();
+          const nextCell = cellOf(next);
           const landedRow = nextCell?.parentElement ?? null;
           const landedValue = valuedRows.items().find((item) => item.element === landedRow)?.key;
           if (extending) {

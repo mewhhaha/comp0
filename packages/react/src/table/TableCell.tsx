@@ -7,5 +7,5 @@ export type TableCellProps = ComponentProps<"td"> & AsProp;
 export function TableCell({ as, ref, ...props }: TableCellProps) {
   const { cellRef, tabIndex } = useTableCell(ref);
   const Part = partElement(as, "td");
-  return <Part {...props} ref={cellRef} tabIndex={tabIndex} />;
+  return <Part {...props} ref={cellRef} tabIndex={tabIndex} data-slot="table-cell" />;
 }

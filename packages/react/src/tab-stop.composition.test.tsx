@@ -144,40 +144,6 @@ describe("roving tab stop registration", () => {
     unmount();
   });
 
-  it("moves the table stop in one commit without re-registering cells", async () => {
-    let commits = 0;
-    const { container, user, unmount } = setup(
-      <Profiler id="table" onRender={() => (commits += 1)}>
-        <button type="button">Before</button>
-        <Table aria-label="Bench">
-          <TableBody>
-            {values.map((value) => (
-              <TableRow key={value}>
-                <TableCell>{value}</TableCell>
-                <TableCell>{`${value} detail`}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Profiler>,
-    );
-    const before = container.querySelector<HTMLElement>("button")!;
-    const cells = container.querySelectorAll<HTMLElement>("td");
-
-    await user.click(before);
-    await user.tab();
-    expect(document.activeElement).toBe(cells[0]);
-    expect(registry.changes).toBeGreaterThan(0);
-    commits = 0;
-    registry.changes = 0;
-    await user.keyboard("{ArrowDown}");
-    expect(document.activeElement).toBe(cells[2]);
-    expect(cells[2]!.tabIndex).toBe(0);
-    expect(commits).toBe(1);
-    expect(registry.changes).toBe(0);
-    unmount();
-  });
-
   it("moves the listbox stop in one commit when the controlled value changes from outside", () => {
     let commits = 0;
     const list = (value: string) => (
@@ -425,30 +391,37 @@ describe("roving tab stop re-renders", () => {
     unmount();
   });
 
-  it("re-renders only the two table cells the stop moves between", async () => {
-    const { rendered, onRender } = tracked();
+  it("moves the table stop without rendering any cell", async () => {
+    // The stop is the tabindex attribute itself, which the table moves in the DOM.
+    let commits = 0;
     const { container, user, unmount } = setup(
-      <Table aria-label="Cells">
-        <TableBody>
-          {many.map((value) => (
-            <TableRow key={value}>
-              <Profiler id={value} onRender={onRender}>
+      <Profiler id="table" onRender={() => (commits += 1)}>
+        <button type="button">Before</button>
+        <Table aria-label="Cells">
+          <TableBody>
+            {many.map((value) => (
+              <TableRow key={value}>
                 <TableCell>{value}</TableCell>
-              </Profiler>
-              <Profiler id={`${value} detail`} onRender={onRender}>
                 <TableCell>{`${value} detail`}</TableCell>
-              </Profiler>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>,
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Profiler>,
     );
+    const before = container.querySelector<HTMLElement>("button")!;
     const cells = container.querySelectorAll<HTMLElement>("td");
-    act(() => cells[2]!.focus());
-    rendered.clear();
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(cells[0]);
+    commits = 0;
+
     await user.keyboard("{ArrowDown}");
-    expect(document.activeElement).toBe(cells[4]);
-    expect([...rendered].sort()).toEqual(["three", "two"]);
+    expect(document.activeElement).toBe(cells[2]);
+    expect([...cells].filter((cell) => cell.tabIndex === 0)).toEqual([cells[2]]);
+    await user.click(cells[5]!);
+    expect([...cells].filter((cell) => cell.tabIndex === 0)).toEqual([cells[5]]);
+    expect(commits).toBe(0);
     unmount();
   });
 
