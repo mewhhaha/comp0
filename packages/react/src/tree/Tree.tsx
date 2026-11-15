@@ -7,8 +7,9 @@ import {
   createTreeShape,
   TreeContext,
   TreeGroupScopeContext,
-  TreeOwnerContext,
+  TreeSetContext,
   useTreeScope,
+  type TreeCollectionItem,
   type TreeContextValue,
 } from "./tree-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
@@ -51,12 +52,12 @@ export function Tree({
     onChange: onOpenChange,
   });
   const navigate = useCollectionNavigation();
-  const collection = useCollection();
+  const collection = useCollection<TreeCollectionItem>();
   const rootScope = useTreeScope();
   // The item that last held focus or was chosen, recorded under the selection current at the
   // time, else the selected item, else the first enabled item. Items inside a collapsed group
-  // register as disabled, so the stop never sits in one: collapsing the group that holds it
-  // hands the stop to the first visible item. The stop lives outside React state, so a focus
+  // register as disabled, so the stop never sits in one: collapsing the group that holds the
+  // recorded or selected item hands the stop to that item's nearest visible ancestor. The stop lives outside React state, so a focus
   // move re-renders only the two items whose tabIndex changes (bench:
   // collection-tab-stop.bench.tsx, PERFORMANCE.md).
   const selection = useTabStopSelection(selected);
@@ -67,7 +68,13 @@ export function Tree({
   // aria-posinset, aria-setsize, and aria-expanded are in server HTML too.
   const [shape] = useState(createTreeShape);
   const pass = useCollectionPass(seed, children);
-  const tabStops = useTabStopStore(collection, seed);
+  // Registered items know their parent; before they register (on the server and while
+  // hydrating) the pass recorded it.
+  const parentOf = (key: string) => {
+    const item = collection.get(key);
+    return item ? item.parent : shape.parent(key);
+  };
+  const tabStops = useTabStopStore(collection, seed, parentOf);
   const setFocusedKey = (key: string) => {
     tabStops.focus(key, selection);
   };
@@ -124,7 +131,7 @@ export function Tree({
   const Part = partElement(as, "div");
   return (
     <TreeContext value={context}>
-      <TreeOwnerContext value={null}>
+      <TreeSetContext value={null}>
         <TreeGroupScopeContext value={rootScope}>
           {pass}
           <Part
@@ -197,7 +204,7 @@ export function Tree({
             {children}
           </Part>
         </TreeGroupScopeContext>
-      </TreeOwnerContext>
+      </TreeSetContext>
     </TreeContext>
   );
 }

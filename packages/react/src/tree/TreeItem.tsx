@@ -24,10 +24,11 @@ import {
   TreeCollapsedContext,
   TreeItemContext,
   TreeLevelContext,
-  TreeOwnerContext,
+  TreeSetContext,
   treeRowText,
   useTreeContext,
   useTreeGroupCount,
+  useOptionalTreeItemContext,
   useTreeGroupScopeContext,
   type TreeItemContextValue,
 } from "./tree-shared.js";
@@ -48,8 +49,9 @@ function TreeItemPart({
   const { collection } = tree;
   const scope = useTreeGroupScopeContext("TreeItem");
   const scopeCollection = scope.collection;
-  const owner = use(TreeOwnerContext);
   const level = use(TreeLevelContext);
+  // The item whose group holds this one, read before this item provides its own context.
+  const parent = useOptionalTreeItemContext()?.value ?? null;
   // An item inside a collapsed group is out of reach: it registers as disabled, so neither the
   // stop nor the seed can land on it.
   const collapsed = use(TreeCollapsedContext);
@@ -85,7 +87,7 @@ function TreeItemPart({
     () => scope.position(value),
     () => tree.shape.position(value),
   );
-  const size = useSyncExternalStore(scope.subscribe, scope.size, () => tree.shape.size(owner));
+  const size = useSyncExternalStore(scope.subscribe, scope.size, () => tree.shape.size(value));
   const setSize = posInSet === undefined ? undefined : size;
 
   // The stop, the position, and the group depend on the whole tree, which the server can see in
@@ -118,7 +120,7 @@ function TreeItemPart({
     }
     let label = textValue || treeRowText(element);
     if (!label) label = ariaLabel ?? value;
-    const item = { key: value, id, textValue: label, element, disabled: unavailable };
+    const item = { key: value, id, textValue: label, element, disabled: unavailable, parent };
     collection.register(item);
     scopeCollection.register(item);
   });
@@ -207,12 +209,13 @@ export function TreeItem(props: TreeItemProps) {
 function CollectedTreeItem({ value, disabled, children }: TreeItemProps) {
   const tree = useTreeContext("TreeItem");
   const collapsed = use(TreeCollapsedContext);
-  const owner = use(TreeOwnerContext);
+  const set = use(TreeSetContext);
+  const parent = useOptionalTreeItemContext()?.value ?? null;
   useCollectedItem(tree.seed, value, Boolean(disabled) || collapsed);
   // A render-time write under the same limits as `useCollectedItem`, for the item's
   // aria-posinset and aria-setsize.
   const own = useIsCollectionPassOf(tree.seed);
-  if (own) tree.shape.add(owner, value);
+  if (own) tree.shape.add(set, value, parent);
   // Nested groups only need to know which item they belong to, to read whether it is open. The
   // row's own text cannot hold items, so it stays out of the pass's hidden copy.
   const itemContext: TreeItemContextValue = { value, registerGroup: ignoreGroup };

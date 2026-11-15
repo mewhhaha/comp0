@@ -71,15 +71,29 @@ describe("Tree collection pass", () => {
     expect(tabStops(container)).toEqual(["input"]);
   });
 
-  it("never puts the stop inside a collapsed group, however deep the selection sits", () => {
+  it("puts the stop on the nearest visible ancestor of a selection in a collapsed group", () => {
     const closed = serverRender(files({ defaultValue: "button" }));
     const outerOpen = serverRender(files({ defaultOpen: ["src"], defaultValue: "button" }));
     // An open group inside a closed one is still out of view.
     const innerOpen = serverRender(files({ defaultOpen: ["components"], defaultValue: "button" }));
 
     expect(tabStops(closed)).toEqual(["src"]);
-    expect(tabStops(outerOpen)).toEqual(["src"]);
+    expect(tabStops(outerOpen)).toEqual(["components"]);
     expect(tabStops(innerOpen)).toEqual(["src"]);
+  });
+
+  it("numbers a group without an owning item as a set of its own", () => {
+    const container = serverRender(
+      <Tree aria-label="Files">
+        <TreeItem value="a">a</TreeItem>
+        <TreeGroup>
+          <TreeItem value="b">b</TreeItem>
+          <TreeItem value="c">c</TreeItem>
+        </TreeGroup>
+      </Tree>,
+    );
+
+    expect(shape(container)).toEqual(["a 1/1 null", "b 1/2 null", "c 2/2 null"]);
   });
 
   it("skips a disabled first item", () => {
@@ -111,7 +125,7 @@ describe("Tree collection pass", () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});
     const ui = page(files({ defaultOpen: ["src"], defaultValue: "button" }));
     const container = serverRender(ui);
-    expect(tabStops(container)).toEqual(["src"]);
+    expect(tabStops(container)).toEqual(["components"]);
     const index = container.querySelector<HTMLElement>("[data-value='index']")!;
     index.focus();
 
@@ -296,11 +310,38 @@ describe("Tree position and expansion on the client", () => {
 });
 
 describe("Tree tab stop and collapsed groups", () => {
-  it("hands the stop to the first visible item when its group collapses from outside", () => {
-    const tree = (open: string[]) => files({ open, onOpenChange: () => {}, defaultValue: "index" });
+  it("hands the stop to the collapsed parent when its group collapses from outside", () => {
+    // The parent is not the first item, so falling back to the first item would land on readme.
+    const tree = (open: string[]) => (
+      <Tree aria-label="Files" open={open} onOpenChange={() => {}} defaultValue="index">
+        <TreeItem value="readme">README.md</TreeItem>
+        <TreeItem value="src">
+          src
+          <TreeGroup>
+            <TreeItem value="index">index.ts</TreeItem>
+          </TreeGroup>
+        </TreeItem>
+      </Tree>
+    );
     const { container, rerender, unmount } = render(tree(["src"]));
     expect(tabStops(container)).toEqual(["index"]);
 
+    rerender(tree([]));
+    expect(tabStops(container)).toEqual(["src"]);
+    rerender(tree(["src"]));
+    expect(tabStops(container)).toEqual(["index"]);
+    unmount();
+  });
+
+  it("hands a focused item's stop to its nearest visible ancestor, not the selection", () => {
+    const tree = (open: string[]) =>
+      files({ open, onOpenChange: () => {}, defaultValue: "readme" });
+    const { container, rerender, unmount } = render(tree(["src", "components"]));
+    act(() => container.querySelector<HTMLElement>("[data-value='input']")!.focus());
+    expect(tabStops(container)).toEqual(["input"]);
+
+    rerender(tree(["src"]));
+    expect(tabStops(container)).toEqual(["components"]);
     rerender(tree([]));
     expect(tabStops(container)).toEqual(["src"]);
     unmount();
@@ -325,7 +366,7 @@ describe("Tree tab stop and collapsed groups", () => {
     rerender(tree(["src", "components"]));
     expect(visibleStop()).toBe("button");
     rerender(tree(["src"]));
-    expect(visibleStop()).toBe("src");
+    expect(visibleStop()).toBe("components");
     unmount();
   });
 });

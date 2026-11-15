@@ -54,6 +54,14 @@ export function useTabStopSelection(selected: string, keepFocusRecord = false) {
   return next;
 }
 
+/**
+ * For a collection whose items nest (Tree): the key of the item that contains `key`, if any. A
+ * recorded or selected item that is out of reach (inside a collapsed group) then hands the stop
+ * to its nearest ancestor in reach instead of the first item. It is read only while resolving,
+ * and must answer from the root's stable stores, never from render state.
+ */
+export type ParentOf = (key: string) => string | null | undefined;
+
 /** The owner's handle on a fine-grained tab stop: items read it with `useIsTabStop`. */
 export type TabStopStore = {
   subscribe: (listener: () => void) => () => void;
@@ -75,6 +83,7 @@ export type TabStopStore = {
 function createTabStopStore<TItem extends CollectionItem<Element>>(
   collection: Collection<TItem>,
   seed: CollectionSeed,
+  parentOf: ParentOf | undefined,
 ): TabStopStore {
   const listeners = new Set<() => void>();
   let focused = { key: "", epoch: 0 };
@@ -95,7 +104,17 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
     if (focused.epoch === selection.epoch) key = focused.key;
     // A record survives one change of selection, and only when that change cleared it.
     else if (!selection.value && focused.epoch === selection.epoch - 1) key = focused.key;
-    return resolveTabStop(collection, [key, selection.value], seed);
+    return resolveTabStop(collection, [...lineage(key), ...lineage(selection.value)], seed);
+  };
+  // The key followed by the items that contain it, nearest first, so a preferred item that is out
+  // of reach hands the stop to its nearest ancestor in reach before anything else.
+  const lineage = (key: string) => {
+    if (!parentOf) return [key];
+    const keys: string[] = [];
+    for (let current = key; current && !keys.includes(current); current = parentOf(current) ?? "") {
+      keys.push(current);
+    }
+    return keys;
   };
   return {
     subscribe(listener) {
@@ -136,13 +155,14 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
  *
  * Keep item registration stable (a ref callback must not depend on a context value that changes
  * with the stop), or every stop move re-registers every item and each notification recomputes
- * the snapshot.
+ * the snapshot. Pass `parentOf` for a collection whose items nest.
  */
 export function useTabStopStore<TItem extends CollectionItem<Element>>(
   collection: Collection<TItem>,
   seed: CollectionSeed,
+  parentOf?: ParentOf,
 ) {
-  const [store] = useState(() => createTabStopStore(collection, seed));
+  const [store] = useState(() => createTabStopStore(collection, seed, parentOf));
   return store;
 }
 
