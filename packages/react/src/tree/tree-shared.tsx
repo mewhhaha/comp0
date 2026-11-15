@@ -1,8 +1,11 @@
 import { createContext, useState } from "react";
-import { createCollection, type Collection } from "@comp0/core";
+import { createCollection, type Collection, type CollectionItem } from "@comp0/core";
 import { type CollectionSeed } from "../internal/collection-pass.js";
 import { createRequiredContext } from "../internal/context.js";
 import { type TabStopSelection, type TabStopStore } from "../internal/tab-stop.js";
+
+/** A registered tree item, with the item whose group holds it (`null` at the root). */
+export type TreeCollectionItem = CollectionItem & { parent: string | null };
 
 export type TreeContextValue = {
   /** What the collection pass and the items fill on the server and while hydrating. */
@@ -21,9 +24,10 @@ export type TreeContextValue = {
   toggleOpen: (key: string) => void;
   /**
    * Every item in the tree; each registers and unregisters itself on this stable object. An
-   * item inside a collapsed group registers as disabled, so the stop never lands on it.
+   * item inside a collapsed group registers as disabled, so the stop never lands on it: it goes to
+   * the nearest ancestor in reach, read from each item's `parent`.
    */
-  collection: Collection;
+  collection: Collection<TreeCollectionItem>;
 };
 
 export const [TreeContext, useTreeContext, useOptionalTreeContext] =
@@ -45,10 +49,13 @@ export const [TreeItemContext, useTreeItemContext, useOptionalTreeItemContext] =
   createRequiredContext<TreeItemContextValue>("TreeItem");
 
 /**
- * The value of the item whose group holds the items at this depth, or `null` at the root. Tree
- * provides `null`, so a tree nested inside another tree's item starts its own root.
+ * The sibling set the collection pass records items at this depth into: `null` at the root, and
+ * a token of each TreeGroup's own otherwise, so a group without an owning item still numbers its
+ * items as a set of their own. Tree provides `null`, so a tree nested inside another tree's item
+ * starts its own root. Only the pass reads it.
  */
-export const TreeOwnerContext = createContext<string | null>(null);
+export type TreeSet = object | null;
+export const TreeSetContext = createContext<TreeSet>(null);
 
 /**
  * What the collection pass sees of the tree's shape: each item's place among its siblings and
@@ -56,34 +63,44 @@ export const TreeOwnerContext = createContext<string | null>(null);
  * only as their server snapshot, so a later client render never sees a stale answer.
  */
 export type TreeShape = {
-  /** Records an item under its owner; a key already recorded keeps its first position. */
-  add: (owner: string | null, key: string) => void;
+  /**
+   * Records an item in its sibling set, under the item whose group holds it; a key already
+   * recorded keeps its first position.
+   */
+  add: (set: TreeSet, key: string, parent: string | null) => void;
   /** Records that the item `key` renders a TreeGroup. */
   addGroup: (key: string) => void;
   /** The item's 1-based position among its siblings, if recorded. */
   position: (key: string) => number | undefined;
-  /** How many items the owner's group holds, if any were recorded. */
-  size: (owner: string | null) => number | undefined;
+  /** How many items the item's sibling set holds, if the item was recorded. */
+  size: (key: string) => number | undefined;
   hasGroup: (key: string) => boolean;
+  /** The item whose group holds `key`, if recorded. */
+  parent: (key: string) => string | null | undefined;
 };
 
 export function createTreeShape(): TreeShape {
   const positions = new Map<string, number>();
-  const sizes = new Map<string | null, number>();
+  const sets = new Map<string, TreeSet>();
+  const sizes = new Map<TreeSet, number>();
+  const parents = new Map<string, string | null>();
   const groups = new Set<string>();
   return {
-    add(owner, key) {
+    add(set, key, parent) {
       if (positions.has(key)) return;
-      const size = (sizes.get(owner) ?? 0) + 1;
-      sizes.set(owner, size);
+      const size = (sizes.get(set) ?? 0) + 1;
+      sizes.set(set, size);
       positions.set(key, size);
+      sets.set(key, set);
+      parents.set(key, parent);
     },
     addGroup(key) {
       groups.add(key);
     },
     position: (key) => positions.get(key),
-    size: (owner) => sizes.get(owner),
+    size: (key) => (sets.has(key) ? sizes.get(sets.get(key) ?? null) : undefined),
     hasGroup: (key) => groups.has(key),
+    parent: (key) => parents.get(key),
   };
 }
 
