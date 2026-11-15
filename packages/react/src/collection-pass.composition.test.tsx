@@ -15,6 +15,9 @@ import {
   TabList,
   TabPanel,
   Tabs,
+  Tag,
+  TagGroup,
+  TagList,
 } from "./index.js";
 
 function serverRender(ui: ReactElement) {
@@ -183,6 +186,51 @@ describe("collection pass", () => {
     expect(stops(container, "tab")).toEqual(["One"]);
     const root = await hydrate(container, ui);
     expect(stops(container, "tab")).toEqual(["One"]);
+    expect(errors).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
+  it("renders one tag stop in server HTML, skipping a disabled tag, and hydrates without a mismatch", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const ui = (
+      <TagGroup defaultValue={["arts"]}>
+        <TagList aria-label="Topics">
+          <Tag value="news" disabled>
+            News
+          </Tag>
+          <Tag value="sports">Sports</Tag>
+          <Tag value="arts">Arts</Tag>
+        </TagList>
+      </TagGroup>
+    );
+    const container = serverRender(ui);
+
+    // Selection is multiple and does not choose the stop: the first enabled tag holds it.
+    expect(stops(container, "row")).toEqual(["sports"]);
+    const root = await hydrate(container, ui);
+    expect(stops(container, "row")).toEqual(["sports"]);
+    expect(container.querySelector("[hidden]")).toBeNull();
+    expect(errors).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
+  it("hydrates tags inside a Suspense boundary without a mismatch", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const ui = (
+      <TagGroup>
+        <TagList aria-label="Topics">
+          <Suspense fallback={null}>
+            <Tag value="news">News</Tag>
+            <Tag value="arts">Arts</Tag>
+          </Suspense>
+        </TagList>
+      </TagGroup>
+    );
+    const container = serverRender(ui);
+
+    expect(stops(container, "row")).toEqual(["news"]);
+    const root = await hydrate(container, ui);
+    expect(stops(container, "row")).toEqual(["news"]);
     expect(errors).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });

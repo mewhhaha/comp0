@@ -73,6 +73,11 @@ export type TabStopStore = {
    * selection keeps it.
    */
   focus: (key: string, selection: TabStopSelection) => void;
+  /**
+   * Drops the record when it names `key`, for an owner whose record never expires with a
+   * selection (TagGroup): a removed item that comes back later must not take the stop back.
+   */
+  forget: (key: string) => void;
 };
 
 function createTabStopStore<TItem extends CollectionItem<Element>>(
@@ -131,6 +136,11 @@ function createTabStopStore<TItem extends CollectionItem<Element>>(
     focus(key, selection) {
       if (focused.key === key && focused.epoch === selection.epoch) return;
       focused = { key, epoch: selection.epoch };
+      notify();
+    },
+    forget(key) {
+      if (!key || focused.key !== key) return;
+      focused = { key: "", epoch: focused.epoch };
       notify();
     },
   };

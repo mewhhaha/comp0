@@ -19,6 +19,9 @@ import {
   TabList,
   TabPanel,
   Tabs,
+  Tag,
+  TagGroup,
+  TagList,
 } from "./index.js";
 
 const cases: { name: string; role: string; forward: string; ui: ReactElement }[] = [
@@ -42,6 +45,19 @@ const cases: { name: string; role: string; forward: string; ui: ReactElement }[]
         <GridListItem value="readme">Readme</GridListItem>
         <GridListItem value="license">License</GridListItem>
       </GridList>
+    ),
+  },
+  {
+    name: "TagGroup",
+    role: "grid",
+    forward: "{ArrowRight}",
+    ui: (
+      <TagGroup>
+        <TagList aria-label="Topics">
+          <Tag value="news">News</Tag>
+          <Tag value="arts">Arts</Tag>
+        </TagList>
+      </TagGroup>
     ),
   },
   {
