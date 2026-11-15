@@ -17,6 +17,8 @@ import {
   Tag,
   TagGroup,
   TagList,
+  Tree,
+  TreeItem,
 } from "../src/index.js";
 import { keyDown, median, mountMeasured, report, type Row, type Sample } from "./measure.js";
 
@@ -92,6 +94,21 @@ const families: Family[] = [
           </GridListItem>
         ))}
       </GridList>
+    ),
+  },
+  {
+    name: "Tree",
+    item: "[role='treeitem']",
+    next: "ArrowDown",
+    loop: false,
+    ui: (size, value) => (
+      <Tree aria-label="Bench" defaultValue={value}>
+        {values(size).map((item) => (
+          <TreeItem key={item} value={item}>
+            {item}
+          </TreeItem>
+        ))}
+      </Tree>
     ),
   },
   {

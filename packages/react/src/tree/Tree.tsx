@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
+import { useState, type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
 import { useCollection, useCollectionNavigation, useControllableState } from "@comp0/core";
+import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
+import { useTabStopSelection, useTabStopStore } from "../internal/tab-stop.js";
 import {
+  createTreeShape,
   TreeContext,
   TreeGroupScopeContext,
-  useTreeGroupScope,
+  TreeOwnerContext,
+  useTreeScope,
   type TreeContextValue,
 } from "./tree-shared.js";
 import { writingDirection } from "../internal/writing-direction.js";
@@ -31,6 +35,7 @@ export function Tree({
   open: openProp,
   defaultOpen,
   onOpenChange,
+  onFocus,
   onKeyDown,
   children,
   ...props
@@ -46,21 +51,26 @@ export function Tree({
     onChange: onOpenChange,
   });
   const navigate = useCollectionNavigation();
-  const [activeKey, setActiveKey] = useState(selected);
-  const activeKeyRef = useRef(activeKey);
   const collection = useCollection();
-  const rootScope = useTreeGroupScope();
-
-  useEffect(() => {
-    if (selected) {
-      activeKeyRef.current = selected;
-      setActiveKey(selected);
-    }
-  }, [selected]);
-
-  useEffect(() => {
-    activeKeyRef.current = activeKey;
-  }, [activeKey]);
+  const rootScope = useTreeScope();
+  // The item that last held focus or was chosen, recorded under the selection current at the
+  // time, else the selected item, else the first enabled item. Items inside a collapsed group
+  // register as disabled, so the stop never sits in one: collapsing the group that holds it
+  // hands the stop to the first visible item. The stop lives outside React state, so a focus
+  // move re-renders only the two items whose tabIndex changes (bench:
+  // collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  const selection = useTabStopSelection(selected);
+  // On the server and while hydrating, the items are collected before they render, so the stop
+  // is already resolved in server HTML.
+  const seed = useCollectionSeed();
+  // The same pass records each item's place among its siblings and which items own a group, so
+  // aria-posinset, aria-setsize, and aria-expanded are in server HTML too.
+  const [shape] = useState(createTreeShape);
+  const pass = useCollectionPass(seed, children);
+  const tabStops = useTabStopStore(collection, seed);
+  const setFocusedKey = (key: string) => {
+    tabStops.focus(key, selection);
+  };
 
   // Arrow keys, Home/End, and typeahead walk VISIBLE rows only: a collapsed
   // TreeGroup renders with the hidden attribute, so checking each item's
@@ -70,17 +80,10 @@ export function Tree({
       .items()
       .filter((item) => item.element !== null && item.element.closest("[hidden]") === null);
 
-  // The roving tab stop must sit on a visible, enabled item: nothing is
-  // active on first render, and the selected item can live inside a
-  // collapsed group. Runs after every commit and bails when already valid.
-  useEffect(() => {
-    const visible = visibleItems().filter((item) => !item.disabled);
-    if (visible.some((item) => item.key === activeKeyRef.current)) return;
-    const first = visible[0];
-    if (!first) return;
-    activeKeyRef.current = first.key;
-    setActiveKey(first.key);
-  });
+  // Nested items contain their descendants, so the innermost registered element around the
+  // target is the item it belongs to.
+  const itemAround = (items: ReturnType<typeof visibleItems>, target: Node | null) =>
+    items.filter((item) => target && item.element?.contains(target)).at(-1);
 
   const setItemOpen = (key: string, nextOpen: boolean) => {
     setOpen((current) => {
@@ -101,92 +104,100 @@ export function Tree({
   const focusItem = (key: string) => {
     const element = collection.get(key)?.element;
     if (!element) return;
-    activeKeyRef.current = key;
-    setActiveKey(key);
+    setFocusedKey(key);
     element.focus();
   };
 
   const context: TreeContextValue = {
-    activeKey,
+    seed,
+    shape,
+    tabStops,
+    selection,
     selectedKey: selected,
     open,
-    setActiveKey,
+    setFocusedKey,
     setSelectedKey: setSelected,
     toggleOpen,
-    register: collection.register,
     collection,
   };
 
   const Part = partElement(as, "div");
   return (
     <TreeContext value={context}>
-      <TreeGroupScopeContext value={rootScope}>
-        <Part
-          {...props}
-          role="tree"
-          onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
-            onKeyDown?.(event);
-            if (event.defaultPrevented) return;
-            const ownerWindow = event.currentTarget.ownerDocument.defaultView;
-            const target =
-              ownerWindow && event.target instanceof ownerWindow.HTMLElement ? event.target : null;
-            const visible = visibleItems();
-            // Nested items contain their descendants, so the innermost
-            // registered element around the target is the focused item.
-            const current = visible
-              .filter((item) => target && item.element?.contains(target))
-              .at(-1);
-            const currentElement = current?.element;
-            if (!current || !currentElement) return;
-            const rtl = writingDirection(event.currentTarget) === "rtl";
-            const expandKey = rtl ? "ArrowLeft" : "ArrowRight";
-            const collapseKey = rtl ? "ArrowRight" : "ArrowLeft";
+      <TreeOwnerContext value={null}>
+        <TreeGroupScopeContext value={rootScope}>
+          {pass}
+          <Part
+            {...props}
+            role="tree"
+            onFocus={(event: FocusEvent<HTMLDivElement>) => {
+              onFocus?.(event);
+              if (event.defaultPrevented) return;
+              const item = itemAround(collection.items(), event.target);
+              if (item && !item.disabled) setFocusedKey(item.key);
+            }}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+              onKeyDown?.(event);
+              if (event.defaultPrevented) return;
+              const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+              const target =
+                ownerWindow && event.target instanceof ownerWindow.HTMLElement
+                  ? event.target
+                  : null;
+              const visible = visibleItems();
+              const current = itemAround(visible, target);
+              const currentElement = current?.element;
+              if (!current || !currentElement) return;
+              const rtl = writingDirection(event.currentTarget) === "rtl";
+              const expandKey = rtl ? "ArrowLeft" : "ArrowRight";
+              const collapseKey = rtl ? "ArrowRight" : "ArrowLeft";
 
-            if (event.key === expandKey) {
-              // A descendant group can only belong to this item: groups only
-              // ever render inside their own parent item.
-              if (current.disabled || currentElement.querySelector('[role="group"]') === null) {
+              if (event.key === expandKey) {
+                // A descendant group can only belong to this item: groups only
+                // ever render inside their own parent item.
+                if (current.disabled || currentElement.querySelector('[role="group"]') === null) {
+                  return;
+                }
+                event.preventDefault();
+                if (!open.includes(current.key)) {
+                  setItemOpen(current.key, true);
+                  return;
+                }
+                // The first child of an expanded item is the next visible row
+                // inside its element.
+                const next = visible[visible.indexOf(current) + 1];
+                if (next?.element && currentElement.contains(next.element)) focusItem(next.key);
                 return;
               }
+              if (event.key === collapseKey) {
+                const expandable = currentElement.querySelector('[role="group"]') !== null;
+                if (expandable && open.includes(current.key) && !current.disabled) {
+                  event.preventDefault();
+                  setItemOpen(current.key, false);
+                  return;
+                }
+                const parent = visible
+                  .filter((item) => item !== current && item.element?.contains(currentElement))
+                  .at(-1);
+                if (parent && !parent.disabled) {
+                  event.preventDefault();
+                  focusItem(parent.key);
+                }
+                return;
+              }
+              // Enter and Space select in TreeItem's own handler; anything they
+              // handled arrives here already default-prevented.
+              if (event.key === "Enter" || event.key === " ") return;
+              const key = navigate(event.key, visible, current.key, { orientation: "vertical" });
+              if (!key) return;
               event.preventDefault();
-              if (!open.includes(current.key)) {
-                setItemOpen(current.key, true);
-                return;
-              }
-              // The first child of an expanded item is the next visible row
-              // inside its element.
-              const next = visible[visible.indexOf(current) + 1];
-              if (next?.element && currentElement.contains(next.element)) focusItem(next.key);
-              return;
-            }
-            if (event.key === collapseKey) {
-              const expandable = currentElement.querySelector('[role="group"]') !== null;
-              if (expandable && open.includes(current.key) && !current.disabled) {
-                event.preventDefault();
-                setItemOpen(current.key, false);
-                return;
-              }
-              const parent = visible
-                .filter((item) => item !== current && item.element?.contains(currentElement))
-                .at(-1);
-              if (parent && !parent.disabled) {
-                event.preventDefault();
-                focusItem(parent.key);
-              }
-              return;
-            }
-            // Enter and Space select in TreeItem's own handler; anything they
-            // handled arrives here already default-prevented.
-            if (event.key === "Enter" || event.key === " ") return;
-            const key = navigate(event.key, visible, current.key, { orientation: "vertical" });
-            if (!key) return;
-            event.preventDefault();
-            focusItem(key);
-          }}
-        >
-          {children}
-        </Part>
-      </TreeGroupScopeContext>
+              focusItem(key);
+            }}
+          >
+            {children}
+          </Part>
+        </TreeGroupScopeContext>
+      </TreeOwnerContext>
     </TreeContext>
   );
 }
