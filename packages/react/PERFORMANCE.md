@@ -92,6 +92,21 @@ Later, `aria-posinset`, `aria-setsize`, and `aria-expanded` moved from layout-ef
 - **A client mount renders about a seventh faster and keeps its two commits.** The bench mounts on the client, where no pass runs: items still learn their positions only once they register, so the second commit re-renders every item as before, but it no longer scans each item's siblings (render 91 → 78 ms at 1000). The commit it saves is the hydration one, which the bench does not measure: the hydrated items' client snapshots already match their server snapshots, so `useSyncExternalStore` schedules no re-render.
 - **Arrow presses are unchanged.** Moving the stop touches neither store.
 
+### TagGroup
+
+TagGroup moved from an `activeKey` in `TagList` state and context, set from each tag's registration, to `useTabStopStore` with each `Tag` reading `useIsTabStop`. Selection is multiple and never chooses the stop, so the store resolves it from the tag that last held focus, else the first enabled tag. Same bench and setup as above; the two columns were measured back to back in one session, alternating twice, and the second pair was within 0.4 ms of the first except the context column's unselected mount at 1000 (67.9 ms wall).
+
+| Scenario            | Tags | Store: commits / render ms / wall ms | Context: commits / render ms / wall ms |
+| ------------------- | ---: | ------------------------------------ | -------------------------------------- |
+| mount, selected     |  100 | 2 / 5.6 / 6.4                        | 3 / 6.5 / 7.4                          |
+| mount, selected     | 1000 | 2 / 47.1 / 55.1                      | 3 / 60.9 / 69.4                        |
+| mount, no selection | 1000 | 2 / 45.6 / 53.3                      | 3 / 54.2 / 61.7                        |
+| ArrowRight          |  100 | 1 / 0.06 / 0.18                      | 2 / 1.44 / 1.88                        |
+| ArrowRight          | 1000 | 1 / 0.20 / 0.80                      | 2 / 14.19 / 20.53                      |
+
+- **An arrow press re-renders two tags in one commit.** With the stop in context, every tag re-rendered on each press, and the state setter each tag's registration called scheduled a second commit: 20.5 ms wall at 1000 tags. With the store, only the tag the stop leaves and the one it reaches render: 0.80 ms. "re-renders only the two tags the stop moves between" in `tab-stop.composition.test.tsx` keeps it that way.
+- **Mount loses a commit.** Registration no longer sets state; the second commit is the store's, rendering only the tag that becomes the stop once tags register. Server HTML now has that stop too, through the collection pass, where before it had none.
+
 ### Table
 
 The same bench measures Table, whose items are cells: a header row and body rows of four (1000 is a header plus 249 rows). Arrow rows press ArrowDown from the first body cell, and Table has no selection, so its mount rows (the bench's "mount, no item selected") have no remembered cell. Three implementations, each run with the same command:

@@ -23,6 +23,9 @@ import {
   TableRow,
   TabList,
   Tabs,
+  Tag,
+  TagGroup,
+  TagList,
 } from "./index.js";
 
 type Case = {
@@ -69,6 +72,19 @@ const cases: Case[] = [
         <GridListItem value="readme">Readme</GridListItem>
         <GridListItem value="license">License</GridListItem>
       </GridList>
+    ),
+  },
+  {
+    name: "TagGroup",
+    firstItem: "row, News",
+    forward: "ArrowRight",
+    ui: (
+      <TagGroup>
+        <TagList aria-label="Topics">
+          <Tag value="news">News</Tag>
+          <Tag value="arts">Arts</Tag>
+        </TagList>
+      </TagGroup>
     ),
   },
   {

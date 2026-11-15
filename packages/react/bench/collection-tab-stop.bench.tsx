@@ -14,6 +14,9 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Tag,
+  TagGroup,
+  TagList,
   Tree,
   TreeItem,
 } from "../src/index.js";
@@ -106,6 +109,25 @@ const families: Family[] = [
           </TreeItem>
         ))}
       </Tree>
+    ),
+  },
+  {
+    // Selection is multiple and does not choose the stop, so the selected tag only adds
+    // aria-selected; ArrowRight moves focus without changing the selection.
+    name: "TagGroup",
+    item: "[role='row']",
+    next: "ArrowRight",
+    loop: false,
+    ui: (size, value) => (
+      <TagGroup defaultValue={value === undefined ? [] : [value]}>
+        <TagList aria-label="Bench">
+          {values(size).map((item) => (
+            <Tag key={item} value={item}>
+              {item}
+            </Tag>
+          ))}
+        </TagList>
+      </TagGroup>
     ),
   },
   {
