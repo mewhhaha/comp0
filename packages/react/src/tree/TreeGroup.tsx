@@ -1,13 +1,14 @@
 import { use, useLayoutEffect, type ComponentProps } from "react";
-import { useIsCollectionPass } from "../internal/collection-pass.js";
+import { useIsCollectionPass, useIsCollectionPassOf } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import {
   TreeCollapsedContext,
   TreeGroupScopeContext,
   TreeLevelContext,
+  TreeOwnerContext,
   useOptionalTreeItemContext,
   useTreeContext,
-  useTreeGroupScope,
+  useTreeScope,
 } from "./tree-shared.js";
 
 export type TreeGroupProps = ComponentProps<"div"> & AsProp;
@@ -19,7 +20,8 @@ export type TreeGroupProps = ComponentProps<"div"> & AsProp;
  * order without unmounting.
  */
 export function TreeGroup(props: TreeGroupProps) {
-  // A collection pass only needs the items inside the group, and whether they are collapsed.
+  // A collection pass only needs the items inside the group, which item owns it, and whether
+  // they are collapsed.
   const collecting = useIsCollectionPass();
   if (collecting) return <CollectedTreeGroup {...props} />;
   return <TreeGroupPart {...props} />;
@@ -29,32 +31,41 @@ export function TreeGroup(props: TreeGroupProps) {
 function useGroupHidden() {
   const tree = useTreeContext("TreeGroup");
   const item = useOptionalTreeItemContext();
-  return { item, hidden: item !== null && !tree.open.includes(item.value) };
+  return { tree, item, hidden: item !== null && !tree.open.includes(item.value) };
 }
 
 function TreeGroupPart({ as, children, ...props }: TreeGroupProps) {
   const { item, hidden } = useGroupHidden();
   const level = use(TreeLevelContext);
   const collapsed = use(TreeCollapsedContext);
-  const scope = useTreeGroupScope();
+  const scope = useTreeScope();
   useLayoutEffect(() => item?.registerGroup(), [item]);
 
   const Part = partElement(as, "div");
   return (
     <TreeLevelContext value={level + 1}>
       <TreeCollapsedContext value={collapsed || hidden}>
-        <TreeGroupScopeContext value={scope}>
-          <Part {...props} role="group" hidden={hidden}>
-            {children}
-          </Part>
-        </TreeGroupScopeContext>
+        <TreeOwnerContext value={item?.value ?? null}>
+          <TreeGroupScopeContext value={scope}>
+            <Part {...props} role="group" hidden={hidden}>
+              {children}
+            </Part>
+          </TreeGroupScopeContext>
+        </TreeOwnerContext>
       </TreeCollapsedContext>
     </TreeLevelContext>
   );
 }
 
 function CollectedTreeGroup({ children }: TreeGroupProps) {
-  const { hidden } = useGroupHidden();
+  const { tree, item, hidden } = useGroupHidden();
   const collapsed = use(TreeCollapsedContext);
-  return <TreeCollapsedContext value={collapsed || hidden}>{children}</TreeCollapsedContext>;
+  // A render-time write under the same limits as `useCollectedItem`: only in the tree's own pass.
+  const own = useIsCollectionPassOf(tree.seed);
+  if (own && item) tree.shape.addGroup(item.value);
+  return (
+    <TreeCollapsedContext value={collapsed || hidden}>
+      <TreeOwnerContext value={item?.value ?? null}>{children}</TreeOwnerContext>
+    </TreeCollapsedContext>
+  );
 }

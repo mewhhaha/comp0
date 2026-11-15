@@ -23,6 +23,9 @@ import {
   TableRow,
   TabList,
   Tabs,
+  Tree,
+  TreeGroup,
+  TreeItem,
 } from "./index.js";
 
 function stream(ui: ReactElement, afterStart: () => void) {
@@ -540,6 +543,43 @@ describe("hydrating HTML the server rendered out of order", () => {
     expect(container.querySelector("[data-value='pear']")!.getAttribute("data-active")).toBe(
       "route",
     );
+    await act(async () => root.unmount());
+  });
+
+  it("numbers tree items in document order when one suspended on the server", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const late = gate();
+    const Late = () => {
+      use(late.promise);
+      return (
+        <TreeItem value="src">
+          src
+          <TreeGroup>
+            <TreeItem value="index">index.ts</TreeItem>
+          </TreeGroup>
+        </TreeItem>
+      );
+    };
+    const { container, root } = await streamThenHydrate(
+      <Tree aria-label="Files" defaultOpen={["src"]}>
+        <Late />
+        <TreeItem value="package">package.json</TreeItem>
+        <TreeItem value="readme">README.md</TreeItem>
+      </Tree>,
+      late.open,
+    );
+
+    const shape = [...container.querySelectorAll<HTMLElement>("[role='treeitem']")].map(
+      (item) =>
+        `${item.dataset.value} ${item.getAttribute("aria-posinset")}/${item.getAttribute("aria-setsize")} ${item.getAttribute("aria-expanded")}`,
+    );
+    expect(shape).toEqual([
+      "src 1/3 true",
+      "index 1/1 null",
+      "package 2/3 null",
+      "readme 3/3 null",
+    ]);
+    expect(stops(container, "treeitem")).toEqual(["src"]);
     await act(async () => root.unmount());
   });
 });

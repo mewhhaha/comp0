@@ -366,7 +366,6 @@
   "packages/react/dist/tree/Tree.js",
   "packages/react/dist/tree/TreeGroup.js",
   "packages/react/dist/tree/TreeItem.js",
-  "packages/react/dist/tree/tree-shared.js",
   "packages/react/dist/visually-hidden/VisuallyHidden.js",
   "packages/react/dist/visually-hidden/visually-hidden-shared.js"
 ]
