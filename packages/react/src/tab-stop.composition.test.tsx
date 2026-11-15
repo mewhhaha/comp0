@@ -1,4 +1,4 @@
-import { act, Profiler } from "react";
+import { act, Profiler, type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { type CollectionItem } from "@comp0/core";
 import { render, setup } from "../test/render.js";
@@ -16,6 +16,9 @@ import { TableCell } from "./table/TableCell.js";
 import { TableRow } from "./table/TableRow.js";
 import { TabList } from "./tabs/TabList.js";
 import { Tabs } from "./tabs/Tabs.js";
+import { Tree } from "./tree/Tree.js";
+import { TreeGroup } from "./tree/TreeGroup.js";
+import { TreeItem } from "./tree/TreeItem.js";
 
 // Counts registry changes: a register or unregister that changed an entry. Registering an
 // unchanged item returns false and is not counted, so a stop move that re-registered every item
@@ -139,6 +142,36 @@ describe("roving tab stop registration", () => {
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[1]);
     expect(rows[1]!.tabIndex).toBe(0);
+    expect(commits).toBe(1);
+    expect(registry.changes).toBe(0);
+    unmount();
+  });
+
+  it("moves the tree stop in one commit without re-registering items", async () => {
+    let commits = 0;
+    const { container, user, unmount } = setup(
+      <Profiler id="tree" onRender={() => (commits += 1)}>
+        <button type="button">Before</button>
+        <Tree aria-label="Bench">
+          {values.map((value) => (
+            <TreeItem key={value} value={value}>
+              {value}
+            </TreeItem>
+          ))}
+        </Tree>
+      </Profiler>,
+    );
+    const before = container.querySelector<HTMLElement>("button")!;
+    const items = container.querySelectorAll<HTMLElement>("[role='treeitem']");
+
+    await user.click(before);
+    await user.tab();
+    expect(document.activeElement).toBe(items[0]);
+    commits = 0;
+    registry.changes = 0;
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(items[1]);
+    expect(items[1]!.tabIndex).toBe(0);
     expect(commits).toBe(1);
     expect(registry.changes).toBe(0);
     unmount();
@@ -388,6 +421,50 @@ describe("roving tab stop re-renders", () => {
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(rows[2]);
     expect([...rendered].sort()).toEqual(["three", "two"]);
+    unmount();
+  });
+
+  it("re-renders only the two tree items the stop moves between, at any depth", async () => {
+    // A Profiler around a parent item would also report its nested items, so each item reports
+    // its own renders through the element it renders as.
+    const rendered = new Set<string>();
+    const Row = (props: ComponentProps<"div"> & { "data-value"?: string }) => {
+      rendered.add(props["data-value"]!);
+      return <div {...props} />;
+    };
+    const { container, user, unmount } = setup(
+      <Tree aria-label="Files" defaultOpen={["one"]}>
+        <TreeItem as={Row} value="one" textValue="one">
+          one
+          <TreeGroup>
+            {many.slice(1, 4).map((value) => (
+              <TreeItem as={Row} key={value} value={value}>
+                {value}
+              </TreeItem>
+            ))}
+          </TreeGroup>
+        </TreeItem>
+        <TreeItem as={Row} value="five">
+          five
+        </TreeItem>
+      </Tree>,
+    );
+    const item = (value: string) =>
+      container.querySelector<HTMLElement>(`[data-value="${value}"]`)!;
+    act(() => item("two").focus());
+    rendered.clear();
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(item("three"));
+    expect([...rendered].sort()).toEqual(["three", "two"]);
+    // Out of a group to its parent row with ArrowLeft, and back in with ArrowDown.
+    rendered.clear();
+    await user.keyboard("{ArrowLeft}");
+    expect(document.activeElement).toBe(item("one"));
+    expect([...rendered].sort()).toEqual(["one", "three"]);
+    rendered.clear();
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(item("two"));
+    expect([...rendered].sort()).toEqual(["one", "two"]);
     unmount();
   });
 
