@@ -1,4 +1,11 @@
-import { useId, useLayoutEffect, useRef, type ComponentProps, type MouseEvent } from "react";
+import {
+  useId,
+  useLayoutEffect,
+  useRef,
+  type ComponentProps,
+  type FocusEvent,
+  type MouseEvent,
+} from "react";
 import { dataAttr, useComposedRefs } from "@comp0/core";
 import {
   useCollectedItem,
@@ -21,6 +28,7 @@ function TagPart({
   textValue,
   children,
   onClick,
+  onFocus,
   ref,
   ...props
 }: TagProps) {
@@ -96,6 +104,12 @@ function TagPart({
       data-selected={dataAttr(selected)}
       data-disabled={dataAttr(resolvedDisabled)}
       data-value={value}
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        onFocus?.(event);
+        // Covers focus that no key handler moved: a click, a remove control inside the tag, or
+        // TagPickerInput sending focus to the last tag.
+        if (!event.defaultPrevented && !resolvedDisabled) list.setFocusedKey(value);
+      }}
       onClick={(event: MouseEvent<HTMLDivElement>) => {
         if (resolvedDisabled) {
           event.preventDefault();

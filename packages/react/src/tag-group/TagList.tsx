@@ -1,4 +1,4 @@
-import { type ComponentProps, type FocusEvent, type KeyboardEvent } from "react";
+import { type ComponentProps, type KeyboardEvent } from "react";
 import { useCollectionNavigation, type CollectionItem } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
 import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
@@ -16,7 +16,6 @@ export function TagList({
   "aria-labelledby": ariaLabelledBy,
   children,
   id,
-  onFocus,
   onKeyDown,
   ...props
 }: TagListProps) {
@@ -29,9 +28,9 @@ export function TagList({
   const seed = useCollectionSeed();
   const pass = useCollectionPass(seed, children);
   // The tag that last held focus or was chosen. Selection is multiple and never picks the stop,
-  // so the record holds until its tag unmounts or is disabled, and the stop falls back to the
-  // first enabled tag. It lives outside React state, so a focus move re-renders only the two
-  // tags whose tabIndex changes (bench: collection-tab-stop.bench.tsx, PERFORMANCE.md).
+  // so no selection change expires the record: it holds while its tag is enabled, the stop falls
+  // back to the first enabled tag otherwise, and unmounting the tag drops it. It lives outside React state,
+  // so a focus move re-renders only the two tags whose tabIndex changes (bench: collection-tab-stop.bench.tsx, PERFORMANCE.md).
   const tabStops = useTabStopStore(collection, seed);
   const setFocusedKey = (key: string) => {
     tabStops.focus(key, NO_SELECTION);
@@ -46,6 +45,12 @@ export function TagList({
     },
     unregister: (key, element) => {
       collection.unregister(key, element);
+      // A tag whose ref callback runs again (new children, or a new element for a new `as`)
+      // unregisters and registers again in the same commit, so only a key still missing once
+      // the commit is done has gone: "keeps the stop on a tag whose element changes".
+      queueMicrotask(() => {
+        if (!collection.get(key)) tabStops.forget(key);
+      });
     },
   };
   let labelledBy = ariaLabelledBy;
@@ -64,16 +69,6 @@ export function TagList({
         aria-label={ariaLabel}
         aria-labelledby={labelledBy}
         aria-multiselectable={group.selectionEnabled || undefined}
-        onFocus={(event: FocusEvent<HTMLDivElement>) => {
-          onFocus?.(event);
-          if (event.defaultPrevented) return;
-          // Covers focus that no key handler moved: a click, a remove control inside a tag, or
-          // TagPickerInput sending focus to the last tag.
-          const tag = collection
-            .items()
-            .find((item) => item.element?.contains(event.target as Node));
-          if (tag && !tag.disabled) setFocusedKey(tag.key);
-        }}
         onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
           onKeyDown?.(event);
           if (event.defaultPrevented) return;
@@ -83,10 +78,15 @@ export function TagList({
           const current = tags.find((item) => item.element?.contains(target));
           if (!current) return;
           if ((event.key === "Delete" || event.key === "Backspace") && group.remove) {
+            // Focus reaches a disabled tag only through a control inside it, which must not
+            // remove the tag either.
+            if (current.disabled) return;
             event.preventDefault();
             const index = tags.indexOf(current);
             group.remove(current.key);
-            const neighbor = tags[index + 1] ?? tags[index - 1];
+            const enabled = (tag: CollectionItem) => !tag.disabled;
+            const neighbor =
+              tags.slice(index + 1).find(enabled) ?? tags.slice(0, index).reverse().find(enabled);
             if (neighbor) {
               setFocusedKey(neighbor.key);
               neighbor.element?.focus();
