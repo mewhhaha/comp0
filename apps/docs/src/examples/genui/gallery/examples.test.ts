@@ -16,10 +16,10 @@ it("each example has a distinct permalink and its recorded response fits the hos
     // Named holes validate their contents separately when the museum renders each panel.
     if (example.slug === "museum-label") continue;
     expect(ui.validate(example.source).errors, example.slug).toEqual([]);
-    if (example.revision) {
-      expect(validateEdits(example.revision, { ...ui, history: [example.source] }).errors).toEqual(
-        [],
-      );
+    if (example.followUp) {
+      expect(
+        validateEdits(example.followUp.source, { ...ui, history: [example.source] }).errors,
+      ).toEqual([]);
     }
   }
 });

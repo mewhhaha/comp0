@@ -1,12 +1,12 @@
-export type GalleryExample = {
+export type RecordedTurn = { prompt: string; reply: string; source: string };
+
+export type GalleryExample = RecordedTurn & {
   slug: string;
   title: string;
   group: "In the studio" | "In the field" | "Behind the scenes";
-  prompt: string;
   tryIt: string;
   mechanism: string;
-  source: string;
-  revision?: string;
+  followUp?: RecordedTurn;
   format?: "json";
 };
 
@@ -17,6 +17,8 @@ function json(value: unknown) {
 export const examples: readonly GalleryExample[] = [
   {
     slug: "print-proof",
+    reply:
+      "Here’s the sleeve with vermilion over black. Move the second plate a few millimetres to see where the rings slip out of register.",
     mechanism:
       "The host registers PrintProof as a client component. GenUI passes it the ink and plate offset as validated props whenever either control changes.",
     title: "Two-ink print proof",
@@ -36,6 +38,8 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "listening-room",
+    reply:
+      "Four rows with a centre aisle give you 16 chairs. Try closing the aisle or adding a row to see the new floor plan.",
     mechanism:
       "The seating diagram and the built-in Output both read the same two state values. One draws the arrangement, the other calculates its capacity.",
     title: "Listening room layout",
@@ -53,12 +57,14 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "soundcheck",
+    reply:
+      "The first take lost 14 dB between the front and back rows. After the adjustment the gap was 3 dB. You can switch between the readings below.",
     mechanism:
       "Each Tab and its TabPanel share an item value. The active panel contains a BarChart whose rows are also available as a data table.",
     title: "Soundcheck notebook",
     group: "In the studio",
     prompt:
-      "The vocal disappears at the back of the room. Let me compare the two soundchecks by listening position.",
+      "The vocal disappears at the back. Front, desk, and back measured 82, 76, and 68 dB on the first take, then 79, 78, and 76 dB after adjustment. Let me compare the two takes.",
     tryIt: "Switch between the two takes to compare the measured vocal level at three positions.",
     source: `<Tabs defaultValue="first">
   <TabList label="Soundcheck take">
@@ -79,6 +85,7 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "encore",
+    reply: "Here’s the opening set. There’s room for a stage note while the band picks an encore.",
     mechanism:
       "The follow-up updates the card by ID and appends a song to the list. Both views share a root, so the original text field stays mounted.",
     title: "The encore revision",
@@ -94,11 +101,17 @@ export const examples: readonly GalleryExample[] = [
   </List>
   <TextField label="Stage note" placeholder="Where should the spare guitar go?" />
 </Card>`,
-    revision: `<Update id="set" title="Opening set + encore" />
+    followUp: {
+      prompt: "The band picked Borrowed Light. Add it as the encore.",
+      reply: "Borrowed Light now closes the set. I’ve kept your stage note in place.",
+      source: `<Update id="set" title="Opening set + encore" />
 <Append to="songs"><Item>Borrowed Light · 2:50 (encore)</Item></Append>`,
+    },
   },
   {
     slug: "night-train",
+    reply:
+      "The last Harbour train leaves for East Quay at 23:12 in this sample timetable. Choose another line to check its last three trains.",
     mechanism:
       "Departures is a registered server component. Selecting a line changes its prop and asks the server to render that component with the new timetable.",
     title: "Last train board",
@@ -117,6 +130,8 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "backpack",
+    reply:
+      "With the camera kit packed, your bag weighs 5.6 kg. Try the other extras to see what fits in the remaining 1.4 kg.",
     mechanism:
       "Each checkbox writes a boolean to the shared state. The meter and remaining allowance read those values in arithmetic expressions.",
     title: "One-bag packing list",
@@ -134,6 +149,8 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "pour-over",
+    reply:
+      "For 20 g of coffee at 1:16, use 320 g of water. I’ve put the running scale reading beside each pour so you can change the recipe as you go.",
     mechanism:
       "The sliders write numbers to shared state. Expressions in the output and individual list items calculate all three pours locally.",
     title: "Pour-over recipe",
@@ -154,11 +171,14 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "field-notes",
+    reply:
+      "The two cards record counts at different times and places. Here’s a short report with each count linked to its observer’s note.",
     mechanism:
       "CitedText connects numbered markers in the report to its source records. CopyButton places the supplied plain-text summary on the clipboard.",
     title: "Bird blind field notes",
     group: "In the field",
-    prompt: "Turn these two observation cards into a short report I can check and copy.",
+    prompt:
+      "My first card says “East spit, 06:20, 18 terns resting together.” The second says “Harbour posts, 08:10, six terns on separate posts.” Turn them into a short report I can check and copy.",
     tryIt: "Inspect the citations for the morning count, then copy the report for the logbook.",
     source: `<Stack>
   <CitedText text="At first light, 18 terns rested on the east spit.[1] A separate count at 08:10 found six on the harbour posts.[2]"
@@ -168,6 +188,8 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "museum-label",
+    reply:
+      "I’ve put the recorder’s provenance on the label and the disputed pencil mark in a separate conservator’s note.",
     mechanism:
       "The host defines two named holes, each with its own allowed components and child limit. One model response fills both panels.",
     title: "Museum object label",
@@ -181,6 +203,7 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "repair-desk",
+    reply: "Look up one job at a time. Try R-104 for the cassette deck or R-117 for the turntable.",
     mechanism:
       "Submitting the form calls repairStatus with the ticket field. The host validates the argument, then GenUI stores the returned text under result.",
     title: "Repair ticket lookup",
@@ -197,6 +220,8 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "record-crates",
+    reply:
+      "The ambient crate has two titles on the shelf. Flip to Dub or Disco to see the pressings and copy counts in that crate.",
     mechanism:
       "The JSON Query reads the bound crate name and stores the inventory response under records. The table binds its rows to that same name.",
     title: "Record shop crates",
@@ -233,6 +258,8 @@ export const examples: readonly GalleryExample[] = [
   },
   {
     slug: "screening-ballot",
+    reply:
+      "Here’s a ballot for the three shorts. Pick a film and add a line for the programme, then send it to see what the host receives.",
     mechanism:
       "The browser renderer calls onAction with a readable message and the form values. The receipt displays the payload from that callback.",
     title: "Midnight screening ballot",

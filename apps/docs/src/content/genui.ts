@@ -116,7 +116,7 @@ export const genuiDocs: GenUIDoc[] = [
           {
             label: "GenUI examples",
             to: "/genui/examples",
-            description: "Explore the recorded responses and try their controls.",
+            description: "Send a sample prompt and try the controls in the reply.",
           },
           {
             label: "JSX playground",
@@ -151,7 +151,7 @@ export const genuiDocs: GenUIDoc[] = [
   {
     slug: "examples",
     title: "Examples",
-    summary: `Try ${examples.length} model responses, from a two-ink print proof to a station departure board. Each example includes the source that drives it and runs without a model key.`,
+    summary: `Send a sample prompt and watch the assistant stream an interactive reply. These ${examples.length} recorded conversations run without a model key. Open the response source to see the JSX or JSON behind each one.`,
     sections: ["In the studio", "In the field", "Behind the scenes"].map((group) => ({
       id: group.toLowerCase().replaceAll(" ", "-"),
       title: group,

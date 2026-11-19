@@ -189,7 +189,9 @@ export function renderLlmsFullTxt(input: LlmsInput): string {
           "",
           "URL: " + genuiUrl("examples/" + example.slug),
           "",
-          example.prompt,
+          "You: " + example.prompt,
+          "",
+          "Assistant: " + example.reply,
           "",
           example.tryIt,
           "",
@@ -198,8 +200,15 @@ export function renderLlmsFullTxt(input: LlmsInput): string {
           fence(example.source, example.format ?? "jsx"),
           "",
         );
-        if (example.revision)
-          lines.push("Follow-up response", "", fence(example.revision, "jsx"), "");
+        if (example.followUp)
+          lines.push(
+            "You: " + example.followUp.prompt,
+            "",
+            "Assistant: " + example.followUp.reply,
+            "",
+            fence(example.followUp.source, "jsx"),
+            "",
+          );
       }
     }
   }

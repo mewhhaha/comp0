@@ -5,6 +5,7 @@ export default [
   route("learn/:slug", "routes/learn/route.tsx"),
   route("genui/examples/tools", "routes/genui-examples/tools.ts"),
   route("genui/examples/night-train/departures", "routes/genui-examples/departures.ts"),
+  route("genui/examples/:example/reply", "routes/genui-examples/reply.ts"),
   route("genui/examples/:example", "routes/genui-examples/route.tsx"),
   route("genui/:slug", "routes/genui/route.tsx"),
   route("labs/genui-rsc", "routes/labs/genui-rsc/route.tsx"),

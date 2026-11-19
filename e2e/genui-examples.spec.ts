@@ -36,6 +36,12 @@ const interactions: Record<string, (view: Locator, page: Page) => Promise<void>>
     await expect(view.getByRole("heading", { name: "Opening set + encore" })).toBeVisible();
     await expect(view.getByRole("listitem").last()).toContainText("Borrowed Light");
     await expect(note).toHaveValue("Guitar at stage left");
+    await expect(view.getByRole("article", { name: "You" })).toHaveCount(2);
+    const followUp = examples.find((example) => example.slug === "encore")!.followUp!;
+    await expect(view.getByRole("article", { name: "You" }).last()).toContainText(followUp.prompt);
+    await expect(view.getByRole("article", { name: "Assistant" }).last()).toContainText(
+      followUp.reply,
+    );
   },
   async "night-train"(view, page) {
     await view.getByRole("button", { name: /Rail line/ }).click();
@@ -100,8 +106,18 @@ for (const example of examples) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/genui/examples/" + example.slug, { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(example.title);
-    await interactions[example.slug]!(page.getByRole("region", { name: "Live example" }), page);
-    await page.getByText("Model response", { exact: true }).click();
+    const view = page.getByRole("region", { name: "Mock conversation" });
+    const log = view.getByRole("log", { name: "Conversation" });
+    const assistant = log.getByRole("article", { name: "Assistant" });
+    await expect(log.getByRole("article", { name: "You" })).toContainText(example.prompt);
+    await expect(assistant).toHaveCount(0);
+    const request = page.waitForRequest((req) => req.url().endsWith("/" + example.slug + "/reply"));
+    await view.getByRole("button", { name: "Send prompt" }).click();
+    expect((await request).postData()).toBe(example.prompt);
+    await expect(assistant).toContainText(example.reply);
+    await expect(view.getByRole("button", { name: "Replay conversation" })).toBeEnabled();
+    await interactions[example.slug]!(view, page);
+    await page.getByText("Response source", { exact: true }).click();
     await expect(page.locator("article pre code").first()).toHaveText(example.source);
     expect(await axeViolations(page, "article")).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -110,14 +126,59 @@ for (const example of examples) {
     expect(errors).toEqual([]);
     if (process.env.UPDATE_GENUI_PREVIEWS === "1") {
       await page.setViewportSize({ width: 520, height: 1000 });
-      await page.locator("article [data-genui]").screenshot({
-        path: "apps/docs/public/genui-previews/" + example.slug + ".jpg",
-        quality: 76,
-        animations: "disabled",
-      });
+      await view
+        .locator("[data-genui]")
+        .first()
+        .screenshot({
+          path: "apps/docs/public/genui-previews/" + example.slug + ".jpg",
+          quality: 76,
+          animations: "disabled",
+        });
     }
   });
 }
+
+test("a failed reply can be retried and replay starts a fresh conversation", async ({ page }) => {
+  await page.route(
+    "**/genui/examples/screening-ballot/reply",
+    (route) => route.fulfill({ status: 503 }),
+    { times: 1 },
+  );
+  await page.goto("/genui/examples/screening-ballot", { waitUntil: "networkidle" });
+  const view = page.getByRole("region", { name: "Mock conversation" });
+  const log = view.getByRole("log", { name: "Conversation" });
+  await view.getByRole("button", { name: "Send prompt" }).click();
+  await expect(log).toContainText("The recorded reply couldn’t be loaded.");
+  await view.getByRole("button", { name: "Retry reply" }).click();
+  const ballot = log.getByRole("button", { name: "Send ballot" });
+  await expect(ballot).toBeVisible();
+  await expect(ballot).toBeDisabled();
+  await expect(log).toHaveAttribute("aria-busy", "true");
+  await expect(ballot).toBeEnabled();
+  await log.getByRole("textbox").fill("Loved the sets");
+  await view.getByRole("button", { name: "Replay conversation" }).click();
+  await expect(view.getByRole("button", { name: "Replay conversation" })).toBeEnabled();
+  await expect(log.getByRole("textbox")).toHaveValue("");
+  await expect(log.getByRole("article", { name: "Assistant" })).toHaveCount(1);
+});
+
+test("leaving a streaming JSX reply opens the next example with its own prompt", async ({
+  page,
+}) => {
+  await page.goto("/genui/examples/soundcheck", { waitUntil: "networkidle" });
+  const view = page.getByRole("region", { name: "Mock conversation" });
+  const log = view.getByRole("log", { name: "Conversation" });
+  await view.getByRole("button", { name: "Send prompt" }).click();
+  await expect(log.getByRole("tab", { name: "First take" })).toBeVisible();
+  await expect(log).toHaveAttribute("aria-busy", "true");
+  await page.getByRole("link", { name: /The encore revision/ }).click();
+  await expect(page).toHaveURL(/genui\/examples\/encore$/);
+  await expect(view.getByRole("button", { name: "Send prompt" })).toBeEnabled();
+  await expect(log.getByRole("article", { name: "Assistant" })).toHaveCount(0);
+  await view.getByRole("button", { name: "Send prompt" }).click();
+  await expect(log.getByRole("textbox", { name: "Stage note" })).toBeVisible();
+  await expect(log.getByRole("tab")).toHaveCount(0);
+});
 
 test("the gallery lists every example with its preview and preserves navigation", async ({
   page,
@@ -140,6 +201,10 @@ test("the gallery lists every example with its preview and preserves navigation"
   await page.locator("article").getByRole("link", { name: "GenUI examples" }).click();
   await expect(cards).toHaveCount(examples.length);
   expect((await request.get("/genui/examples/unknown-print")).status()).toBe(404);
+  expect((await request.post("/genui/examples/unknown-print/reply")).status()).toBe(404);
+  expect(
+    (await request.post("/genui/examples/encore/reply", { data: "Unknown prompt" })).status(),
+  ).toBe(400);
   expect((await request.get("/genui/examples/night-train/departures?line=Missing")).status()).toBe(
     400,
   );
