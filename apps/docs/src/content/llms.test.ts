@@ -1,3 +1,4 @@
+import { examples } from "../examples/genui/gallery/examples.js";
 import { describe, expect, it } from "vitest";
 import { componentGroups, components } from "./catalog.js";
 import { genuiDocs } from "./genui.js";
@@ -54,6 +55,10 @@ describe("llms.txt", () => {
     for (const page of genuiDocs) {
       expect(index, page.slug).toContain(`(${docsOrigin}/genui/${page.slug})`);
       expect(full, page.slug).toContain(`URL: ${docsOrigin}/genui/${page.slug}`);
+    }
+    for (const example of examples) {
+      expect(full).toContain(example.source);
+      if (example.revision) expect(full).toContain(example.revision);
     }
     for (const entry of genuiReference.catalog) {
       expect(full, entry.name).toContain(`##### ${entry.name}\n\n`);

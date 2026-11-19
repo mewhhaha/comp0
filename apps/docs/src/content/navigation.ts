@@ -1,3 +1,4 @@
+import { examples } from "../examples/genui/gallery/examples.js";
 import type { DocsNavigationData, PaletteEntry } from "../components/shell/types.js";
 import { componentGroups } from "./catalog.js";
 import { genuiDocs } from "./genui.js";
@@ -33,5 +34,10 @@ export const paletteEntries: PaletteEntry[] = [
     route: `/genui/${page.slug}`,
     title: page.slug === "overview" ? "GenUI overview" : page.title,
     group: "GenUI",
+  })),
+  ...examples.map((example) => ({
+    route: "/genui/examples/" + example.slug,
+    title: example.title,
+    group: "GenUI examples",
   })),
 ];

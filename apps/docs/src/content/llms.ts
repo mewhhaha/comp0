@@ -1,3 +1,4 @@
+import { examples } from "../examples/genui/gallery/examples.js";
 import type {
   ComponentDoc,
   ComponentGroup,
@@ -181,6 +182,26 @@ export function renderLlmsFullTxt(input: LlmsInput): string {
       "",
     );
     for (const section of page.sections) lines.push(...renderGenUISection(section, genuiReference));
+    if (page.slug === "examples") {
+      for (const example of examples) {
+        lines.push(
+          "#### " + example.title,
+          "",
+          "URL: " + genuiUrl("examples/" + example.slug),
+          "",
+          example.prompt,
+          "",
+          example.tryIt,
+          "",
+          example.mechanism,
+          "",
+          fence(example.source, example.format ?? "jsx"),
+          "",
+        );
+        if (example.revision)
+          lines.push("Follow-up response", "", fence(example.revision, "jsx"), "");
+      }
+    }
   }
   return lines.join("\n");
 }

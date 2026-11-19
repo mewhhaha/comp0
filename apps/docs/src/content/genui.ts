@@ -1,3 +1,4 @@
+import { examples } from "../examples/genui/gallery/examples.js";
 import answerSource from "../examples/genui/Answer.tsx?raw";
 import answerRootSource from "../examples/genui/AnswerRoot.tsx?raw";
 import badgeSource from "../examples/genui/StatusBadge.tsx?raw";
@@ -113,6 +114,11 @@ export const genuiDocs: GenUIDoc[] = [
         codeTitle: "Answer.tsx",
         links: [
           {
+            label: "GenUI examples",
+            to: "/genui/examples",
+            description: "Explore the recorded responses and try their controls.",
+          },
+          {
             label: "JSX playground",
             to: "/labs/genui-rsc/compose",
             description: "Edit a response and inspect its validation errors.",
@@ -141,6 +147,23 @@ export const genuiDocs: GenUIDoc[] = [
         ],
       },
     ],
+  },
+  {
+    slug: "examples",
+    title: "Examples",
+    summary: `Try ${examples.length} model responses, from a two-ink print proof to a station departure board. Each example includes the source that drives it and runs without a model key.`,
+    sections: ["In the studio", "In the field", "Behind the scenes"].map((group) => ({
+      id: group.toLowerCase().replaceAll(" ", "-"),
+      title: group,
+      paragraphs: [],
+      links: examples
+        .filter((example) => example.group === group)
+        .map((example) => ({
+          label: example.title,
+          to: "/genui/examples/" + example.slug,
+          description: example.tryIt,
+        })),
+    })),
   },
   {
     slug: "server",

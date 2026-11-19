@@ -16,11 +16,3 @@ export const revisionResponse = `<Update id="summary" title="Ready itinerary" />
 /** The valid update must also be withheld when another operation in the turn is invalid. */
 export const invalidResponse = `<Update id="summary" title="This turn must be rejected" />
 <Append to="missing"><Item>Do not add this</Item></Append>`;
-
-/** Small delayed chunks give edits a visible streaming stage without requiring a model key. */
-export async function* replay(response: string): AsyncGenerator<string> {
-  for (let offset = 0; offset < response.length; offset += 80) {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    yield response.slice(offset, offset + 80);
-  }
-}

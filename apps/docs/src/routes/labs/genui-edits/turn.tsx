@@ -1,6 +1,7 @@
+import { replay } from "../../../examples/genui/replay.js";
 import { renderToReadableStream } from "@vitejs/plugin-rsc/rsc/server";
 import { edits } from "./renderer.server.js";
-import { initialResponse, invalidResponse, replay, revisionResponse } from "./responses.js";
+import { initialResponse, invalidResponse, revisionResponse } from "./responses.js";
 
 export async function action({ request }: { request: Request }): Promise<Response> {
   const origin = request.headers.get("origin");

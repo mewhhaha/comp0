@@ -1,3 +1,4 @@
+import { examples } from "../examples/genui/gallery/examples.js";
 import * as genui from "@comp0/genui";
 import { describe, expect, it } from "vitest";
 import { ui } from "../examples/genui/ui.js";
@@ -63,6 +64,7 @@ describe("GenUI reference pages", () => {
 
   it("link only to pages that exist", () => {
     const routes = new Set(genuiDocs.map((page) => `/genui/${page.slug}`));
+    for (const example of examples) routes.add("/genui/examples/" + example.slug);
     for (const page of genuiDocs) {
       for (const section of page.sections) {
         for (const link of section.links ?? []) {

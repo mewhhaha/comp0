@@ -4,6 +4,8 @@ The docs app runs React Router RSC Framework Mode on Cloudflare Workers. Route c
 
 Component pages are generated from `src/content/catalog.ts`, and the GenUI reference under `/genui` from `src/content/genui.ts` plus the catalog data in `src/content/genui-reference.json`. The live and displayed example for a component is the same source file under `src/examples/cases`. The GenUI overview renders the seat calculator from `src/examples/genui` and displays those same files. The JSX composition guide displays the forecast lab’s source. The browser JSON renderer page hosts the recorded JSON responses.
 
+The GenUI examples gallery at `/genui/examples` uses the recorded responses in `src/examples/genui/gallery/examples.ts`. Its Playwright suite exercises each response and can refresh the gallery card images from those same interactions. After building the docs, run `UPDATE_GENUI_PREVIEWS=1 pnpm test:e2e e2e/genui-examples.spec.ts` from the repository root to regenerate the previews.
+
 The preview stack is pinned exactly in `package.json`. React Router, the Vite React/RSC and Cloudflare plugins, the native compiler, and the `cf` CLI are upgraded as one tested set. Repeat cold-cache, bundle-boundary, Worker preview, and browser checks when updating them.
 
 ```sh
