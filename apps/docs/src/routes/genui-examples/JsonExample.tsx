@@ -13,15 +13,17 @@ export function JsonExample({ source, inventory }: JsonExampleProps) {
         call={inventory ? "/genui/examples/tools" : undefined}
         onAction={setReceipt}
       />
-      {receipt && (
-        <section className="mt-4" aria-live="polite">
-          <h3 className="font-semibold">Ballot received</h3>
-          <p>{receipt.message}</p>
-          <pre className="mt-2 overflow-auto whitespace-pre-wrap break-words">
-            {JSON.stringify(receipt.values, null, 2)}
-          </pre>
-        </section>
-      )}
+      <div aria-live="polite">
+        {receipt && (
+          <section className="mt-4">
+            <h3 className="font-semibold">Ballot received</h3>
+            <p>{receipt.message}</p>
+            <pre className="mt-2 overflow-auto whitespace-pre-wrap break-words">
+              {JSON.stringify(receipt.values, null, 2)}
+            </pre>
+          </section>
+        )}
+      </div>
     </>
   );
 }
