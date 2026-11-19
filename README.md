@@ -168,42 +168,18 @@ The JavaScript published to npm is already transformed by the React Compiler for
 
 If you alias directly to this repository's source, vendor the source, or otherwise bypass the published output, apply the same React Compiler setup used by the repository. See [CONTRIBUTING.md](./CONTRIBUTING.md#react-compiler) for the exact configuration and maintenance constraints.
 
-## Intelligent UI
+## GenUI
 
-Let a model compose your components as restricted JSX. [`@comp0/genui`](packages/genui) gives the host a typed state contract and a component vocabulary; React Server Components stream the model's layout, text, and children progressively.
+GenUI lets a model compose an interface from React components your app chooses. In the seat calculator, the model binds a slider to shared state and reads that state to display a price.
 
-```ts
-// ui.ts: shared contracts
-import { forms, layout, vocabulary } from "@comp0/genui/vocabulary";
-export const ui = vocabulary(layout, forms);
+```jsx
+<Stack gap="md">
+  <Slider label="Seats" bind="seats" min={1} max={10} />
+  <Text>Monthly total: {seats * 12} USD</Text>
+</Stack>
 ```
 
-```tsx
-// AnswerRoot.tsx: import contracts locally in the client boundary
-"use client";
-import { GenUIRoot } from "@comp0/genui/rsc/client";
-import { type ReactNode } from "react";
-import { ui } from "./ui.js";
-
-export function AnswerRoot({ children }: { children: ReactNode }) {
-  return <GenUIRoot vocabulary={ui}>{children}</GenUIRoot>;
-}
-```
-
-```tsx
-// Answer.tsx: the server passes only React children to the client wrapper
-import { GenUIView } from "@comp0/genui/rsc";
-import { AnswerRoot } from "./AnswerRoot.js";
-import { ui } from "./ui.js";
-
-<AnswerRoot>
-  <GenUIView vocabulary={ui} stream={streamFromYourProvider(ui.prompt(), message)} />
-</AnswerRoot>;
-```
-
-Custom client components read typed shared state. Async server components fetch their own data and refresh independently when a dependent value changes. Named holes let the model fill bounded places inside your layout. Later `Update` and `Append` turns revise identified components without remounting controls or discarding the person’s values; edit history is validated before the whole turn commits. Component schemas validate props and accessible names; model text never becomes executable JavaScript. The JSON browser renderer and MCP Apps transport remain available from the package root and `@comp0/genui/mcp`.
-
-`@comp0/react` also has the general-purpose pieces conversational interfaces need, useful with or without a model: `BusyRegion`, `Output`, `Comparison`, `Citation`, `Message`, `Composer`, `Suggestions`, `Reasoning`, `Feedback`, and `CopyButton`.
+[Try the seat calculator](https://comp0-docs.horrible.workers.dev/genui/overview) or [run the workspace package locally](./packages/genui/README.md). For structured JSON responses and MCP Apps, see the [browser JSON renderer](https://comp0-docs.horrible.workers.dev/genui/renderer).
 
 ## Contributing
 

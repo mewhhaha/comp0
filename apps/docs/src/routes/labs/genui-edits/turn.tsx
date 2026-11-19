@@ -1,6 +1,5 @@
-import { GenUIView } from "@comp0/genui/rsc";
 import { renderToReadableStream } from "@vitejs/plugin-rsc/rsc/server";
-import { editState, editVocabulary } from "./contract.js";
+import { edits } from "./renderer.server.js";
 import { initialResponse, invalidResponse, replay, revisionResponse } from "./responses.js";
 
 export async function action({ request }: { request: Request }): Promise<Response> {
@@ -28,15 +27,7 @@ export async function action({ request }: { request: Request }): Promise<Respons
     if (revised) history = [initialResponse, revisionResponse];
   } else if (mode !== "revision") return new Response("Unknown turn", { status: 400 });
   return new Response(
-    renderToReadableStream(
-      <GenUIView
-        vocabulary={editVocabulary}
-        state={editState}
-        stream={replay(response)}
-        history={history}
-        turn={turn}
-      />,
-    ),
+    renderToReadableStream(<edits.View source={replay(response)} history={history} turn={turn} />),
     { headers: { "content-type": "text/x-component", "cache-control": "no-store" } },
   );
 }

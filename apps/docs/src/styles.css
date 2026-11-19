@@ -265,7 +265,7 @@
 
 /* Styles for the headless output of @comp0/genui, keyed off its data-comp0 and token attributes. */
 @layer components {
-  [data-intelligent-ui] {
+  [data-genui] {
     @apply text-base/7 text-zinc-800 sm:text-sm/6 dark:text-zinc-200;
 
     [data-comp0="stack"] {

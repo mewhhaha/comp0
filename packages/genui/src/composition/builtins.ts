@@ -85,7 +85,7 @@ export const headingSpec = spec("Heading", {
   description:
     "Titles the content below it. Write the heading as text children; keep heading levels in order.",
   props: { "level?": number },
-  children: "text",
+  children: "label",
 });
 export const textSpec = spec("Text", {
   description: "A paragraph of plain text children. Markdown and HTML are shown literally.",
@@ -104,6 +104,7 @@ export const itemSpec = spec("Item", {
   description: "One list item, written as text children. Only use inside List.",
   props: {},
   children: "text",
+  parents: ["List"],
 });
 export const layout = vocabulary(
   stackSpec,
@@ -140,7 +141,9 @@ export const optionSpec = spec("Option", {
   description:
     "One dropdown choice. Value is stored; text children label it. Only use inside Select.",
   props: { value: text, "disabled?": boolean },
-  children: "text",
+  children: "label",
+  parents: ["Select"],
+  identity: { prop: "value", scope: "Select", matchesBoundValue: true },
 });
 export const forms = vocabulary(
   formSpec,
@@ -199,12 +202,12 @@ export const buttonSpec = spec("Button", {
   description:
     "A button with visible text children. Action runs steps on click; otherwise it sends its message, or its text, to the assistant.",
   props: buttonAttributes,
-  children: "text",
+  children: "label",
 });
 export const linkSpec = spec("Link", {
   description: "A link with visible text children and a safe href.",
   props: linkAttributes,
-  children: "text",
+  children: "label",
 });
 export const actions = vocabulary(
   buttonSpec,
@@ -223,17 +226,22 @@ export const tabListSpec = spec("TabList", {
   description: "The labelled row of Tab buttons inside Tabs.",
   props: { label: text, "orientation?": oneOf(["horizontal", "vertical"]) },
   children: ["Tab"],
+  parents: ["Tabs"],
 });
 export const tabSpec = spec("Tab", {
   description:
     "A tab button with visible text children and a value matching its TabPanel. Only use inside TabList.",
   props: { value: text, "disabled?": boolean },
-  children: "text",
+  children: "label",
+  parents: ["TabList"],
+  identity: { prop: "value", scope: "Tabs" },
 });
 export const tabPanelSpec = spec("TabPanel", {
   description: "Content of one tab, with the same value as its Tab. Only use inside Tabs.",
   props: { value: text },
   children: "nodes",
+  parents: ["Tabs"],
+  identity: { prop: "value", scope: "Tabs" },
 });
 export const accordionSpec = spec("Accordion", {
   description: "Expandable Section children. One section opens at a time unless multiple is true.",
@@ -250,6 +258,8 @@ export const sectionSpec = spec("Section", {
     "One accordion section. Title labels its expand button; children are its content. Only use inside Accordion.",
   props: { value: text, title: text, "disabled?": boolean },
   children: "nodes",
+  parents: ["Accordion"],
+  identity: { prop: "value", scope: "Accordion" },
 });
 const { children: _disclosureChildren, ...disclosureAttributes } = disclosureProps;
 export const disclosure = vocabulary(

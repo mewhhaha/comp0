@@ -35,8 +35,11 @@ export type CatalogEntry<TProps extends PropShape = PropShape> = CatalogSpec<TPr
 };
 
 /** Declares a catalog entry; keeps the schema and component types in sync. */
-export function defineEntry<TProps extends PropShape>(entry: CatalogEntry<TProps>): CatalogEntry {
-  return entry as unknown as CatalogEntry;
+export function defineEntry<TProps extends PropShape>(
+  spec: CatalogSpec<TProps>,
+  component: ComponentType<CatalogProps<TProps>>,
+): CatalogEntry {
+  return { ...spec, component } as unknown as CatalogEntry;
 }
 
 /**

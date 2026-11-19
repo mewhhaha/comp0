@@ -2,7 +2,7 @@
 
 import { GenUIRoot } from "@comp0/genui/rsc/client";
 import { useState, type ReactNode } from "react";
-import { editState, editVocabulary } from "./contract.js";
+import { editUI } from "./contract.js";
 
 type RecordedTurn = { key: number; content: ReactNode };
 
@@ -41,13 +41,12 @@ export function EditRoot({ children }: EditRootProps) {
 
   return (
     <GenUIRoot
-      vocabulary={editVocabulary}
-      state={editState}
+      ui={editUI}
       onError={(errors) => setMessage(errors.map((error) => error.message).join(" "))}
       onAction={() => setMessage("Your trip was saved.")}
     >
       <div className="grid gap-8">
-        <section aria-label="Trip answer" data-intelligent-ui="">
+        <section aria-label="Trip answer" data-genui="">
           {children}
           {turns.map((turn) => (
             <div key={turn.key}>{turn.content}</div>

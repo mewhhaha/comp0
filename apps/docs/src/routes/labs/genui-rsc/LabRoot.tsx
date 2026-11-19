@@ -2,7 +2,7 @@
 
 import { GenUIRoot, type GenUIRootProps } from "@comp0/genui/rsc/client";
 import { type ReactNode } from "react";
-import { labState, labVocabulary } from "./contract.js";
+import { labUI } from "./contract.js";
 
 const render: NonNullable<GenUIRootProps["render"]> = async (name, props, signal) => {
   // The browser decoder installs its module loader globally; importing it during SSR replaces
@@ -24,13 +24,7 @@ const render: NonNullable<GenUIRootProps["render"]> = async (name, props, signal
 export type LabRootProps = Pick<GenUIRootProps, "children" | "onAction">;
 export function LabRoot({ children, onAction }: LabRootProps) {
   return (
-    <GenUIRoot
-      vocabulary={labVocabulary}
-      state={labState}
-      call="/labs/genui-rsc/tools"
-      render={render}
-      onAction={onAction}
-    >
+    <GenUIRoot ui={labUI} call="/labs/genui-rsc/tools" render={render} onAction={onAction}>
       {children}
     </GenUIRoot>
   );

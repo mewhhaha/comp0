@@ -34,6 +34,7 @@ test("recorded revisions update and append without replacing the person's work",
   await expect(answer.getByRole("listitem")).toHaveText(["Book the flight", "Book the ferry"]);
   await expect(note).toHaveValue("Keep the window seat");
   await expect(note).toBeFocused();
+  await expect(travellers).toHaveAttribute("max", "12");
   await expect(travellers).toHaveValue("3");
   await expect(details).toHaveAttribute("aria-expanded", "true");
   expect(await originalNote?.evaluate((element) => element.isConnected)).toBe(true);

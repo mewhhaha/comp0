@@ -22,6 +22,7 @@
   "packages/genui/dist/render/use-latest.js",
   "packages/genui/dist/rsc/client.js",
   "packages/genui/dist/rsc/holes.js",
+  "packages/genui/dist/rsc/renderer.js",
   "packages/genui/dist/rsc/surface.js",
   "packages/react/dist/accordion/Accordion.js",
   "packages/react/dist/accordion/AccordionHeader.js",

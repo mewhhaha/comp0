@@ -2,12 +2,12 @@
 
 import { Button } from "@comp0/react";
 import { type ComponentProps, lazy, Suspense, useEffect, useState } from "react";
-import { demoResponses, tokenize } from "../../examples/demos/intelligent-ui-responses.js";
+import { demoResponses, tokenize } from "../../examples/demos/json-responses.js";
 import { cn } from "./cn.js";
 
 // The GenUI runtime is only fetched when someone presses play.
 const Stage = lazy(async () => ({
-  default: (await import("../../examples/demos/IntelligentUiStage.js")).IntelligentUiStage,
+  default: (await import("../../examples/demos/JsonResponseStage.js")).JsonResponseStage,
 }));
 
 const tokensPerTick = 3;
@@ -32,12 +32,12 @@ function DemoButton({ className, ...props }: ComponentProps<typeof Button>) {
   );
 }
 
-type IntelligentUiDemoProps = {
+type JsonResponseDemoProps = {
   className?: string | undefined;
 };
 
 /** Replays recorded JSON responses token by token through GenUI. No network. */
-export function IntelligentUiDemo({ className }: IntelligentUiDemoProps) {
+export function JsonResponseDemo({ className }: JsonResponseDemoProps) {
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(0);
   const [started, setStarted] = useState(false);
@@ -93,7 +93,7 @@ export function IntelligentUiDemo({ className }: IntelligentUiDemoProps) {
 
   return (
     <section
-      aria-label="Streaming demo"
+      aria-label="JSON streaming demo"
       className={cn(
         `
           min-w-0 rounded-xl border border-zinc-950/10 bg-white p-4

@@ -11,6 +11,8 @@ import {
 import { genuiBySlug, genuiDocs } from "../../content/genui.js";
 import referenceData from "../../content/genui-reference.json" with { type: "json" };
 import type { GenUIReference, GenUISection } from "../../content/types.js";
+import { Answer } from "../../examples/genui/Answer.js";
+import { JsonResponseDemo } from "../../components/teaching/JsonResponseDemo.js";
 import { CatalogGroup } from "./CatalogGroup.js";
 import { InlineText } from "./InlineText.js";
 import { ReferenceTable } from "./ReferenceTable.js";
@@ -126,6 +128,12 @@ export function ServerComponent({ params }: GenUIRouteProps) {
                   <InlineText text={paragraph} />
                 </p>
               ))}
+              {section.demo === "seat-quote" && section.code && (
+                <section aria-label="Seat quote" data-genui="" className="mt-6">
+                  <Answer source={section.code} />
+                </section>
+              )}
+              {section.demo === "json-replay" && <JsonResponseDemo className="mt-6" />}
               {section.code && (
                 <CodeBlock
                   className="mt-6"

@@ -94,13 +94,15 @@ describe("genuiPrompt", () => {
   });
 
   it("describes a custom catalog and root", () => {
-    const Shout = defineEntry({
-      name: "Shout",
-      group: "Voices",
-      description: "Loud text. Requires text.",
-      props: { text: type("string").describe("What to shout.") },
-      component: () => null,
-    });
+    const Shout = defineEntry(
+      {
+        name: "Shout",
+        group: "Voices",
+        description: "Loud text. Requires text.",
+        props: { text: type("string").describe("What to shout.") },
+      },
+      () => null,
+    );
     const custom = genuiPrompt({ catalog: [Shout], root: "Shout" });
 
     expect(custom).toContain("### Voices");

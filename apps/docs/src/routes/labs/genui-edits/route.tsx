@@ -1,6 +1,5 @@
-import { GenUIView } from "@comp0/genui/rsc";
 import { Link } from "react-router";
-import { editState, editVocabulary } from "./contract.js";
+import { edits } from "./renderer.server.js";
 import { EditRoot } from "./EditRoot.js";
 import { initialResponse, replay } from "./responses.js";
 
@@ -22,18 +21,13 @@ export function ServerComponent() {
         </p>
         <Link
           className="text-sm font-medium text-zinc-700 underline dark:text-zinc-300"
-          to="/genui/server"
+          to="/genui/server#edits"
         >
           How revisions work
         </Link>
       </header>
       <EditRoot>
-        <GenUIView
-          vocabulary={editVocabulary}
-          state={editState}
-          stream={replay(initialResponse)}
-          turn="assistant-1"
-        />
+        <edits.View source={replay(initialResponse)} turn="assistant-1" />
       </EditRoot>
     </div>
   );

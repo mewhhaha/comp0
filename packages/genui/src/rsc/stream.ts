@@ -104,8 +104,13 @@ export type ResponseStream = Pick<
 >;
 
 /** Starts reading a model response; the returned stream fills in as chunks arrive. */
-export function readResponse(chunks: AsyncIterable<string>): ResponseStream {
-  return new StreamedResponse(chunks);
+export type ResponseSource = string | AsyncIterable<string>;
+
+export function readResponse(source: ResponseSource): ResponseStream {
+  if (typeof source !== "string") return new StreamedResponse(source);
+  const text = source.slice(0, maxJsxLength + 1);
+  const parsed = parsePartialJsx(text, { final: true });
+  return { ...completedResponse(parsed.nodes), source: text, parsed };
 }
 
 /** An already validated append keeps its original paths and ancestry without reparsing JSX. */

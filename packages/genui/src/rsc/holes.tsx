@@ -1,8 +1,8 @@
 import { Suspense, type ReactNode } from "react";
 import { type Vocabulary } from "../composition/spec.js";
-import { type StateContract } from "../composition/state.js";
-import { type ComponentImplementations } from "./components.js";
-import { readResponse, type ResponseStream } from "./stream.js";
+import { composition, type Composition } from "../composition/composition.js";
+import { type ComponentRegistry } from "./components.js";
+import { readResponse, type ResponseSource, type ResponseStream } from "./stream.js";
 import { GenUIStreamEnd, GenUIViewScope } from "./client.js";
 import { ResponseView } from "./surface.js";
 
@@ -21,8 +21,6 @@ export function hole(
 }
 
 type FillOptions = {
-  state?: StateContract;
-  components?: ComponentImplementations;
   history?: readonly string[];
   turn?: string;
 };
@@ -32,11 +30,15 @@ async function HoleContent({
   name,
   definition,
   options,
+  ui,
+  components,
 }: {
   response: ResponseStream;
   name: string;
   definition: Hole;
   options: FillOptions;
+  ui: Composition;
+  components: ComponentRegistry;
 }) {
   const find = () =>
     response.parsed.nodes.find((node) => node.kind === "element" && node.name === name);
@@ -57,8 +59,8 @@ async function HoleContent({
     <ResponseView
       response={response}
       vocabulary={definition.vocabulary}
-      state={options.state}
-      components={options.components ?? {}}
+      state={ui.state}
+      components={components}
       root={node.key}
       max={definition.max}
       name={name}
@@ -69,24 +71,29 @@ async function HoleContent({
 }
 
 /** One model response can fill several named places without taking over the page's layout. */
-export function holes<const T extends Record<string, Hole>>(definitions: T) {
-  for (const name of Object.keys(definitions)) {
+export function createHoles<const T extends Record<string, Hole>>(
+  ui: Composition,
+  components: ComponentRegistry,
+  definitions: T,
+) {
+  for (const [name, definition] of Object.entries(definitions)) {
+    for (const spec of definition.vocabulary.specs) {
+      if (ui.vocabulary.get(spec.name) !== spec)
+        throw new Error(`Hole ${name}: ${spec.name} is outside the composition.`);
+    }
     if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(name)) throw new Error(`Invalid hole name: ${name}`);
   }
   return {
-    prompt(options: { state?: StateContract } = {}) {
+    prompt() {
       return Object.entries(definitions)
         .map(
           ([name, definition]) =>
-            `Fill <${name}>...</${name}> exactly once. ${definition.instruction} At most ${definition.max} direct children.\n${definition.vocabulary.prompt(options)}`,
+            `Fill <${name}>...</${name}> exactly once. ${definition.instruction} At most ${definition.max} direct children.\n${composition({ vocabulary: definition.vocabulary, state: ui.state }).prompt()}`,
         )
         .join("\n\n");
     },
-    fill(
-      chunks: AsyncIterable<string>,
-      options: FillOptions = {},
-    ): { [K in keyof T]: () => ReactNode } {
-      const response = readResponse(chunks);
+    fill(source: ResponseSource, options: FillOptions = {}): { [K in keyof T]: () => ReactNode } {
+      const response = readResponse(source);
       return Object.fromEntries(
         Object.entries(definitions).map(([name, definition]) => {
           function Content() {
@@ -97,6 +104,8 @@ export function holes<const T extends Record<string, Hole>>(definitions: T) {
                   name={name}
                   definition={definition}
                   options={options}
+                  ui={ui}
+                  components={components}
                 />
               </Suspense>
             );

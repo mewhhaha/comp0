@@ -52,6 +52,25 @@ export function validateProp(
   }
 }
 
+/** Apply the same required-name rule to literals, expressions and bound state. */
+export function validateField(
+  name: string,
+  schema: PropSchema | PropShape,
+  value: unknown,
+  required: boolean,
+): ReturnType<typeof validateProp> {
+  const checked = validateProp(schema, value);
+  if (
+    checked.ok &&
+    required &&
+    ["label", "title", "caption"].includes(name) &&
+    typeof checked.value === "string" &&
+    checked.value.trim() === ""
+  )
+    return { ok: false, message: "An accessible name must not be empty." };
+  return checked;
+}
+
 export function expressionSource(value: unknown): string | undefined {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
   const source = Object.getOwnPropertyDescriptor(value, "$expr")?.value as unknown;
@@ -73,19 +92,6 @@ export function resolveExpressions(
   );
 }
 
-const parents: Record<string, readonly string[]> = {
-  Option: ["Select"],
-  Item: ["List"],
-  TabList: ["Tabs"],
-  Tab: ["TabList"],
-  TabPanel: ["Tabs"],
-  Section: ["Accordion"],
-};
-
-export function needsTextName(name: string): boolean {
-  return ["Heading", "Option", "Tab", "Button", "Link"].includes(name);
-}
-
 /** Protocol IDs identify mounted components; they are never DOM props. */
 export function isComponentId(value: unknown): value is string {
   return typeof value === "string" && value.length <= 64 && /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value);
@@ -104,7 +110,7 @@ export function validateJsx(
   if (typeof input === "string") parsed = parsePartialJsx(input, { final: complete });
   const tree = parsed as JsxParse;
   const errors: GenUIError[] = [];
-  const specs = new Map(options.vocabulary.specs.map((entry) => [entry.name, entry]));
+  const ancestors: ValidJsxElement[] = [];
   const identities = new Map<string, Set<string>>();
   const ids = new Set<string>();
   function report(path: string, code: GenUIError["code"], message: string) {
@@ -124,18 +130,19 @@ export function validateJsx(
     }
     return true;
   }
-  function visit(node: JsxNode, parent?: ValidJsxElement, owner = ""): ValidJsxNode | undefined {
+  function visit(node: JsxNode): ValidJsxNode | undefined {
     if (node.kind === "expression") {
       if (!expression(node.source, node.key)) return undefined;
       return node;
     }
     if (node.kind === "text") return node;
-    const entry = specs.get(node.name);
+    const entry = options.vocabulary.get(node.name);
     if (!entry) {
       report(node.key, "unknown-type", `${node.name} is not in this vocabulary.`);
       return undefined;
     }
-    const requiredParents = parents[node.name];
+    const parent = ancestors.at(-1);
+    const requiredParents = entry.parents;
     if (requiredParents && !requiredParents.includes(parent?.name ?? "")) {
       report(
         node.key,
@@ -167,7 +174,20 @@ export function validateJsx(
       ids.add(value);
       id = value;
     }
-    if (["Select", "Tabs", "Accordion"].includes(node.name)) owner = node.key;
+    const identity = entry.identity;
+    let owner: ValidJsxElement | undefined;
+    if (identity) {
+      for (let i = ancestors.length - 1; i >= 0; i--) {
+        if (ancestors[i]!.name === identity.scope) {
+          owner = ancestors[i];
+          break;
+        }
+      }
+    }
+    if (identity && !owner) {
+      report(node.key, "invalid-prop", `${node.name} needs an enclosing ${identity.scope}.`);
+      return undefined;
+    }
     const fields = shapeEntries(entry.props);
     const allowed = new Set(fields.map((field) => field.name));
     let binding: string | undefined;
@@ -201,7 +221,19 @@ export function validateJsx(
         report(`${node.key}/${key}`, "unknown-prop", `${node.name} has no ${key} prop.`);
     }
     for (const field of fields) {
+      const bound = field.name === entry.binding?.prop && binding;
       let value = node.props[field.name];
+      if (bound) {
+        if (Object.hasOwn(node.props, field.name)) {
+          report(
+            `${node.key}/${field.name}`,
+            "binding",
+            `bind already supplies ${field.name}. Remove the explicit prop.`,
+          );
+          return undefined;
+        }
+        value = options.state?.initial[bound];
+      }
       if (field.name === "name" && value === undefined && binding !== undefined) value = binding;
       if (value === undefined && field.optional) continue;
       if (value === undefined) {
@@ -209,9 +241,9 @@ export function validateJsx(
         return undefined;
       }
       const source = expressionSource(value);
-      if (field.name === "value" && parents[node.name] && source !== undefined) {
+      if (field.name === identity?.prop && (source !== undefined || typeof value !== "string")) {
         report(
-          `${node.key}/value`,
+          `${node.key}/${field.name}`,
           "invalid-prop",
           "A collection item's value must be a fixed string.",
         );
@@ -222,35 +254,23 @@ export function validateJsx(
         if (!expression(source, `${node.key}/${field.name}`)) return undefined;
         literal = evaluateExpression(source, options.state?.initial ?? {});
       }
-      const checked = validateProp(field.schema, literal);
+      const checked = validateField(field.name, field.schema, literal, !field.optional);
       if (!checked.ok) {
         report(`${node.key}/${field.name}`, "invalid-prop", checked.message);
-        if (!field.optional) return undefined;
+        if (bound || !field.optional) return undefined;
         continue;
       }
-      if (
-        ["label", "title", "caption"].includes(field.name) &&
-        typeof checked.value === "string" &&
-        checked.value.trim() === "" &&
-        !field.optional
-      ) {
-        report(
-          `${node.key}/${field.name}`,
-          "invalid-prop",
-          "An accessible name must not be empty.",
-        );
-        return undefined;
-      }
+      if (bound) continue;
       if (source === undefined) props[field.name] = checked.value as JsonValue;
       else props[field.name] = value;
     }
     if (
-      node.name === "Option" &&
-      parent?.binding &&
-      !options.state?.accepts(parent.binding, props.value)
+      identity?.matchesBoundValue &&
+      owner?.binding &&
+      !options.state?.accepts(owner.binding, props[identity.prop])
     ) {
       report(
-        `${node.key}/value`,
+        `${node.key}/${identity.prop}`,
         "binding",
         "This option is outside the bound state's allowed values.",
       );
@@ -259,8 +279,12 @@ export function validateJsx(
     const result: ValidJsxElement = { ...node, props, entry, children: [] };
     if (id !== undefined) result.id = id;
     if (binding !== undefined) result.binding = binding;
+    ancestors.push(result);
     for (const child of node.children) {
-      if (entry.children === undefined || (entry.children === "text" && child.kind === "element")) {
+      if (
+        entry.children === undefined ||
+        ((entry.children === "text" || entry.children === "label") && child.kind === "element")
+      ) {
         if (child.kind !== "text" || child.text.trim() !== "")
           report(child.key, "invalid-prop", `${node.name} does not accept this child.`);
         continue;
@@ -277,11 +301,12 @@ export function validateJsx(
           );
         continue;
       }
-      const validated = visit(child, result, owner);
+      const validated = visit(child);
       if (validated) result.children.push(validated);
     }
+    ancestors.pop();
     if (
-      entry.children === "text" &&
+      (entry.children === "text" || entry.children === "label") &&
       !result.children.some(
         (child) =>
           child.kind === "expression" || (child.kind === "text" && child.text.trim() !== ""),
@@ -291,7 +316,7 @@ export function validateJsx(
       return undefined;
     }
     if (
-      needsTextName(node.name) &&
+      entry.children === "label" &&
       !result.children.some((child) => child.kind === "text" && child.text.trim() !== "")
     ) {
       // A literal label can stream immediately. An expression-only label must be complete and
@@ -311,14 +336,23 @@ export function validateJsx(
         return undefined;
       }
     }
-    if (parents[node.name] && typeof props.value === "string") {
-      const collection = `${owner}/${node.name}`;
-      const values = identities.get(collection) ?? new Set<string>();
-      if (values.has(props.value)) {
-        report(`${node.key}/value`, "invalid-prop", "Collection values must be unique.");
+    if (identity && owner) {
+      const value = props[identity.prop];
+      if (typeof value !== "string") {
+        report(
+          `${node.key}/${identity.prop}`,
+          "invalid-prop",
+          "A collection item needs a fixed string identity.",
+        );
         return undefined;
       }
-      values.add(props.value);
+      const collection = `${owner.key}/${node.name}`;
+      const values = identities.get(collection) ?? new Set<string>();
+      if (values.has(value)) {
+        report(`${node.key}/${identity.prop}`, "invalid-prop", "Collection values must be unique.");
+        return undefined;
+      }
+      values.add(value);
       identities.set(collection, values);
     }
     return result;

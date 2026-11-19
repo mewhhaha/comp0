@@ -8,10 +8,10 @@ Three rounds of "hills" are on `main` (rounds 1 and 2 landed together in #35):
 
 1. Restructure: family folders, shared primitives in `@comp0/core`, one polymorphism/context/state model, docs entry files, project lint plugin.
 2. Hardening: typed parts, every component compiled by the React Compiler, `onOpenChange`, dev-only data warnings instead of render-time throws, shared trigger/disabled/overlay helpers, docs prop and data-attribute guards, axe in interactive states, userEvent-driven tests, Playwright Test e2e, parallel CI.
-3. Intelligent UI (this push), modelled on OpenAI's Intelligent UI but with no third-party runtime (OpenUI was only a reference and is not a dependency):
+3. GenUI began with a browser JSON renderer:
    - `@comp0/react` gained `BusyRegion` (streaming contract: no warnings or focus moves while busy), `Output`, the `Comparison` table family, citations (`Citations`, `Sources`, `Source`, `Citation`), and conversation parts (`Message`, `Composer`, `Suggestions`, `Reasoning`, `Feedback`, `CopyButton`).
    - New package `@comp0/genui` (`packages/genui`): models write a JSON tree (`{ "type": "Select", ... }`, `children`, `{ "$bind" }`, `{ "$expr" }`); our own partial-JSON parser, validator with model-correctable errors, store, safe expression evaluator, `GenUI` renderer, `genuiPrompt`, `responseJsonSchema({ strict })`, generated `genui.prompt.md`, conformance suite and seeded fuzzer.
-   - Docs: Intelligent UI learn page with a replayed-JSON demo, pages for every new component, generated `/llms.txt` and `/llms-full.txt`.
+   - Docs: the GenUI overview now teaches JSX composition. The browser JSON renderer page hosts the replay demo. Both guides are included in the generated `/llms.txt` and `/llms-full.txt`.
 
 All checks passed before the push: `pnpm verify` set (format, lint, typecheck, 1638 unit + 89 browser tests, build, package check for core/react/genui, compiler conformance 328/328 with no exceptions, smoke, 4/4 e2e).
 
@@ -26,8 +26,7 @@ All checks passed before the push: `pnpm verify` set (format, lint, typecheck, 1
 - Overlay `initialFocus` matches `[autofocus]`, which React's `autoFocus` prop does not render; `<input autoFocus>` inside a popover is not picked up.
 - A citation to a missing source renders an inert labelled span (review the choice).
 - Conversation chrome (Message, Composer, Reasoning, Feedback) deliberately has no genui facade; revisit if models should compose it.
-- No host-side tool/function calling in genui (queries, mutations); actions only produce a next-turn `message` with form `values`.
-- `@comp0/genui` styling is data attributes only (`data-gap`, `data-columns`, `data-tone`); the docs app has the only theme (`[data-intelligent-ui]` in `apps/docs/src/styles.css`).
+- `@comp0/genui` styling is data attributes only (`data-gap`, `data-columns`, `data-tone`); the docs app has the only theme (`[data-genui]` in `apps/docs/src/styles.css`).
 
 ## Working notes
 

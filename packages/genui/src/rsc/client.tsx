@@ -17,8 +17,9 @@ import { type PropShape } from "../catalog/schema.js";
 import { builtInVocabulary } from "../composition/builtins.js";
 import { compositionComponents } from "../composition/parts.js";
 import { type Vocabulary } from "../composition/spec.js";
+import { composition, type Composition } from "../composition/composition.js";
 import { type StateContract, type StateValues } from "../composition/state.js";
-import { expressionSource, resolveExpressions, validateProp } from "../composition/validate.js";
+import { expressionSource, resolveExpressions, validateField } from "../composition/validate.js";
 import { evaluateExpression } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
 import { GenUIContext, type GenUIAction } from "../render/context.js";
@@ -37,10 +38,8 @@ import {
 
 export type GenUIRootProps = {
   children?: ReactNode;
-  /** Import the same vocabulary in the server view and this client scope. */
-  vocabulary?: Vocabulary;
-  /** Host-owned names, defaults and validators shared by controls and host components. */
-  state?: StateContract;
+  /** Import this shared model contract locally inside a client wrapper. */
+  ui?: Composition;
   call?: ToolCaller | string | undefined;
   /** Refreshes one data component. The host supplies its framework's RSC transport. */
   render?: ComponentRenderer;
@@ -121,11 +120,12 @@ function useRoot(): Root {
   return root;
 }
 
+const defaultUI = composition({ vocabulary: builtInVocabulary });
+
 /** Client scope for all views and host components sharing one typed state contract. */
 export function GenUIRoot({
   children,
-  vocabulary = builtInVocabulary,
-  state,
+  ui = defaultUI,
   call,
   render,
   onAction,
@@ -133,6 +133,7 @@ export function GenUIRoot({
   initialState,
   store: provided,
 }: GenUIRootProps) {
+  const { state, vocabulary } = ui;
   const [edits] = useState(createEditStore);
   const [own] = useState(() => {
     if (state) return state.createStore(initialState);
@@ -216,7 +217,7 @@ export function GenUIClientNode({
     root.store.getSnapshot,
     root.store.getSnapshot,
   );
-  const entry = root.vocabulary.specs.find((item) => item.name === name);
+  const entry = root.vocabulary.get(name);
   const props: Record<string, unknown> = resolveExpressions(raw, values);
   let content = children;
   if (text) {
@@ -231,22 +232,27 @@ export function GenUIClientNode({
     if (label.trim() === "") return null;
     content = label;
   }
-  if (entry) {
-    for (const [key, value] of Object.entries(raw)) {
-      if (expressionSource(value) === undefined) continue;
-      const schema = entry.props[key] ?? entry.props[`${key}?`];
-      if (!schema) return null;
-      const checked = validateProp(schema, props[key]);
-      if (!checked.ok) return null;
-      if (
-        ["label", "title", "caption"].includes(key) &&
-        typeof checked.value === "string" &&
-        checked.value.trim() === ""
-      )
-        return null;
-      props[key] = checked.value;
+  if (!entry) return null;
+  for (const [key, value] of Object.entries(raw)) {
+    if (expressionSource(value) === undefined) continue;
+    const schema = entry.props[key] ?? entry.props[`${key}?`];
+    if (!schema) return null;
+    const checked = validateField(key, schema, props[key], Object.hasOwn(entry.props, key));
+    if (!checked.ok) return null;
+    props[key] = checked.value;
+  }
+  if (binding && entry.binding) {
+    if (component) {
+      const prop = entry.binding.prop;
+      const schema = entry.props[prop] ?? entry.props[`${prop}?`];
+      const checked =
+        schema && validateField(prop, schema, values[binding], Object.hasOwn(entry.props, prop));
+      if (!checked?.ok) return null;
+      props[prop] = checked.value;
+      props.onChange = (value: JsonValue) => root.store.set(binding, value);
+    } else {
+      props[entry.binding.prop] = new Binding(binding, values[binding]);
     }
-    if (binding && entry.binding) props[entry.binding.prop] = new Binding(binding, values[binding]);
   }
   const Component = (component ??
     Object.getOwnPropertyDescriptor(compositionComponents, name)?.value) as

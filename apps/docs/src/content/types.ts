@@ -2,7 +2,7 @@ import type { CatalogEntryDescription } from "@comp0/genui";
 
 type ComponentGroupId = "actions" | "charts" | "fields" | "navigation" | "pickers";
 
-export type CodeLanguage = "bash" | "css" | "json" | "tsx";
+export type CodeLanguage = "bash" | "css" | "json" | "jsx" | "tsx";
 
 type AnatomyKind =
   | "root"
@@ -121,8 +121,6 @@ type LearnSection = {
   code?: string | undefined;
   language?: CodeLanguage | undefined;
   note?: string | undefined;
-  /** A live demo rendered after the explanation, by name. */
-  demo?: "intelligent-ui" | undefined;
   links?: DocLink[] | undefined;
 };
 
@@ -152,6 +150,7 @@ export type GenUISection = {
   id: string;
   title: string;
   paragraphs: string[];
+  demo?: "seat-quote" | "json-replay";
   code?: string | undefined;
   language?: CodeLanguage | undefined;
   /** The code block's caption; defaults to Example. */
