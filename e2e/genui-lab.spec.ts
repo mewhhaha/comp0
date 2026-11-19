@@ -245,7 +245,7 @@ test("the former lesson leads to a working JSX example and the JSON replay", asy
   const redirect = await request.get("/learn/intelligent-ui", { maxRedirects: 0 });
   expect(redirect.status()).toBe(301);
   expect(redirect.headers().location).toBe("/genui/overview");
-  await page.goto("/learn/intelligent-ui");
+  await page.goto("/learn/intelligent-ui", { waitUntil: "networkidle" });
   await expect(page).toHaveURL(/\/genui\/overview$/);
   const quote = page.getByRole("region", { name: "Seat quote", exact: true });
   await expect(quote).toContainText("Monthly total: 24 USD");
