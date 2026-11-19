@@ -1,7 +1,8 @@
+import { replay } from "../../../examples/genui/replay.js";
 import { Link } from "react-router";
 import { edits } from "./renderer.server.js";
 import { EditRoot } from "./EditRoot.js";
-import { initialResponse, replay } from "./responses.js";
+import { initialResponse } from "./responses.js";
 
 export function meta() {
   return [{ title: "GenUI revisions · Labs · comp0" }];

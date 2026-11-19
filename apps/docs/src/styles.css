@@ -509,6 +509,30 @@
     [data-comp0="select"] [role="option"] {
       @apply flex min-h-11 cursor-default items-center rounded-md px-3 py-2 outline-none hover:bg-zinc-950/5 focus-visible:bg-zinc-950/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 data-selected:font-semibold data-selected:text-teal-800 sm:min-h-9 dark:hover:bg-white/10 dark:focus-visible:bg-white/10 dark:focus-visible:outline-teal-400 dark:data-selected:text-teal-300;
     }
+    [data-comp0="checkbox"],
+    [data-comp0="switch"] {
+      @apply relative inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-sm data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-focus-visible:outline-teal-700 dark:data-focus-visible:outline-teal-300;
+      &::before {
+        content: "";
+        @apply grid size-5 shrink-0 place-content-center rounded border border-current;
+      }
+    }
+    [data-comp0="checkbox"][data-checked]::before {
+      content: "✓" / "";
+      @apply bg-teal-800 font-bold text-white dark:bg-teal-300 dark:text-zinc-950;
+    }
+    [data-comp0="switch"] {
+      &::before {
+        @apply w-9 rounded-full;
+      }
+      &::after {
+        content: "";
+        @apply absolute start-1 size-3 rounded-full bg-current;
+      }
+      &[data-checked]::after {
+        @apply start-5;
+      }
+    }
     label,
     legend {
       @apply font-medium text-zinc-950 dark:text-white;
@@ -808,4 +832,25 @@
       }
     }
   }
+}
+
+/* Two offset ink plates on the same paper. The print-proof example supplies the plate displacement. */
+.sleeve-proof {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  aspect-ratio: 2.4;
+  background-color: #f2e7ca;
+}
+.sleeve-disc {
+  position: absolute;
+  inset: -32% 23%;
+  border-radius: 50%;
+  background: repeating-radial-gradient(ellipse at center, #222019 0 6%, transparent 6% 10%);
+  transform: rotate(-26deg);
+}
+.sleeve-overprint {
+  background: repeating-radial-gradient(ellipse at center, var(--ink) 0 6%, transparent 6% 10%);
+  mix-blend-mode: multiply;
+  transform: translateX(var(--shift)) rotate(-26deg);
 }

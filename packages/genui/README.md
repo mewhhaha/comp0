@@ -29,6 +29,8 @@ The example uses three files, each with a separate responsibility.
 | [AnswerRoot.tsx](../../apps/docs/src/examples/genui/AnswerRoot.tsx) | Import the same composition in a client component and give it to `GenUIRoot`, which owns the live seat count.                                                                    |
 | [Answer.tsx](../../apps/docs/src/examples/genui/Answer.tsx)         | Create a renderer and pass a string or a stream of text chunks to its `View`. Opening tags settle before their components appear, and children stream independently.             |
 
+[Browse the GenUI examples](https://comp0-docs.horrible.workers.dev/genui/examples) for twelve runnable responses, including server-side timetable refreshes, a two-panel museum exhibit and a set list that preserves your stage notes across a revision. Read the [recorded responses](../../apps/docs/src/examples/genui/gallery/examples.ts), [per-example contracts](../../apps/docs/src/examples/genui/gallery/contracts.ts), and [renderer and host wiring](../../apps/docs/src/routes/genui-examples/route.tsx) together to adapt one.
+
 ## Extend the vocabulary
 
 A `spec` describes a component name, props, and allowed children. Combine specs with the built-in `layout`, `forms`, `charts`, `actions`, and `disclosure` groups using `vocabulary(...)`. Use `.only(...names)` to give the model a smaller set.

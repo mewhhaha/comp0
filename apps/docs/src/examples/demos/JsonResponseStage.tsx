@@ -6,8 +6,7 @@ type JsonResponseStageProps = {
   onAction: (message: string) => void;
 };
 
-// This module is the only importer of @comp0/genui in the docs client graph, and the demo loads
-// it with import(), so the GenUI runtime stays out of every other page's bundle.
+// The replay demo loads its JSON renderer when the reader presses Play.
 export function JsonResponseStage({ response, streaming, onAction }: JsonResponseStageProps) {
   return (
     <div data-genui="">

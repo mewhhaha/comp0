@@ -3,6 +3,9 @@ import { index, route, type RouteConfig } from "@react-router/dev/routes";
 export default [
   index("routes/_index/route.tsx"),
   route("learn/:slug", "routes/learn/route.tsx"),
+  route("genui/examples/tools", "routes/genui-examples/tools.ts"),
+  route("genui/examples/night-train/departures", "routes/genui-examples/departures.ts"),
+  route("genui/examples/:example", "routes/genui-examples/route.tsx"),
   route("genui/:slug", "routes/genui/route.tsx"),
   route("labs/genui-rsc", "routes/labs/genui-rsc/route.tsx"),
   route("labs/genui-rsc/tools", "routes/labs/genui-rsc/tools.ts"),

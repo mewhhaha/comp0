@@ -14,6 +14,7 @@ import type { GenUIReference, GenUISection } from "../../content/types.js";
 import { Answer } from "../../examples/genui/Answer.js";
 import { JsonResponseDemo } from "../../components/teaching/JsonResponseDemo.js";
 import { CatalogGroup } from "./CatalogGroup.js";
+import { ExampleCards } from "./ExampleCards.js";
 import { InlineText } from "./InlineText.js";
 import { ReferenceTable } from "./ReferenceTable.js";
 
@@ -164,7 +165,10 @@ export function ServerComponent({ params }: GenUIRouteProps) {
                   </p>
                 </Callout>
               )}
-              {section.links && <SectionLinks className="mt-6" links={section.links} />}
+              {section.links && page.slug === "examples" && <ExampleCards links={section.links} />}
+              {section.links && page.slug !== "examples" && (
+                <SectionLinks className="mt-6" links={section.links} />
+              )}
             </section>
           ))}
         </div>
