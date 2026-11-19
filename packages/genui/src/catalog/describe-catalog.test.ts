@@ -20,19 +20,21 @@ describe("describeCatalog", () => {
   });
 
   it("writes readable types, required flags, and descriptions", () => {
-    const Panel = defineEntry({
-      name: "Panel",
-      group: "Layout",
-      description: "A panel.",
-      // Any Standard Schema library works for a prop; ArkType and zod side by side.
-      props: {
-        title: type("string").describe("Visible title."),
-        "size?": z.enum(["sm", "lg"]),
-        "value?": bindable(type("number")),
-        children: nodes("Content."),
+    const Panel = defineEntry(
+      {
+        name: "Panel",
+        group: "Layout",
+        description: "A panel.",
+        // Any Standard Schema library works for a prop; ArkType and zod side by side.
+        props: {
+          title: type("string").describe("Visible title."),
+          "size?": z.enum(["sm", "lg"]),
+          "value?": bindable(type("number")),
+          children: nodes("Content."),
+        },
       },
-      component: () => null,
-    });
+      () => null,
+    );
     expect(describeCatalog([Panel])).toEqual([
       {
         name: "Panel",

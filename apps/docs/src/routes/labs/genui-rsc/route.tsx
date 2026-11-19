@@ -1,8 +1,6 @@
-import { GenUIView } from "@comp0/genui/rsc";
 import { Link } from "react-router";
 import { dashboard, explainer } from "./responses.js";
-import { labState, labVocabulary } from "./contract.js";
-import { labComponents } from "./components.server.js";
+import { labRenderer } from "./components.server.js";
 import { forecastExplorer } from "./forecast-explorer.js";
 import { releaseNotes } from "./release-notes.js";
 import { LiveValues } from "./LiveValues.js";
@@ -40,7 +38,11 @@ export function ServerComponent() {
           >
             Ask a model
           </Link>{" "}
-          to compose one live.
+          to compose one live, or{" "}
+          <Link to="/labs/genui-rsc/compose" className="underline">
+            edit the JSX yourself
+          </Link>
+          .
         </p>
       </header>
       <LabRoot>
@@ -51,44 +53,19 @@ export function ServerComponent() {
           <LiveValues />
         </section>
         <section aria-label="Shader explorer" data-intelligent-ui="">
-          <GenUIView
-            stream={replay(shaderExplorer)}
-            vocabulary={labVocabulary}
-            state={labState}
-            components={labComponents}
-          />
+          <labRenderer.View source={replay(shaderExplorer)} />
         </section>
         <section aria-label="Forecast" data-intelligent-ui="">
-          <GenUIView
-            stream={replay(forecastExplorer)}
-            vocabulary={labVocabulary}
-            state={labState}
-            components={labComponents}
-          />
+          <labRenderer.View source={replay(forecastExplorer)} />
         </section>
         <section aria-label="How did the product do this week?" data-intelligent-ui="">
-          <GenUIView
-            stream={replay(dashboard)}
-            vocabulary={labVocabulary}
-            state={labState}
-            components={labComponents}
-          />
+          <labRenderer.View source={replay(dashboard)} />
         </section>
         <section aria-label="Release notes" data-intelligent-ui="">
-          <GenUIView
-            stream={replay(releaseNotes)}
-            vocabulary={labVocabulary}
-            state={labState}
-            components={labComponents}
-          />
+          <labRenderer.View source={replay(releaseNotes)} />
         </section>
         <section aria-label="Explain how OAuth works." data-intelligent-ui="">
-          <GenUIView
-            stream={replay(explainer)}
-            vocabulary={labVocabulary}
-            state={labState}
-            components={labComponents}
-          />
+          <labRenderer.View source={replay(explainer)} />
         </section>
       </LabRoot>
     </div>

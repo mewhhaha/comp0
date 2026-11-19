@@ -1,11 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { GenUIView } from "@comp0/genui/rsc";
 import { type ReactNode } from "react";
 import { Form, Link } from "react-router";
 import { AskRoot } from "./AskRoot.js";
 import { askClaude, labApiKey } from "./model.server.js";
-import { labState, labVocabulary } from "./contract.js";
-import { labComponents } from "./components.server.js";
+import { labRenderer } from "./components.server.js";
 
 type AskLoaderData = { prompt: string; after: string };
 
@@ -62,12 +60,7 @@ export function ServerComponent({ loaderData }: { loaderData: AskLoaderData }) {
     answer = (
       <AskRoot key={`${after}\n${prompt}`} prompt={prompt}>
         <section aria-label="Answer" data-intelligent-ui="">
-          <GenUIView
-            stream={stream}
-            vocabulary={labVocabulary}
-            state={labState}
-            components={labComponents}
-          />
+          <labRenderer.View source={stream} />
         </section>
       </AskRoot>
     );

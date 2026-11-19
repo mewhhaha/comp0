@@ -174,8 +174,8 @@ Let a model compose your components as restricted JSX. [`@comp0/genui`](packages
 
 ```ts
 // ui.ts: shared contracts
-import { forms, layout, vocabulary } from "@comp0/genui/vocabulary";
-export const ui = vocabulary(layout, forms);
+import { composition, forms, layout, vocabulary } from "@comp0/genui/vocabulary";
+export const ui = composition({ vocabulary: vocabulary(layout, forms) });
 ```
 
 ```tsx
@@ -186,18 +186,20 @@ import { type ReactNode } from "react";
 import { ui } from "./ui.js";
 
 export function AnswerRoot({ children }: { children: ReactNode }) {
-  return <GenUIRoot vocabulary={ui}>{children}</GenUIRoot>;
+  return <GenUIRoot ui={ui}>{children}</GenUIRoot>;
 }
 ```
 
 ```tsx
 // Answer.tsx: the server passes only React children to the client wrapper
-import { GenUIView } from "@comp0/genui/rsc";
+import { createRenderer } from "@comp0/genui/rsc";
 import { AnswerRoot } from "./AnswerRoot.js";
 import { ui } from "./ui.js";
 
+const renderer = createRenderer(ui);
+
 <AnswerRoot>
-  <GenUIView vocabulary={ui} stream={streamFromYourProvider(ui.prompt(), message)} />
+  <renderer.View source={streamFromYourProvider(ui.prompt(), message)} />
 </AnswerRoot>;
 ```
 

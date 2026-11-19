@@ -73,9 +73,9 @@ export const genuiDocs: GenUIDoc[] = [
         id: "start",
         title: "Choose the vocabulary and state",
         paragraphs: [
-          "Import the server-safe contracts from `@comp0/genui/vocabulary`. Combine the built-in `layout`, `forms`, `charts`, `actions`, and `disclosure` groups with your own specs through `vocabulary`. Use `.only(...)` to narrow a group. The vocabulary generates its own prompt with `.prompt({ state })`.",
+          "Import the server-safe contracts from `@comp0/genui/vocabulary`. Combine the built-in `layout`, `forms`, `charts`, `actions`, and `disclosure` groups with your own specs through `vocabulary`. Use `.only(...)` to narrow a group. Pass the vocabulary and state to `composition`. Its `.prompt()` and `.validate(source)` share these rules with the renderer.",
         ],
-        code: 'import { fromJsonSchema, layout, forms, state, vocabulary } from "@comp0/genui/vocabulary";\n\nexport const settings = state({ seats: fromJsonSchema<number>({ type: "number" }) }, { seats: 1 });\nexport const ui = vocabulary(layout, forms);\nexport const system = ui.prompt({ state: settings });',
+        code: 'import {\n  composition,\n  fromJsonSchema,\n  layout,\n  forms,\n  state,\n  vocabulary,\n} from "@comp0/genui/vocabulary";\n\nexport const settings = state({ seats: fromJsonSchema<number>({ type: "number" }) }, { seats: 1 });\nexport const ui = composition({ vocabulary: vocabulary(layout, forms), state: settings });\nexport const system = ui.prompt();',
         codeTitle: "ui.ts",
       },
       {
@@ -84,17 +84,21 @@ export const genuiDocs: GenUIDoc[] = [
         paragraphs: [
           "Vocabulary and state contracts contain methods and validators. Import them locally in a client wrapper; they cannot be serialized as props from a server component. The server passes React children to this wrapper.",
         ],
-        code: '"use client";\n\nimport { GenUIRoot } from "@comp0/genui/rsc/client";\nimport { type ReactNode } from "react";\nimport { settings, ui } from "./ui.js";\n\nexport function AnswerRoot({ children }: { children: ReactNode }) {\n  return (\n    <GenUIRoot vocabulary={ui} state={settings}>\n      {children}\n    </GenUIRoot>\n  );\n}',
+        code: '"use client";\n\nimport { GenUIRoot } from "@comp0/genui/rsc/client";\nimport { type ReactNode } from "react";\nimport { ui } from "./ui.js";\n\nexport function AnswerRoot({ children }: { children: ReactNode }) {\n  return <GenUIRoot ui={ui}>{children}</GenUIRoot>;\n}',
         codeTitle: "AnswerRoot.tsx",
       },
       {
         id: "server",
         title: "Render a response",
         paragraphs: [
-          "The server view imports the same contracts and consumes one `AsyncIterable<string>` of restricted JSX. Its client wrapper owns the shared store.",
+          "Create a renderer once from the shared composition. Its View accepts finished JSX or a stream of text chunks. You can try a complete response in the JSX editor without a model key.",
         ],
-        code: 'import { GenUIView } from "@comp0/genui/rsc";\nimport { AnswerRoot } from "./AnswerRoot.js";\nimport { settings, system, ui } from "./ui.js";\n\nexport function Answer({ message }: { message: string }) {\n  return (\n    <AnswerRoot>\n      <GenUIView\n        vocabulary={ui}\n        state={settings}\n        stream={streamFromYourProvider(system, message)}\n      />\n    </AnswerRoot>\n  );\n}',
+        code: 'import { createRenderer } from "@comp0/genui/rsc";\nimport { AnswerRoot } from "./AnswerRoot.js";\nimport { system, ui } from "./ui.js";\n\nconst renderer = createRenderer(ui);\n\nexport function Answer({ message }: { message: string }) {\n  return (\n    <AnswerRoot>\n      <renderer.View source={streamFromYourProvider(system, message)} />\n    </AnswerRoot>\n  );\n}',
         links: [
+          {
+            label: "Edit JSX and preview the result",
+            to: "/labs/genui-rsc/compose",
+          },
           {
             label: "Server components",
             to: "/genui/server",
@@ -289,10 +293,10 @@ export const genuiDocs: GenUIDoc[] = [
         id: "custom-components",
         title: "Add your own components",
         paragraphs: [
-          "`defineEntry` declares an entry as plain data: a name, a group, a description written for the model, its props, and the React component that renders them. Props are a shape: each key holds a Standard Schema that can also describe itself as JSON Schema (ArkType 2.1.28+, zod 4.2+, or Valibot through `toStandardJsonSchema()`), and a key ending in `?` is optional. Pass the extended catalog to `GenUI`, `genuiPrompt`, and `responseJsonSchema` alike, and use `describeCatalog` to list it as plain data, as this page does. The built-ins come apart the same way: `catalogSpecs` is every built-in component as data with no renderer, safe to load on a server for prompts and schemas, and `withComponents(catalogSpecs, { ...builtInComponents, Button: MyButton })` pairs specs with components by name, so you can swap one renderer and keep what the model is told; `builtInComponents` maps each built-in name to its React component.",
+          "`defineEntry(spec, Component)` attaches a browser implementation to a catalog contract. Use the same spec to build the model prompt, structured output schema, and MCP tool descriptor. Props are a shape: each key holds a Standard Schema that can also describe itself as JSON Schema (ArkType 2.1.28+, zod 4.2+, or Valibot through `toStandardJsonSchema()`), and a key ending in `?` is optional. Pass the extended catalog to `GenUI`, `genuiPrompt`, and `responseJsonSchema` alike, and use `describeCatalog` to list it as plain data, as this page does. The built-ins come apart the same way: `catalogSpecs` is every built-in component as data with no renderer, safe to load on a server for prompts and schemas, and `withComponents(catalogSpecs, { ...builtInComponents, Button: MyButton })` pairs specs with components by name, so you can swap one renderer and keep what the model is told; `builtInComponents` maps each built-in name to its React component.",
           "While a response streams, a prop is checked against its JSON Schema so partial values still render. Once it is finished it must also pass the library's own `validate`, so formats and refinements count. Validators must be synchronous. A component receives only the props its schema declares, and each may be missing while the response streams, so render defensively.",
         ],
-        code: 'import { catalog, defineEntry, GenUI, genuiPrompt } from "@comp0/genui";\nimport { type } from "arktype";\nimport { z } from "zod";\n\nconst Shout = defineEntry({\n  name: "Shout",\n  group: "Layout",\n  description: "Loud text. Requires text.",\n  props: {\n    text: type("string").describe("What to shout."),\n    "volume?": z.number().min(1).max(11).describe("How loud, 1 to 11."),\n  },\n  component: ({ text, volume }) => <strong data-volume={volume}>{text}</strong>,\n});\n\nconst withShout = [...catalog, Shout];\n\n<GenUI response={response} catalog={withShout} />;\ngenuiPrompt({ catalog: withShout });',
+        code: 'import { catalog, defineEntry, GenUI, genuiPrompt } from "@comp0/genui";\nimport { type } from "arktype";\nimport { z } from "zod";\n\nconst Shout = defineEntry(\n  {\n    name: "Shout",\n    group: "Layout",\n    description: "Loud text. Requires text.",\n    props: {\n      text: type("string").describe("What to shout."),\n      "volume?": z.number().min(1).max(11).describe("How loud, 1 to 11."),\n    },\n  },\n  ({ text, volume }) => <strong data-volume={volume}>{text}</strong>,\n);\n\nconst withShout = [...catalog, Shout];\n\n<GenUI response={response} catalog={withShout} />;\ngenuiPrompt({ catalog: withShout });',
         codeTitle: "A custom entry",
         list: [
           "`nodes(description)` declares a slot for nested components; the component receives a `ReactNode`.",
@@ -416,10 +420,10 @@ export const genuiDocs: GenUIDoc[] = [
         id: "contracts",
         title: "A vocabulary is the model API",
         paragraphs: [
-          '`spec(name, { description, props, children, binding })` describes a component without importing its implementation. Props are Standard Schemas; a key ending in `?` is optional. Children may be `"text"`, `"nodes"`, or a list of allowed component names. `spec.implement(Component)` adds a typed client implementation. That component belongs in a module marked `"use client"`; the renderer passes its RSC client reference, never a plain server function. `vocabulary(...)` combines specs or groups, rejects duplicate names, and generates the prompt.',
+          '`spec(name, { description, props, children, binding })` describes a component without importing its implementation. Props are Standard Schemas; a key ending in `?` is optional. Children may be `"text"`, `"nodes"`, a list of allowed component names, or `"label"` for a visible accessible name. Declare `parents` for direct-parent restrictions and `identity: { prop, scope }` for a unique string key within a named ancestor. `spec.implement(Component)` pairs that exact spec with a typed React implementation. A bound custom field receives the value and an optional typed `onChange(next)` callback. That component belongs in a module marked `"use client"`; the renderer passes its RSC client reference, never a plain server function. `vocabulary(...)` combines specs or groups, rejects duplicate names, and preserves the selected contracts.',
           "The server-safe entry exports `fromJsonSchema`, `oneOf`, and `url` for schemas with no runtime library. Hosts may also use synchronous Standard Schema validators from ArkType, zod, or Valibot.",
         ],
-        code: 'import { spec, vocabulary, layout, forms } from "@comp0/genui/vocabulary";\nimport { ShaderCanvas } from "./ShaderCanvas.js";\n\nconst Shader = spec("Shader", {\n  description: "A live preview driven by the declared shader settings.",\n  props: {},\n}).implement(ShaderCanvas);\n\nexport const ui = vocabulary(layout, forms, Shader);',
+        code: 'import { composition, layout, spec, vocabulary } from "@comp0/genui/vocabulary";\n\nexport const Shader = spec("Shader", {\n  description: "A live preview of the shader settings.",\n  props: {},\n});\nexport const ui = composition({ vocabulary: vocabulary(layout, Shader) });\n\n// renderer.server.tsx\n// import { createRenderer } from "@comp0/genui/rsc";\n// import { ShaderCanvas } from "./ShaderCanvas.js";\n// export const renderer = createRenderer(ui, Shader.implement(ShaderCanvas));',
       },
       {
         id: "state",
@@ -428,7 +432,7 @@ export const genuiDocs: GenUIDoc[] = [
           '`state(shape, defaults)` owns every shared name, validator, and initial value. A model writes `bind="seats"` on a field and `{seats * 12}` in text or an expression-capable prop. The binding kind must match the declared state schema. Unknown names and invalid writes are rejected. Unbound form controls keep local values.',
           'Host client components use `useGenUIValue(settings, "seats")` for a typed value. `useGenUIState`, `useGenUIStore`, and `useGenUICall` expose the shared scope when needed.',
         ],
-        code: 'import { fromJsonSchema, layout, forms, state, vocabulary } from "@comp0/genui/vocabulary";\n\nexport const settings = state({ seats: fromJsonSchema<number>({ type: "number" }) }, { seats: 1 });\nexport const ui = vocabulary(layout, forms);\nexport const system = ui.prompt({ state: settings });\n\n// In a client component:\n// const seats = useGenUIValue(settings, "seats");',
+        code: 'import {\n  composition,\n  fromJsonSchema,\n  layout,\n  forms,\n  state,\n  vocabulary,\n} from "@comp0/genui/vocabulary";\n\nexport const settings = state({ seats: fromJsonSchema<number>({ type: "number" }) }, { seats: 1 });\nexport const ui = composition({ vocabulary: vocabulary(layout, forms), state: settings });\nexport const system = ui.prompt();\n\n// In a client component:\n// const seats = useGenUIValue(settings, "seats");',
         links: [
           {
             label: "GenUI lab",
@@ -442,16 +446,16 @@ export const genuiDocs: GenUIDoc[] = [
         paragraphs: [
           "Vocabulary and state contracts contain methods and validators. Import them locally in a client wrapper; they cannot be serialized as props from a server component. The server passes React children to this wrapper.",
         ],
-        code: '"use client";\n\nimport { GenUIRoot } from "@comp0/genui/rsc/client";\nimport { type ReactNode } from "react";\nimport { settings, ui } from "./ui.js";\n\nexport function AnswerRoot({ children }: { children: ReactNode }) {\n  return (\n    <GenUIRoot vocabulary={ui} state={settings}>\n      {children}\n    </GenUIRoot>\n  );\n}',
+        code: '"use client";\n\nimport { GenUIRoot } from "@comp0/genui/rsc/client";\nimport { type ReactNode } from "react";\nimport { ui } from "./ui.js";\n\nexport function AnswerRoot({ children }: { children: ReactNode }) {\n  return <GenUIRoot ui={ui}>{children}</GenUIRoot>;\n}',
         codeTitle: "AnswerRoot.tsx",
       },
       {
         id: "root",
         title: "A root and its views",
         paragraphs: [
-          "`GenUIRoot` is the client scope; `GenUIView` renders one response on the server. Import the same contracts in both modules; the client wrapper passes them to the root locally. Each opening tag must finish before its component renders, while text and nested children stream independently. Layout such as Stack, Grid, Heading, Text, List, and Image uses server HTML. Controls and custom client components receive React children through Suspense.",
+          "`GenUIRoot` is the client scope; `createRenderer(ui, ...implementations)` returns a View that renders one response on the server. Import the same contracts in both modules; the client wrapper passes them to the root locally. Each opening tag must finish before its component renders, while text and nested children stream independently. Layout such as Stack, Grid, Heading, Text, List, and Image uses server HTML. Controls and custom client components receive React children through Suspense.",
         ],
-        code: 'import { GenUIView } from "@comp0/genui/rsc";\nimport { AnswerRoot } from "./AnswerRoot.js";\nimport { settings, system, ui } from "./ui.js";\n\nexport function Answer({ message }: { message: string }) {\n  return (\n    <AnswerRoot>\n      <GenUIView\n        vocabulary={ui}\n        state={settings}\n        stream={streamFromYourProvider(system, message)}\n      />\n    </AnswerRoot>\n  );\n}',
+        code: 'import { createRenderer } from "@comp0/genui/rsc";\nimport { AnswerRoot } from "./AnswerRoot.js";\nimport { system, ui } from "./ui.js";\n\nconst renderer = createRenderer(ui);\n\nexport function Answer({ message }: { message: string }) {\n  return (\n    <AnswerRoot>\n      <renderer.View source={streamFromYourProvider(system, message)} />\n    </AnswerRoot>\n  );\n}',
         tables: [
           {
             caption: "GenUIRoot props",
@@ -460,14 +464,10 @@ export const genuiDocs: GenUIDoc[] = [
                 type: "ReactNode",
                 description: "Views and host components sharing the root state.",
               },
-              vocabulary: {
-                type: "Vocabulary",
+              ui: {
+                type: "Composition",
                 description:
-                  "The same vocabulary used by the server views. Defaults to `builtInVocabulary`.",
-              },
-              state: {
-                type: "StateContract",
-                description: "Host-owned state names, schemas, and defaults.",
+                  "The shared vocabulary and state contract. Defaults to the built-in vocabulary with no declared state.",
               },
               call: {
                 type: "ToolCaller | string",
@@ -500,11 +500,11 @@ export const genuiDocs: GenUIDoc[] = [
             }),
           },
           {
-            caption: "GenUIView props",
+            caption: "renderer.View props",
             rows: rows<GenUIViewProps>({
-              stream: {
-                type: "AsyncIterable<string>",
-                description: "Restricted JSX text deltas from the provider.",
+              source: {
+                type: "string | AsyncIterable<string>",
+                description: "A complete JSX response or text deltas from the provider.",
               },
               history: {
                 type: "readonly string[]",
@@ -516,18 +516,6 @@ export const genuiDocs: GenUIDoc[] = [
                 description:
                   "Stable identity for an edit turn. Replaying the same identity is a no-op.",
               },
-              vocabulary: {
-                type: "Vocabulary",
-                description: "Allowed component contracts. Defaults to `builtInVocabulary`.",
-              },
-              state: {
-                type: "StateContract",
-                description: "The same state contract used by the root.",
-              },
-              components: {
-                type: "ComponentImplementations",
-                description: "Custom client references and server component definitions by name.",
-              },
             }),
           },
         ],
@@ -538,17 +526,17 @@ export const genuiDocs: GenUIDoc[] = [
         paragraphs: [
           "The client root and server view import this contract module. It describes the data component without loading its implementation.",
         ],
-        code: 'import { fromJsonSchema, layout, spec, vocabulary } from "@comp0/genui/vocabulary";\n\nexport const ForecastSpec = spec("Forecast", {\n  description: "Weather for the chosen city.",\n  props: { city: fromJsonSchema<string>({ type: "string" }) },\n});\nexport const ui = vocabulary(layout, ForecastSpec);',
+        code: 'import { composition, fromJsonSchema, layout, spec, vocabulary } from "@comp0/genui/vocabulary";\n\nexport const ForecastSpec = spec("Forecast", {\n  description: "Weather for the chosen city.",\n  props: { city: fromJsonSchema<string>({ type: "string" }) },\n});\nexport const ui = composition({ vocabulary: vocabulary(layout, ForecastSpec) });',
         codeTitle: "forecast-spec.ts",
       },
       {
         id: "data-components",
         title: "Data reads are components",
         paragraphs: [
-          "`serverComponent` defines an async component and its server-safe `.spec`. Keep the spec in a shared contract module and the async implementation in a server-only module. Register the shared spec in the vocabulary and the definition in the view’s `components` map, so the client wrapper never imports server data code. The model places the component directly; the host performs its data read.",
-          "If a prop depends on state, changing that value refreshes only this component after a short debounce. Supply `render` on the root using your framework’s RSC transport. Validate every incoming refresh with `renderComponent(components, name, props)` on the server. The host owns authentication and transport; genui keeps the last accepted subtree while a refresh is pending or fails.",
+          "`serverComponent(spec, render)` implements a leaf from the shared contract. Pass the result to `createRenderer` in a server-only module. Registration catches missing, duplicate and mismatched implementations immediately. The model places the component directly; the host performs its data read.",
+          "If a prop depends on state, changing that value refreshes only this component after a short debounce. Supply `render` on the root using your framework’s RSC transport. Validate every incoming refresh with `renderer.render(name, props)` on the server. The host owns authentication and transport; genui keeps the last accepted subtree while a refresh is pending or fails.",
         ],
-        code: 'import { serverComponent, GenUIView } from "@comp0/genui/rsc";\nimport { ForecastSpec, ui } from "./forecast-spec.js";\n\nconst Forecast = serverComponent(ForecastSpec.name, {\n  description: ForecastSpec.description,\n  props: ForecastSpec.props,\n  async render({ city }) {\n    const forecast = await fetchForecast(city);\n    return <ForecastTable forecast={forecast} />;\n  },\n});\nconst components = { Forecast };\n\n// Inside AnswerRoot, which imports ui locally:\n<GenUIView vocabulary={ui} components={components} stream={modelStream} />;\n// A server refresh handler calls renderComponent(components, name, props).',
+        code: 'import { createRenderer, serverComponent } from "@comp0/genui/rsc";\nimport { ForecastSpec, ui } from "./forecast-spec.js";\n\nconst forecast = serverComponent(ForecastSpec, async ({ city }) => {\n  const data = await fetchForecast(city);\n  return <ForecastTable forecast={data} />;\n});\nexport const renderer = createRenderer(ui, forecast);\n\n// Render inside the client AnswerRoot.\n<renderer.View source={modelStream} />;\n// The refresh endpoint calls renderer.render(name, props).',
       },
       {
         id: "edits",
@@ -558,23 +546,23 @@ export const genuiDocs: GenUIDoc[] = [
           "Pass exact earlier response text and prior successful edits as `history`, plus a stable `turn` identity. Supplying `history` marks a turn as edits only. The server replays history and validates the whole edit turn before it commits. A missing target, invalid child, duplicate ID, or stale target revision rejects the entire turn. Replaying an accepted turn identity makes no changes.",
           "Updates preserve component identity, focus, disclosure state, and the person's field values. They cannot change identity props such as name, bind, or a collection item's value. Updating a data component's props refreshes only that target through the root's server renderer while retaining its accepted content.",
         ],
-        code: '// The first answer identifies the places later turns may revise.\nconst firstResponse = `<Stack>\n  <Card id="summary" title="Draft itinerary"><Text>A weekend by the sea.</Text></Card>\n  <List id="checklist"><Item id="flight">Book the flight</Item></List>\n</Stack>`;\n\n// This is a later model response, streamed into a separate mounted view.\nconst editResponse = `<Update id="summary" title="Ready itinerary" />\n<Append to="checklist"><Item id="ferry">Book the ferry</Item></Append>`;\n\n<AnswerRoot>\n  <GenUIView vocabulary={ui} state={settings} stream={firstStream} turn="assistant-1" />\n  <GenUIView\n    vocabulary={ui}\n    state={settings}\n    stream={editStream}\n    history={[firstResponse]}\n    turn="assistant-2"\n  />\n</AnswerRoot>;',
+        code: '// The first answer identifies the places later turns may revise.\nconst firstResponse = `<Stack>\n  <Card id="summary" title="Draft itinerary"><Text>A weekend by the sea.</Text></Card>\n  <List id="checklist"><Item id="flight">Book the flight</Item></List>\n</Stack>`;\n\n// This is a later model response, streamed into a separate mounted view.\nconst editResponse = `<Update id="summary" title="Ready itinerary" />\n<Append to="checklist"><Item id="ferry">Book the ferry</Item></Append>`;\n\n<AnswerRoot>\n  <renderer.View source={firstStream} turn="assistant-1" />\n  <renderer.View source={editStream} history={[firstResponse]} turn="assistant-2" />\n</AnswerRoot>;',
         links: [{ label: "Recorded revisions lab", to: "/labs/genui-edits" }],
       },
       {
         id: "holes",
         title: "Let the host keep the layout",
         paragraphs: [
-          "`hole(vocabulary, instruction, { max })` bounds what the model may compose in one place. `holes({...})` produces a prompt and `.fill(stream, options)` returns named React components. All holes share one model stream; each enforces its own vocabulary and maximum number of direct children. For later turns, `.fill(stream, { history, turn, state, components })` accepts the same edit history and identity. Keep edits wrapped in the same named hole tags; targets and atomic commits stay within each hole. Omit a hole from a follow-up to leave it unchanged.",
+          "`hole(vocabulary, instruction, { max })` bounds what the model may compose in one place. `renderer.holes({...})` produces a prompt and `.fill(stream, options)` returns named React components. All holes share one model stream; each enforces its own vocabulary and maximum number of direct children. For later turns, `.fill(source, { history, turn })` accepts the same edit history and identity. Keep edits wrapped in the same named hole tags; targets and atomic commits stay within each hole. Omit a hole from a follow-up to leave it unchanged.",
         ],
-        code: 'import { hole, holes } from "@comp0/genui/rsc";\nimport { layout, forms } from "@comp0/genui/vocabulary";\nimport { AnswerRoot } from "./AnswerRoot.js";\nimport { settings } from "./ui.js";\n\nconst page = holes({\n  summary: hole(layout.only("Heading", "Text"), "Explain the result.", { max: 3 }),\n  controls: hole(forms.only("Slider", "Switch"), "Offer useful adjustments.", { max: 4 }),\n});\nconst answer = page.fill(streamFromYourProvider(page.prompt({ state: settings }), message), {\n  state: settings,\n});\n\n<AnswerRoot>\n  <header>\n    <answer.summary />\n  </header>\n  <aside>\n    <answer.controls />\n  </aside>\n</AnswerRoot>;',
+        code: 'import { hole } from "@comp0/genui/rsc";\nimport { layout, forms } from "@comp0/genui/vocabulary";\nimport { AnswerRoot } from "./AnswerRoot.js";\nimport { renderer } from "./renderer.server.js";\n\nconst page = renderer.holes({\n  summary: hole(layout.only("Heading", "Text"), "Explain the result.", { max: 3 }),\n  controls: hole(forms.only("Slider", "Switch"), "Offer useful adjustments.", { max: 4 }),\n});\nconst answer = page.fill(streamFromYourProvider(page.prompt(), message));\n\n<AnswerRoot>\n  <header>\n    <answer.summary />\n  </header>\n  <aside>\n    <answer.controls />\n  </aside>\n</AnswerRoot>;',
       },
       {
         id: "server-actions",
         title: "Actions and errors",
         paragraphs: [
           "Buttons, forms, and suggestions remain disabled until the view settles. The root’s `onAction` receives the person’s message and any form values. Button and Form `action` steps can call a tool, set a declared value, or send a message. Supply `call` as a function or an endpoint served by `handleToolRequest`; `httpToolCaller` is available for an explicit HTTP client.",
-          '`parsePartialJsx` parses prefixes; `validateJsx` (or `vocabulary.validate`) checks an ordinary tree against the vocabulary and state. `validateEdits(source, { history, vocabulary, state })` validates an entire edit turn against replayed earlier responses. The root’s `onError` reports structured problems after streaming. Send `formatErrors(errors, "jsx")` back to the model when asking for a corrected response. Later responses use `Update` and `Append` to revise mounted targets, with the contracts described below.',
+          '`parsePartialJsx` parses prefixes; `validateJsx` (or `ui.validate`) checks an ordinary tree against the vocabulary and state. `validateEdits(source, { history, vocabulary, state })` validates an entire edit turn against replayed earlier responses. The root’s `onError` reports structured problems after streaming. Send `formatErrors(errors, "jsx")` back to the model when asking for a corrected response. Later responses use `Update` and `Append` to revise mounted targets, with the contracts described below.',
         ],
       },
     ],
@@ -669,10 +657,10 @@ export const genuiDocs: GenUIDoc[] = [
         paragraphs: [
           "The model composes layout; your app supplies what it can reach. A tool is a function with a schema for its input, declared with `defineTool`. The interface calls tools through one `call(name, args)` function you pass to the renderer, so the same tools work from an HTTP endpoint (`handleToolRequest` on the server, `httpToolCaller` or just the endpoint's URL in the browser), a function that calls `runTool` (which validates the arguments and keeps error details on the server), or an MCP `tools/call`.",
           "A `Query` node calls a tool and stores the result under a name, again whenever a bound argument changes, without another turn; a chart's `data`, a table's `rows`, or a list's `items` bound to that name follow it. A button's `action` runs steps in order: `call` a tool, `set` a value, or `send` a message. A `Slot` places one of your own views, which read the same values with hooks, so a slider the model wrote can drive your canvas live.",
-          "With React Server Components, `@comp0/genui/rsc` streams layout as server HTML: `GenUIRoot` holds typed state and any number of `GenUIView` elements stream restricted JSX into it. Custom components replace the JSON transport’s `Query` and `Slot`. Server components covers it in full.",
+          "With React Server Components, `@comp0/genui/rsc` streams layout as server HTML: `GenUIRoot` holds typed state and any number of `renderer.View` elements stream restricted JSX into it. Custom components replace the JSON transport’s `Query` and `Slot`. Server components covers it in full.",
           "Inside an MCP Apps host, `@comp0/genui/mcp` renders a response the model writes as a tool call's arguments: `genuiAppTool` describes that tool on your MCP server, and `McpAppGenUI` renders it in the app's `ui://` resource while the arguments stream, with tools going through the host's `tools/call` and actions becoming the person's next message.",
         ],
-        code: "<GenUI\n  response={response}\n  streaming={streaming}\n  call={callTool}\n  slots={{ shader: <ShaderCanvas /> }}\n/>;\n\n// With React Server Components, the client AnswerRoot imports its contracts\n<AnswerRoot>\n  <GenUIView vocabulary={ui} state={settings} stream={modelStream} />\n</AnswerRoot>;",
+        code: "<GenUI\n  response={response}\n  streaming={streaming}\n  call={callTool}\n  slots={{ shader: <ShaderCanvas /> }}\n/>;\n\n// With React Server Components, the client AnswerRoot imports its contracts\n<AnswerRoot>\n  <renderer.View source={modelStream} />\n</AnswerRoot>;",
       },
       {
         id: "actions",

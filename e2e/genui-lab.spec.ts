@@ -214,3 +214,21 @@ test("genui lab ask page: says what it needs without a model key, accessible", a
     [],
   );
 });
+
+test("compose a custom component, inspect a contract error and correct the preview", async ({
+  page,
+}) => {
+  await page.goto("/labs/genui-rsc/compose");
+  const preview = page.getByRole("region", { name: "Preview" });
+  await expect(preview.getByRole("table", { name: "Daily high" })).toBeVisible();
+  const source = page.getByRole("textbox", { name: "Component JSX" });
+  await source.fill('<Forecast city="Paris" />');
+  await page.getByRole("button", { name: "Preview" }).click();
+  await expect(preview.getByRole("heading", { name: "Check the JSX" })).toBeVisible();
+  await expect(preview.getByRole("table")).toHaveCount(0);
+  await source.fill("<Heading>A new view</Heading>");
+  await page.getByRole("button", { name: "Preview" }).click();
+  await expect(preview.getByRole("heading", { name: "A new view" })).toBeVisible();
+  await expect(preview.getByRole("heading", { name: "Check the JSX" })).toHaveCount(0);
+  expect(await axeViolations(page, "main")).toEqual([]);
+});

@@ -1,5 +1,6 @@
 import {
   builtInVocabulary,
+  composition,
   fromJsonSchema,
   oneOf,
   spec,
@@ -9,22 +10,21 @@ import {
 
 const number = fromJsonSchema<number>({ type: "number" });
 const text = fromJsonSchema<string>({ type: "string" });
-export const forecastProps = { city: oneOf(["Oslo", "Lisbon", "Tokyo", "Nairobi"]) };
-export const forecastDescription =
-  "A seven-day forecast chart for a city. Read city from declared state to refresh just this component when it changes.";
+const city = oneOf(["Oslo", "Lisbon", "Tokyo", "Nairobi"]);
 export const shaderSpec = spec("Shader", {
   description:
     "A live plasma shader that follows the declared speed, scale, and hue values locally. Place sliders bound to those names beside it.",
   props: {},
 });
 export const forecastSpec = spec("Forecast", {
-  description: forecastDescription,
-  props: forecastProps,
+  description:
+    "A seven-day forecast chart for a city. Bind its city prop to state to update the chart.",
+  props: { city },
 });
 
 export const labState = state(
   {
-    city: forecastProps.city,
+    city,
     speed: number,
     scale: number,
     hue: number,
@@ -33,4 +33,7 @@ export const labState = state(
   },
   { city: "Oslo", speed: 1, scale: 4, hue: 200, email: "", subscription: "" },
 );
-export const labVocabulary = vocabulary(builtInVocabulary, shaderSpec, forecastSpec);
+export const labUI = composition({
+  vocabulary: vocabulary(builtInVocabulary, shaderSpec, forecastSpec),
+  state: labState,
+});

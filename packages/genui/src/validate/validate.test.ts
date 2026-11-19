@@ -399,14 +399,16 @@ describe("validateResponse", () => {
   });
 
   it("works with a custom catalog", () => {
-    const Shout = defineEntry({
-      name: "Shout",
-      group: "Layout",
-      description: "Loud text. Requires text.",
-      // A zod schema works like any other Standard Schema.
-      props: { text: z.string().describe("What to shout.") },
-      component: () => null,
-    });
+    const Shout = defineEntry(
+      {
+        name: "Shout",
+        group: "Layout",
+        description: "Loud text. Requires text.",
+        // A zod schema works like any other Standard Schema.
+        props: { text: z.string().describe("What to shout.") },
+      },
+      () => null,
+    );
     const result = validate({ type: "Shout", text: "HEY" }, { catalog: [Shout] });
 
     expect(result.errors).toEqual([]);
@@ -419,16 +421,18 @@ describe("validateResponse", () => {
 });
 
 describe("schema library rules", () => {
-  const Contact = defineEntry({
-    name: "Contact",
-    group: "Layout",
-    description: "An email address. Requires email.",
-    props: {
-      email: type("string.email").describe("Where to write."),
-      "tags?": z.array(z.string().min(2)).describe("Short labels."),
+  const Contact = defineEntry(
+    {
+      name: "Contact",
+      group: "Layout",
+      description: "An email address. Requires email.",
+      props: {
+        email: type("string.email").describe("Where to write."),
+        "tags?": z.array(z.string().min(2)).describe("Short labels."),
+      },
     },
-    component: () => null,
-  });
+    () => null,
+  );
 
   it("apply once a value is finished, with the library's message", () => {
     const result = validate(

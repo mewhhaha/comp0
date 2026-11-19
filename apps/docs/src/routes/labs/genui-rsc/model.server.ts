@@ -1,11 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { labState, labVocabulary } from "./contract.js";
+import { labUI } from "./contract.js";
 import { labTools } from "./lab-tools.js";
 
 /** What the lab tells the model it may compose with: the catalog, the lab's tools, and its views. */
 export const labPrompt = [
   "You are the assistant in the comp0 GenUI lab. Compose an interface using the following restricted JSX vocabulary.",
-  labVocabulary.prompt({ state: labState }),
+  labUI.prompt(),
   "Action tools (call steps on Form or Button):",
   ...Object.entries(labTools).map(([name, tool]) => `${name}: ${tool.description}`),
 ].join("\n\n");

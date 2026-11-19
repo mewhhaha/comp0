@@ -3,7 +3,11 @@ import { type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { setup } from "../../test/render.js";
 import { fromJsonSchema, oneOf } from "../catalog/schema.js";
+import { builtInVocabulary } from "../composition/builtins.js";
+import { composition } from "../composition/composition.js";
+import { spec, vocabulary } from "../composition/spec.js";
 import { state } from "../composition/state.js";
+import { register } from "./components.js";
 import {
   GenUIClientNode,
   GenUIRoot,
@@ -13,12 +17,43 @@ import {
 } from "./client.js";
 const tripState = state({ city: oneOf(["Oslo", "Tokyo"]) }, { city: "Oslo" });
 describe("dependent server components", () => {
+  it("passes a scalar and a validated writer to custom bound fields", async () => {
+    const allowed = oneOf(["Oslo", "Tokyo"]);
+    const city = spec("City", {
+      description: "Choose a city.",
+      props: { value: allowed },
+      binding: { prop: "value", kind: "string" },
+    });
+    const ui = composition({ vocabulary: vocabulary(city), state: tripState });
+    const store = tripState.createStore();
+    const field = city.implement(({ value, onChange }) => (
+      <button onClick={() => onChange?.("Tokyo")}>{value}</button>
+    ));
+    const entry = register(ui.vocabulary, [field]).get(city);
+    if (!entry || !("component" in entry)) throw new Error("Expected registered city field");
+    const { user } = setup(
+      <GenUIRoot ui={ui} store={store}>
+        <GenUIViewScope>
+          <GenUIClientNode name="City" component={entry.component} props={{}} binding="city" />
+        </GenUIViewScope>
+      </GenUIRoot>,
+    );
+    expect(ui.validate('<City bind="city" />').errors).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Oslo" }));
+    expect(screen.getByRole("button", { name: "Tokyo" })).toBeTruthy();
+    expect(store.get("city")).toBe("Tokyo");
+  });
+
   it("keeps form-local fields editable without opening the host state contract", async () => {
     const contract = state({ email: fromJsonSchema<number>({ type: "number" }) }, { email: 1 });
     const store = contract.createStore();
     const onAction = vi.fn();
     const { user } = setup(
-      <GenUIRoot state={contract} store={store} onAction={onAction}>
+      <GenUIRoot
+        ui={composition({ vocabulary: builtInVocabulary, state: contract })}
+        store={store}
+        onAction={onAction}
+      >
         <GenUIViewScope>
           <GenUIClientNode name="Form" props={{ label: "Contact", name: "contact" }}>
             <GenUIClientNode name="TextField" props={{ label: "Email", name: "email" }} />
@@ -43,7 +78,11 @@ describe("dependent server components", () => {
         new Promise<ReactNode>((resolve) => pending.push({ resolve, signal })),
     );
     setup(
-      <GenUIRoot state={tripState} store={store} render={render}>
+      <GenUIRoot
+        ui={composition({ vocabulary: builtInVocabulary, state: tripState })}
+        store={store}
+        render={render}
+      >
         <GenUIServerNode
           name="Forecast"
           props={{ city: { $expr: "city" } }}
@@ -73,7 +112,7 @@ describe("dependent server components", () => {
     const store = tripState.createStore();
     setup(
       <GenUIRoot
-        state={tripState}
+        ui={composition({ vocabulary: builtInVocabulary, state: tripState })}
         store={store}
         render={() => {
           throw new Error("offline");
@@ -100,7 +139,7 @@ describe("dependent server components", () => {
     );
     const store = contract.createStore();
     setup(
-      <GenUIRoot state={contract} store={store}>
+      <GenUIRoot ui={composition({ vocabulary: builtInVocabulary, state: contract })} store={store}>
         <GenUIViewScope>
           <GenUIClientNode name="TextField" props={{ label: { $expr: "label" } }} />
           <GenUIClientNode name="Button" props={{}} text={[{ $expr: "label" }]} />

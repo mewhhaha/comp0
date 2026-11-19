@@ -1,6 +1,5 @@
-import { renderComponent } from "@comp0/genui/rsc";
 import { renderToReadableStream } from "@vitejs/plugin-rsc/rsc/server";
-import { labComponents } from "./components.server.js";
+import { labRenderer } from "./components.server.js";
 
 const maxBodySize = 16_384;
 
@@ -46,7 +45,7 @@ export async function action({ request }: { request: Request }): Promise<Respons
       return new Response("Invalid component request", { status: 400 });
     const { name, props } = body as { name?: unknown; props?: unknown };
     if (typeof name !== "string") return new Response("Invalid component name", { status: 400 });
-    const result = await renderComponent(labComponents, name, props);
+    const result = await labRenderer.render(name, props);
     return new Response(renderToReadableStream(result), {
       headers: { "content-type": "text/x-component", "cache-control": "no-store" },
     });

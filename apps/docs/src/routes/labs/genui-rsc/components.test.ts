@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { action } from "./components.js";
-import { labComponents } from "./components.server.js";
+import { Forecast } from "./components.server.js";
 
 vi.mock("@vitejs/plugin-rsc/rsc/server", () => ({
   renderToReadableStream(value: string) {
@@ -14,16 +14,19 @@ vi.mock("@vitejs/plugin-rsc/rsc/server", () => ({
 }));
 
 vi.mock("./components.server.js", async () => {
-  const { serverComponent, oneOf } = await import("@comp0/genui/rsc");
+  const { createRenderer, serverComponent } = await import("@comp0/genui/rsc");
+  const { labUI, forecastSpec, shaderSpec } = await import("./contract.js");
+  const Forecast = serverComponent(
+    forecastSpec,
+    vi.fn(async ({ city }: { city: string }) => `Flight for ${city}`),
+  );
   return {
-    labComponents: {
-      Forecast: serverComponent("Forecast", {
-        description: "Forecast chart.",
-        props: { city: oneOf(["Oslo", "Tokyo"]) },
-        render: vi.fn(async ({ city }) => `Flight for ${city}`),
-      }),
-      Shader: () => null,
-    },
+    Forecast,
+    labRenderer: createRenderer(
+      labUI,
+      Forecast,
+      shaderSpec.implement(() => null),
+    ),
   };
 });
 
@@ -46,7 +49,7 @@ describe("lab component transport", () => {
     expect(response.headers.get("content-type")).toBe("text/x-component");
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.text()).toBe("Flight for Oslo");
-    expect(labComponents.Forecast.render).toHaveBeenCalledExactlyOnceWith({ city: "Oslo" });
+    expect(Forecast.render).toHaveBeenCalledExactlyOnceWith({ city: "Oslo" });
   });
 
   it.each([
@@ -58,7 +61,7 @@ describe("lab component transport", () => {
     null,
   ])("refuses unknown components and invalid props before executing them", async (body) => {
     expect((await action({ request: request(body) })).status).toBe(400);
-    expect(labComponents.Forecast.render).not.toHaveBeenCalled();
+    expect(Forecast.render).not.toHaveBeenCalled();
   });
 
   it("refuses cross-origin requests, unsupported content, and oversized bodies", async () => {
@@ -79,6 +82,6 @@ describe("lab component transport", () => {
       (await action({ request: new Request("https://comp0.test/labs/genui-rsc/components") }))
         .status,
     ).toBe(405);
-    expect(labComponents.Forecast.render).not.toHaveBeenCalled();
+    expect(Forecast.render).not.toHaveBeenCalled();
   });
 });

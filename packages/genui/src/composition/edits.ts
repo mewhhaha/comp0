@@ -215,10 +215,11 @@ export function validateEdits(source: string, options: ValidateEditsOptions): Va
           );
           return [];
         }
+        const identity = options.vocabulary.get(target.name)?.identity;
         if (
-          ["Option", "Tab", "TabPanel", "Section"].includes(target.name) &&
-          changed.includes("value") &&
-          operation.props.value !== target.props.value
+          identity &&
+          changed.includes(identity.prop) &&
+          operation.props[identity.prop] !== target.props[identity.prop]
         ) {
           report(
             operation.key,

@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { readResponse } from "@comp0/genui/rsc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { askClaude, labApiKey, labPrompt } from "./model.server.js";
-import { labState, labVocabulary } from "./contract.js";
+import { labUI } from "./contract.js";
 import { dashboard, explainer } from "./responses.js";
 import { forecastExplorer } from "./forecast-explorer.js";
 import { shaderExplorer } from "./shader-explorer.js";
@@ -84,7 +84,7 @@ describe("askClaude", () => {
     const chunks = await collect(askClaude("Say hello", client));
 
     expect(chunks).toEqual(deltas);
-    const validated = labVocabulary.validate(chunks.join(""), { state: labState });
+    const validated = labUI.validate(chunks.join(""));
     expect(validated.errors).toEqual([]);
     expect(validated.nodes[0]).toMatchObject({ name: "Stack" });
   });
@@ -151,7 +151,7 @@ describe("recorded lab responses", () => {
   it.each([shaderExplorer, forecastExplorer, dashboard, releaseNotes, explainer])(
     "validates a recorded JSX response",
     (source) => {
-      const validated = labVocabulary.validate(source, { state: labState });
+      const validated = labUI.validate(source);
       expect(validated.errors).toEqual([]);
       expect(validated.nodes).toHaveLength(1);
     },

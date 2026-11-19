@@ -1,12 +1,10 @@
-import { Suspense, type ComponentType, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { dataAttr } from "@comp0/core";
-import { builtInVocabulary } from "../composition/builtins.js";
 import { validateEdits } from "../composition/edits.js";
 import { type Vocabulary } from "../composition/spec.js";
 import { type StateContract } from "../composition/state.js";
 import {
   expressionSource,
-  needsTextName,
   resolveExpressions,
   validateJsx,
   type ValidJsxElement,
@@ -23,15 +21,15 @@ import {
   GenUIStreamEnd,
   GenUIViewScope,
 } from "./client.js";
-import { isServerComponent, renderComponent, type ComponentImplementations } from "./components.js";
+import { type ComponentRegistry } from "./components.js";
 import { type ClientEdit, type EditableNode } from "./edit-store.js";
-import { completedResponse, readResponse, type ResponseStream } from "./stream.js";
+import { completedResponse, type ResponseSource, type ResponseStream } from "./stream.js";
 
 type Scope = {
   response: ResponseStream;
   vocabulary: Vocabulary;
   state: StateContract | undefined;
-  components: ComponentImplementations;
+  components: ComponentRegistry;
   version: number;
   nodes: Map<string, ValidJsxNode>;
   root: string;
@@ -79,7 +77,7 @@ function editableNode(node: ValidJsxElement, source: JsxElement): EditableNode {
   }
   let text: EditableNode["text"];
   if (
-    needsTextName(node.name) &&
+    node.entry.children === "label" &&
     !node.children.some((child) => child.kind === "text" && child.text.trim() !== "")
   ) {
     text = node.children.flatMap((child): (string | { $expr: string })[] => {
@@ -231,20 +229,17 @@ async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
       <Children scope={scope} parent={path} />
     </Suspense>
   );
-  let implementation = Object.getOwnPropertyDescriptor(scope.components, node.name)
-    ?.value as unknown;
-  if (implementation === undefined && "component" in node.entry)
-    implementation = node.entry.component;
+  const implementation = scope.components.get(node.entry);
   const source = response.nodeAt(path) as JsxElement;
   const metadata = editableNode(node, source);
-  if (isServerComponent(implementation)) {
+  if (implementation && "render" in implementation) {
     // The endpoint validates inputs itself. Retain their original representation so schema
     // transforms run once, both for the initial render and subsequent refresh requests.
     const inputs = metadata.inputs;
     const props = resolveExpressions(inputs, scope.state?.initial ?? {});
     let content: ReactNode;
     try {
-      content = await renderComponent(scope.components, node.name, props);
+      content = await scope.components.render(node.name, props);
     } catch {
       content = <output>This view could not be loaded.</output>;
     }
@@ -265,17 +260,13 @@ async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
   }
   if (node.id) {
     return (
-      <GenUIEditable
-        scope={scope.name}
-        node={metadata}
-        component={implementation as ComponentType<never> | undefined}
-      >
+      <GenUIEditable scope={scope.name} node={metadata} component={implementation?.component}>
         {children}
       </GenUIEditable>
     );
   }
   if (
-    needsTextName(node.name) &&
+    node.entry.children === "label" &&
     !node.children.some((child) => child.kind === "text" && child.text.trim() !== "")
   ) {
     const text: (string | { $expr: string })[] = [];
@@ -286,7 +277,7 @@ async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
     return (
       <GenUIClientNode
         name={node.name}
-        component={implementation as ComponentType<never> | undefined}
+        component={implementation?.component}
         props={node.props}
         text={text}
       />
@@ -302,7 +293,7 @@ async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
   return (
     <GenUIClientNode
       name={node.name}
-      component={implementation as ComponentType<never> | undefined}
+      component={implementation?.component}
       props={node.props}
       binding={node.binding}
     >
@@ -340,37 +331,13 @@ async function StreamEnd({ scope }: { scope: Scope }) {
 }
 
 export type GenUIViewProps = {
-  /** Restricted JSX text deltas from the model. */
-  stream: AsyncIterable<string>;
-  vocabulary?: Vocabulary;
-  state?: StateContract;
-  components?: ComponentImplementations;
+  /** A complete JSX response or text deltas from the model. */
+  source: ResponseSource;
   /** Marks an edit turn. Complete accepted JSX turns validate targets and their revisions. */
   history?: readonly string[];
   /** A unique host-owned message ID. Required for Update/Append and reused on retries. */
   turn?: string;
 };
-
-/** Renders one model response. Opening tags settle props; every child streams in its own boundary. */
-export function GenUIView({
-  stream,
-  vocabulary = builtInVocabulary,
-  state,
-  components = {},
-  history,
-  turn,
-}: GenUIViewProps) {
-  return (
-    <ResponseView
-      response={readResponse(stream)}
-      vocabulary={vocabulary}
-      state={state}
-      components={components}
-      history={history}
-      turn={turn}
-    />
-  );
-}
 
 /** Shared by a whole response and independently constrained holes in a host layout. */
 export function ResponseView({
@@ -387,7 +354,7 @@ export function ResponseView({
   response: ResponseStream;
   vocabulary: Vocabulary;
   state: StateContract | undefined;
-  components: ComponentImplementations;
+  components: ComponentRegistry;
   root?: string;
   max?: number;
   history?: readonly string[] | undefined;
@@ -467,7 +434,7 @@ async function ResponseContent({
         continue;
       }
       // Appended text names replace the complete text value; other children keep their fibers.
-      if (needsTextName(node.name)) {
+      if (operation.validated.entry.children === "label") {
         node.text = operation.validated.children.flatMap(
           (child): (string | { $expr: string })[] => {
             if (child.kind === "text") return [child.text];

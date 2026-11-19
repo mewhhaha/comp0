@@ -149,16 +149,18 @@ describe("responseJsonSchema", () => {
   });
 
   it("can start from another root and use a custom catalog", () => {
-    const Shout = defineEntry({
-      name: "Shout",
-      group: "Layout",
-      description: "Loud text. Requires text.",
-      props: {
-        text: type("string").describe("What to shout."),
-        "volume?": type("number").describe("How loud."),
+    const Shout = defineEntry(
+      {
+        name: "Shout",
+        group: "Layout",
+        description: "Loud text. Requires text.",
+        props: {
+          text: type("string").describe("What to shout."),
+          "volume?": type("number").describe("How loud."),
+        },
       },
-      component: () => null,
-    });
+      () => null,
+    );
     const custom = responseJsonSchema({ catalog: [Shout], root: "Shout" }) as Schema;
 
     expect(custom.properties?.type).toEqual({ const: "Shout" });

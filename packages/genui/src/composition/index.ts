@@ -1,3 +1,4 @@
+export { composition, type Composition } from "./composition.js";
 export {
   spec,
   vocabulary,
