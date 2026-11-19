@@ -10,7 +10,7 @@ export const initialResponse = `<Stack gap="lg">
 
 export const revisionResponse = `<Update id="summary" title="Ready itinerary" />
 <Update id="note" value="The model suggested this note" />
-<Update id="seats" value={8} />
+<Update id="seats" max={12} />
 <Append to="checklist"><Item id="ferry">Book the ferry</Item></Append>`;
 
 /** The valid update must also be withheld when another operation in the turn is invalid. */
