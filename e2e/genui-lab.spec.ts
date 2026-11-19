@@ -222,6 +222,11 @@ test("compose a custom component, inspect a contract error and correct the previ
   const preview = page.getByRole("region", { name: "Preview" });
   await expect(preview.getByRole("table", { name: "Daily high" })).toBeVisible();
   const source = page.getByRole("textbox", { name: "Component JSX" });
+  await source.fill("   ");
+  await page.getByRole("button", { name: "Preview" }).click();
+  await expect(
+    preview.getByText("Enter a component in the JSX editor to preview it."),
+  ).toBeVisible();
   await source.fill('<Forecast city="Paris" />');
   await page.getByRole("button", { name: "Preview" }).click();
   await expect(preview.getByRole("heading", { name: "Check the JSX" })).toBeVisible();

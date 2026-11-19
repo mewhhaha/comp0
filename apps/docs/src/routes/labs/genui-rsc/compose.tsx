@@ -73,11 +73,14 @@ export function ServerComponent({ loaderData }: { loaderData: { source: string }
               </ul>
             </div>
           )}
-          <div data-intelligent-ui="">
-            <LabRoot key={source}>
-              <labRenderer.View source={source} />
-            </LabRoot>
-          </div>
+          {source.trim() === "" && <p>Enter a component in the JSX editor to preview it.</p>}
+          {source.trim() !== "" && (
+            <div data-intelligent-ui="">
+              <LabRoot key={source}>
+                <labRenderer.View source={source} />
+              </LabRoot>
+            </div>
+          )}
         </section>
       </div>
       <details className="min-w-0">

@@ -36,7 +36,7 @@ export function composition<const T extends Contract>(contract: T) {
           );
         }
         lines.push(
-          'Use bind="name" only on components with a binding contract; the declared state supplies the bound prop. The state schema and binding kind must match.',
+          'Use bind="name" only on components with a binding contract; the declared state supplies the bound prop. Omit that prop when binding. The state schema and binding kind must match.',
         );
       } else lines.push("No state is declared; do not use bind or read state names.");
       for (const item of specs) {
@@ -64,6 +64,8 @@ export function composition<const T extends Contract>(contract: T) {
           lines.push(
             `Identity: ${item.identity.prop} must be a fixed string, unique for this component inside ${item.identity.scope}.`,
           );
+        if (item.identity?.matchesBoundValue)
+          lines.push("Each item identity must be accepted by the bound state of its owner.");
         if (item.binding)
           lines.push(`Binding: bind supplies ${item.binding.prop} (${item.binding.kind}).`);
       }

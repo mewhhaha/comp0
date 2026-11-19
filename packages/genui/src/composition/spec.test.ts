@@ -81,6 +81,42 @@ describe("composition specs", () => {
     );
   });
 
+  it("rejects a second source for a bound prop on initial and edit turns", () => {
+    const ui = composition({
+      vocabulary: vocabulary(Field),
+      state: state({ city: type("string") }, { city: "Oslo" }),
+    });
+    const first = '<Field id="f" label="City" bind="city" />';
+    expect(ui.validate(first).errors).toEqual([]);
+    for (const value of ['"Tokyo"', "{missing}"]) {
+      const result = ui.validate(`<Field label="City" bind="city" value=${value} />`);
+      expect(result.nodes).toEqual([]);
+      expect(result.errors[0]).toMatchObject({ code: "binding", path: "/0/value" });
+      const edit = validateEdits(`<Update id="f" value=${value} />`, { ...ui, history: [first] });
+      expect(edit.operations).toEqual([]);
+      expect(edit.errors[0]?.code).toBe("binding");
+    }
+  });
+
+  it("keeps scoped item identities independent of the owning control's value", () => {
+    const Board = spec("Board", {
+      description: "Slides",
+      props: { position: type("number") },
+      binding: { prop: "position", kind: "number" },
+      children: ["Slide"],
+    });
+    const Slide = spec("Slide", {
+      description: "One slide",
+      props: { slug: type("string") },
+      identity: { prop: "slug", scope: "Board" },
+    });
+    const ui = composition({
+      vocabulary: vocabulary(Board, Slide),
+      state: state({ index: type("number") }, { index: 1 }),
+    });
+    expect(ui.validate('<Board bind="index"><Slide slug="maps" /></Board>').errors).toEqual([]);
+  });
+
   it("rejects ambiguous programmer contracts", () => {
     for (const name of ["Update", "Append"]) {
       expect(() => spec(name, { description: "Reserved.", props: {} })).toThrow("reserved");

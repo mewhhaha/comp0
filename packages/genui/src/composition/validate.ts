@@ -52,6 +52,25 @@ export function validateProp(
   }
 }
 
+/** Apply the same required-name rule to literals, expressions and bound state. */
+export function validateField(
+  name: string,
+  schema: PropSchema | PropShape,
+  value: unknown,
+  required: boolean,
+): ReturnType<typeof validateProp> {
+  const checked = validateProp(schema, value);
+  if (
+    checked.ok &&
+    required &&
+    ["label", "title", "caption"].includes(name) &&
+    typeof checked.value === "string" &&
+    checked.value.trim() === ""
+  )
+    return { ok: false, message: "An accessible name must not be empty." };
+  return checked;
+}
+
 export function expressionSource(value: unknown): string | undefined {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
   const source = Object.getOwnPropertyDescriptor(value, "$expr")?.value as unknown;
@@ -202,15 +221,19 @@ export function validateJsx(
         report(`${node.key}/${key}`, "unknown-prop", `${node.name} has no ${key} prop.`);
     }
     for (const field of fields) {
-      if (binding && field.name === entry.binding?.prop) {
-        const checked = validateProp(field.schema, options.state?.initial[binding]);
-        if (!checked.ok) {
-          report(`${node.key}/bind`, "binding", checked.message);
+      const bound = field.name === entry.binding?.prop && binding;
+      let value = node.props[field.name];
+      if (bound) {
+        if (Object.hasOwn(node.props, field.name)) {
+          report(
+            `${node.key}/${field.name}`,
+            "binding",
+            `bind already supplies ${field.name}. Remove the explicit prop.`,
+          );
           return undefined;
         }
-        continue;
+        value = options.state?.initial[bound];
       }
-      let value = node.props[field.name];
       if (field.name === "name" && value === undefined && binding !== undefined) value = binding;
       if (value === undefined && field.optional) continue;
       if (value === undefined) {
@@ -231,30 +254,18 @@ export function validateJsx(
         if (!expression(source, `${node.key}/${field.name}`)) return undefined;
         literal = evaluateExpression(source, options.state?.initial ?? {});
       }
-      const checked = validateProp(field.schema, literal);
+      const checked = validateField(field.name, field.schema, literal, !field.optional);
       if (!checked.ok) {
         report(`${node.key}/${field.name}`, "invalid-prop", checked.message);
-        if (!field.optional) return undefined;
+        if (bound || !field.optional) return undefined;
         continue;
       }
-      if (
-        ["label", "title", "caption"].includes(field.name) &&
-        typeof checked.value === "string" &&
-        checked.value.trim() === "" &&
-        !field.optional
-      ) {
-        report(
-          `${node.key}/${field.name}`,
-          "invalid-prop",
-          "An accessible name must not be empty.",
-        );
-        return undefined;
-      }
+      if (bound) continue;
       if (source === undefined) props[field.name] = checked.value as JsonValue;
       else props[field.name] = value;
     }
     if (
-      identity &&
+      identity?.matchesBoundValue &&
       owner?.binding &&
       !options.state?.accepts(owner.binding, props[identity.prop])
     ) {

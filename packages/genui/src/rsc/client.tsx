@@ -19,7 +19,7 @@ import { compositionComponents } from "../composition/parts.js";
 import { type Vocabulary } from "../composition/spec.js";
 import { composition, type Composition } from "../composition/composition.js";
 import { type StateContract, type StateValues } from "../composition/state.js";
-import { expressionSource, resolveExpressions, validateProp } from "../composition/validate.js";
+import { expressionSource, resolveExpressions, validateField } from "../composition/validate.js";
 import { evaluateExpression } from "../expression/expression.js";
 import { type JsonValue } from "../json/parse.js";
 import { GenUIContext, type GenUIAction } from "../render/context.js";
@@ -237,21 +237,16 @@ export function GenUIClientNode({
     if (expressionSource(value) === undefined) continue;
     const schema = entry.props[key] ?? entry.props[`${key}?`];
     if (!schema) return null;
-    const checked = validateProp(schema, props[key]);
+    const checked = validateField(key, schema, props[key], Object.hasOwn(entry.props, key));
     if (!checked.ok) return null;
-    if (
-      ["label", "title", "caption"].includes(key) &&
-      typeof checked.value === "string" &&
-      checked.value.trim() === ""
-    )
-      return null;
     props[key] = checked.value;
   }
   if (binding && entry.binding) {
     if (component) {
       const prop = entry.binding.prop;
       const schema = entry.props[prop] ?? entry.props[`${prop}?`];
-      const checked = schema && validateProp(schema, values[binding]);
+      const checked =
+        schema && validateField(prop, schema, values[binding], Object.hasOwn(entry.props, prop));
       if (!checked?.ok) return null;
       props[prop] = checked.value;
       props.onChange = (value: JsonValue) => root.store.set(binding, value);

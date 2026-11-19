@@ -18,7 +18,7 @@ export const shaderSpec = spec("Shader", {
 });
 export const forecastSpec = spec("Forecast", {
   description:
-    "A seven-day forecast chart for a city. Bind its city prop to state to update the chart.",
+    "A seven-day forecast chart for a city. Write <Forecast city={city} /> to refresh when the selected city changes.",
   props: { city },
 });
 

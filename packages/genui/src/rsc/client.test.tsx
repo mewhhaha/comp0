@@ -44,6 +44,34 @@ describe("dependent server components", () => {
     expect(store.get("city")).toBe("Tokyo");
   });
 
+  it("withholds custom controls when their bound accessible name is empty and restores them when it changes", () => {
+    const text = fromJsonSchema<string>({ type: "string" });
+    const entry = spec("Entry", {
+      description: "Named input.",
+      props: { label: text },
+      binding: { prop: "label", kind: "string" },
+    });
+    const ui = composition({
+      vocabulary: vocabulary(entry),
+      state: state({ name: text }, { name: "" }),
+    });
+    expect(ui.validate('<Entry bind="name" />').errors[0]?.message).toContain("accessible name");
+    const store = ui.state.createStore({ name: "City" });
+    const Field = ({ label }: { label: string }) => <input aria-label={label} />;
+    setup(
+      <GenUIRoot ui={ui} store={store}>
+        <GenUIViewScope>
+          <GenUIClientNode name="Entry" component={Field} props={{}} binding="name" />
+        </GenUIViewScope>
+      </GenUIRoot>,
+    );
+    expect(screen.getByRole("textbox", { name: "City" })).toBeTruthy();
+    act(() => store.set("name", " "));
+    expect(screen.queryByRole("textbox")).toBeNull();
+    act(() => store.set("name", "Destination"));
+    expect(screen.getByRole("textbox", { name: "Destination" })).toBeTruthy();
+  });
+
   it("keeps form-local fields editable without opening the host state contract", async () => {
     const contract = state({ email: fromJsonSchema<number>({ type: "number" }) }, { email: 1 });
     const store = contract.createStore();

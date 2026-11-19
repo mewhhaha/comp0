@@ -143,7 +143,7 @@ export const optionSpec = spec("Option", {
   props: { value: text, "disabled?": boolean },
   children: "label",
   parents: ["Select"],
-  identity: { prop: "value", scope: "Select" },
+  identity: { prop: "value", scope: "Select", matchesBoundValue: true },
 });
 export const forms = vocabulary(
   formSpec,

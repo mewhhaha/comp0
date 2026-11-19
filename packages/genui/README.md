@@ -98,7 +98,7 @@ For reactive data, supply a `render(name, props, signal)` transport on the clien
 
 ## Add an interactive component
 
-Use the same spec API for client components. Place the component in a module marked `"use client"`, include the spec in the shared vocabulary and pass `spec.implement(Component)` to the renderer. A bound field receives its ordinary value prop and an `onChange(next)` callback that writes through the state validator.
+Use the same spec API for client components. Place the component in a module marked `"use client"`, include the spec in the shared vocabulary and pass `spec.implement(Component)` to the renderer. A bound field receives its ordinary value prop and an `onChange(next)` callback that writes through the state validator. Omit the value prop when binding.
 
 ```tsx
 // Additional shared spec
@@ -112,7 +112,7 @@ const CityPicker = spec("CityPicker", {
 const renderer = createRenderer(uiWithPicker, CityPicker.implement(CityField));
 ```
 
-A container receives React children as they stream. Use `children: "nodes"` for free composition, a list of names to constrain its children, `"text"` for text and scalar expressions, or `"label"` for text that must resolve to a visible accessible name. A compound part can declare `parents: ["List"]` and `identity: { prop: "value", scope: "List" }` to require a direct parent and a fixed, unique item value in that ancestor. The prompt, initial validation and later edits use these same rules.
+A container receives React children as they stream. Use `children: "nodes"` for free composition, a list of names to constrain its children, `"text"` for text and scalar expressions, or `"label"` for text that must resolve to a visible accessible name. A compound part can declare `parents: ["List"]` and `identity: { prop: "value", scope: "List" }` to require a direct parent and a fixed, unique item value in that ancestor. Set `identity.matchesBoundValue` on a choice whose key must also pass the owning control’s bound state validator. The prompt, initial validation and later edits use these same rules.
 
 The built-in groups are `layout`, `forms`, `charts`, `actions` and `disclosure`. Optional prop keys end in `?`. Use `fromJsonSchema`, `oneOf`, `url` or a synchronous Standard Schema provider. Hosts can read typed values with `useGenUIValue(settings, "city")` and restore validated state with `settings.createStore(savedValues)`.
 

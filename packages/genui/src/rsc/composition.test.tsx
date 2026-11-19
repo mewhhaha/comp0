@@ -43,6 +43,33 @@ describe("RSC composition", () => {
     expect(() => renderer.holes({ forecast: hole(vocabulary(Forecast), "Weather") })).not.toThrow();
   });
 
+  it.each(["", ' id="picker"'])(
+    "combines binding and an expression-only label on a custom component (%s)",
+    async (id) => {
+      const City = spec("City", {
+        description: "Pick a city.",
+        props: { value: oneOf(["Oslo", "Tokyo"]) },
+        children: "label",
+        binding: { prop: "value", kind: "string" },
+      });
+      const ui = composition({ vocabulary: vocabulary(City), state: tripState });
+      const renderer = createRenderer(
+        ui,
+        City.implement(({ value, onChange, children }) => (
+          <button value={value} disabled={!onChange}>
+            {children}
+          </button>
+        )),
+      );
+      const rendered = await html(
+        <GenUIRoot ui={ui}>
+          <renderer.View source={`<City${id} bind="city">{city}</City>`} />
+        </GenUIRoot>,
+      );
+      expect(rendered).toContain('<button value="Oslo">Oslo</button>');
+    },
+  );
+
   it("streams JSX children through custom client containers", async () => {
     const Frame = spec("Frame", {
       description: "A custom container",

@@ -266,25 +266,8 @@ async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
     );
   }
   if (
-    node.entry.children === "label" &&
-    !node.children.some((child) => child.kind === "text" && child.text.trim() !== "")
-  ) {
-    const text: (string | { $expr: string })[] = [];
-    for (const child of node.children) {
-      if (child.kind === "text") text.push(child.text);
-      if (child.kind === "expression") text.push({ $expr: child.source });
-    }
-    return (
-      <GenUIClientNode
-        name={node.name}
-        component={implementation?.component}
-        props={node.props}
-        text={text}
-      />
-    );
-  }
-  if (
     implementation === undefined &&
+    metadata.text === undefined &&
     !Object.values(node.props).some((value) => expressionSource(value) !== undefined)
   ) {
     const result = renderStaticNode({ node, children });
@@ -296,6 +279,7 @@ async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
       component={implementation?.component}
       props={node.props}
       binding={node.binding}
+      text={metadata.text}
     >
       {children}
     </GenUIClientNode>

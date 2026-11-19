@@ -15,7 +15,7 @@ type SpecData<P extends PropShape> = {
   readonly children?: ComponentChildren;
   readonly binding?: ComponentBinding;
   readonly parents?: readonly string[];
-  readonly identity?: { prop: string; scope: string };
+  readonly identity?: { prop: string; scope: string; matchesBoundValue?: boolean };
 };
 
 /** The default type erases the renderer while retaining the server-safe contract. */
