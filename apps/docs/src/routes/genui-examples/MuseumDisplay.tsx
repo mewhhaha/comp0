@@ -1,7 +1,5 @@
-import { createRenderer, hole } from "@comp0/genui/rsc";
+import { createRenderer, hole, type ResponseSource } from "@comp0/genui/rsc";
 import { contracts } from "../../examples/genui/gallery/contracts.js";
-import { replay } from "../../examples/genui/replay.js";
-import { ExampleRoot } from "./ExampleRoot.js";
 
 const museum = createRenderer(contracts["museum-label"]);
 const display = museum.holes({
@@ -17,19 +15,17 @@ const display = museum.holes({
   ),
 });
 
-type MuseumDisplayProps = { source: string };
+type MuseumDisplayProps = { source: ResponseSource };
 export function MuseumDisplay({ source }: MuseumDisplayProps) {
-  const panels = display.fill(replay(source));
+  const panels = display.fill(source);
   return (
-    <ExampleRoot slug="museum-label">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="grid content-start gap-3 border-l-4 border-amber-600 px-4">
-          <panels.label />
-        </div>
-        <div className="border-t border-zinc-300 pt-4 dark:border-zinc-700">
-          <panels.notes />
-        </div>
+    <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid content-start gap-3 border-l-4 border-amber-600 px-4">
+        <panels.label />
       </div>
-    </ExampleRoot>
+      <div className="border-t border-zinc-300 pt-4 dark:border-zinc-700">
+        <panels.notes />
+      </div>
+    </div>
   );
 }

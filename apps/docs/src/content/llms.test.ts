@@ -57,8 +57,12 @@ describe("llms.txt", () => {
       expect(full, page.slug).toContain(`URL: ${docsOrigin}/genui/${page.slug}`);
     }
     for (const example of examples) {
-      expect(full).toContain(example.source);
-      if (example.revision) expect(full).toContain(example.revision);
+      for (const turn of [example, example.followUp]) {
+        if (!turn) continue;
+        expect(full).toContain("You: " + turn.prompt);
+        expect(full).toContain("Assistant: " + turn.reply);
+        expect(full).toContain(turn.source);
+      }
     }
     for (const entry of genuiReference.catalog) {
       expect(full, entry.name).toContain(`##### ${entry.name}\n\n`);
