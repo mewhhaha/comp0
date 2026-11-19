@@ -237,3 +237,29 @@ test("compose a custom component, inspect a contract error and correct the previ
   await expect(preview.getByRole("heading", { name: "Check the JSX" })).toHaveCount(0);
   expect(await axeViolations(page, "main")).toEqual([]);
 });
+
+test("the former lesson leads to a working JSX example and the JSON replay", async ({
+  page,
+  request,
+}) => {
+  const redirect = await request.get("/learn/intelligent-ui", { maxRedirects: 0 });
+  expect(redirect.status()).toBe(301);
+  expect(redirect.headers().location).toBe("/genui/overview");
+  await page.goto("/learn/intelligent-ui");
+  await expect(page).toHaveURL(/\/genui\/overview$/);
+  const quote = page.getByRole("region", { name: "Seat quote", exact: true });
+  await expect(quote).toContainText("Monthly total: 24 USD");
+  await quote.getByRole("slider", { name: "Seats" }).press("ArrowRight");
+  await expect(quote).toContainText("Monthly total: 36 USD");
+  expect(await axeViolations(page, "main")).toEqual([]);
+
+  await page
+    .locator("article")
+    .getByRole("link", { name: /^Browser JSON renderer/ })
+    .click();
+  const demo = page.getByRole("region", { name: "JSON streaming demo" });
+  await demo.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(demo.getByText("Response complete.")).toBeVisible({ timeout: 45_000 });
+  await expect(demo.getByRole("grid", { name: "Starter and Pro compared" })).toBeVisible();
+  expect(await axeViolations(page, "main")).toEqual([]);
+});

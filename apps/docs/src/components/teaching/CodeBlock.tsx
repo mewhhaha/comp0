@@ -56,7 +56,7 @@ export async function CodeBlock({ code, language = "tsx", title, className }: Co
       <figcaption className="flex items-center justify-between border-b border-white/10 py-2 pr-2.5 pl-4 text-base font-medium text-zinc-300 sm:text-sm">
         <span className="min-w-0 wrap-anywhere">{title ?? "Example"}</span>
         <span className="flex shrink-0 items-center gap-2">
-          <span className="font-mono tracking-wide text-zinc-500 uppercase">{language}</span>
+          <span className="font-mono tracking-wide text-zinc-400 uppercase">{language}</span>
           <CodeBlockCopyButton code={code} />
         </span>
       </figcaption>

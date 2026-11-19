@@ -59,7 +59,7 @@ export function ServerComponent({ loaderData }: { loaderData: AskLoaderData }) {
     const stream = askClaude(requestText(prompt, after), new Anthropic({ apiKey }));
     answer = (
       <AskRoot key={`${after}\n${prompt}`} prompt={prompt}>
-        <section aria-label="Answer" data-intelligent-ui="">
+        <section aria-label="Answer" data-genui="">
           <labRenderer.View source={stream} />
         </section>
       </AskRoot>

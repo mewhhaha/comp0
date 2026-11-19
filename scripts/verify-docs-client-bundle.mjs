@@ -53,7 +53,7 @@ function collectImports(key, chunks) {
   for (const imported of chunk.imports ?? []) collectImports(imported, chunks);
 }
 
-// Lazily loaded example modules: component examples and the Intelligent UI demo runtime, which
+// Lazily loaded example modules: component examples and the JSON replay demo runtime, which
 // pulls in the GenUI renderer. Each group is measured as a page on top of the shared graph.
 const lazyExamplePattern = /\/examples\/(?:cases|demos)\//;
 const exampleGroups = new Map();

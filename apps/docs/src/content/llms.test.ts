@@ -48,6 +48,9 @@ describe("llms.txt", () => {
   });
 
   it("links every GenUI page and inlines the catalog in the full file", () => {
+    expect(index).not.toContain("/learn/intelligent-ui");
+    expect(full).not.toContain("/learn/intelligent-ui");
+    expect(full).toContain("AnswerRoot.tsx\n\n```tsx");
     for (const page of genuiDocs) {
       expect(index, page.slug).toContain(`(${docsOrigin}/genui/${page.slug})`);
       expect(full, page.slug).toContain(`URL: ${docsOrigin}/genui/${page.slug}`);

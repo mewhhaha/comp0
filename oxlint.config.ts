@@ -353,7 +353,7 @@ export default defineConfig({
     {
       files: [
         "apps/docs/src/components/teaching/CodeBlock.tsx",
-        "apps/docs/src/components/teaching/IntelligentUiDemo.tsx",
+        "apps/docs/src/components/teaching/JsonResponseDemo.tsx",
       ],
       rules: {
         // Overflowing code is keyboard-scrollable, so the pre needs a tab stop.

@@ -46,7 +46,7 @@ Do not break class name expressions out into separate variables just to shorten 
 
 `pnpm lint` enforces these conventions through the project plugin in `scripts/oxlint-comp0.ts` (props placement, compact ternaries, inline class names, memo justification comments, presence data attributes, no synthetic test events) plus oxlint's `no-nested-ternary` and `consistent-type-definitions`. Fix the code rather than disabling a rule; add a rule there when a new convention can be checked mechanically. `pnpm test:compiler-conformance` fails when a component file is not compiled by the React Compiler (exceptions need a reason in `packages/react/react-compiler-exceptions.json`); regenerate the dist baseline with `pnpm compiler:baseline`.
 
-## Intelligent UI (`@comp0/genui`)
+## GenUI (`@comp0/genui`)
 
 The primary composition API is restricted JSX. Define a shared `composition({ vocabulary, state })` in `@comp0/genui/vocabulary`. Its prompt and validation use the same spec objects as the RSC renderer and client root. `vocabulary(...)` combines specs and groups, `.only(...)` narrows one. `spec(name, { description, props, children, binding, parents, identity })` describes a component. Children can be text, a required visible label, nodes, or a list of names. Direct parent restrictions and scoped item identities belong to the spec. Keep built-in specs server-safe. Client implementations live in `composition/parts.tsx`. Nothing evaluates model output as JavaScript.
 

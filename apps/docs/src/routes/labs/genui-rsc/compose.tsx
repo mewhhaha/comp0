@@ -31,7 +31,7 @@ export function ServerComponent({ loaderData }: { loaderData: { source: string }
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 sm:px-6">
       <header className="grid gap-2">
         <Link className="text-sm underline" to="/genui/server">
-          GenUI component contracts
+          JSX composition
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight">Compose an interface</h1>
         <p>
@@ -75,7 +75,7 @@ export function ServerComponent({ loaderData }: { loaderData: { source: string }
           )}
           {source.trim() === "" && <p>Enter a component in the JSX editor to preview it.</p>}
           {source.trim() !== "" && (
-            <div data-intelligent-ui="">
+            <div data-genui="">
               <LabRoot key={source}>
                 <labRenderer.View source={source} />
               </LabRoot>

@@ -46,7 +46,7 @@ export function EditRoot({ children }: EditRootProps) {
       onAction={() => setMessage("Your trip was saved.")}
     >
       <div className="grid gap-8">
-        <section aria-label="Trip answer" data-intelligent-ui="">
+        <section aria-label="Trip answer" data-genui="">
           {children}
           {turns.map((turn) => (
             <div key={turn.key}>{turn.content}</div>

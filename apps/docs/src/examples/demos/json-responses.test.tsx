@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react";
 import { GenUI } from "@comp0/genui";
 import { describe, expect, it, vi } from "vitest";
-import { demoResponses, tokenize } from "./intelligent-ui-responses.js";
+import { demoResponses, tokenize } from "./json-responses.js";
 
-describe("recorded Intelligent UI responses", () => {
+describe("recorded GenUI JSON responses", () => {
   it("tokenizes losslessly", () => {
     for (const demo of demoResponses) expect(tokenize(demo.response).join("")).toBe(demo.response);
   });

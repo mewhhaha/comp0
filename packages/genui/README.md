@@ -1,167 +1,54 @@
 # @comp0/genui
 
-Give a model a vocabulary of components and render its answer as restricted JSX. Start with a finished string while developing. Feed the same view text deltas from your model provider when you want children to appear as they arrive.
+GenUI renders a model response using components chosen by the host app. The main API accepts restricted JSX in a React Server Components app. A separate browser renderer accepts structured JSON, including tool arguments streamed by an MCP Apps host.
 
-[Try the JSX editor](https://comp0-docs.horrible.workers.dev/labs/genui-rsc/compose) · [API reference](https://comp0-docs.horrible.workers.dev/genui/server)
+## Run the seat calculator
+
+GenUI is a private workspace package. From the root of a comp0 checkout, start the docs app and open `/genui/overview` on the local server. The recorded examples run without a model API key.
 
 ```sh
-pnpm add @comp0/genui @comp0/react react@^19 react-dom@^19
+pnpm install --frozen-lockfile
+pnpm --filter @comp0/genui... build
+pnpm dev
 ```
 
-## Describe the interface
+The model supplies this response. Moving the slider from two seats to three changes the monthly price from 24 USD to 36 USD.
 
-Define the model's vocabulary and shared state in one module that both server and client can import. A spec describes one component. A vocabulary combines specs and built-in groups. A composition pairs it with the state the model can read or bind.
-
-```ts
-// ui.ts
-import {
-  composition,
-  forms,
-  layout,
-  oneOf,
-  spec,
-  state,
-  vocabulary,
-} from "@comp0/genui/vocabulary";
-
-const city = oneOf(["Oslo", "Tokyo"]);
-export const Forecast = spec("Forecast", {
-  description: "A seven-day forecast for a selected city.",
-  props: { city },
-});
-export const settings = state({ city }, { city: "Oslo" });
-export const ui = composition({
-  vocabulary: vocabulary(layout, forms.only("Select", "Option"), Forecast),
-  state: settings,
-});
-```
-
-`ui.prompt()` describes this composition to the model. `ui.validate(source)` checks an answer locally. A matching response looks like this.
-
-```tsx
-<Stack>
-  <Select label="City" bind="city">
-    <Option value="Oslo">Oslo</Option>
-    <Option value="Tokyo">Tokyo</Option>
-  </Select>
-  <Forecast city={city} />
+```jsx
+<Stack gap="md">
+  <Slider label="Seats" bind="seats" min={1} max={10} />
+  <Text>Monthly total: {seats * 12} USD</Text>
 </Stack>
 ```
 
-## Implement and render
+The example uses three files, each with a separate responsibility.
 
-Implement the shared spec in a server module. The callback receives validated, inferred props. Register each custom spec once. The renderer checks for missing implementations, duplicate registrations and implementations built from a different spec.
+| File                                                                | Responsibility                                                                                                                                                                   |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ui.ts](../../apps/docs/src/examples/genui/ui.ts)                   | Define the allowed components and state with `composition({ vocabulary, state })`. `ui.prompt()` describes this contract to a model and `ui.validate(source)` checks its answer. |
+| [AnswerRoot.tsx](../../apps/docs/src/examples/genui/AnswerRoot.tsx) | Import the same composition in a client component and give it to `GenUIRoot`, which owns the live seat count.                                                                    |
+| [Answer.tsx](../../apps/docs/src/examples/genui/Answer.tsx)         | Create a renderer and pass a string or a stream of text chunks to its `View`. Opening tags settle before their components appear, and children stream independently.             |
 
-```tsx
-// renderer.server.tsx
-import { createRenderer, serverComponent } from "@comp0/genui/rsc";
-import { Forecast, ui } from "./ui.js";
+## Extend the vocabulary
 
-export const renderer = createRenderer(
-  ui,
-  serverComponent(Forecast, async ({ city }) => {
-    const forecast = await fetchForecast(city);
-    return <ForecastTable forecast={forecast} />;
-  }),
-);
-```
+A `spec` describes a component name, props, and allowed children. Combine specs with the built-in `layout`, `forms`, `charts`, `actions`, and `disclosure` groups using `vocabulary(...)`. Use `.only(...names)` to give the model a smaller set.
 
-The client root owns interactive state. Import the composition inside the wrapper so its schema functions stay on their side of the React Server Components boundary.
+The forecast lab combines a server component that reads data with a client component that draws a shader. Its [shared contract](../../apps/docs/src/routes/labs/genui-rsc/contract.ts) declares both specs and their state. Its [server module](../../apps/docs/src/routes/labs/genui-rsc/components.server.tsx) registers both implementations on the same renderer.
 
 ```tsx
-// AnswerRoot.tsx
-"use client";
-import { GenUIRoot } from "@comp0/genui/rsc/client";
-import { type ReactNode } from "react";
-import { ui } from "./ui.js";
-
-export function AnswerRoot({ children }: { children: ReactNode }) {
-  return <GenUIRoot ui={ui}>{children}</GenUIRoot>;
-}
+export const labRenderer = createRenderer(labUI, Forecast, shaderSpec.implement(ShaderCanvas));
 ```
 
-```tsx
-// Answer.tsx
-import { AnswerRoot } from "./AnswerRoot.js";
-import { renderer } from "./renderer.server.js";
+Use `spec.implement(Component)` for a React component and `serverComponent(spec, render)` for a server-only data read. Components receive props checked against their specs. A container can opt into nested components or text. A field can declare a binding and write through the shared state validator. The lab’s [client root](../../apps/docs/src/routes/labs/genui-rsc/LabRoot.tsx) supplies a refresh transport so changing the city reloads only the forecast. [JSX composition guide](https://comp0-docs.horrible.workers.dev/genui/server) · [JSX playground](https://comp0-docs.horrible.workers.dev/labs/genui-rsc/compose)
 
-export function Answer({ source }: { source: string | AsyncIterable<string> }) {
-  return (
-    <AnswerRoot>
-      <renderer.View source={source} />
-    </AnswerRoot>
-  );
-}
-```
+## Layouts, revisions, and actions
 
-For reactive data, supply a `render(name, props, signal)` transport on the client root. Its server endpoint calls `renderer.render(name, props)` to revalidate the request against the original spec. The initial render reads directly on the server. Changing the selected city refreshes just Forecast and keeps its last successful result visible while waiting. The [forecast lab](https://comp0-docs.horrible.workers.dev/labs/genui-rsc) implements both sides.
+- Use `renderer.holes` and `hole(vocabulary, instruction, { max })` to let one response fill named places in a host layout. [Host layouts](https://comp0-docs.horrible.workers.dev/genui/server#holes)
+- Give a component an `id` so a later turn can change its props with `Update` or extend its children with `Append`. Supply the accepted response history and a stable turn identity. The edit keeps controls mounted and preserves user-entered values. [Revisions lab](https://comp0-docs.horrible.workers.dev/labs/genui-edits)
+- Handle submitted messages and form values with `onAction`, supply `call` for tools, and use `onError` for validation problems. [Actions and errors](https://comp0-docs.horrible.workers.dev/genui/server#server-actions)
 
-## Add an interactive component
+## Structured JSON and MCP Apps
 
-Use the same spec API for client components. Place the component in a module marked `"use client"`, include the spec in the shared vocabulary and pass `spec.implement(Component)` to the renderer. A bound field receives its ordinary value prop and an `onChange(next)` callback that writes through the state validator. Omit the value prop when binding.
-
-```tsx
-// Additional shared spec
-const CityPicker = spec("CityPicker", {
-  description: "Choose a forecast city.",
-  props: { label: oneOf(["City"]), "value?": city },
-  binding: { prop: "value", kind: "string" },
-});
-
-// Register in the server module. CityField is a client component.
-const renderer = createRenderer(uiWithPicker, CityPicker.implement(CityField));
-```
-
-A container receives React children as they stream. Use `children: "nodes"` for free composition, a list of names to constrain its children, `"text"` for text and scalar expressions, or `"label"` for text that must resolve to a visible accessible name. A compound part can declare `parents: ["List"]` and `identity: { prop: "value", scope: "List" }` to require a direct parent and a fixed, unique item value in that ancestor. Set `identity.matchesBoundValue` on a choice whose key must also pass the owning control’s bound state validator. The prompt, initial validation and later edits use these same rules.
-
-The built-in groups are `layout`, `forms`, `charts`, `actions` and `disclosure`. Optional prop keys end in `?`. Use `fromJsonSchema`, `oneOf`, `url` or a synchronous Standard Schema provider. Hosts can read typed values with `useGenUIValue(settings, "city")` and restore validated state with `settings.createStore(savedValues)`.
-
-## Host layouts and edits
-
-A renderer can fill several named places in your layout from one response. Each place narrows the composition's vocabulary and sets its own limit. The resulting prompt and views use the renderer's state and implementations.
-
-```tsx
-import { hole } from "@comp0/genui/rsc";
-
-const page = renderer.holes({
-  summary: hole(layout.only("Heading", "Text"), "Summarize the trip.", { max: 3 }),
-  forecast: hole(ui.vocabulary.only("Forecast"), "Show the selected city.", { max: 1 }),
-});
-const slots = page.fill(streamFromYourProvider(page.prompt(), message));
-<AnswerRoot>
-  <header>
-    <slots.summary />
-  </header>
-  <aside>
-    <slots.forecast />
-  </aside>
-</AnswerRoot>;
-```
-
-Assign protocol IDs to components that a later turn may revise. Keep the original view mounted. Render a second view under the same root with the exact accepted history and a stable turn ID.
-
-```tsx
-const first = '<Card id="trip" title="Draft"><Text>Two days in Oslo.</Text></Card>';
-<AnswerRoot>
-  <renderer.View source={first} />
-  <renderer.View
-    source={'<Update id="trip" title="Weekend in Oslo" />'}
-    history={[first]}
-    turn="assistant-2"
-  />
-</AnswerRoot>;
-```
-
-`Update` changes props. `Append` adds children. The complete turn validates before it commits. Retries preserve mounted identity, focus and user-entered values. Named holes accept the same history and turn options through `.fill(source, { history, turn })`. [Try the revisions lab](https://comp0-docs.horrible.workers.dev/labs/genui-edits).
-
-## JSON and MCP Apps
-
-For browser JSON rendering, `@comp0/genui` exposes `GenUI`, `genuiPrompt`, `responseJsonSchema`, `parsePartialJson` and `validateResponse`. Define the model-facing catalog spec once. Use it for the JSON schema, model prompt and MCP tool descriptor, then attach the browser implementation with `defineEntry(spec, Component)`. JSON supports its own binding objects, Query and Slot. Import `genuiAppTool`, `createMcpAppBridge` and `McpAppGenUI` from `@comp0/genui/mcp` to use this transport inside an MCP Apps host.
-
-## Actions, accessibility and styling
-
-Buttons and form actions wait for the response to settle. The root's `onAction` receives the message and form values. Supply `call` as a tool caller or an endpoint URL. `defineTool`, `runTool`, `handleToolRequest` and `httpToolCaller` provide validated tools and HTTP transport. Use `onError` for structured validation problems and `formatErrors(errors, "jsx")` for a correction request.
-
-Model expressions use a bounded evaluator with declared state. Text renders literally. Required props and accessible names settle before controls appear, and URL schemas constrain links and images. Components expose `data-comp0`, token attributes and comp0 state attributes for styling.
+Import `GenUI`, `genuiPrompt`, `responseJsonSchema` and `validateResponse` from `@comp0/genui` for the JSON transport. Model-facing catalog specs can be reused for the prompt, schema and MCP tool descriptor. Attach browser components with `defineEntry(spec, Component)`. The MCP bridge and `McpAppGenUI` live in `@comp0/genui/mcp`. [Browser JSON renderer and replay](https://comp0-docs.horrible.workers.dev/genui/renderer)
 
 MIT licensed.

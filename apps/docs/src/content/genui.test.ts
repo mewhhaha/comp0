@@ -1,5 +1,7 @@
 import * as genui from "@comp0/genui";
 import { describe, expect, it } from "vitest";
+import { ui } from "../examples/genui/ui.js";
+import { labUI } from "../routes/labs/genui-rsc/contract.js";
 import { genuiDocs } from "./genui.js";
 import reference from "./genui-reference.json" with { type: "json" };
 import type { GenUIReference } from "./types.js";
@@ -29,6 +31,25 @@ describe("GenUI reference pages", () => {
     for (const page of genuiDocs) {
       const ids = page.sections.map((section) => section.id);
       expect(new Set(ids).size, page.slug).toBe(ids.length);
+    }
+  });
+
+  it("renders each published model response under its documented contract", () => {
+    for (const page of genuiDocs) {
+      for (const section of page.sections) {
+        if (!section.code) continue;
+        const example = page.slug + "/" + section.id;
+        if (section.language === "json") {
+          const parsed = JSON.parse(section.code);
+          expect(genui.validateResponse(parsed).errors, example).toEqual([]);
+        }
+        if (section.language === "jsx") {
+          const contract = page.slug === "server" ? labUI : ui;
+          const result = contract.validate(section.code, { complete: true });
+          expect(result.errors, example).toEqual([]);
+          expect(result.nodes, example).toHaveLength(1);
+        }
+      }
     }
   });
 

@@ -38,9 +38,9 @@ export function ServerComponent() {
           >
             Ask a model
           </Link>{" "}
-          to compose one live, or{" "}
+          to compose one live, or try the{" "}
           <Link to="/labs/genui-rsc/compose" className="underline">
-            edit the JSX yourself
+            JSX playground
           </Link>
           .
         </p>
@@ -52,19 +52,19 @@ export function ServerComponent() {
           </h2>
           <LiveValues />
         </section>
-        <section aria-label="Shader explorer" data-intelligent-ui="">
+        <section aria-label="Shader explorer" data-genui="">
           <labRenderer.View source={replay(shaderExplorer)} />
         </section>
-        <section aria-label="Forecast" data-intelligent-ui="">
+        <section aria-label="Forecast" data-genui="">
           <labRenderer.View source={replay(forecastExplorer)} />
         </section>
-        <section aria-label="How did the product do this week?" data-intelligent-ui="">
+        <section aria-label="How did the product do this week?" data-genui="">
           <labRenderer.View source={replay(dashboard)} />
         </section>
-        <section aria-label="Release notes" data-intelligent-ui="">
+        <section aria-label="Release notes" data-genui="">
           <labRenderer.View source={replay(releaseNotes)} />
         </section>
-        <section aria-label="Explain how OAuth works." data-intelligent-ui="">
+        <section aria-label="Explain how OAuth works." data-genui="">
           <labRenderer.View source={replay(explainer)} />
         </section>
       </LabRoot>

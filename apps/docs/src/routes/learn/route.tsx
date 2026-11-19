@@ -1,10 +1,9 @@
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import {
   Callout,
   CodeBlock,
   DesktopOutline,
   InlineOutline,
-  IntelligentUiDemo,
   LessonPager,
   PageIntro,
   SectionLinks,
@@ -21,6 +20,7 @@ type LearnRouteLoaderData = {
 };
 
 export function loader({ params }: LearnRouteProps): LearnRouteLoaderData {
+  if (params.slug === "intelligent-ui") throw redirect("/genui/overview", 301);
   const page = params.slug ? learnBySlug.get(params.slug) : undefined;
   if (!page) return { description: undefined, title: "Lesson not found" };
   return { description: page.summary, title: page.title };
@@ -96,7 +96,6 @@ export function ServerComponent({ params }: LearnRouteProps) {
                   title="Add this"
                 />
               )}
-              {section.demo === "intelligent-ui" && <IntelligentUiDemo className="mt-6" />}
               {section.note && (
                 <Callout className="mt-6" title="Keep in mind">
                   <p>{section.note}</p>

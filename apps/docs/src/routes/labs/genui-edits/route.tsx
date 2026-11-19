@@ -21,7 +21,7 @@ export function ServerComponent() {
         </p>
         <Link
           className="text-sm font-medium text-zinc-700 underline dark:text-zinc-300"
-          to="/genui/server"
+          to="/genui/server#edits"
         >
           How revisions work
         </Link>

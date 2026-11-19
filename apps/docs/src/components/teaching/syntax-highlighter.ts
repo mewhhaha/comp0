@@ -130,7 +130,10 @@ export function highlightCode(code: string, language: CodeLanguage) {
 
   const highlight = highlighterPromise
     .then((highlighter) =>
-      highlighter.codeToTokens(code, { lang: language, theme: phSyntaxTheme.name }),
+      highlighter.codeToTokens(code, {
+        lang: language === "jsx" ? "tsx" : language,
+        theme: phSyntaxTheme.name,
+      }),
     )
     .then(({ tokens }) => {
       resolvedHighlights.set(key, tokens);

@@ -1,6 +1,6 @@
 import { GenUI } from "@comp0/genui";
 
-type IntelligentUiStageProps = {
+type JsonResponseStageProps = {
   response: string;
   streaming: boolean;
   onAction: (message: string) => void;
@@ -8,9 +8,9 @@ type IntelligentUiStageProps = {
 
 // This module is the only importer of @comp0/genui in the docs client graph, and the demo loads
 // it with import(), so the GenUI runtime stays out of every other page's bundle.
-export function IntelligentUiStage({ response, streaming, onAction }: IntelligentUiStageProps) {
+export function JsonResponseStage({ response, streaming, onAction }: JsonResponseStageProps) {
   return (
-    <div data-intelligent-ui="">
+    <div data-genui="">
       <GenUI
         response={response}
         streaming={streaming}

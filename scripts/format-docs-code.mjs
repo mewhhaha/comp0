@@ -1,23 +1,8 @@
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { registerHooks } from "node:module";
+import "./lib/docs-source.mjs";
 import { pathToFileURL } from "node:url";
 import { format } from "oxfmt";
-
-// Entry files import siblings as "./define.js" for the bundler; map those to the .ts source so
-// Node's native type stripping can load them without starting Vite.
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    try {
-      return nextResolve(specifier, context);
-    } catch (error) {
-      if (error?.code === "ERR_MODULE_NOT_FOUND" && /^\.\.?\/.*\.js$/.test(specifier)) {
-        return nextResolve(specifier.replace(/\.js$/, ".ts"), context);
-      }
-      throw error;
-    }
-  },
-});
 
 const contentDirectory = "apps/docs/src/content/components";
 const entryPath = (slug) => `${contentDirectory}/${slug}.ts`;
@@ -49,7 +34,7 @@ function runOxfmt(args) {
 }
 
 async function formatSnippet(source, language, name) {
-  if (language === "bash" || language === "json") return source;
+  if (language === "bash" || language === "json" || language === "jsx") return source;
   const extension = language === "css" ? "css" : "tsx";
   let result = await format(`code-block.${extension}`, source, formatOptions);
   if (result.errors.length > 0 && extension === "tsx") {

@@ -118,6 +118,7 @@ function renderComponent(item: ComponentDoc, source: string | undefined) {
 function renderGenUISection(section: GenUISection, reference: GenUIReference) {
   const lines = [`#### ${section.title}`, ""];
   for (const paragraph of section.paragraphs) lines.push(oneLine(paragraph), "");
+  if (section.codeTitle) lines.push(section.codeTitle, "");
   if (section.code) lines.push(fence(section.code, section.language ?? "tsx"), "");
   for (const table of section.tables ?? []) {
     lines.push(`${table.caption}:`, "");

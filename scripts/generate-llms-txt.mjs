@@ -6,23 +6,8 @@ import {
   readdirSync,
   writeFileSync,
 } from "node:fs";
-import { registerHooks } from "node:module";
+import "./lib/docs-source.mjs";
 import { pathToFileURL } from "node:url";
-
-// Same trick as format-docs-code.mjs: load the TypeScript content modules with Node's native type
-// stripping, mapping "./x.js" specifiers to their .ts source, so no Vite is needed.
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    try {
-      return nextResolve(specifier, context);
-    } catch (error) {
-      if (error?.code === "ERR_MODULE_NOT_FOUND" && /^\.\.?\/.*\.js$/.test(specifier)) {
-        return nextResolve(specifier.replace(/\.js$/, ".ts"), context);
-      }
-      throw error;
-    }
-  },
-});
 
 process.chdir(new URL("..", import.meta.url).pathname);
 
