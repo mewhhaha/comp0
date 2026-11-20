@@ -1,6 +1,6 @@
 # @comp0/genui
 
-GenUI renders a model response using components chosen by the host app. The main API accepts restricted JSX in a React Server Components app. A separate browser renderer accepts structured JSON, including tool arguments streamed by an MCP Apps host.
+GenUI renders a model response using components chosen by the host app. The main API accepts restricted JSX in a React Server Components app. The server validates the JSX as it arrives and streams the rendered tree to the browser using React Flight. A separate browser renderer accepts structured JSON, including tool arguments streamed by an MCP Apps host.
 
 ## Run the seat calculator
 

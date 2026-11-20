@@ -1,4 +1,10 @@
-import { maxJsxLength, parsePartialJsx, type JsxNode, type JsxParse } from "../jsx/parse.js";
+import {
+  StreamingJsxParser,
+  maxJsxLength,
+  parsePartialJsx,
+  type JsxNode,
+  type JsxParse,
+} from "../jsx/parse.js";
 
 function signal() {
   let resolve = () => {};
@@ -14,8 +20,7 @@ function signal() {
  * streams to the browser top-down while the model is still writing.
  */
 class StreamedResponse {
-  #text = "";
-  #parsed: JsxParse = parsePartialJsx("");
+  #parser = new StreamingJsxParser();
   #done = false;
   #version = 0;
   #changed = signal();
@@ -28,18 +33,18 @@ class StreamedResponse {
     let failed = false;
     try {
       for await (const chunk of chunks) {
-        this.#text += chunk.slice(0, maxJsxLength + 1 - this.#text.length);
-        this.#parsed = parsePartialJsx(this.#text);
-        this.#notify();
-        if (this.#text.length > maxJsxLength) break;
+        const revision = this.#parser.revision;
+        this.#parser.push(chunk);
+        if (revision !== this.#parser.revision) this.#notify();
+        if (this.#parser.length > maxJsxLength) break;
       }
     } catch {
       // A broken stream ends the response; what arrived still renders.
       failed = true;
     } finally {
-      this.#parsed = parsePartialJsx(this.#text, { final: true });
+      this.#parser.finish();
       if (failed)
-        this.#parsed.errors.push({
+        this.#parser.parsed.errors.push({
           path: "",
           code: "truncated",
           message: "The response stream ended unexpectedly.",
@@ -58,12 +63,12 @@ class StreamedResponse {
 
   /** The response parsed so far. */
   get parsed(): JsxParse {
-    return this.#parsed;
+    return this.#parser.parsed;
   }
 
   /** Bounded source text, retained for validating a complete edit turn. */
   get source(): string {
-    return this.#text;
+    return this.#parser.source;
   }
 
   /** Whether the model has finished writing. */
@@ -71,24 +76,14 @@ class StreamedResponse {
     return this.#done;
   }
 
-  /** Increases with every chunk; lets callers cache work per state of the response. */
+  /** Increases when nodes change or the stream ends; lets callers cache work per state of the response. */
   get version(): number {
     return this.#version;
   }
 
   /** A node at its stable tree path. */
   nodeAt(key: string): JsxNode | undefined {
-    const find = (nodes: JsxNode[]): JsxNode | undefined => {
-      for (const node of nodes) {
-        if (node.key === key) return node;
-        if (node.kind === "element") {
-          const found = find(node.children);
-          if (found) return found;
-        }
-      }
-      return undefined;
-    };
-    return find(this.#parsed.nodes);
+    return this.#parser.byKey.get(key);
   }
 
   /** Resolves once `ready()` holds or the response is finished. */

@@ -17,7 +17,7 @@ export function composition<const T extends Contract>(contract: T) {
     prompt() {
       const specs = vocabulary.specs;
       const lines = [
-        "Write only restricted JSX: one component tree, without Markdown fences or surrounding text.",
+        "Write only restricted JSX: one component tree, without Markdown fences or surrounding text. Omit indentation between tags and spaces before />. Preserve spaces in visible text.",
         `Allowed components: ${specs.map((item) => item.name).join(", ") || "none"}. No native HTML tags or other components.`,
         "Use quoted attributes for strings and braces for booleans, numbers, arrays, and plain data objects. Compose components with nested children; close every tag.",
         "This is data, not JavaScript: no imports, declarations, assignments, functions, event handlers, spread attributes, member access, or executable code.",

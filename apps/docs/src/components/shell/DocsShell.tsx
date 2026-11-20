@@ -1,22 +1,26 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 import { SkipLink, Toast, ToastClose, ToastProvider, ToastRegion } from "@comp0/react";
-import { CommandPalette } from "./CommandPalette.js";
+
 import { DocsHeader } from "./DocsHeader.js";
 import { DocsNavigation } from "./DocsNavigation.js";
 import type { DocsNavigationData, PaletteEntry } from "./types.js";
+
+const CommandPalette = lazy(async () => ({
+  default: (await import("./CommandPalette.js")).CommandPalette,
+}));
 
 export type DocsShellProps = {
   children: ReactNode;
   className?: string | undefined;
   navigation: DocsNavigationData;
-  paletteEntries: PaletteEntry[];
+  exampleEntries: PaletteEntry[];
 };
 
-export function DocsShell({ children, className, navigation, paletteEntries }: DocsShellProps) {
-  const [paletteOpen, setPaletteOpen] = useState(false);
+export function DocsShell({ children, className, navigation, exampleEntries }: DocsShellProps) {
+  const [paletteOpen, setPaletteOpen] = useState<boolean>();
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -59,7 +63,16 @@ export function DocsShell({ children, className, navigation, paletteEntries }: D
           </div>
         </div>
       </div>
-      <CommandPalette entries={paletteEntries} open={paletteOpen} onOpenChange={setPaletteOpen} />
+      {paletteOpen !== undefined && (
+        <Suspense fallback={null}>
+          <CommandPalette
+            navigation={navigation}
+            exampleEntries={exampleEntries}
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+          />
+        </Suspense>
+      )}
       <ToastRegion className="inset-auto right-4 bottom-4 m-0 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 border-0 bg-transparent p-0">
         {(toast) => (
           <Toast

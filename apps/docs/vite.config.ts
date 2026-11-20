@@ -28,7 +28,13 @@ export default defineConfig({
     tailwindcss(),
     reactRouterPlugins.filter((plugin) => !readsAssetsManifest(plugin)),
     react({ compiler: true }),
-    rsc({ serverHandler: false }),
+    rsc({
+      serverHandler: false,
+      // Link discovery imports route metadata. Keep those references independent of page widgets.
+      clientChunks({ id }) {
+        if (id.includes("?client-route-module=shared")) return "route-metadata";
+      },
+    }),
     reactRouterPlugins.filter(readsAssetsManifest),
   ],
   environments: {

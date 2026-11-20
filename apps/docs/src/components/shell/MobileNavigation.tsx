@@ -47,11 +47,13 @@ export function MobileNavigation({ className, navigation }: MobileNavigationProp
               />
             </Button>
           </div>
-          <DocsNavigation
-            className="min-w-0 flex-1 overflow-y-auto px-5 py-6"
-            navigation={navigation}
-            onNavigate={() => setOpen(false)}
-          />
+          {open && (
+            <DocsNavigation
+              className="min-w-0 flex-1 overflow-y-auto px-5 py-6"
+              navigation={navigation}
+              onNavigate={() => setOpen(false)}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>

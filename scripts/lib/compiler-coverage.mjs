@@ -10,12 +10,13 @@ const componentExport = new RegExp(
   [
     String.raw`^export\s+(?:default\s+)?(?:async\s+)?function\s+[A-Z]\w*`,
     String.raw`^export\s+const\s+[A-Z]\w*\s*(?::[^=\n]+)?=\s*(?:async\s*)?(?:\(|function\b|\w+\s*=>|(?:React\.)?(?:memo|forwardRef)\()`,
-    String.raw`^export\s+class\s+[A-Z]\w*`,
+    // A plain class with no superclass is a utility. Keep checking derived and generic classes.
+    String.raw`^export\s+(?:default\s+)?class\s+[A-Z]\w*\b(?!\s*\{)`,
   ].join("|"),
   "m",
 );
 
-/** True when the module exports a PascalCase function, const, or class (a component by convention). */
+/** Detect component-shaped exports without treating a plain utility class as a React component. */
 export function exportsComponent(source) {
   return componentExport.test(source);
 }
