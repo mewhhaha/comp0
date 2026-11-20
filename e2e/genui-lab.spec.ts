@@ -252,6 +252,34 @@ test("compose a custom component, inspect a contract error and correct the previ
   expect(await axeViolations(page, "main")).toEqual([]);
 });
 
+test("an image enters when its file loads", async ({ page }) => {
+  await page.goto("/labs/genui-rsc/compose", { waitUntil: "networkidle" });
+  const file = "/genui-previews/print-proof.jpg";
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**" + file, async (route) => {
+    await gate;
+    await route.continue();
+  });
+  const source = '<Image src="' + file + '" alt="Two ink plates" caption="Sleeve proof" />';
+  await page.getByLabel("Component JSX").fill(source);
+  await page.getByRole("button", { name: "Preview" }).click();
+  const image = page.getByRole("img", { name: "Two ink plates" });
+  await image.scrollIntoViewIfNeeded();
+  try {
+    await expect(image).toHaveCSS("animation-name", "none");
+    await expect(page.getByText("Sleeve proof", { exact: true })).toBeVisible();
+  } finally {
+    release();
+  }
+  await expect(image).toHaveCSS("animation-name", "genui-artwork-in");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(image).toHaveCSS("animation-name", "none");
+  await expect(image).toBeVisible();
+});
+
 test("the former lesson leads to a working JSX example and the JSON replay", async ({
   page,
   request,

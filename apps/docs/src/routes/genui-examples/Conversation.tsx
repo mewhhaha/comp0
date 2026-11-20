@@ -130,7 +130,7 @@ export function Conversation({ slug, prompt, followUp }: ConversationProps) {
                   Assistant
                 </MessageAuthor>
                 <MessageContent>
-                  <p className="mt-1 max-w-prose">
+                  <p className="mt-1 min-h-[4lh] max-w-prose sm:min-h-[2lh]">
                     {turn.text ?? (
                       <>
                         Writing a reply
@@ -164,7 +164,7 @@ export function Conversation({ slug, prompt, followUp }: ConversationProps) {
   else transcript = <Fragment key={session}>{transcript}</Fragment>;
   return (
     <section aria-labelledby="conversation-title" className="min-w-0">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 max-[28rem]:flex-col max-[28rem]:items-start">
         <h2 id="conversation-title" className="text-xl font-semibold">
           Mock conversation
         </h2>
