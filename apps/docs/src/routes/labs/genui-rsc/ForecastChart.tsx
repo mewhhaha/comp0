@@ -27,7 +27,9 @@ export function ForecastChart({ data }: ForecastChartProps) {
             {points.map((point) => (
               <LineChartPoint key={point.index} point={point} className="group">
                 <circle cx={point.x} cy={point.y} r="4" fill="transparent" />
+                {/* A changed reading animates its dot while the day keeps its keyboard target. */}
                 <circle
+                  key={point.value.y}
                   className="forecast-point fill-white stroke-teal-700 group-data-active:fill-teal-700 dark:fill-zinc-950 dark:stroke-teal-300 dark:group-data-active:fill-teal-300"
                   cx={point.x}
                   cy={point.y}

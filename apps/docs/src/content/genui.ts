@@ -472,7 +472,7 @@ export const genuiDocs: GenUIDoc[] = [
         title: "Animate the arrival of a part",
         paragraphs: [
           "Attach an entrance to an element that mounts once, such as a new list item. Later text chunks can extend that item without restarting the animation. Keep the list itself steady so those movements do not add together. Long replies should remain readable and usable while the rest arrives.",
-          "For a chart, keep each point at its measured coordinates. In the forecast example the visible dots grow in a short sequence, while their keyboard and pointer targets are available immediately. The table exposes the same seven values throughout.",
+          "For a chart, keep each point at its measured coordinates. In the forecast example the visible dots grow in a short sequence, while their keyboard and pointer targets are available immediately. When a reading changes, only its dot repeats the entrance. The table exposes all seven values throughout.",
           "Start with the final, visible state and enable a short entrance only when the person allows motion. Keep focus, selection, submission, and completion independent of animation timing.",
         ],
         code: '@media (prefers-reduced-motion: no-preference) {\n  [data-genui] [data-comp0="list"] > li {\n    animation: item-arrives 180ms ease-out;\n  }\n}\n\n@keyframes item-arrives {\n  from {\n    opacity: 0.6;\n    translate: 0 0.2rem;\n  }\n}',
