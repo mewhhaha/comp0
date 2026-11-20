@@ -1,3 +1,4 @@
+import { contracts } from "../examples/genui/gallery/contracts.js";
 import { examples } from "../examples/genui/gallery/examples.js";
 import * as genui from "@comp0/genui";
 import { describe, expect, it } from "vitest";
@@ -45,7 +46,9 @@ describe("GenUI reference pages", () => {
           expect(genui.validateResponse(parsed).errors, example).toEqual([]);
         }
         if (section.language === "jsx") {
-          const contract = page.slug === "server" ? labUI : ui;
+          let contract: Pick<typeof ui, "validate"> = ui;
+          if (page.slug === "server") contract = labUI;
+          if (page.slug === "payloads") contract = contracts["print-proof"];
           const result = contract.validate(section.code, { complete: true });
           expect(result.errors, example).toEqual([]);
           expect(result.nodes, example).toHaveLength(1);

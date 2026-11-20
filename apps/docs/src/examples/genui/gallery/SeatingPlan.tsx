@@ -16,11 +16,8 @@ export function SeatingPlan({ rows, aisle }: SeatingPlanProps) {
           return (
             <span
               key={i}
-              className={
-                open
-                  ? "invisible"
-                  : "aspect-square rounded-t-md border-b-4 border-amber-500 bg-amber-200"
-              }
+              className="room-seat aspect-square rounded-t-md border-b-4 border-amber-500 bg-amber-200"
+              data-aisle={open ? "" : undefined}
             />
           );
         })}

@@ -130,7 +130,18 @@ export function Conversation({ slug, prompt, followUp }: ConversationProps) {
                   Assistant
                 </MessageAuthor>
                 <MessageContent>
-                  <p className="mt-1 max-w-prose">{turn.text ?? "Writing a reply…"}</p>
+                  <p className="mt-1 max-w-prose">
+                    {turn.text ?? (
+                      <>
+                        Writing a reply
+                        <span className="reply-dots" aria-hidden="true">
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                      </>
+                    )}
+                  </p>
                   {turn.view && (
                     <div className="mt-4 min-w-0" data-genui="">
                       {turn.view}

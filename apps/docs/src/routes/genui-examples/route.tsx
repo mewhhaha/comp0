@@ -50,11 +50,19 @@ export function ServerComponent(props: ExampleRouteProps) {
         followUp={example.followUp?.prompt}
       />
       <SourcePanel href={source + "response"} title="Response source">
-        <p className="mt-2 max-w-prose">{example.mechanism}</p>
+        <p className="mt-2 max-w-prose">
+          {example.mechanism}{" "}
+          <Link className="underline underline-offset-4" to="/genui/payloads">
+            How this payload reaches the browser
+          </Link>
+        </p>
       </SourcePanel>
       {hostFiles.has(example.slug) && (
         <SourcePanel href={source + "host"} title="Host implementation" />
       )}
+      <Link className="w-fit underline underline-offset-4" to="/genui/styling">
+        Style a generated response
+      </Link>
       <LessonPager
         previous={previous && { title: previous.title, to: "/genui/examples/" + previous.slug }}
         next={next && { title: next.title, to: "/genui/examples/" + next.slug }}

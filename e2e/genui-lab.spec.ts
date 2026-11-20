@@ -67,6 +67,12 @@ test("genui lab: server-streamed views finish, city refreshes its server compone
 
   const table = forecast.getByRole("table", { name: "Daily high", exact: true });
   const oslo = await chartValues(table);
+  const points = forecast.getByRole("img", { name: /^Day: / });
+  await expect(points).toHaveCount(7);
+  await points.first().focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(points.nth(1)).toBeFocused();
+
   await page.waitForLoadState("networkidle");
   expect(toolCalls, "Initial data renders directly on the server").toEqual([]);
   expect(componentCalls, "The initial forecast needs no browser request").toEqual([]);
@@ -75,6 +81,11 @@ test("genui lab: server-streamed views finish, city refreshes its server compone
     requests.length = 0;
     const city = forecast.getByRole("button", { name: /^City\b/ });
     await expect(city).toHaveText("Oslo");
+    const chart = forecast.getByRole("group", { name: "Line chart: Daily high" });
+    const firstDot = await chart
+      .locator(".forecast-point")
+      .first()
+      .evaluateHandle((dot) => dot);
     await city.click();
     await page.getByRole("option", { name: "Tokyo", exact: true }).click();
     await expect(city).toHaveText("Tokyo");
@@ -91,6 +102,9 @@ test("genui lab: server-streamed views finish, city refreshes its server compone
       )
       .not.toEqual(oslo);
     await chartValues(table);
+    // The new day's reading gets its own entrance, even when React retains the plot.
+    await expect.poll(() => firstDot.evaluate((dot) => dot.isConnected)).toBe(false);
+    await firstDot.dispose();
     await page.waitForLoadState("networkidle");
     expect(componentCalls[0], "The component must receive the chosen city").toBe(
       JSON.stringify({ name: "Forecast", props: { city: "Tokyo" } }),
