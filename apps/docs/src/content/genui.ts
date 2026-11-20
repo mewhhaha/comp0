@@ -56,6 +56,9 @@ const errorCodes = {
     "The response is larger or deeper than the renderer draws, or more problems were found than are listed.",
 } satisfies Record<GenUIErrorCode, string>;
 
+const printProofRecording = examples.find((example) => example.slug === "print-proof")!;
+const ballotRecording = examples.find((example) => example.slug === "screening-ballot")!;
+
 export const genuiDocs: GenUIDoc[] = [
   {
     slug: "overview",
@@ -142,6 +145,8 @@ export const genuiDocs: GenUIDoc[] = [
             to: "/genui/renderer",
             description: "Replay a recorded response and inspect its JSON.",
           },
+          { label: "Model payloads and the HTTP response", to: "/genui/payloads" },
+          { label: "Styling and motion", to: "/genui/styling" },
           { label: "JSON response format", to: "/genui/format" },
           { label: "JSON component catalog", to: "/genui/catalog" },
         ],
@@ -164,6 +169,64 @@ export const genuiDocs: GenUIDoc[] = [
           description: example.tryIt,
         })),
     })),
+  },
+  {
+    slug: "payloads",
+    title: "Response payloads",
+    summary:
+      "Follow two gallery recordings from the model output to the bytes returned by the reply endpoint.",
+    sections: [
+      {
+        id: "jsx",
+        title: "What the model writes for an RSC app",
+        paragraphs: [
+          "The print-proof recording has two parts. The assistant describes the sleeve in prose, and the UI source below names the components to display. Your server passes that source to `renderer.View` as text deltas. A delta can end halfway through a tag. Once the opening tag is complete, the renderer checks its props against the host’s vocabulary.",
+          "Here `ink` and `offset` refer to state declared by the host. Choosing Cobalt changes the mounted print proof without another model call.",
+        ],
+        code: printProofRecording.source,
+        language: "jsx",
+        codeTitle: "Recorded model output · Two-ink print proof",
+        links: [{ label: "Run the print proof", to: "/genui/examples/print-proof" }],
+      },
+      {
+        id: "json",
+        title: "What the model writes for the browser renderer",
+        paragraphs: [
+          "The screening ballot has the same two parts, but its UI source is one JSON object. Each child names a catalog component with `type`. As JSON text arrives, the gallery passes the accumulated text to `<GenUI response={source} streaming={true} />`. When the recording ends, it sets `streaming` to false so the audience can submit the form.",
+        ],
+        code: ballotRecording.source,
+        language: "json",
+        codeTitle: "Recorded model output · Midnight screening ballot",
+        links: [{ label: "Run the screening ballot", to: "/genui/examples/screening-ballot" }],
+      },
+      {
+        id: "wire",
+        title: "Inspect the HTTP response",
+        paragraphs: [
+          "Send the recorded prompt as the POST body. The gallery responds with `Content-Type: text/x-component` in both examples. This is React Flight, the stream a React Server Components app uses to deliver values and component references to its client.",
+          "The table shows the root record captured from each reply. On the print-proof path, the browser’s Flight decoder exposes a prose stream and a renderable React tree. For the ballot it exposes two async iterables. Later records supply the strings or tree nodes those references point to.",
+          "Use your framework’s Flight decoder to read the response. React assigns the record IDs and their order may vary. To see the bytes yourself, run the docs dev server and replay this request.",
+        ],
+        code: `curl -iN --data-raw '${ballotRecording.prompt}' \\
+  http://localhost:5173/genui/examples/screening-ballot/reply`,
+        language: "bash",
+        codeTitle: "Replay the local ballot recording",
+        tables: [
+          {
+            caption: "Root records captured from the gallery",
+            headings: ["Recording", "Flight record"],
+            rows: [
+              {
+                name: "Print proof",
+                description:
+                  '`0:{"text":"$1","view":["$","$L2",null,{"children":["$","$3",null,{"fallback":null,"children":"$L4"}]}]}`',
+              },
+              { name: "Screening ballot", description: '`0:{"text":"$1","json":"$2"}`' },
+            ],
+          },
+        ],
+      },
+    ],
   },
   {
     slug: "server",
@@ -318,6 +381,106 @@ export const genuiDocs: GenUIDoc[] = [
         paragraphs: [
           "Buttons, forms, and suggestions remain disabled until the view settles. The root’s `onAction` receives the person’s message and any form values. Button and Form `action` steps can call a tool, set a declared value, or send a message. Supply `call` as a function or an endpoint served by `handleToolRequest`; `httpToolCaller` is available for an explicit HTTP client.",
           '`parsePartialJsx` parses prefixes; `validateJsx` (or `ui.validate`) checks an ordinary tree against the vocabulary and state. `validateEdits(source, { history, vocabulary, state })` validates an entire edit turn against replayed earlier responses. The root’s `onError` reports structured problems after streaming. Send `formatErrors(errors, "jsx")` back to the model when asking for a corrected response.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: "styling",
+    title: "Styling and motion",
+    summary:
+      "Give generated controls the same spacing, focus states, and motion as the rest of your app. Both renderers use the host’s CSS.",
+    sections: [
+      {
+        id: "scope",
+        title: "Start with a response wrapper",
+        paragraphs: [
+          "Put an attribute you own on a real element around the answer. The docs use `data-genui`. GenUI supplies the built-in components’ markup and attributes, and your stylesheet decides how they look. For a custom component such as PrintProof, style the figure inside its registered implementation.",
+        ],
+        code: '<section aria-label="Seat quote" data-genui="">\n  <Answer source={modelText} />\n</section>;',
+        codeTitle: "Host JSX",
+      },
+      {
+        id: "layout",
+        title: "Give each token a useful default",
+        paragraphs: [
+          "A plain Stack should already be readable when the model omits `gap`. Set a default rhythm, then map the vocabulary’s optional tokens to your design system. For a wide row, allow wrapping. For a grid, start with one column on narrow screens.",
+        ],
+        code: '[data-genui] [data-comp0="stack"] {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n  min-inline-size: 0;\n}\n\n[data-genui] [data-comp0="stack"][data-gap="lg"] {\n  gap: 1.5rem;\n}\n\n[data-genui] [data-comp0="stack"][data-direction="row"] {\n  flex-direction: row;\n}\n\n[data-genui] [data-comp0="stack"][data-wrap] {\n  flex-wrap: wrap;\n}',
+        language: "css",
+        codeTitle: "Response spacing",
+        tables: [
+          {
+            caption: "Token attributes",
+            headings: ["Attribute", "On", "Values"],
+            rows: [
+              { name: "data-direction", type: "Stack", description: "`column`, `row`" },
+              {
+                name: "data-gap",
+                type: "Stack, Grid",
+                description: "`xs`, `sm`, `md`, `lg`, `xl`",
+              },
+              {
+                name: "data-align",
+                type: "Stack",
+                description: "`start`, `center`, `end`, `stretch`",
+              },
+              { name: "data-wrap", type: "Stack", description: "Present when children wrap." },
+              { name: "data-columns", type: "Grid", description: "1 to 6" },
+              { name: "data-tone", type: "Card", description: "`default`, `muted`, `accent`" },
+              {
+                name: "data-tone",
+                type: "Text",
+                description: "`default`, `muted`, `success`, `warning`, `danger`",
+              },
+              { name: "data-size", type: "Text", description: "`sm`, `md`, `lg`" },
+              {
+                name: "data-variant",
+                type: "Button",
+                description: "`primary`, `secondary`, `danger`",
+              },
+              {
+                name: "data-tone",
+                type: "Alert",
+                description: "`info`, `success`, `warning`, `danger`",
+              },
+              {
+                name: "data-numeric",
+                type: "Table cells",
+                description: "Present on cells that hold numbers.",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "interaction",
+        title: "Keep controls recognisable as state changes",
+        paragraphs: [
+          "Tab through the rendered answer while it streams. Focus should remain visible, and selected controls should still read as selected in a high-contrast theme. Pair colour with a second cue, such as a check mark or an underline. Read the accessible name aloud to check that it still makes sense on its own.",
+        ],
+        code: '[data-genui] :focus-visible {\n  outline: 2px solid currentColor;\n  outline-offset: 3px;\n}\n\n[data-genui] [role="tab"][aria-selected="true"] {\n  text-decoration: underline;\n  text-underline-offset: 0.3em;\n}',
+        language: "css",
+        codeTitle: "Keyboard focus and the selected tab",
+        links: [
+          { label: "Inspect the soundcheck tabs", to: "/genui/examples/soundcheck" },
+          { label: "Styling comp0 parts", to: "/learn/styling" },
+        ],
+      },
+      {
+        id: "motion",
+        title: "Animate the arrival of a part",
+        paragraphs: [
+          "Attach an entrance to an element that mounts once, such as a new list item. Later text chunks can extend that item without restarting the animation. Keep the list itself steady so those movements do not add together. Long replies should remain readable and usable while the rest arrives.",
+          "For a chart, keep each point at its measured coordinates. In the forecast example the visible dots grow in a short sequence, while their keyboard and pointer targets are available immediately. The table exposes the same seven values throughout.",
+          "Start with the final, visible state and enable a short entrance only when the person allows motion. Keep focus, selection, submission, and completion independent of animation timing.",
+        ],
+        code: '@media (prefers-reduced-motion: no-preference) {\n  [data-genui] [data-comp0="list"] > li {\n    animation: item-arrives 180ms ease-out;\n  }\n}\n\n@keyframes item-arrives {\n  from {\n    opacity: 0.6;\n    translate: 0 0.2rem;\n  }\n}',
+        language: "css",
+        codeTitle: "An entrance for appended songs",
+        links: [
+          { label: "Add an encore to the set list", to: "/genui/examples/encore" },
+          { label: "Try the forecast chart", to: "/labs/genui-rsc" },
         ],
       },
     ],
@@ -956,9 +1119,8 @@ export const genuiDocs: GenUIDoc[] = [
   },
   {
     slug: "safety",
-    title: "Safety, accessibility, and styling",
-    summary:
-      "What a model's output can and cannot reach, how accessible names are enforced, and the hooks that style the headless output.",
+    title: "Safety and accessibility",
+    summary: "How the host limits what a model can render and how GenUI enforces accessible names.",
     sections: [
       {
         id: "untrusted-output",
@@ -1015,55 +1177,9 @@ export const genuiDocs: GenUIDoc[] = [
         id: "styling",
         title: "Style the output",
         paragraphs: [
-          "comp0 ships no CSS. Every part carries a `data-comp0`, and layout components carry token attributes that are absent when the model did not choose a value. The comp0 parts inside keep their own state attributes, such as `data-checked`, `data-selected`, `data-open`, and `data-focus-visible`, so one stylesheet themes everything a model can compose.",
+          "Use the styling guide for a scoped stylesheet, layout tokens, keyboard focus, and motion as a reply arrives.",
         ],
-        tables: [
-          {
-            caption: "Token attributes",
-            headings: ["Attribute", "On", "Values"],
-            rows: [
-              { name: "data-direction", type: "Stack", description: "`column`, `row`" },
-              {
-                name: "data-gap",
-                type: "Stack, Grid",
-                description: "`xs`, `sm`, `md`, `lg`, `xl`",
-              },
-              {
-                name: "data-align",
-                type: "Stack",
-                description: "`start`, `center`, `end`, `stretch`",
-              },
-              { name: "data-wrap", type: "Stack", description: "Present when children wrap." },
-              { name: "data-columns", type: "Grid", description: "1 to 6" },
-              { name: "data-tone", type: "Card", description: "`default`, `muted`, `accent`" },
-              {
-                name: "data-tone",
-                type: "Text",
-                description: "`default`, `muted`, `success`, `warning`, `danger`",
-              },
-              { name: "data-size", type: "Text", description: "`sm`, `md`, `lg`" },
-              {
-                name: "data-variant",
-                type: "Button",
-                description: "`primary`, `secondary`, `danger`",
-              },
-              {
-                name: "data-tone",
-                type: "Alert",
-                description: "`info`, `success`, `warning`, `danger`",
-              },
-              {
-                name: "data-numeric",
-                type: "Table cells",
-                description: "Present on cells that hold numbers.",
-              },
-            ],
-          },
-        ],
-        code: '[data-comp0="stack"] {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n\n[data-comp0="stack"][data-direction="row"] {\n  flex-direction: row;\n}\n\n[data-comp0="grid"][data-columns="3"] {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n[data-comp0="card"][data-tone="accent"] {\n  border-color: teal;\n}',
-        language: "css",
-        codeTitle: "genui.css",
-        links: [{ label: "Styling lesson", to: "/learn/styling" }],
+        links: [{ label: "Styling and motion", to: "/genui/styling" }],
       },
     ],
   },

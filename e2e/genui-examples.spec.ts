@@ -244,3 +244,39 @@ test("closed source panels stay off the network and reuse their first response",
   await expect(panel.locator("code")).toBeVisible();
   expect(sourceRequests).toEqual([path + "/source/response"]);
 });
+
+test("waiting dots give way to a reply and respect the reader’s motion preference", async ({
+  page,
+}) => {
+  let resume = () => {};
+  const gate = new Promise<void>((resolve) => {
+    resume = resolve;
+  });
+  await page.route("**/genui/examples/listening-room/reply", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto("/genui/examples/listening-room", { waitUntil: "networkidle" });
+  const log = page.getByRole("log", { name: "Conversation" });
+  await page.getByRole("button", { name: "Send prompt" }).click();
+  const dots = log.locator(".reply-dots");
+  try {
+    await expect(log).toHaveAttribute("aria-busy", "true");
+    await expect(log.getByText("Writing a reply")).toBeVisible();
+    await expect(dots).toHaveAttribute("aria-hidden", "true");
+    await expect(dots.locator("span").first()).toHaveCSS("animation-name", "reply-dot");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(dots.locator("span").first()).toHaveCSS("animation-name", "none");
+  } finally {
+    resume();
+  }
+  await expect(dots).toHaveCount(0);
+  const slider = log.getByRole("slider", { name: "Rows" });
+  await expect(slider).toBeVisible();
+  await expect(log.locator('[data-comp0="slider"]').first()).toHaveCSS("animation-name", "none");
+  await expect(log.locator(".room-seat[data-aisle]").first()).toHaveCSS("opacity", "0");
+  await expect(page.getByRole("button", { name: "Replay conversation" })).toBeEnabled();
+  await slider.press("ArrowRight");
+  await expect(slider).toBeFocused();
+  await expect(log.getByRole("status", { name: "Chairs to set out" })).toHaveText("20");
+});
