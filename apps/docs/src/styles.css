@@ -1,9 +1,22 @@
 @import "tailwindcss";
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter Variable";
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("@fontsource-variable/inter/files/inter-latin-wght-italic.woff2") format("woff2");
+}
 
 @theme {
   --font-sans:
-    InterVariable, Inter, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji";
+    "Inter Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 
   /* PH source palette: ~/.config/helix/themes/ph.toml */
@@ -129,7 +142,7 @@
 
 :root {
   color-scheme: light dark;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01", "ss03";
   font-synthesis: none;
   --syntax-foreground: var(--color-ph-text);
@@ -153,12 +166,6 @@
   --syntax-punctuation: var(--color-ph-subtle);
   --syntax-operator: var(--color-ph-subtle);
   --syntax-invalid: var(--color-ph-red);
-}
-
-@supports (font-variation-settings: normal) {
-  :root {
-    font-family: InterVariable, ui-sans-serif, system-ui, sans-serif;
-  }
 }
 
 @layer base {

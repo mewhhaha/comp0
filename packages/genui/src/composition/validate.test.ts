@@ -3,7 +3,8 @@ import { type } from "arktype";
 import { builtInVocabulary, forms, layout } from "./builtins.js";
 import { spec, vocabulary } from "./spec.js";
 import { state } from "./state.js";
-import { validateJsx } from "./validate.js";
+import { StreamingJsxParser } from "../jsx/parse.js";
+import { createJsxValidation, validateJsx } from "./validate.js";
 
 const contract = state(
   { city: type("'Oslo' | 'Tokyo'"), guests: type("1 <= number.integer <= 9") },
@@ -168,4 +169,41 @@ describe("JSX composition validation", () => {
     expect(result.nodes).toEqual([]);
     expect(result.errors[0]?.code).toBe("invalid-prop");
   });
+});
+
+it("resumes without changing which controls have a visible name or a unique identity", () => {
+  const source =
+    '<Stack><Select label="City" bind="city"><Option value="Oslo"></Option><Option value="Oslo">Oslo</Option><Option value="Oslo">Duplicate</Option></Select><Button>{city}</Button></Stack>';
+  const parser = new StreamingJsxParser();
+  const validation = createJsxValidation({ ...options, complete: false });
+  for (const char of source) {
+    parser.push(char);
+    const result = validation.read(parser.parsed);
+    expect(result).toEqual(validateJsx(parser.parsed, { ...options, complete: false }));
+    expect(validation.nodeAt("/0/children/0/children/2")).toBeUndefined();
+    expect(validation.nodeAt("/0/children/0/children/2/children/0")).toBeUndefined();
+  }
+});
+
+it("checks each settled opening tag's props once while text and siblings stream", () => {
+  let calls = 0;
+  const probe = spec("Probe", {
+    description: "A measured label.",
+    children: "text",
+    props: {
+      value: type("string").narrow(() => {
+        calls++;
+        return true;
+      }),
+    },
+  });
+  const parser = new StreamingJsxParser();
+  const validation = createJsxValidation({ vocabulary: vocabulary(probe), complete: false });
+  const source = '<Probe value="one">First</Probe><Probe value="two">Second</Probe>';
+  for (const char of source) {
+    parser.push(char);
+    validation.read(parser.parsed);
+  }
+  expect(calls).toBe(2);
+  expect(validation.nodeAt("/1")).toMatchObject({ closed: true, props: { value: "two" } });
 });

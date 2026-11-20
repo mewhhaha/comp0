@@ -17,27 +17,8 @@ export const docsNavigation: DocsNavigationData = {
   })),
 };
 
-export const paletteEntries: PaletteEntry[] = [
-  ...docsNavigation.componentGroups.flatMap((group) =>
-    group.components.map((component) => ({
-      route: `/components/${component.slug}`,
-      title: component.title,
-      group: group.title,
-    })),
-  ),
-  ...docsNavigation.lessons.map((lesson) => ({
-    route: `/learn/${lesson.slug}`,
-    title: lesson.title,
-    group: "Learn",
-  })),
-  ...docsNavigation.genui.map((page) => ({
-    route: `/genui/${page.slug}`,
-    title: page.slug === "overview" ? "GenUI overview" : page.title,
-    group: "GenUI",
-  })),
-  ...examples.map((example) => ({
-    route: "/genui/examples/" + example.slug,
-    title: example.title,
-    group: "GenUI examples",
-  })),
-];
+export const exampleEntries: PaletteEntry[] = examples.map((example) => ({
+  route: "/genui/examples/" + example.slug,
+  title: example.title,
+  group: "GenUI examples",
+}));

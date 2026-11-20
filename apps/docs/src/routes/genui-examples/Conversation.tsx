@@ -3,21 +3,22 @@
 import { Message, MessageAuthor, MessageContent, Messages } from "@comp0/react";
 import { ArrowPathIcon, PaperAirplaneIcon } from "@heroicons/react/16/solid";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import { ExampleRoot } from "./ExampleRoot.js";
-import type { ReplyPart } from "./recording.server.js";
+import type { ExampleRoot } from "./ExampleRoot.js";
+import type { RecordedReply } from "./recording.server.js";
 
 type Turn = {
   prompt: string;
   status: "streaming" | "complete" | "error";
   text?: string;
   view?: ReactNode;
+  Root?: typeof ExampleRoot;
 };
 
 async function receiveReply(
   slug: string,
   prompt: string,
   signal: AbortSignal,
-  show: (text: string, view: ReactNode) => void,
+  show: (change: Partial<Turn>) => void,
 ) {
   const [response, { createFromReadableStream }] = await Promise.all([
     fetch("/genui/examples/" + slug + "/reply", { method: "POST", body: prompt, signal }),
@@ -29,25 +30,30 @@ async function receiveReply(
   // the transport closes, including for JSX replies whose shell can already be displayed.
   const pipe = new TransformStream<Uint8Array, Uint8Array>();
   async function display() {
-    const parts = await createFromReadableStream<AsyncIterable<ReplyPart>>(pipe.readable);
-    let text = "";
-    for await (const part of parts) {
-      if (typeof part === "string") {
-        text += part;
-        show(text, null);
-      } else if ("view" in part) {
-        show(text, part.view);
-      } else {
-        const { JsonExample } = await import("./JsonExample.js");
-        let source = "";
-        const inventory = slug === "record-crates";
-        for await (const chunk of part.json) {
-          source += chunk;
-          show(text, <JsonExample source={source} inventory={inventory} streaming />);
-        }
-        show(text, <JsonExample source={source} inventory={inventory} streaming={false} />);
+    const reply = await createFromReadableStream<RecordedReply>(pipe.readable);
+    async function showText(parts: AsyncIterable<string>) {
+      let text = "";
+      for await (const chunk of parts) {
+        text += chunk;
+        show({ text });
       }
     }
+    async function showView() {
+      if ("view" in reply) {
+        const { ExampleRoot } = await import("./ExampleRoot.js");
+        show({ Root: ExampleRoot, view: reply.view });
+        return;
+      }
+      const { JsonExample } = await import("./JsonExample.js");
+      const inventory = slug === "record-crates";
+      let source = "";
+      for await (const chunk of reply.json) {
+        source += chunk;
+        show({ view: <JsonExample source={source} inventory={inventory} streaming /> });
+      }
+      show({ view: <JsonExample source={source} inventory={inventory} streaming={false} /> });
+    }
+    await Promise.all([showText(reply.text), showView()]);
   }
   await Promise.all([response.body.pipeTo(pipe.writable, { signal }), display()]);
 }
@@ -78,7 +84,7 @@ export function Conversation({ slug, prompt, followUp }: ConversationProps) {
       ]);
     }
     try {
-      await receiveReply(slug, question, controller.signal, (text, view) => update({ text, view }));
+      await receiveReply(slug, question, controller.signal, update);
       update({ status: "complete" });
     } catch {
       update({ status: "error", text: "The recorded reply couldn’t be loaded.", view: null });
@@ -94,6 +100,57 @@ export function Conversation({ slug, prompt, followUp }: ConversationProps) {
   else if (last) buttonLabel = "Replay conversation";
   const ActionIcon = last ? ArrowPathIcon : PaperAirplaneIcon;
   const visibleTurns = turns.length ? turns : [{ prompt }];
+  const Root = turns[0]?.Root;
+  let transcript = (
+    <Messages
+      aria-label="Conversation"
+      busy={busy}
+      className="grid min-w-0 gap-5 rounded-xl border border-zinc-300 p-4 sm:p-6 dark:border-zinc-700"
+    >
+      {visibleTurns.map(({ prompt: question }, index) => {
+        const turn = turns[index];
+        return (
+          <Fragment key={question}>
+            <Message
+              from="user"
+              aria-label="You"
+              className="max-w-[90%] justify-self-end rounded-xl bg-zinc-100 px-4 py-3 dark:bg-zinc-800"
+            >
+              <MessageAuthor className="text-sm font-semibold">You</MessageAuthor>
+              <MessageContent className="mt-1">{question}</MessageContent>
+            </Message>
+            {turn && (
+              <Message
+                from="assistant"
+                status={turn.status}
+                aria-label="Assistant"
+                className="min-w-0"
+              >
+                <MessageAuthor className="text-sm font-semibold text-teal-800 dark:text-teal-200">
+                  Assistant
+                </MessageAuthor>
+                <MessageContent>
+                  <p className="mt-1 max-w-prose">{turn.text ?? "Writing a reply…"}</p>
+                  {turn.view && (
+                    <div className="mt-4 min-w-0" data-genui="">
+                      {turn.view}
+                    </div>
+                  )}
+                </MessageContent>
+              </Message>
+            )}
+          </Fragment>
+        );
+      })}
+    </Messages>
+  );
+  if (Root)
+    transcript = (
+      <Root key={session} slug={slug}>
+        {transcript}
+      </Root>
+    );
+  else transcript = <Fragment key={session}>{transcript}</Fragment>;
   return (
     <section aria-labelledby="conversation-title" className="min-w-0">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -110,49 +167,7 @@ export function Conversation({ slug, prompt, followUp }: ConversationProps) {
           {buttonLabel}
         </button>
       </div>
-      <ExampleRoot key={session} slug={slug}>
-        <Messages
-          aria-label="Conversation"
-          busy={busy}
-          className="grid min-w-0 gap-5 rounded-xl border border-zinc-300 p-4 sm:p-6 dark:border-zinc-700"
-        >
-          {visibleTurns.map(({ prompt: question }, index) => {
-            const turn = turns[index];
-            return (
-              <Fragment key={question}>
-                <Message
-                  from="user"
-                  aria-label="You"
-                  className="max-w-[90%] justify-self-end rounded-xl bg-zinc-100 px-4 py-3 dark:bg-zinc-800"
-                >
-                  <MessageAuthor className="text-sm font-semibold">You</MessageAuthor>
-                  <MessageContent className="mt-1">{question}</MessageContent>
-                </Message>
-                {turn && (
-                  <Message
-                    from="assistant"
-                    status={turn.status}
-                    aria-label="Assistant"
-                    className="min-w-0"
-                  >
-                    <MessageAuthor className="text-sm font-semibold text-teal-800 dark:text-teal-200">
-                      Assistant
-                    </MessageAuthor>
-                    <MessageContent>
-                      <p className="mt-1 max-w-prose">{turn.text ?? "Writing a reply…"}</p>
-                      {turn.view && (
-                        <div className="mt-4 min-w-0" data-genui="">
-                          {turn.view}
-                        </div>
-                      )}
-                    </MessageContent>
-                  </Message>
-                )}
-              </Fragment>
-            );
-          })}
-        </Messages>
-      </ExampleRoot>
+      {transcript}
       {followUp && turns[0]?.status === "complete" && (
         <button
           type="button"

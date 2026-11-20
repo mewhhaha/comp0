@@ -108,7 +108,7 @@ export const genuiDocs: GenUIDoc[] = [
         id: "server",
         title: "Render the answer",
         paragraphs: [
-          "Pass the model response above as `source` to `Answer`. To connect a provider, send `ui.prompt()` as its system instruction and pass its stream of text chunks as the same prop. The renderer waits for a complete opening tag before rendering the component and streams its children as they arrive.",
+          "Pass the model response above as `source` to `Answer`. To connect a provider, send `ui.prompt()` as its system instruction and pass its stream of text chunks as the same prop. The server validates each opening tag as it arrives. React Flight carries the rendered tree to the browser while the model continues writing JSX. The browser JSON renderer accepts structured JSON directly.",
         ],
         code: answerSource.trimEnd(),
         codeTitle: "Answer.tsx",

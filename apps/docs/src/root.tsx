@@ -1,8 +1,17 @@
 import { type ReactNode } from "react";
 import { Links, Meta, Outlet, ScrollRestoration } from "react-router";
-import { DocsShell } from "./components/shell/index.js";
-import { docsNavigation, paletteEntries } from "./content/navigation.js";
-import "./styles.css";
+import { DocsShell } from "./components/shell/DocsShell.js";
+import { docsNavigation, exampleEntries } from "./content/navigation.js";
+import stylesheet from "./styles.css?url";
+
+export function links() {
+  return [{ rel: "stylesheet", href: stylesheet }];
+}
+
+// The router uses these headers for Flight navigation and sets text/html when it renders HTML.
+export function headers() {
+  return { "Content-Type": "text/x-component" };
+}
 
 export function meta() {
   return [
@@ -23,8 +32,6 @@ export function ServerLayout({ children }: { children: ReactNode }) {
         <meta content="#fffaf2" media="(prefers-color-scheme: light)" name="theme-color" />
         <meta content="#080808" media="(prefers-color-scheme: dark)" name="theme-color" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
-        <link href="https://rsms.me/" rel="preconnect" />
-        <link href="https://rsms.me/inter/inter.css" rel="stylesheet" />
         <Meta />
         <Links />
       </head>
@@ -39,7 +46,7 @@ export function ServerLayout({ children }: { children: ReactNode }) {
 
 export function ServerComponent() {
   return (
-    <DocsShell navigation={docsNavigation} paletteEntries={paletteEntries}>
+    <DocsShell navigation={docsNavigation} exampleEntries={exampleEntries}>
       <Outlet />
     </DocsShell>
   );

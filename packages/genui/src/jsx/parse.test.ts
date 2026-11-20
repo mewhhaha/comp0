@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { maxJsxDepth, maxJsxLength, maxJsxNodes, parsePartialJsx, type JsxNode } from "./parse.js";
+import {
+  maxJsxDepth,
+  maxJsxLength,
+  maxJsxNodes,
+  StreamingJsxParser,
+  parsePartialJsx,
+  type JsxNode,
+} from "./parse.js";
 
 function flatten(nodes: JsxNode[]): JsxNode[] {
   return nodes.flatMap((node) => {
@@ -307,6 +314,54 @@ describe("parsePartialJsx", () => {
         source += alphabet[next() % alphabet.length]!;
       expect(() => parsePartialJsx(source)).not.toThrow();
       expect(() => parsePartialJsx(source, { final: true })).not.toThrow();
+    }
+  });
+});
+
+describe("streaming JSX", () => {
+  it.each([
+    '<Stack data={{"a":[">","}",1]}}><Text>{first} {last} &amp; 😊</Text></Stack>',
+    "<Text>x\ud83d&amp; 😀 &unknown; &#x1f600;</Text><Other/>",
+    "<Text>Safe</Text><Unknown attr={[1,]}/>",
+    "<Tag>{unfinished",
+    "<Tag>unclosed",
+    "<Ok/><Broken></Bad>",
+    "{count}  {price}",
+  ])("matches a fresh parse at every split and at EOF for %j", (source) => {
+    const stream = new StreamingJsxParser();
+    for (let index = 0; index < source.length; index++) {
+      stream.push(source[index]!);
+      expect(stream.parsed).toEqual(parsePartialJsx(source.slice(0, index + 1)));
+      for (const node of flatten(stream.parsed.nodes))
+        expect(stream.byKey.get(node.key)).toBe(node);
+    }
+    expect(stream.finish()).toEqual(parsePartialJsx(source, { final: true }));
+  });
+
+  it("keeps published nodes in place and withholds changes until a tag settles", () => {
+    const stream = new StreamingJsxParser();
+    stream.push("<Stack><Text>Hello</Text>");
+    const first = stream.byKey.get("/0/children/0");
+    const revision = stream.revision;
+    stream.push('<Output label="Half');
+    expect(stream.revision).toBe(revision);
+    stream.push(' done"/></Stack>');
+    expect(stream.revision).toBeGreaterThan(revision);
+    expect(stream.byKey.get("/0/children/0")).toBe(first);
+    expect(stream.finish().complete).toBe(true);
+  });
+
+  it("retains the same bounded prefix and final errors at each resource limit", () => {
+    for (const source of [
+      "<X/>".repeat(maxJsxNodes + 1),
+      "<X>".repeat(maxJsxDepth + 1),
+      "<X data={" + "[".repeat(200) + "]".repeat(200) + "}/>",
+      "a".repeat(maxJsxLength + 500),
+    ]) {
+      const stream = new StreamingJsxParser();
+      for (let i = 0; i < source.length; i += 337) stream.push(source.slice(i, i + 337));
+      expect(stream.finish()).toEqual(parsePartialJsx(source, { final: true }));
+      expect(stream.length).toBeLessThanOrEqual(maxJsxLength + 1);
     }
   });
 });

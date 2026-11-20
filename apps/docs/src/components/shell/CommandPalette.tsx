@@ -11,7 +11,7 @@ import {
   Dialog,
   DialogContent,
 } from "@comp0/react";
-import type { PaletteEntry } from "./types.js";
+import type { DocsNavigationData, PaletteEntry } from "./types.js";
 
 /**
  * Case-insensitive subsequence match: every character of the query appears in
@@ -30,12 +30,38 @@ export function fuzzyMatch(textValue: string, inputValue: string): boolean {
 }
 
 export type CommandPaletteProps = {
-  entries: PaletteEntry[];
+  navigation: DocsNavigationData;
+  exampleEntries: PaletteEntry[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export function CommandPalette({ entries, open, onOpenChange }: CommandPaletteProps) {
+export function CommandPalette({
+  navigation,
+  exampleEntries,
+  open,
+  onOpenChange,
+}: CommandPaletteProps) {
+  const entries = [
+    ...navigation.componentGroups.flatMap((group) =>
+      group.components.map((component) => ({
+        route: `/components/${component.slug}`,
+        title: component.title,
+        group: group.title,
+      })),
+    ),
+    ...navigation.lessons.map((lesson) => ({
+      route: `/learn/${lesson.slug}`,
+      title: lesson.title,
+      group: "Learn",
+    })),
+    ...navigation.genui.map((page) => ({
+      route: `/genui/${page.slug}`,
+      title: page.slug === "overview" ? "GenUI overview" : page.title,
+      group: "GenUI",
+    })),
+    ...exampleEntries,
+  ];
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 

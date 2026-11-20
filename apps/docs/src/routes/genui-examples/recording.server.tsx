@@ -14,7 +14,10 @@ import { replay } from "../../examples/genui/replay.js";
 import { MuseumDisplay } from "./MuseumDisplay.js";
 import { station } from "./station.server.js";
 
-export type ReplyPart = string | { view: ReactNode } | { json: AsyncIterable<string> };
+export type RecordedReply = { text: AsyncIterable<string> } & (
+  | { view: ReactNode }
+  | { json: AsyncIterable<string> }
+);
 
 function rendererFor(slug: CompositionSlug) {
   if (slug === "night-train") return station;
@@ -25,27 +28,24 @@ function rendererFor(slug: CompositionSlug) {
   return createRenderer(contracts[slug]);
 }
 
-/** Replay the assistant’s words, then the JSX or JSON it generated. */
-export async function* recordedReply(
+/** Independent streams let an opening tag render while the introduction is still arriving. */
+export function recordedReply(
   example: GalleryExample,
   turn: RecordedTurn,
   signal: AbortSignal,
-): AsyncGenerator<ReplyPart> {
-  yield* replay(turn.reply, signal, 32);
-  if (signal.aborted) return;
+): RecordedReply {
+  const text = replay(turn.reply, signal, 32);
   const source = replay(turn.source, signal);
   if (example.format === "json") {
-    yield { json: source };
-    return;
+    return { text, json: source };
   }
   if (example.slug === "museum-label") {
-    yield { view: <MuseumDisplay source={source} /> };
-    return;
+    return { text, view: <MuseumDisplay source={source} /> };
   }
   if (!hasComposition(example.slug)) throw new Error("Missing composition: " + example.slug);
   const renderer = rendererFor(example.slug);
   let view = <renderer.View source={source} />;
   if (turn === example.followUp)
     view = <renderer.View source={source} history={[example.source]} turn="band-encore" />;
-  yield { view };
+  return { text, view };
 }

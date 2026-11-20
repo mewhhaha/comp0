@@ -209,3 +209,38 @@ test("the gallery lists every example with its preview and preserves navigation"
     400,
   );
 });
+
+test("closed source panels stay off the network and reuse their first response", async ({
+  page,
+  request,
+}) => {
+  const path = "/genui/examples/print-proof";
+  const example = examples.find((entry) => entry.slug === "print-proof")!;
+  const sourceRequests: string[] = [];
+  page.on("request", (req) => {
+    if (req.url().includes(path + "/source/")) sourceRequests.push(new URL(req.url()).pathname);
+  });
+  const document = await page.goto(path, { waitUntil: "networkidle" });
+  expect(document?.headers()["content-type"]).toContain("text/html");
+  expect(sourceRequests).toEqual([]);
+  // The production page uses 35 scripts. Catch unrelated route widgets joining its startup graph.
+  const assets = await page.evaluate(() =>
+    performance.getEntriesByType("resource").map((entry) => new URL(entry.name).pathname),
+  );
+  expect(assets.filter((path) => path.endsWith(".js")).length).toBeLessThanOrEqual(50);
+  expect(assets.filter((path) => path.endsWith(".css"))).toHaveLength(1);
+  const navigation = await request.get(path + ".rsc");
+  expect(navigation.headers()["content-type"]).toContain("text/x-component");
+  expect(await navigation.text()).not.toContain(example.source);
+  const plain = await request.get(path + "/source/response");
+  expect(plain.headers()["content-type"]).toContain("text/plain");
+  expect(await plain.text()).toBe(example.source);
+  const toggle = page.getByText("Response source", { exact: true });
+  const panel = page.locator("details").filter({ has: toggle });
+  await toggle.click();
+  await expect(panel.locator("code")).toHaveText(example.source);
+  await toggle.click();
+  await toggle.click();
+  await expect(panel.locator("code")).toBeVisible();
+  expect(sourceRequests).toEqual([path + "/source/response"]);
+});

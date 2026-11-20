@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 import { LessonPager } from "../../components/teaching/LessonPager.js";
-import { CodeBlock } from "../../components/teaching/CodeBlock.js";
+import { SourcePanel } from "./SourcePanel.js";
 import { examples } from "../../examples/genui/gallery/examples.js";
 import { Conversation } from "./Conversation.js";
-import { HostCode } from "./HostCode.js";
+import { hostFiles } from "./host-files.js";
 
 type ExampleRouteProps = { params: { example?: string } };
 function findExample({ params }: ExampleRouteProps) {
@@ -27,7 +27,7 @@ export function meta({ loaderData }: { loaderData?: ReturnType<typeof loader> })
 
 export function ServerComponent(props: ExampleRouteProps) {
   const example = findExample(props);
-  const language = example.format ?? "jsx";
+  const source = "/genui/examples/" + example.slug + "/source/";
   const index = examples.indexOf(example);
   const previous = examples[index - 1];
   const next = examples[index + 1];
@@ -49,27 +49,12 @@ export function ServerComponent(props: ExampleRouteProps) {
         prompt={example.prompt}
         followUp={example.followUp?.prompt}
       />
-      <details className="min-w-0">
-        <summary className="w-fit cursor-pointer py-2 text-lg font-semibold">
-          Response source
-        </summary>
+      <SourcePanel href={source + "response"} title="Response source">
         <p className="mt-2 max-w-prose">{example.mechanism}</p>
-        <CodeBlock
-          title="Recorded response"
-          language={language}
-          code={example.source}
-          className="mt-3"
-        />
-        {example.followUp && (
-          <CodeBlock
-            title="Band’s follow-up"
-            language="jsx"
-            code={example.followUp.source}
-            className="mt-4"
-          />
-        )}
-      </details>
-      <HostCode slug={example.slug} />
+      </SourcePanel>
+      {hostFiles.has(example.slug) && (
+        <SourcePanel href={source + "host"} title="Host implementation" />
+      )}
       <LessonPager
         previous={previous && { title: previous.title, to: "/genui/examples/" + previous.slug }}
         next={next && { title: next.title, to: "/genui/examples/" + next.slug }}

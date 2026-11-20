@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { page, userEvent } from "vitest/browser";
 import { describe, expect, it, vi } from "vitest";
-import { docsNavigation, paletteEntries } from "../../content/navigation.js";
+import { docsNavigation, exampleEntries } from "../../content/navigation.js";
 import { DocsShell } from "./DocsShell.js";
 import { fuzzyMatch } from "./CommandPalette.js";
 
@@ -14,7 +14,7 @@ function LocationProbe() {
 
 function Harness() {
   return (
-    <DocsShell navigation={docsNavigation} paletteEntries={paletteEntries}>
+    <DocsShell navigation={docsNavigation} exampleEntries={exampleEntries}>
       <LocationProbe />
     </DocsShell>
   );
@@ -63,6 +63,7 @@ function currentPath(container: HTMLElement) {
 
 async function openFromHeaderButton() {
   await act(async () => page.getByRole("button", { name: /Search docs/ }).click());
+  await vi.waitFor(() => expect(paletteDialog()?.open).toBe(true));
 }
 
 describe("CommandPalette", () => {

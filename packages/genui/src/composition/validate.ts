@@ -105,10 +105,24 @@ export function validateJsx(
   nodes: ValidJsxNode[];
   errors: GenUIError[];
 } {
+  const parsed =
+    typeof input === "string" ? parsePartialJsx(input, { final: options.complete ?? true }) : input;
+  return createJsxValidation(options).read(parsed);
+}
+
+type Cursor = { next: number; accepted: number };
+
+/** Consumes an append-only parse tree, resuming at each open parent's first unfinished child. */
+export function createJsxValidation(options: ValidateJsxOptions, scopeRoot = "") {
   const complete = options.complete ?? true;
-  let parsed = input;
-  if (typeof input === "string") parsed = parsePartialJsx(input, { final: complete });
-  const tree = parsed as JsxParse;
+  const frames = new WeakMap<
+    JsxElement,
+    { result: ValidJsxElement; owner?: ValidJsxElement | undefined; cursor: Cursor } | null
+  >();
+  const byKey = new Map<string, ValidJsxNode>();
+  const root: Cursor = { next: 0, accepted: 0 };
+  const nodes: ValidJsxNode[] = [];
+  const pendingIdentities = new Map<string, Set<string>>();
   const errors: GenUIError[] = [];
   const ancestors: ValidJsxElement[] = [];
   const identities = new Map<string, Set<string>>();
@@ -130,12 +144,7 @@ export function validateJsx(
     }
     return true;
   }
-  function visit(node: JsxNode): ValidJsxNode | undefined {
-    if (node.kind === "expression") {
-      if (!expression(node.source, node.key)) return undefined;
-      return node;
-    }
-    if (node.kind === "text") return node;
+  function open(node: JsxElement) {
     const entry = options.vocabulary.get(node.name);
     if (!entry) {
       report(node.key, "unknown-type", `${node.name} is not in this vocabulary.`);
@@ -279,31 +288,69 @@ export function validateJsx(
     const result: ValidJsxElement = { ...node, props, entry, children: [] };
     if (id !== undefined) result.id = id;
     if (binding !== undefined) result.binding = binding;
-    ancestors.push(result);
-    for (const child of node.children) {
-      if (
-        entry.children === undefined ||
-        ((entry.children === "text" || entry.children === "label") && child.kind === "element")
-      ) {
-        if (child.kind !== "text" || child.text.trim() !== "")
-          report(child.key, "invalid-prop", `${node.name} does not accept this child.`);
-        continue;
+    return { result, owner, cursor: { next: 0, accepted: 0 } };
+  }
+
+  function scan(
+    children: JsxNode[],
+    accepted: ValidJsxNode[],
+    cursor: Cursor,
+    parent?: ValidJsxElement,
+  ) {
+    accepted.length = cursor.accepted;
+    for (let i = cursor.next; i < children.length; i++) {
+      const child = children[i]!;
+      let allowed = true;
+      if (parent) {
+        const rule = parent.entry.children;
+        if (!rule || ((rule === "text" || rule === "label") && child.kind === "element")) {
+          allowed = false;
+          if (child.kind !== "text" || child.text.trim())
+            report(child.key, "invalid-prop", `${parent.name} does not accept this child.`);
+        } else if (
+          Array.isArray(rule) &&
+          (child.kind !== "element" || !rule.includes(child.name))
+        ) {
+          allowed = false;
+          if (child.kind !== "text" || child.text.trim())
+            report(
+              child.key,
+              "invalid-prop",
+              `${parent.name} accepts ${rule.join(", ")} children.`,
+            );
+        }
       }
-      if (
-        Array.isArray(entry.children) &&
-        (child.kind !== "element" || !entry.children.includes(child.name))
-      ) {
-        if (child.kind !== "text" || child.text.trim() !== "")
-          report(
-            child.key,
-            "invalid-prop",
-            `${node.name} accepts ${entry.children.join(", ")} children.`,
-          );
-        continue;
+      if (allowed) {
+        const validated = visit(child);
+        if (validated) {
+          accepted.push(validated);
+          byKey.set(child.key, validated);
+        } else byKey.delete(child.key);
       }
-      const validated = visit(child);
-      if (validated) result.children.push(validated);
+      if (child.closed) {
+        cursor.next = i + 1;
+        cursor.accepted = accepted.length;
+      }
     }
+  }
+  function visit(node: JsxNode): ValidJsxNode | undefined {
+    if (node.kind === "expression") {
+      if (!expression(node.source, node.key)) return undefined;
+      return node;
+    }
+    if (node.kind === "text") return node;
+    let frame = frames.get(node);
+    if (frame === undefined) {
+      frame = open(node) ?? null;
+      frames.set(node, frame);
+    }
+    if (!frame) return;
+    const { result, owner, cursor } = frame;
+    const { entry, props } = result;
+    const identity = entry.identity;
+    result.closed = node.closed;
+    ancestors.push(result);
+    scan(node.children, result.children, cursor, result);
     ancestors.pop();
     if (
       (entry.children === "text" || entry.children === "label") &&
@@ -347,21 +394,37 @@ export function validateJsx(
         return undefined;
       }
       const collection = `${owner.key}/${node.name}`;
-      const values = identities.get(collection) ?? new Set<string>();
-      if (values.has(value)) {
+      if (identities.get(collection)?.has(value) || pendingIdentities.get(collection)?.has(value)) {
         report(`${node.key}/${identity.prop}`, "invalid-prop", "Collection values must be unique.");
         return undefined;
       }
+      // An open ancestor's postorder claim can still lose to a newly arrived descendant.
+      const claims = node.closed ? identities : pendingIdentities;
+      const values = claims.get(collection) ?? new Set<string>();
       values.add(value);
-      identities.set(collection, values);
+      claims.set(collection, values);
     }
     return result;
   }
-  for (const error of tree.errors) report(error.path, error.code, error.message);
-  const nodes: ValidJsxNode[] = [];
-  for (const node of tree.nodes) {
-    const valid = visit(node);
-    if (valid) nodes.push(valid);
-  }
-  return { nodes, errors };
+  return {
+    nodeAt(key: string) {
+      const node = byKey.get(key);
+      if (!node) return;
+      // A descendant may have finished before its enclosing label or identity was accepted.
+      for (
+        let end = key.lastIndexOf("/children/");
+        end > scopeRoot.length;
+        end = key.lastIndexOf("/children/", end - 1)
+      ) {
+        if (!byKey.has(key.slice(0, end))) return;
+      }
+      return node;
+    },
+    read(tree: JsxParse) {
+      pendingIdentities.clear();
+      for (const error of tree.errors) report(error.path, error.code, error.message);
+      scan(tree.nodes, nodes, root);
+      return { nodes, errors };
+    },
+  };
 }

@@ -6,6 +6,7 @@ import { type StateContract } from "../composition/state.js";
 import {
   expressionSource,
   resolveExpressions,
+  createJsxValidation,
   validateJsx,
   type ValidJsxElement,
   type ValidJsxNode,
@@ -30,8 +31,9 @@ type Scope = {
   vocabulary: Vocabulary;
   state: StateContract | undefined;
   components: ComponentRegistry;
+  validation: ReturnType<typeof createJsxValidation>;
   version: number;
-  nodes: Map<string, ValidJsxNode>;
+  nodeAt: (key: string) => ValidJsxNode | undefined;
   root: string;
   max: number;
   name: string;
@@ -42,7 +44,9 @@ function scopedParse(scope: Scope) {
   if (scope.root === "") return parsed;
   const parent = scope.response.nodeAt(scope.root);
   if (parent?.kind !== "element") return { ...parsed, nodes: [] };
-  return { ...parsed, nodes: parent.children.slice(0, scope.max) };
+  let nodes = parent.children;
+  if (nodes.length > scope.max) nodes = nodes.slice(0, scope.max);
+  return { ...parsed, nodes };
 }
 
 function indexNodes(children: ValidJsxNode[]) {
@@ -57,17 +61,12 @@ function indexNodes(children: ValidJsxNode[]) {
   return nodes;
 }
 
-function validated(scope: Scope) {
-  if (scope.version === scope.response.version) return scope.nodes;
-  const result = validateJsx(scopedParse(scope), {
-    vocabulary: scope.vocabulary,
-    state: scope.state,
-    complete: false,
-  });
-  const nodes = indexNodes(result.nodes);
-  scope.version = scope.response.version;
-  scope.nodes = nodes;
-  return nodes;
+function validated(scope: Scope, path: string) {
+  if (scope.version !== scope.response.version) {
+    scope.validation.read(scopedParse(scope));
+    scope.version = scope.response.version;
+  }
+  return scope.nodeAt(path);
 }
 
 function editableNode(node: ValidJsxElement, source: JsxElement): EditableNode {
@@ -132,7 +131,7 @@ async function Children({
     if (parent === "") return response.parsed.nodes;
     const node = response.nodeAt(parent);
     if (node?.kind === "element") {
-      if (parent === scope.root) return node.children.slice(0, scope.max);
+      if (parent === scope.root && index >= scope.max) return [];
       return node.children;
     }
     return [];
@@ -219,8 +218,10 @@ function renderStaticNode({
 
 async function NodeAt({ scope, path }: { scope: Scope; path: string }) {
   const { response } = scope;
-  await response.until(() => validated(scope).has(path) || response.nodeAt(path)?.closed === true);
-  const node = validated(scope).get(path);
+  await response.until(
+    () => validated(scope, path) !== undefined || response.nodeAt(path)?.closed === true,
+  );
+  const node = validated(scope, path);
   if (!node) return null;
   if (node.kind === "text") return <GrowingText scope={scope} path={path} />;
   if (node.kind === "expression") return <GenUIExpression source={node.source} />;
@@ -345,13 +346,15 @@ export function ResponseView({
   turn?: string | undefined;
   name?: string;
 }) {
+  const validation = createJsxValidation({ vocabulary, state, complete: false }, root);
   const scope: Scope = {
+    validation,
     response,
     vocabulary,
     state,
     components,
     version: -1,
-    nodes: new Map(),
+    nodeAt: validation.nodeAt,
     root,
     max,
     name,
@@ -432,7 +435,7 @@ async function ResponseContent({
       const appended: Scope = {
         ...scope,
         response,
-        nodes,
+        nodeAt: (key) => nodes.get(key),
         version: response.version,
         root: "",
         max: Infinity,

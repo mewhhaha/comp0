@@ -37,14 +37,21 @@ const entities: Record<string, string> = {
   apos: "'",
   nbsp: "\u00a0",
 };
+const partialEntity = /&(?:[A-Za-z][A-Za-z0-9]*|#(?:[0-9]*|[xX][0-9a-fA-F]*))?$/;
 const loneSurrogate = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+
+function stableTextEnd(source: string) {
+  let end = partialEntity.exec(source)?.index ?? source.length;
+  const last = source.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end--;
+  return end;
+}
 
 function decodeText(source: string, closed: boolean): string {
   let text = source;
   if (!closed) {
     // An entity or surrogate pair split across chunks has not become text yet.
-    text = text.replace(/&(?:[A-Za-z][A-Za-z0-9]*|#(?:[0-9]*|[xX][0-9a-fA-F]*))?$/, "");
-    text = text.replace(/[\ud800-\udbff]$/, "");
+    text = text.slice(0, stableTextEnd(text));
   }
   return text
     .replace(/&([A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9a-fA-F]+);/g, (entity, name: string) => {
@@ -191,7 +198,7 @@ class Reader {
     return { $expr: source };
   }
 
-  element(path: string, depth: number): JsxElement | undefined {
+  opening(path: string, depth: number): JsxElement | undefined {
     if (depth >= maxJsxDepth) {
       this.fail(path, `Elements may nest at most ${maxJsxDepth} levels`, "limit");
       return;
@@ -251,31 +258,33 @@ class Reader {
         configurable: true,
       });
     }
-    const node: JsxElement = { kind: "element", key: path, name, props, children: [], closed };
-    if (!closed) node.closed = this.children(node.children, `${path}/children`, depth + 1, name);
-    return node;
+    return { kind: "element", key: path, name, props, children: [], closed };
+  }
+
+  closing(key: string, parent?: string): boolean {
+    if (parent === undefined) {
+      this.fail(key, "Unexpected closing tag");
+      return false;
+    }
+    this.position += 2;
+    const name = this.name(key);
+    if (name === undefined) return false;
+    this.skipSpace();
+    if (this.source[this.position] === undefined)
+      this.pending(key, "The closing tag is unfinished");
+    else if (this.source[this.position] !== ">")
+      this.fail(key, 'Expected ">" after the closing tag name');
+    else if (name !== parent) this.fail(key, `Expected </${parent}> but found </${name}>`);
+    if (this.stopped) return false;
+    this.position += 1;
+    return true;
   }
 
   children(nodes: JsxNode[], path: string, depth: number, parent?: string): boolean {
     while (!this.stopped && this.position < this.source.length) {
       const key = childPointer(path, nodes.length);
       if (this.source.startsWith("</", this.position)) {
-        if (parent === undefined) {
-          this.fail(key, "Unexpected closing tag");
-          return false;
-        }
-        this.position += 2;
-        const name = this.name(key);
-        if (name === undefined) return false;
-        this.skipSpace();
-        if (this.source[this.position] === undefined)
-          this.pending(key, "The closing tag is unfinished");
-        else if (this.source[this.position] !== ">")
-          this.fail(key, 'Expected ">" after the closing tag name');
-        else if (name !== parent) this.fail(key, `Expected </${parent}> but found </${name}>`);
-        if (this.stopped) return false;
-        this.position += 1;
-        return true;
+        return this.closing(key, parent);
       }
       if (this.count >= maxJsxNodes) {
         // Whitespace-only gaps do not consume the node budget.
@@ -290,7 +299,9 @@ class Reader {
       let node: JsxNode | undefined;
       if (character === "<") {
         this.count += 1;
-        node = this.element(key, depth);
+        node = this.opening(key, depth);
+        if (node && !node.closed)
+          node.closed = this.children(node.children, `${key}/children`, depth + 1, node.name);
       } else if (character === "{") {
         const source = this.braced(key);
         if (source === undefined) return false;
@@ -341,4 +352,171 @@ export function parsePartialJsx(source: string, options: { final?: boolean } = {
     errors: reader.errors,
     complete: !reader.stopped && nodes.length > 0 && nodes.every((node) => node.closed),
   };
+}
+
+/** Append-only parser for a single model turn. Settled nodes keep their identity and path.
+ * The scanner only finds token boundaries. Reader owns the grammar and final diagnostics.
+ */
+export class StreamingJsxParser {
+  #chunks: string[] = [];
+  length = 0;
+  revision = 0;
+  get source() {
+    return this.#chunks.join("");
+  }
+  readonly parsed: JsxParse = { nodes: [], errors: [], complete: false };
+  readonly byKey = new Map<string, JsxNode>();
+  #parents: JsxElement[] = [];
+  #kind: "text" | "tag" | "expression" = "text";
+  #tokenParts: string[] = [];
+  #pendingText = "";
+  #entityContinuation: RegExp | undefined;
+  #quote = "";
+  #escaped = false;
+  #depth = 0;
+  #failed = false;
+  #text = "";
+  #textNode: JsxText | undefined;
+
+  #siblings() {
+    return this.#parents.at(-1)?.children ?? this.parsed.nodes;
+  }
+
+  #key() {
+    const parent = this.#parents.at(-1);
+    const path = parent ? parent.key + "/children" : "";
+    return childPointer(path, this.#siblings().length);
+  }
+
+  #add(node: JsxNode) {
+    if (this.byKey.size >= maxJsxNodes) {
+      this.#failed = true;
+      return;
+    }
+    this.#siblings().push(node);
+    this.byKey.set(node.key, node);
+    this.revision++;
+  }
+
+  #readText(piece: string, closed: boolean, beforeExpression = false) {
+    // An unfinished entity can span arbitrarily many deltas. Only inspect the new characters.
+    if (!closed && this.#entityContinuation?.test(piece)) {
+      this.#pendingText += piece;
+      return;
+    }
+    const raw = this.#pendingText + piece;
+    let end = raw.length;
+    if (!closed) end = stableTextEnd(raw);
+    this.#pendingText = raw.slice(end);
+    this.#entityContinuation = undefined;
+    const entity = this.#pendingText.indexOf("&");
+    if (entity >= 0) {
+      const head = this.#pendingText.slice(entity + 1, entity + 3);
+      if (/^[a-z]/i.test(head)) this.#entityContinuation = /^[a-z0-9]*$/i;
+      else if (/^#x/i.test(head)) this.#entityContinuation = /^[a-f0-9]*$/i;
+      else if (/^#[0-9]/.test(head)) this.#entityContinuation = /^[0-9]*$/;
+    }
+    const decoded = decodeText(raw.slice(0, end), true);
+    this.#text += decoded;
+    const gap = beforeExpression && this.#siblings().at(-1)?.kind === "expression";
+    if (!this.#textNode && (decoded.trim() || (gap && this.#text))) {
+      this.#textNode = { kind: "text", key: this.#key(), text: "", closed: false };
+      this.#add(this.#textNode);
+    }
+    if (this.#textNode && (decoded || this.#textNode.closed !== closed)) {
+      this.revision++;
+      this.#textNode.text = this.#text;
+      this.#textNode.closed = closed;
+    }
+    if (closed) {
+      this.#text = "";
+      this.#textNode = undefined;
+    }
+  }
+
+  #token() {
+    const reader = new Reader(this.#tokenParts.join(""), false);
+    this.#tokenParts.length = 0;
+    const key = this.#key();
+    if (reader.source.startsWith("</")) {
+      if (reader.closing(key, this.#parents.at(-1)?.name)) {
+        this.#parents.pop()!.closed = true;
+        this.revision++;
+      }
+    } else if (reader.source[0] === "<") {
+      const node = reader.opening(key, this.#parents.length);
+      if (node) {
+        this.#add(node);
+        if (!node.closed) this.#parents.push(node);
+      }
+    } else {
+      const source = reader.braced(key);
+      if (source === undefined || !parseExpression(source).ok) this.#failed = true;
+      else this.#add({ kind: "expression", key, source, closed: true });
+    }
+    if (reader.stopped || reader.position !== reader.source.length) this.#failed = true;
+  }
+
+  push(input: string) {
+    const chunk = input.slice(0, maxJsxLength + 1 - this.length);
+    if (!chunk) return;
+    this.#chunks.push(chunk);
+    const end = Math.min(chunk.length, maxJsxLength - this.length);
+    this.length += chunk.length;
+    let i = 0;
+    while (!this.#failed && i < end) {
+      if (this.#kind === "text") {
+        const start = i;
+        while (i < end && chunk[i] !== "<" && chunk[i] !== "{") i++;
+        this.#readText(chunk.slice(start, i), i < end, chunk[i] === "{");
+        if (i === end) break;
+        this.#kind = chunk[i] === "<" ? "tag" : "expression";
+      }
+      const start = i;
+      while (i < end) {
+        const c = chunk[i++]!;
+        if (this.#quote) {
+          if (this.#escaped) this.#escaped = false;
+          else if (c === "\\" && this.#depth) this.#escaped = true;
+          else if (c === this.#quote) this.#quote = "";
+        } else if (c === '"' || c === "'") this.#quote = c;
+        else if (c === "{") this.#depth++;
+        else if (c === "}") {
+          this.#depth--;
+          if (this.#kind === "expression" && !this.#depth) {
+            this.#kind = "text";
+            break;
+          }
+        } else if (c === ">" && !this.#depth && this.#kind === "tag") {
+          this.#kind = "text";
+          break;
+        }
+      }
+      this.#tokenParts.push(chunk.slice(start, i));
+      if (this.#kind === "text") this.#token();
+    }
+    this.parsed.complete =
+      !this.#failed &&
+      this.#kind === "text" &&
+      !this.#parents.length &&
+      this.parsed.nodes.length > 0 &&
+      !this.#textNode &&
+      this.length <= maxJsxLength;
+  }
+
+  finish() {
+    if (!this.#failed && this.#kind === "text") this.#readText("", true);
+    this.parsed.complete = this.parsed.nodes.length > 0;
+    if (
+      this.#failed ||
+      this.#parents.length ||
+      this.#kind !== "text" ||
+      this.length > maxJsxLength
+    ) {
+      const final = parsePartialJsx(this.source, { final: true });
+      this.parsed.errors = final.errors;
+      this.parsed.complete = final.complete;
+    }
+    return this.parsed;
+  }
 }
