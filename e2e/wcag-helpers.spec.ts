@@ -2,11 +2,13 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { axeViolations } from "./axe.js";
 import {
   compareWithBaseline,
   entrySlugs,
   keyboardFindings,
+  openedStateFindings,
   readBaseline,
   visitExample,
   wcagAxeFindings,
@@ -171,7 +173,7 @@ test("smooth scrolling does not create false focus-obscured findings", async ({ 
 test("a surface the example opened is not counted as covering its trigger", async ({ page }) => {
   // The popover lives in body, outside the region, as portalled overlays do.
   await page.setContent(
-    `${liveExample("<button>Open</button>")}<div id="sheet" popover="manual" style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff"><button>Inside</button></div>`,
+    `${liveExample('<button aria-controls="sheet">Open</button>')}<div id="sheet" popover="manual" style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff"><button>Inside</button></div>`,
   );
   await page.evaluate(() => document.getElementById("sheet")!.showPopover());
   expect(await keyboardFindings(page, region(page))).toEqual([]);
@@ -217,4 +219,534 @@ test("writeBaseline writes sorted unique findings and deletes an empty file", ()
   } finally {
     rmSync(file, { force: true });
   }
+});
+
+test("the e2e axe helper leaves contrast and target size to the consumer", async ({ page }) => {
+  await page.setContent(
+    liveExample(
+      '<p style="color:#ccc;background:#fff">Faint text</p><button style="width:4px;height:4px;padding:0">x</button><button></button>',
+    ),
+  );
+  const ids = (await axeViolations(page, "section")).map(({ id }) => id);
+  expect(ids).not.toContain("color-contrast");
+  expect(ids).not.toContain("target-size");
+  // The other rules still run.
+  expect(ids).toContain("button-name");
+});
+
+// 2.1.1: every interactive element in the example must be reachable with Tab.
+
+test("a clickable div without tabindex is keyboard-unreachable", async ({ page }) => {
+  await page.setContent(liveExample('<div style="cursor:pointer">Pick me</div>'));
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: div "Pick me"',
+  ]);
+});
+
+test("an element with an interactive role and no tabindex is keyboard-unreachable", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample('<span role="switch" aria-checked="false" aria-label="Wi-Fi"></span>'),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: switch "Wi-Fi"',
+  ]);
+});
+
+test("a clickable div with tabindex=0 is reachable", async ({ page }) => {
+  await page.setContent(liveExample('<div style="cursor:pointer" tabindex="0">Pick me</div>'));
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("tabindex=-1 options of a roving listbox are reachable through the listbox", async ({
+  page,
+}) => {
+  // No arrow handler in the fixture, so only the composite role exempts Pear.
+  await page.setContent(
+    liveExample(
+      '<div role="listbox" aria-label="Fruit"><div role="option" tabindex="0" aria-selected="true" style="cursor:pointer">Apple</div><div role="option" tabindex="-1" aria-selected="false" style="cursor:pointer">Pear</div></div>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("options under an aria-activedescendant combobox are reachable through it", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<input role="combobox" aria-label="Fruit" aria-expanded="true" aria-controls="fruits" aria-activedescendant="apple"><div role="listbox" id="fruits" aria-label="Fruit"><div role="option" id="apple" aria-selected="true">Apple</div><div role="option" aria-selected="false">Pear</div></div>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("options of a listbox an aria-autocomplete input controls are reachable through it", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<input type="search" aria-label="City" aria-autocomplete="list" aria-controls="cities"><div role="listbox" id="cities" aria-label="Cities"><div role="option" tabindex="-1" aria-selected="false">Lisbon</div></div>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("unchecked native radios of a group whose member was focused are reachable", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<fieldset><legend>Shipping</legend><label><input type="radio" name="shipping" checked> Standard</label><label><input type="radio" name="shipping"> Express</label></fieldset>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("stepper buttons that control the focused field are reachable through it", async ({
+  page,
+}) => {
+  // The spinbutton pattern: ArrowUp and ArrowDown in the field do what the buttons do.
+  await page.setContent(
+    liveExample(
+      '<input id="tickets" type="number" aria-label="Tickets" value="2"><button type="button" tabindex="-1" aria-controls="tickets" aria-label="Increase tickets">+</button>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a roving tab stop beside the focused one is reachable with arrow keys", async ({ page }) => {
+  // Split-button shape: one tab stop for the group; ArrowLeft and ArrowRight move between the
+  // segments. Only ArrowLeft reaches "More" from "Save", so every direction must be tried.
+  await page.setContent(
+    liveExample(
+      `<div role="group" aria-label="Save" onkeydown="const [save, more] = this.children; if (event.key === 'ArrowLeft' && document.activeElement === save) more.focus(); if (event.key === 'ArrowRight' && document.activeElement === more) save.focus();"><button type="button" tabindex="0">Save</button><button type="button" tabindex="-1" aria-label="More save options">v</button></div>`,
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a roving stop reached by ArrowRight then ArrowDown is reachable", async ({ page }) => {
+  // Two-dimensional, like inventory cards: no single key repeated from the Tab stop reaches D.
+  await page.setContent(
+    liveExample(
+      `<div onkeydown="const [a, b, , d] = this.children; if (event.key === 'ArrowRight' && document.activeElement === a) b.focus(); if (event.key === 'ArrowDown' && document.activeElement === b) d.focus();"><button tabindex="0">A</button><button tabindex="-1">B</button><button tabindex="-1">C</button><button tabindex="-1">D</button></div>`,
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual(['keyboard-unreachable: button "C"']);
+});
+
+test("a tabindex=-1 role=button beside a focused button with no arrow handler is unreachable", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<div><button tabindex="0">Bold</button><div role="button" tabindex="-1" style="cursor:pointer">Italic</div></div>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: button "Italic"',
+  ]);
+});
+
+test("a tabindex=-1 button beside a focused link is unreachable", async ({ page }) => {
+  await page.setContent(
+    liveExample('<p><a href="#x" tabindex="0">Link</a><button tabindex="-1">Delete</button></p>'),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: button "Delete"',
+  ]);
+});
+
+test("a clickable span in a tabindex=-1 wrapper beside a focused button is unreachable", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<div><button tabindex="0">Save</button><div tabindex="-1"><span style="cursor:pointer">Clickable</span></div></div>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: span "Clickable"',
+  ]);
+});
+
+test("a surface an arrow key opens while probing a roving stop is closed again", async ({
+  page,
+}) => {
+  // ArrowDown on the stop opens a menu (as a split button's menu button does); Escape closes it.
+  await page.setContent(
+    `${liveExample(
+      `<div><button tabindex="0" aria-controls="menu" onkeydown="const menu = document.getElementById('menu'); if (event.key === 'ArrowDown') menu.showPopover(); if (event.key === 'Escape' && menu.matches(':popover-open')) menu.hidePopover();">Save</button><button tabindex="-1">Hidden from Tab</button></div>`,
+    )}<div id="menu" popover="manual" role="menu" aria-label="Save"><div role="menuitem">Save as</div></div>`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: button "Hidden from Tab"',
+  ]);
+  expect(await page.locator("#menu").evaluate((menu) => menu.matches(":popover-open"))).toBe(false);
+});
+
+test("a tabindex=-1 button with no focused roving sibling is keyboard-unreachable", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<button type="button">Save</button><div><button type="button" tabindex="-1">Hidden from Tab</button></div>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'keyboard-unreachable: button "Hidden from Tab"',
+  ]);
+});
+
+test("a disabled button is not keyboard-unreachable", async ({ page }) => {
+  await page.setContent(liveExample("<button disabled>Save</button>"));
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a label wrapping a visually hidden checkbox is not keyboard-unreachable", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<label style="cursor:pointer;position:relative"><input type="checkbox" style="position:absolute;opacity:0;width:1px;height:1px;margin:0"><span>Accept terms</span></label>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+// 2.4.11: what covers the focused element, and which surfaces are the example's.
+
+test("a pointer-events:none fixed header covering the focused button is focus-obscured", async ({
+  page,
+}) => {
+  await page.setContent(
+    `<style>body { margin: 0 }</style><header style="position:fixed;top:0;left:0;right:0;height:300px;background:#fff;pointer-events:none;z-index:1"></header>${liveExample(
+      "<button>Save</button>",
+    )}`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual(['focus-obscured: button "Save"']);
+});
+
+test("transparent, opacity:0 and visibility:hidden overlays outside the example hide nothing", async ({
+  page,
+}) => {
+  const overlay = "position:fixed;inset:0;pointer-events:none;z-index:1";
+  await page.setContent(
+    `${liveExample("<button>Save</button>")}<div style="${overlay}"></div><div style="${overlay};opacity:0"><div style="background:#fff;height:100%"></div></div><div style="${overlay};visibility:hidden;background:#fff"></div>`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a docs-shell header a control points at is not the example's and still obscures", async ({
+  page,
+}) => {
+  // aria-controls names the header, but it is neither inside the example nor in the top layer.
+  await page.setContent(
+    `<style>body { margin: 0 }</style><header id="shell" style="position:fixed;top:0;left:0;right:0;height:300px;background:#fff;z-index:1"></header>${liveExample(
+      '<button aria-controls="shell">Save</button>',
+    )}`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual(['focus-obscured: button "Save"']);
+});
+
+test("a pointer-events:none decorative child of the focused button does not obscure it", async ({
+  page,
+}) => {
+  await page.setContent(
+    liveExample(
+      '<button style="position:relative;width:120px;height:40px"><span style="position:absolute;inset:0;background:#fff;pointer-events:none"></span>Save</button>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a page-level popover the example did not open covers the focused button", async ({
+  page,
+}) => {
+  // Like the docs CommandPalette: open in the top layer, but not controlled by the example.
+  await page.setContent(
+    `${liveExample("<button>Open</button>")}<div id="palette" popover="manual" style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff"><input aria-label="Search"></div>`,
+  );
+  await page.evaluate(() => document.getElementById("palette")!.showPopover());
+  expect(await keyboardFindings(page, region(page))).toEqual(['focus-obscured: button "Open"']);
+});
+
+test("a surface opened from a surface the example opened is the example's too", async ({
+  page,
+}) => {
+  // Nested: the menu's own button controls the submenu that covers everything.
+  const sheet =
+    "inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff";
+  await page.setContent(
+    `${liveExample('<button aria-controls="menu">Open</button>')}<div id="menu" popover="manual"><button aria-controls="submenu">More</button></div><div id="submenu" popover="manual" style="${sheet}"><button>Pick</button></div>`,
+  );
+  await page.evaluate(() => {
+    document.getElementById("menu")!.showPopover();
+    document.getElementById("submenu")!.showPopover();
+  });
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("focus inside a modal dialog the example opened is still in the example", async ({ page }) => {
+  // The dialog is portalled to body and covers the page; its button is focused and not obscured.
+  await page.setContent(
+    `${liveExample('<button aria-controls="editor">Edit</button>')}<dialog id="editor" aria-label="Editor" style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0"><button>Inside</button></dialog>`,
+  );
+  await page.evaluate(() => (document.getElementById("editor") as HTMLDialogElement).showModal());
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+// Opened states: every opener in the example is opened with the keyboard and axe-checked.
+
+/** Serves `body` at /components/<slug> so the opener check can restore it by reloading. */
+async function visitFixture(page: Page, slug: string, body: string) {
+  await page.route(`**/components/${slug}`, (route) =>
+    route.fulfill({ contentType: "text/html; charset=utf-8", body }),
+  );
+  return visitExample(page, slug);
+}
+
+const missingAlt = '<img src="data:,">';
+
+test("a listbox popover opened from its button is axe-checked, prefixed with the opener", async ({
+  page,
+}) => {
+  // The popover is portalled to body, outside the region; aria-controls resolves it.
+  const scope = await visitFixture(
+    page,
+    "opener-listbox",
+    `${liveExample(
+      '<button aria-haspopup="listbox" aria-controls="fruits" popovertarget="fruits">Fruit</button>',
+    )}<div id="fruits" popover="auto" role="listbox" aria-label="Fruit"><div>Apple</div></div>`,
+  );
+  expect(await openedStateFindings(page, "opener-listbox", scope)).toEqual([
+    'open(button "Fruit") axe:aria-required-children: listbox "Fruit"',
+  ]);
+});
+
+test("submit buttons, links and file inputs are never activated", async ({ page }) => {
+  let navigated = false;
+  await page.route("**/components/elsewhere", (route) => {
+    navigated = true;
+    return route.fulfill({ contentType: "text/html", body: "<p>Elsewhere</p>" });
+  });
+  const scope = await visitFixture(
+    page,
+    "opener-hazards",
+    liveExample(
+      `<form onsubmit="event.preventDefault(); sessionStorage.setItem('submitted', '1')"><button aria-haspopup="menu" aria-expanded="false">Send</button></form><a href="/components/elsewhere" aria-haspopup="true" aria-expanded="false">Away</a><label aria-haspopup="dialog" aria-expanded="false">Upload <input type="file" aria-expanded="false"></label>`,
+    ),
+  );
+  let chooser = false;
+  page.on("filechooser", () => {
+    chooser = true;
+  });
+  expect(await openedStateFindings(page, "opener-hazards", scope)).toEqual([]);
+  expect(navigated).toBe(false);
+  expect(chooser).toBe(false);
+  expect(page.url()).toMatch(/\/components\/opener-hazards$/);
+  expect(await page.evaluate(() => sessionStorage.getItem("submitted"))).toBeNull();
+});
+
+test("a type=submit button outside a form is never activated; a plain button is", async ({
+  page,
+}) => {
+  const scope = await visitFixture(
+    page,
+    "opener-formless-submit",
+    `${liveExample(
+      '<button type="submit" aria-haspopup="dialog" aria-controls="first" popovertarget="first">Send</button><button aria-haspopup="dialog" aria-controls="second" popovertarget="second">Show</button>',
+    )}<div id="first" popover="auto">${missingAlt}</div><div id="second" popover="auto"><input></div>`,
+  );
+  expect(await openedStateFindings(page, "opener-formless-submit", scope)).toEqual([
+    'open(button "Show") axe:label: input ""',
+  ]);
+});
+
+test("violations already present while closed are not reported again as opened findings", async ({
+  page,
+}) => {
+  const scope = await visitFixture(
+    page,
+    "opener-closed-dedupe",
+    `${liveExample(
+      `${missingAlt}<button aria-haspopup="dialog" aria-controls="sheet" popovertarget="sheet">Show</button>`,
+    )}<div id="sheet" popover="auto"><p>Fine</p></div>`,
+  );
+  expect(await openedStateFindings(page, "opener-closed-dedupe", scope)).toEqual([]);
+});
+
+test("a page with no openers has no opened-state findings", async ({ page }) => {
+  const scope = await visitFixture(page, "opener-none", liveExample("<p>Plain text</p>"));
+  expect(await openedStateFindings(page, "opener-none", scope)).toEqual([]);
+});
+
+test("disabled and aria-disabled openers are skipped", async ({ page }) => {
+  const scope = await visitFixture(
+    page,
+    "opener-disabled",
+    `${liveExample(
+      `<button disabled aria-haspopup="dialog" aria-controls="sheet" popovertarget="sheet">Off</button><button aria-disabled="true" aria-haspopup="dialog" aria-controls="sheet" onclick="document.getElementById('sheet').showPopover()">Dim</button>`,
+    )}<div id="sheet" popover="manual">${missingAlt}</div>`,
+  );
+  expect(await openedStateFindings(page, "opener-disabled", scope)).toEqual([]);
+});
+
+test("an opener that removes itself does not stop the next opener", async ({ page }) => {
+  const scope = await visitFixture(
+    page,
+    "opener-vanish",
+    `${liveExample(
+      '<button aria-haspopup="true" aria-expanded="false" onclick="this.remove()">Vanish</button><button aria-haspopup="dialog" aria-controls="sheet" popovertarget="sheet">Next</button>',
+    )}<div id="sheet" popover="auto">${missingAlt}</div>`,
+  );
+  expect(await openedStateFindings(page, "opener-vanish", scope)).toEqual([
+    'open(button "Next") axe:image-alt: img ""',
+  ]);
+});
+
+test("a surface without id or aria-controls is found as the newly opened top layer", async ({
+  page,
+}) => {
+  const scope = await visitFixture(
+    page,
+    "opener-anonymous",
+    `${liveExample(
+      `<button aria-haspopup="dialog" aria-expanded="false" onclick="document.querySelector('[data-sheet]').showPopover(); this.setAttribute('aria-expanded', 'true')">Show</button>`,
+    )}<div data-sheet popover="manual">${missingAlt}</div>`,
+  );
+  expect(await openedStateFindings(page, "opener-anonymous", scope)).toEqual([
+    'open(button "Show") axe:image-alt: img ""',
+  ]);
+});
+
+test("a surface Escape does not close is restored before the next opener", async ({ page }) => {
+  // Both surfaces sit inside the region: if First's stayed open, Second's check would see it.
+  const scope = await visitFixture(
+    page,
+    "opener-sticky",
+    liveExample(
+      `<button aria-haspopup="dialog" aria-controls="first" onclick="document.getElementById('first').showPopover()">First</button><button aria-haspopup="dialog" aria-controls="second" popovertarget="second">Second</button><div id="first" popover="manual">${missingAlt}</div><div id="second" popover="auto"><p>Fine</p></div>`,
+    ),
+  );
+  expect(await openedStateFindings(page, "opener-sticky", scope)).toEqual([
+    'open(button "First") axe:image-alt: img ""',
+  ]);
+});
+
+test("a modal dialog portalled to body is checked through aria-controls", async ({ page }) => {
+  const scope = await visitFixture(
+    page,
+    "opener-modal",
+    `${liveExample(
+      `<button aria-haspopup="dialog" aria-controls="editor" onclick="document.getElementById('editor').showModal()">Edit</button>`,
+    )}<dialog id="editor" aria-label="Editor">${missingAlt}<button>Close</button></dialog>`,
+  );
+  expect(await openedStateFindings(page, "opener-modal", scope)).toEqual([
+    'open(button "Edit") axe:image-alt: img ""',
+  ]);
+});
+
+test("only top-level openers are opened, not a submenu inside a closed menu", async ({ page }) => {
+  const scope = await visitFixture(
+    page,
+    "opener-nested",
+    liveExample(
+      `<button aria-haspopup="menu" aria-expanded="false" aria-controls="actions" popovertarget="actions">Actions</button><div id="actions" popover="auto" role="menu" aria-label="Actions"><div role="menuitem" tabindex="-1" aria-haspopup="menu" aria-expanded="false" aria-controls="more" onclick="document.getElementById('more').showPopover()">More</div></div><div id="more" popover="manual" role="menu" aria-label="More">${missingAlt}</div>`,
+    ),
+  );
+  expect(await openedStateFindings(page, "opener-nested", scope)).toEqual([]);
+});
+
+test("a tree item is expanded with ArrowRight", async ({ page }) => {
+  const scope = await visitFixture(
+    page,
+    "opener-tree",
+    liveExample(
+      `<div role="tree" aria-label="Files"><div role="treeitem" tabindex="0" aria-selected="false" aria-expanded="false" onkeydown="if (event.key === 'ArrowRight') { this.setAttribute('aria-expanded', 'true'); this.querySelector('[role=group]').hidden = false; }">Docs<div role="group" hidden><div role="treeitem" aria-selected="false">${missingAlt}</div></div></div></div>`,
+    ),
+  );
+  expect(await openedStateFindings(page, "opener-tree", scope)).toEqual([
+    'open(treeitem "Docs") axe:image-alt: img ""',
+  ]);
+});
+
+test("a details summary is opened and its content checked", async ({ page }) => {
+  const scope = await visitFixture(
+    page,
+    "opener-details",
+    liveExample(`<details><summary>More</summary>${missingAlt}</details>`),
+  );
+  expect(await openedStateFindings(page, "opener-details", scope)).toEqual([
+    'open(summary "More") axe:image-alt: img ""',
+  ]);
+});
+
+test("tooltips found by the Tab walk open on focus; a running close timer does not leak", async ({
+  page,
+}) => {
+  // Each tooltip links itself only while open and closes 150ms after blur or Escape, so Alpha's
+  // is still open when Beta is focused unless the check waits for it to close.
+  const scope = await visitFixture(
+    page,
+    "opener-tooltip",
+    `${liveExample(
+      `<button id="alpha">Alpha</button><div id="alpha-tip" role="tooltip" popover="manual">Alpha tip ${missingAlt}</div><button id="beta">Beta</button><div id="beta-tip" role="tooltip" popover="manual">Beta tip</div>`,
+    )}<script>
+      for (const name of ["alpha", "beta"]) {
+        const trigger = document.getElementById(name);
+        const tip = document.getElementById(name + "-tip");
+        let timer;
+        const close = () => {
+          timer = setTimeout(() => {
+            if (tip.matches(":popover-open")) tip.hidePopover();
+            trigger.removeAttribute("aria-describedby");
+          }, 150);
+        };
+        trigger.addEventListener("focus", () => {
+          clearTimeout(timer);
+          if (!tip.matches(":popover-open")) tip.showPopover();
+          trigger.setAttribute("aria-describedby", tip.id);
+        });
+        trigger.addEventListener("blur", close);
+        trigger.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") close();
+        });
+      }
+    </script>`,
+  );
+  expect(await keyboardFindings(page, scope)).toEqual([]);
+  expect(await openedStateFindings(page, "opener-tooltip", scope)).toEqual([
+    'open(button "Alpha") axe:image-alt: img ""',
+  ]);
+});
+
+test("a tooltip trigger linked only while focused is found by the Tab walk", async ({ page }) => {
+  // The trigger has no aria-describedby and no tooltip in the DOM until it is focused, and both
+  // go away on blur, so only what the walk saw while focused can name it an opener.
+  const scope = await visitFixture(
+    page,
+    "opener-tooltip-focus-only",
+    `${liveExample('<button id="hint">Hint</button>')}<script>
+      const trigger = document.getElementById("hint");
+      trigger.addEventListener("focus", () => {
+        const tip = document.createElement("div");
+        tip.id = "hint-tip";
+        tip.setAttribute("role", "tooltip");
+        tip.innerHTML = 'Hint tip <img src="data:,">';
+        document.body.append(tip);
+        trigger.setAttribute("aria-describedby", tip.id);
+      });
+      trigger.addEventListener("blur", () => {
+        document.getElementById("hint-tip")?.remove();
+        trigger.removeAttribute("aria-describedby");
+      });
+    </script>`,
+  );
+  expect(await keyboardFindings(page, scope)).toEqual([]);
+  expect(await openedStateFindings(page, "opener-tooltip-focus-only", scope)).toEqual([
+    'open(button "Hint") axe:image-alt: img ""',
+  ]);
 });

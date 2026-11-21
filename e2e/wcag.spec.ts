@@ -3,6 +3,7 @@ import {
   compareWithBaseline,
   componentSlugs,
   keyboardFindings,
+  openedStateFindings,
   visitExample,
   wcagAxeFindings,
   writeBaseline,
@@ -10,7 +11,8 @@ import {
 
 // WCAG 2.2 AA sweep over every component page of the production docs build, where the examples
 // run in a real browser with real focus. Each page's live example is checked with axe (behavior
-// and semantics rules; visual rules the consumer owns are off), then walked with Tab. Known
+// and semantics rules; visual rules the consumer owns are off), walked with Tab (traps, obscured
+// focus, unreachable controls), and then each opener in it is opened and axe-checked again. Known
 // findings are listed in e2e/wcag-baseline/<slug>.json; see e2e/wcag.ts for the rules and the
 // baseline contract.
 
@@ -26,6 +28,7 @@ for (const slug of componentSlugs) {
     const findings: string[] = [];
     findings.push(...(await wcagAxeFindings(page, region)));
     findings.push(...(await keyboardFindings(page, region)));
+    findings.push(...(await openedStateFindings(page, slug, region)));
 
     if (process.env.WCAG_BASELINE === "update") {
       writeBaseline(slug, findings);
