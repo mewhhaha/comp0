@@ -107,7 +107,16 @@ async function confirmSaid(
   }
   const spoken = utterances;
   for (const describe of context.describers ?? []) {
-    const described = await within(15_000, say(context, describe), `${when}: describing`);
+    // Not through `say`: a reader command queues behind the capture that would wrap it, and
+    // waits for it forever. The command captures its own speech into the log.
+    const start = (await context.reader.spokenPhraseLog()).length;
+    await within(15_000, describe(), `${when}: describing`);
+    let described: string[] = [];
+    for (let attempt = 0; attempt < 6; attempt++) {
+      described = (await context.reader.spokenPhraseLog()).slice(start);
+      if (heard(described, terms, options)) break;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
     if (heard(described, terms, options)) {
       test.info().annotations.push({
         type: "screen reader",
