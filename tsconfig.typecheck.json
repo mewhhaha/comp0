@@ -28,6 +28,8 @@
     "apps/docs/react-router.config.ts",
     "e2e/**/*.ts",
     "playwright.config.ts",
+    "e2e-screen-reader/**/*.ts",
+    "playwright.screen-reader.config.ts",
     "apps/docs/vite.config.ts",
     "vitest.config.ts",
     "vitest.bench.config.ts",

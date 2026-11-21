@@ -1,14 +1,15 @@
 import {
   useEffect,
-  useLayoutEffect,
   useState,
+  useSyncExternalStore,
   type ComponentProps,
   type FocusEvent,
   type PointerEvent,
 } from "react";
-import { dataAttr, useCollection, useControllableState } from "@comp0/core";
+import { dataAttr, useControllableState } from "@comp0/core";
+import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { CarouselContext } from "./carousel-shared.js";
+import { CarouselContext, createCarouselSlides } from "./carousel-shared.js";
 
 export type CarouselProps = Omit<ComponentProps<"section">, "defaultValue" | "onChange" | "value"> &
   AsProp & {
@@ -43,6 +44,7 @@ export function Carousel({
   onFocus,
   onPointerEnter,
   onPointerLeave,
+  children,
   ...props
 }: CarouselProps) {
   const [currentIndex, setCurrentIndex] = useControllableState({
@@ -50,29 +52,16 @@ export function Carousel({
     defaultValue,
     onChange,
   });
-  const collection = useCollection();
-  const [order, setOrder] = useState<string[]>([]);
+  const seed = useCollectionSeed();
+  const renderOrder = useCollectionSeed();
+  const [slides] = useState(() => createCarouselSlides(seed, renderOrder));
   const [stopped, setStopped] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  // Slides register in their own layout effects, which run before this one, so the order is
-  // read once here and then kept current by the collection's change notifications.
-  useLayoutEffect(() => {
-    const syncOrder = () => {
-      setOrder((previous) => {
-        const next = collection.items().map((item) => item.key);
-        if (next.length === previous.length && next.every((key, i) => key === previous[i])) {
-          return previous;
-        }
-        return next;
-      });
-    };
-    syncOrder();
-    return collection.subscribe(syncOrder);
-  }, [collection]);
-
-  const count = order.length;
+  // The root renders ahead of its collection pass, so on the server and while hydrating it knows
+  // no slides yet and does not rotate; the parts that render the count read it after the pass.
+  const count = useSyncExternalStore(slides.subscribe, slides.size, () => 0);
   const resolvedLoop = Boolean(loop);
   const rotating = Boolean(autoplay) && !stopped && !hovered && !focused && count > 1;
 
@@ -103,23 +92,25 @@ export function Carousel({
     if (resolvedLoop) setCurrentIndex(count - 1);
   };
 
+  const pass = useCollectionPass(seed, children);
   const Part = partElement(as, "section");
   return (
     <CarouselContext
       value={{
         value: currentIndex,
-        count,
         loop: resolvedLoop,
         autoplay,
         rotating,
         stopped,
-        collection,
-        order,
+        slides,
+        seed,
+        renderOrder,
         previous,
         next,
         toggleStopped: () => setStopped((current) => !current),
       }}
     >
+      {pass}
       <Part
         {...props}
         role="group"
@@ -145,7 +136,9 @@ export function Carousel({
           if (to && event.currentTarget.contains(to)) return;
           setFocused(false);
         }}
-      />
+      >
+        {children}
+      </Part>
     </CarouselContext>
   );
 }

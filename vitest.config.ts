@@ -80,6 +80,7 @@ export default defineConfig({
             "apps/docs/src/**/*.test.ts",
             "apps/docs/src/**/*.test.tsx",
             "scripts/**/*.test.ts",
+            "e2e-screen-reader/**/*.test.ts",
           ],
           name: "unit",
           setupFiles: ["./vitest.setup.ts"],

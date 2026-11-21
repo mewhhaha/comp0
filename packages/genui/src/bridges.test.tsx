@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { act } from "react";
+import { act, use } from "react";
 import { createGenUIStore } from "./state/store.js";
 import { GenUI } from "./render/GenUI.js";
-import { type GenUIAction } from "./render/context.js";
+import { GenUIContext, type GenUIAction, type GenUIContextValue } from "./render/context.js";
 import { renderResponse, renderStack } from "../test/render.js";
 
 const signup = {
@@ -78,6 +78,34 @@ describe("form state", () => {
     await user.type(getByRole("textbox", { name: "Name" }), "Ada");
 
     expect(onStateChange).toHaveBeenLastCalledWith({ name: "Ada" });
+  });
+
+  it("subscribes once and reports to the newest onStateChange when the host passes a new one each render", async () => {
+    const store = createGenUIStore();
+    const subscribe = vi.spyOn(store, "subscribeToEdits");
+    const response = JSON.stringify({
+      type: "Stack",
+      children: [{ type: "TextField", label: "Name", name: "name" }],
+    });
+    const calls: string[] = [];
+    const { getByRole, user, rerender } = renderResponse(response, {
+      store,
+      onStateChange: () => void calls.push("first"),
+    });
+    for (let render = 0; render < 3; render++) {
+      rerender(
+        <GenUI response={response} store={store} onStateChange={() => void calls.push("old")} />,
+      );
+    }
+    rerender(
+      <GenUI response={response} store={store} onStateChange={() => void calls.push("newest")} />,
+    );
+    await act(async () => {});
+
+    await user.type(getByRole("textbox", { name: "Name" }), "A");
+
+    expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(calls).toEqual(["newest"]);
   });
 
   it("stores a bound control under its binding name, in or out of a form", async () => {
@@ -375,6 +403,79 @@ describe("form actions", () => {
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps the context's act when the host passes a new onAction each render", async () => {
+    const acts = new Set<GenUIContextValue["act"] | undefined>();
+    function Probe() {
+      acts.add(use(GenUIContext)?.act);
+      return null;
+    }
+    const slots = { probe: <Probe /> };
+    const response = JSON.stringify({
+      type: "Stack",
+      children: [{ type: "Slot", name: "probe" }],
+    });
+    const { rerender } = renderResponse(response, { slots, onAction: () => {} });
+
+    for (let render = 0; render < 3; render++) {
+      rerender(<GenUI response={response} slots={slots} onAction={() => {}} />);
+    }
+    await act(async () => {});
+
+    expect(acts.size).toBe(1);
+  });
+
+  it("calls only the newest onAction once a swap during streaming ends", async () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const response = JSON.stringify({ type: "Stack", children: [{ type: "Button", label: "Go" }] });
+    const { getByRole, user, rerender } = renderResponse(response, {
+      onAction: first,
+      streaming: true,
+    });
+
+    rerender(<GenUI response={response} streaming onAction={second} />);
+    await user.click(getByRole("button", { name: "Go" }));
+    expect(second).not.toHaveBeenCalled();
+
+    rerender(<GenUI response={response} streaming={false} onAction={second} />);
+    await user.click(getByRole("button", { name: "Go" }));
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops acts from an enabled host control while streaming and sends later ones to the newest onAction", async () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const action: GenUIAction = { type: "button", message: "Hi" };
+    // Catalog buttons are disabled while streaming, so only a host control reaches act then.
+    function HostButton() {
+      const genui = use(GenUIContext);
+      return (
+        <button type="button" onClick={() => genui?.act(action)}>
+          Host
+        </button>
+      );
+    }
+    const slots = { host: <HostButton /> };
+    const response = JSON.stringify({ type: "Stack", children: [{ type: "Slot", name: "host" }] });
+    const { getByRole, user, rerender } = renderResponse(response, {
+      slots,
+      onAction: first,
+      streaming: true,
+    });
+
+    await user.click(getByRole("button", { name: "Host" }));
+    expect(first).not.toHaveBeenCalled();
+
+    rerender(<GenUI response={response} slots={slots} streaming={false} onAction={second} />);
+    await user.click(getByRole("button", { name: "Host" }));
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledWith(action);
+  });
 });
 
 describe("errors", () => {
@@ -397,6 +498,23 @@ describe("errors", () => {
       "missing-prop",
       "missing-prop",
     ]);
+  });
+
+  it("reports once, to the newest onError, when the host passes a new one each render", async () => {
+    const calls: string[] = [];
+    const response = JSON.stringify({ type: "Stack", children: [{ type: "Nope" }] });
+    const { rerender } = renderResponse(response, {
+      streaming: true,
+      onError: () => void calls.push("first"),
+    });
+    rerender(<GenUI response={response} onError={() => void calls.push("newest")} />);
+    await act(async () => {});
+    for (let render = 0; render < 3; render++) {
+      rerender(<GenUI response={response} onError={() => void calls.push("later")} />);
+      await act(async () => {});
+    }
+
+    expect(calls).toEqual(["newest"]);
   });
 
   it("stays quiet while streaming and reports when the stream ends", async () => {

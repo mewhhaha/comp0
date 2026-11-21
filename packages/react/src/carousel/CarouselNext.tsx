@@ -1,18 +1,23 @@
 import { type ComponentProps, type MouseEvent } from "react";
+import { useIsCollectionPass } from "../internal/collection-pass.js";
 import { disabledProps } from "../internal/disabled.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { useCarouselContext } from "./carousel-shared.js";
+import { useCarouselContext, useSlideCount } from "./carousel-shared.js";
 
 export type CarouselNextProps = ComponentProps<"button"> & AsProp;
 
 /**
  * Native button that shows the next slide. Disabled on the last slide unless
- * the carousel loops. Defaults its aria-label to "Next slide".
+ * the carousel loops, and while it has no slides. Defaults its aria-label to
+ * "Next slide".
  */
 export function CarouselNext({ as, disabled, onClick, ...props }: CarouselNextProps) {
   const carousel = useCarouselContext("CarouselNext");
-  const atEnd = carousel.count > 0 && carousel.value >= carousel.count - 1;
-  const resolvedDisabled = Boolean(disabled ?? (!carousel.loop && atEnd));
+  const collecting = useIsCollectionPass();
+  const count = useSlideCount(carousel);
+  if (collecting) return null;
+  const atEnd = !carousel.loop && carousel.value >= count - 1;
+  const resolvedDisabled = Boolean(disabled ?? (count === 0 || atEnd));
 
   const disabledAttributes = disabledProps<HTMLButtonElement>(resolvedDisabled, {
     native: true,
