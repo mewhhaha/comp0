@@ -123,7 +123,21 @@ export function ConnectOutput({
           gesture.current = null;
           if (event.currentTarget.hasPointerCapture(event.pointerId))
             event.currentTarget.releasePointerCapture(event.pointerId);
-          if (event.defaultPrevented || !current.dragging) return;
+          if (event.defaultPrevented) return;
+          if (!current.dragging) {
+            // The captured pointer sends the click here even when the release is off the
+            // output; releasing outside aborts the press (WCAG 2.5.2 Pointer Cancellation).
+            // The box is inclusive so a release on the border pixel still activates.
+            const box = event.currentTarget.getBoundingClientRect();
+            if (
+              event.clientX < box.left ||
+              event.clientX > box.right ||
+              event.clientY < box.top ||
+              event.clientY > box.bottom
+            )
+              suppressClick.current = true;
+            return;
+          }
           suppressClick.current = true;
           if (context.selectedOutput !== value) return;
           const target = event.currentTarget.ownerDocument.elementFromPoint(
