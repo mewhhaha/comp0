@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { NVDAPlaywright, VoiceOverPlaywright } from "@guidepup/playwright";
 import { visitExample } from "../e2e/wcag.js";
 import { heard, type Phrases, type Term } from "./spoken.js";
@@ -15,6 +15,11 @@ type ScenarioContext = {
   phrases: Phrases;
   /** WebKit only tabs to buttons and checkboxes with Option held; Chromium tabs to everything. */
   tabKey: string;
+  /**
+   * Asks the reader to describe the element with keyboard focus, for a reader that does not
+   * always announce focus moving on its own (VoiceOver after a menu closes).
+   */
+  describeFocus?: () => Promise<unknown>;
 };
 
 type Scenario = {
@@ -58,13 +63,32 @@ async function pressUntilHeard(
   const before = (await context.reader.spokenPhraseLog()).length;
   // NVDA's capture returns the phrase it spoke; VoiceOver's later speech only reaches the log.
   const captured = await press(context, key);
-  await expect
-    .poll(
-      async () =>
-        heard([...captured, ...(await context.reader.spokenPhraseLog()).slice(before)], terms),
-      { timeout: 10_000, message: `${when}: expected ${terms.map(String).join(" + ")}` },
-    )
-    .toBe(true);
+  let utterances: string[] = captured;
+  try {
+    await expect
+      .poll(
+        async () => {
+          utterances = [...captured, ...(await context.reader.spokenPhraseLog()).slice(before)];
+          return heard(utterances, terms);
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+  } catch {
+    // VoiceOver sometimes leaves its cursor on the menu item that Escape removed and says nothing
+    // about focus returning to the trigger, though focus did return. Ask it what has keyboard
+    // focus: that is what a user hears with VO-Shift-F4, and it still checks role and name.
+    if (context.describeFocus) {
+      const described = await say(context, context.describeFocus);
+      test.info().annotations.push({
+        type: "screen reader",
+        description: `${when}: not announced on its own; described on request as ${JSON.stringify(described)}`,
+      });
+      utterances = described;
+    }
+    // The poll's own message can't name what was spoken, which is what a failure needs.
+    expectHeard(utterances, terms, when);
+  }
 }
 
 /**

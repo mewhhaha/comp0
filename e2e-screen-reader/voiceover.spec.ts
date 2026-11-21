@@ -15,5 +15,7 @@ for (const scenario of scenarios) {
       reader: voiceOver,
       phrases: voiceOverPhrases,
       tabKey: "Alt+Tab",
+      describeFocus: () =>
+        voiceOver.perform(voiceOver.keyboardCommands.describeItemWithKeyboardFocus),
     }));
 }
