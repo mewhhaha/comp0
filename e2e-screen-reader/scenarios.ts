@@ -61,9 +61,14 @@ async function tabTo(context: ScenarioContext, target: Locator) {
   throw new Error(`${context.tabKey} never reached ${target} from the start of the Live example`);
 }
 
-function expectHeard(utterances: readonly string[], terms: readonly Term[], when: string) {
+function expectHeard(
+  utterances: readonly string[],
+  terms: readonly Term[],
+  when: string,
+  options?: { hints?: boolean },
+) {
   expect(
-    heard(utterances, terms),
+    heard(utterances, terms, options),
     `${when}: expected ${terms.map(String).join(" + ")} in one announcement; heard ${JSON.stringify(utterances)}`,
   ).toBe(true);
 }
@@ -76,7 +81,7 @@ export const scenarios: Scenario[] = [
       const trigger = region.locator("button[aria-haspopup='listbox']");
       expectHeard(
         await tabTo(context, trigger),
-        ["Size", phrases.popupButton, phrases.collapsed],
+        ["Size", phrases.popupButton, phrases.popupClosed],
         "focus on the trigger",
       );
       // Opening moves focus to the selected option, so the option is what is announced.
@@ -84,7 +89,7 @@ export const scenarios: Scenario[] = [
       await expect(trigger).toHaveAttribute("aria-expanded", "true");
       expectHeard(
         await press(context, "Escape"),
-        ["Size", phrases.popupButton, phrases.collapsed],
+        ["Size", phrases.popupButton, phrases.popupClosed],
         "close",
       );
       await expect(trigger).toBeFocused();
@@ -97,12 +102,12 @@ export const scenarios: Scenario[] = [
       const input = region.getByRole("combobox", { name: "City" });
       expectHeard(
         await tabTo(context, input),
-        ["City", phrases.comboBox, phrases.collapsed],
+        ["City", phrases.comboBox, phrases.popupClosed],
         "focus on the input",
       );
-      const opened = await press(context, "ArrowDown");
-      expectHeard(opened, [phrases.expanded], "open");
-      expectHeard(opened, ["Warsaw", phrases.option], "open: first option");
+      // Opening moves the reader to the first option, so the option is what is announced; NVDA
+      // never speaks the input's new "expanded" state, so that is checked on the element.
+      expectHeard(await press(context, "ArrowDown"), ["Warsaw", phrases.option], "open");
       await expect(input).toHaveAttribute("aria-expanded", "true");
     },
   },
@@ -147,7 +152,8 @@ export const scenarios: Scenario[] = [
       const { phrases, region } = context;
       expectHeard(
         await tabTo(context, region.getByRole("treeitem", { name: "README.md" })),
-        ["README.md", phrases.treeItem],
+        // NVDA reads the extension as "dot md".
+        ["README", phrases.treeItem],
         "focus on the selected item",
       );
       expectHeard(
@@ -172,7 +178,9 @@ export const scenarios: Scenario[] = [
         ["Open dialog", phrases.button],
         "focus on the trigger",
       );
-      expectHeard(await press(context, "Enter"), ["Example dialog", phrases.dialog], "open");
+      // VoiceOver announces the dialog only in its hint ("inside of a web dialog"), so the
+      // role is taken from the hint and the name from the page.
+      expectHeard(await press(context, "Enter"), [phrases.dialog], "open", { hints: true });
       await expect(page.getByRole("dialog", { name: "Example dialog" })).toBeVisible();
       expectHeard(await press(context, "Escape"), ["Open dialog", phrases.button], "close");
       await expect(trigger).toBeFocused();
@@ -188,7 +196,9 @@ export const scenarios: Scenario[] = [
         ["Actions", phrases.popupButton],
         "focus on the trigger",
       );
-      expectHeard(await press(context, "Enter"), ["Rename", phrases.menuItem], "open");
+      // VoiceOver says where focus landed only in its hint ("You are currently on a menu
+      // item"), so the role is taken from the hint and the focused item from the page.
+      expectHeard(await press(context, "Enter"), [phrases.menuItem], "open", { hints: true });
       await expect(page.getByRole("menuitem", { name: "Rename" })).toBeFocused();
       expectHeard(await press(context, "Escape"), ["Actions", phrases.popupButton], "close");
       await expect(trigger).toBeFocused();

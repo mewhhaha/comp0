@@ -44,6 +44,38 @@ describe("heard", () => {
     );
   });
 
+  it("cuts a usage hint VoiceOver appends to the announcement and keeps the rest", () => {
+    const spoken =
+      "unchecked Send me product updates checkbox. You are currently on a checkbox. To select or deselect this checkbox, press Control-Option-Space.";
+    expect(heard([spoken], ["Send me product updates", voiceOverPhrases.unchecked])).toBe(true);
+    expect(
+      heard(
+        ["Open dialog dialog pop up button. You are currently on a button."],
+        ["Open dialog", voiceOverPhrases.popupClosed],
+      ),
+    ).toBe(true);
+    expect(heard(["Actions. You are currently on a menu item."], [/menu item/i])).toBe(false);
+  });
+
+  it("reads usage hints only when asked to", () => {
+    const hint =
+      "You are currently on a button, inside of a web dialog. To click this button, press Control-Option-Space.";
+    expect(heard([hint], [voiceOverPhrases.dialog])).toBe(false);
+    expect(heard([hint], [voiceOverPhrases.dialog], { hints: true })).toBe(true);
+  });
+
+  it("hears NVDA's collapsed state and VoiceOver's pop up button as a closed popup", () => {
+    expect(
+      heard(["Size Medium list box pop up button"], ["Size", voiceOverPhrases.popupClosed]),
+    ).toBe(true);
+    expect(heard(["Size  Medium  button  collapsed"], ["Size", nvdaPhrases.popupClosed])).toBe(
+      true,
+    );
+    expect(heard(["Size  Medium  button  expanded"], ["Size", nvdaPhrases.popupClosed])).toBe(
+      false,
+    );
+  });
+
   it("skips a usage hint between the two halves of a split phrase", () => {
     expect(
       heard(
