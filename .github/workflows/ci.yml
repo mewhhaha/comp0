@@ -93,7 +93,7 @@ jobs:
       - run: pnpm test:package
       # Builds every workspace package and the docs app, then checks compiler coverage.
       - run: pnpm test:compiler-smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: docs-build
           # Vite preview serves the Cloudflare Build Output (worker bundle and assets).
@@ -129,7 +129,7 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
