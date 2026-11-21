@@ -54,6 +54,8 @@ export function useModalDialog({ onCancel, onClose, open, ref, setOpen }: ModalD
   return {
     ref: composedRef,
     onCancel(event: SyntheticEvent<HTMLDialogElement>) {
+      // React bubbles a nested dialog's cancel through the tree; only this dialog's own counts.
+      if (event.target !== event.currentTarget) return;
       onCancel?.(event);
       if (event.defaultPrevented) return;
       // Keep the native element synchronized with controlled state. The state owner decides
@@ -66,6 +68,8 @@ export function useModalDialog({ onCancel, onClose, open, ref, setOpen }: ModalD
       });
     },
     onClose(event: SyntheticEvent<HTMLDialogElement>) {
+      // Likewise a nested dialog's close must not close or refocus this one.
+      if (event.target !== event.currentTarget) return;
       onClose?.(event);
       if (open && !dismissingRef.current) setOpen(false);
       restoreFocusRef.current?.focus();
