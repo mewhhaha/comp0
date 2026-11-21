@@ -45,7 +45,8 @@ export const voiceOverPhrases: Phrases = {
   popupButton: /\bbutton\b|\bcombo box\b/i,
   popupClosed: /\bpop ?up button\b|\bcollapsed\b/i,
   comboBox: /\bcombo box\b/i,
-  option: /\bselected\b|\b\d+ of \d+\b|\boption\b|\blist box\b/i,
+  // VoiceOver names a combobox option's role only in its hint ("a selectable").
+  option: /\bselected\b|\b\d+ of \d+\b|\boption\b|\blist box\b|\bselectable\b/i,
   checkbox: /\bcheck ?box\b/i,
   checked,
   unchecked: /\bunchecked\b|\bnot checked\b/i,
@@ -78,9 +79,10 @@ export const nvdaPhrases: Phrases = {
 
 // VoiceOver's usage hints ("You are currently on a button. To click this button, press
 // Control-Option-Space.") name roles without the element's name. VoiceOver appends them to the
-// announcement itself, so they are cut off the end of an utterance rather than dropping it.
+// announcement, before or after it, so each hint sentence is cut out rather than dropping the
+// utterance.
 const usageHint =
-  /(?:^|\s)(?:You are currently on\b|To [^.]*?\bpress (?:Control|Command|Option|Shift|Caps Lock|VO)\b)[\s\S]*$/i;
+  /You are currently on\b[^.]*\.*|\bTo [^.]*?\bpress (?:Control|Command|Option|Shift|Caps Lock|VO)\b[^.]*\.*/gi;
 
 function contains(text: string, term: Term) {
   if (typeof term === "string") return text.toLowerCase().includes(term.toLowerCase());

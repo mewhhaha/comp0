@@ -57,6 +57,17 @@ describe("heard", () => {
     expect(heard(["Actions. You are currently on a menu item."], [/menu item/i])).toBe(false);
   });
 
+  it("cuts a usage hint VoiceOver says before the announcement", () => {
+    expect(
+      heard(
+        [
+          "You are currently on a link, inside of web content. To click this link, press Control-Option-Space. To exit this web area, press Control-Option-Shift-Up Arrow.. City Filter cities list box pop up collapsed combo box Live example region. You are currently on a combo box.",
+        ],
+        ["City", voiceOverPhrases.comboBox, voiceOverPhrases.popupClosed],
+      ),
+    ).toBe(true);
+  });
+
   it("reads usage hints only when asked to", () => {
     const hint =
       "You are currently on a button, inside of a web dialog. To click this button, press Control-Option-Space.";

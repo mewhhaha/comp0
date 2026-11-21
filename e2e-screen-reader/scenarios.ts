@@ -46,6 +46,26 @@ function press(context: ScenarioContext, key: string) {
 }
 
 /**
+ * Presses a key and waits for the reader to say `terms`. VoiceOver can finish the previous
+ * announcement first (a menu item's hint after Escape) and only then read where focus returned.
+ */
+async function pressUntilHeard(
+  context: ScenarioContext,
+  key: string,
+  terms: readonly Term[],
+  when: string,
+) {
+  const before = (await context.reader.spokenPhraseLog()).length;
+  await context.page.keyboard.press(key);
+  await expect
+    .poll(async () => heard((await context.reader.spokenPhraseLog()).slice(before), terms), {
+      timeout: 10_000,
+      message: `${when}: expected ${terms.map(String).join(" + ")}`,
+    })
+    .toBe(true);
+}
+
+/**
  * Moves focus to the start of the example, then tabs until `target` has focus, the way a
  * keyboard user enters it. Returns what the reader said at the last stop.
  */
@@ -107,7 +127,10 @@ export const scenarios: Scenario[] = [
       );
       // Opening moves the reader to the first option, so the option is what is announced; NVDA
       // never speaks the input's new "expanded" state, so that is checked on the element.
-      expectHeard(await press(context, "ArrowDown"), ["Warsaw", phrases.option], "open");
+      // VoiceOver names the option's role only in its hint ("a selectable").
+      expectHeard(await press(context, "ArrowDown"), ["Warsaw", phrases.option], "open", {
+        hints: true,
+      });
       await expect(input).toHaveAttribute("aria-expanded", "true");
     },
   },
@@ -200,7 +223,7 @@ export const scenarios: Scenario[] = [
       // item"), so the role is taken from the hint and the focused item from the page.
       expectHeard(await press(context, "Enter"), [phrases.menuItem], "open", { hints: true });
       await expect(page.getByRole("menuitem", { name: "Rename" })).toBeFocused();
-      expectHeard(await press(context, "Escape"), ["Actions", phrases.popupButton], "close");
+      await pressUntilHeard(context, "Escape", ["Actions", phrases.popupButton], "close");
       await expect(trigger).toBeFocused();
     },
   },
