@@ -67,7 +67,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
@@ -122,7 +122,7 @@ jobs:
           name: docs-build
           # The artifact holds the output directory's contents, so put them back where they were.
           path: apps/docs/.cloudflare/output
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
