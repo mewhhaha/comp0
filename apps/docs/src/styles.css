@@ -691,11 +691,13 @@
         [data-comp0="checkbox"],
         [data-comp0="cited-text"],
         [data-comp0="source"],
-        [data-comp0="image"],
-        [data-comp0="table"] > tbody > tr,
-        .sleeve-proof
+        [data-comp0="table"] > tbody > tr
       ) {
         animation: genui-arrive 180ms ease-out;
+      }
+
+      .genui-artwork {
+        animation: genui-artwork-in 420ms ease-in-out;
       }
 
       /* The baseline stays fixed, including for negative values. */
@@ -724,6 +726,25 @@
       translate: 0 0.2rem;
     }
   }
+
+  @keyframes genui-artwork-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.86);
+      animation-timing-function: cubic-bezier(0.2, 0.65, 0.3, 1);
+    }
+    52% {
+      opacity: 1;
+      transform: translateY(-2px) scale(1.025);
+    }
+    78% {
+      transform: translateY(0.5px) scale(0.996);
+    }
+    to {
+      transform: none;
+    }
+  }
+
   .room-seat {
     &[data-aisle] {
       opacity: 0;

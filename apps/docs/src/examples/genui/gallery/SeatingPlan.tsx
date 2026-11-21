@@ -6,7 +6,7 @@ export function SeatingPlan({ rows, aisle }: SeatingPlanProps) {
     <figure className="m-0">
       <div
         aria-hidden="true"
-        className="mx-auto grid max-w-xs grid-cols-6 gap-2 rounded-lg bg-zinc-900 p-5"
+        className="genui-artwork mx-auto grid max-w-xs grid-cols-6 gap-2 rounded-lg bg-zinc-900 p-5"
       >
         <div className="col-span-full mb-2 border-t-4 border-teal-300 pt-1 text-center font-mono text-xs text-zinc-200">
           Stage
