@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { compareWithBaseline, componentSlugs, keyboardFindings, wcagAxeFindings } from "./wcag.js";
 
 // WCAG 2.2 AA sweep over every component page of the production docs build, where the
-// examples have real layout, theme, and focus styles. Each page's live example is checked in
-// light and dark color schemes with axe, then walked with Tab. Known findings are listed in
+// examples run in a real browser with real focus. Each page's live example is checked with axe
+// (behavior and semantics rules; visual rules the consumer owns are off), then walked with Tab. Known findings are listed in
 // e2e/wcag-baseline/<slug>.json; see e2e/wcag.ts for the rules and the baseline contract.
 
 test.describe.configure({ mode: "parallel" });
@@ -20,11 +20,7 @@ for (const slug of componentSlugs) {
     await page.waitForLoadState("networkidle");
 
     const findings: string[] = [];
-    for (const colorScheme of ["light", "dark"] as const) {
-      await page.emulateMedia({ colorScheme });
-      findings.push(...(await wcagAxeFindings(page, region, colorScheme)));
-    }
-    await page.emulateMedia({ colorScheme: "light" });
+    findings.push(...(await wcagAxeFindings(page, region)));
     findings.push(...(await keyboardFindings(page, region)));
 
     const { added, fixed } = compareWithBaseline(slug, findings);

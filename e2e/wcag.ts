@@ -3,11 +3,17 @@ import { fileURLToPath } from "node:url";
 import axe from "axe-core";
 import type { Locator, Page } from "@playwright/test";
 
-/**
- * The WCAG 2.2 Level A and AA rule sets. Unlike the jsdom suites, the docs pages have real
- * layout and theme, so `color-contrast` (1.4.3) and `target-size` (2.5.8) run here.
- */
+/** The WCAG 2.2 Level A and AA rule sets. */
 export const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
+
+/**
+ * comp0 is headless: the consumer owns color and size, so contrast (1.4.3) and target size
+ * (2.5.8) judge the docs example styling, not the library. They stay out of this sweep.
+ */
+export const consumerOwnedRules = {
+  "color-contrast": { enabled: false },
+  "target-size": { enabled: false },
+};
 
 const componentsDir = fileURLToPath(
   new URL("../apps/docs/src/content/components/", import.meta.url),
@@ -40,24 +46,24 @@ const describeSource = `(element) => {
 }`;
 
 /** Runs the WCAG 2.2 A/AA axe rules inside `scope` and returns one key per failing node. */
-export async function wcagAxeFindings(page: Page, scope: Locator, label: string) {
+export async function wcagAxeFindings(page: Page, scope: Locator) {
   if (!(await page.evaluate(() => "axe" in window))) {
     await page.addScriptTag({ content: axe.source });
   }
   const handle = await scope.elementHandle();
   return page.evaluate(
-    async ({ element, tags, label: prefix, describe }) => {
+    async ({ element, tags, rules, describe }) => {
       const run = (window as unknown as { axe: typeof axe }).axe.run;
-      const result = await run(element as Element, { runOnly: { type: "tag", values: tags } });
+      const result = await run(element as Element, {
+        runOnly: { type: "tag", values: tags },
+        rules,
+      });
       const toKey = new Function(`return ${describe}`)() as (node: Element | null) => string;
       return result.violations.flatMap(({ id, nodes }) =>
-        nodes.map(
-          ({ target }) =>
-            `axe:${prefix}:${id}: ${toKey(document.querySelector(String(target[0])))}`,
-        ),
+        nodes.map(({ target }) => `axe:${id}: ${toKey(document.querySelector(String(target[0])))}`),
       );
     },
-    { element: handle, tags: wcagTags, label, describe: describeSource },
+    { element: handle, tags: wcagTags, rules: consumerOwnedRules, describe: describeSource },
   );
 }
 
@@ -74,7 +80,6 @@ type FocusStop = {
 /**
  * Walks the example with the Tab key, the way a keyboard user meets it, and reports:
  * - `keyboard-trap` (2.1.2) when Tab stops moving focus or never leaves the example,
- * - `focus-not-visible` (2.4.7) when nothing in the example changes when a stop gains focus,
  * - `focus-obscured` (2.4.11) when content outside the example covers every sampled point of
  *   the focused element (a sticky header, for instance).
  */
@@ -102,7 +107,6 @@ export async function keyboardFindings(page: Page, region: Locator, maxStops = 6
     }
     repeats = 0;
     if (state.obscured) findings.push(`focus-obscured: ${state.key}`);
-    if (!(await focusChangesPixels(page, region))) findings.push(`focus-not-visible: ${state.key}`);
   }
   findings.push(`keyboard-trap: Tab did not leave the example within ${maxStops} stops`);
   return findings;
@@ -149,22 +153,6 @@ async function focusState(page: Page, region: Locator): Promise<FocusStop> {
     },
     { region: handle, describe: describeSource },
   );
-}
-
-/** Compares the example focused and unfocused; the focused stop gets focus back afterwards. */
-async function focusChangesPixels(page: Page, region: Locator) {
-  const options = { animations: "disabled", caret: "hide", scale: "css" } as const;
-  const focused = await region.screenshot(options);
-  const restore = await page.evaluateHandle(() => {
-    const active = document.activeElement as HTMLElement | null;
-    active?.blur();
-    return active;
-  });
-  const blurred = await region.screenshot(options);
-  await restore.evaluate((element) =>
-    (element as HTMLElement | null)?.focus({ preventScroll: true }),
-  );
-  return !focused.equals(blurred);
 }
 
 /**

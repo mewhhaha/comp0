@@ -31,7 +31,7 @@ Judge `pnpm typecheck` by its exit code.
 
 ```sh
 pnpm --filter @comp0/docs build
-pnpm test:wcag                 # every /components/<slug> page, light and dark
+pnpm test:wcag                 # every /components/<slug> page
 ```
 
 The sweep fails on two kinds of difference from `e2e/wcag-baseline/<slug>.json`:
@@ -41,7 +41,7 @@ The sweep fails on two kinds of difference from `e2e/wcag-baseline/<slug>.json`:
   smaller baseline file with the fix.
 
 Then open the changed page with `pnpm dev` and use it with the keyboard alone: Tab in and out,
-operate it, open and close any surface, and check focus is visible at every step. Automated
+operate it, open and close any surface, and check focus never gets lost. Automated
 checks cover roughly a third of WCAG; `ACCESSIBILITY.md` lists the criteria that still need a
 person.
 

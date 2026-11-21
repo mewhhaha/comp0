@@ -1,4 +1,1 @@
-[
-  "axe:dark:scrollable-region-focusable: div \"Contribution activityWeekdayW1W2W3W4W5W6\"",
-  "axe:light:scrollable-region-focusable: div \"Contribution activityWeekdayW1W2W3W4W5W6\""
-]
+["axe:scrollable-region-focusable: div \"Contribution activityWeekdayW1W2W3W4W5W6\""]
