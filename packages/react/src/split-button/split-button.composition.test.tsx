@@ -1,3 +1,4 @@
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { setup } from "../../test/render.js";
 import { Button } from "../button/Button.js";
@@ -46,7 +47,7 @@ describe("split button composition", () => {
 
   it("roves between the segments with the arrow keys, without wrapping", async () => {
     const { primary, menuTrigger, user } = renderSplit();
-    primary.focus();
+    act(() => primary.focus());
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(menuTrigger);
     expect(menuTrigger.tabIndex).toBe(0);
@@ -88,7 +89,7 @@ describe("split button composition", () => {
   it("opens the menu from its own button and restores focus on Escape", async () => {
     const { menuTrigger, surface, user } = renderSplit();
     expect(surface.hidden).toBe(true);
-    menuTrigger.focus();
+    act(() => menuTrigger.focus());
     await user.keyboard("{ArrowDown}");
     expect(surface.hidden).toBe(false);
     expect(document.activeElement?.textContent).toBe("Save as");

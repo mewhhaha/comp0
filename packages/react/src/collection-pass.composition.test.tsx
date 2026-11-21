@@ -145,7 +145,7 @@ describe("collection pass", () => {
     expect(merged.current).toBe(container.querySelector("[data-probe='merged']"));
     expect(calls).toEqual(["row"]);
     expect(container.querySelectorAll("[data-probe]")).toHaveLength(3);
-    root.unmount();
+    await act(async () => root.unmount());
   });
 
   it("hydrates options inside a Suspense boundary without a mismatch", async () => {

@@ -15,7 +15,7 @@ type User = ReturnType<typeof setup>["user"];
 
 /** Focuses the handle, then sends the key the way a keyboard user would. */
 async function press(user: User, element: HTMLElement, key: string) {
-  element.focus();
+  act(() => element.focus());
   await user.keyboard(key === " " ? " " : `{${key}}`);
 }
 

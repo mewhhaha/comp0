@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { act, Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { setup } from "../test/render.js";
 import { Accordion } from "./accordion/Accordion.js";
@@ -43,7 +43,7 @@ describe("provider roots", () => {
     expect(search.type).toBe("search");
     expect(search.value).toBe("docs");
 
-    search.focus();
+    act(() => search.focus());
     await user.keyboard("{Enter}");
     expect(submitted).toHaveBeenLastCalledWith("docs");
     await user.click(container.querySelector("button")!);
@@ -91,13 +91,13 @@ describe("provider roots", () => {
     expect(accordionTriggers[0]!.id).toBe("shipping-trigger");
     expect(accordionTriggers[0]!.getAttribute("aria-controls")).toBe(firstPanel.id);
     expect(firstPanel.getAttribute("aria-labelledby")).toBe(accordionTriggers[0]!.id);
-    accordionTriggers[0]!.focus();
+    act(() => accordionTriggers[0]!.focus());
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(accordionTriggers[1]);
     await user.click(accordionTriggers[1]!);
     expect(container.querySelectorAll("[role='region']")[1]?.hasAttribute("hidden")).toBe(false);
 
-    tabs[0]!.focus();
+    act(() => tabs[0]!.focus());
     await user.keyboard("{ArrowRight}");
     expect(changed).toHaveBeenLastCalledWith("two");
   });

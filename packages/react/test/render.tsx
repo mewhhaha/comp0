@@ -22,13 +22,27 @@ function showOpenPopovers(ownerDocument: Document) {
   ownerDocument.head.append(style);
 }
 
-export function render(element: ReactElement, ownerDocument: Document = document) {
+export type RenderOptions = {
+  /**
+   * Every render goes through StrictMode (vitest.setup.ts). Pass `false` only for a test that
+   * counts commits or effect runs as a production contract, where StrictMode's replayed mount
+   * adds entries production never has; say why in a comment.
+   */
+  strictMode?: boolean;
+};
+
+export function render(
+  element: ReactElement,
+  ownerDocument: Document = document,
+  { strictMode }: RenderOptions = {},
+) {
   showOpenPopovers(ownerDocument);
   const container = ownerDocument.createElement("div");
   ownerDocument.body.append(container);
   return renderWithTestingLibrary(element, {
     baseElement: ownerDocument.body,
     container,
+    ...(strictMode === undefined ? {} : { reactStrictMode: strictMode }),
   });
 }
 
@@ -45,8 +59,12 @@ export function render(element: ReactElement, ownerDocument: Document = document
  * jsdom has no layout, so pointer-events checks are off (components never
  * hide behind CSS here). Always `await` the user calls.
  */
-export function setup(ui: ReactElement, ownerDocument: Document = document) {
-  const result = render(ui, ownerDocument);
+export function setup(
+  ui: ReactElement,
+  ownerDocument: Document = document,
+  options: RenderOptions = {},
+) {
+  const result = render(ui, ownerDocument, options);
   const user = userEvent.setup({
     document: ownerDocument,
     pointerEventsCheck: PointerEventsCheckLevel.Never,
@@ -83,4 +101,16 @@ export function fireKeyDown(element: Element, key: string, init?: KeyboardEventI
       new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }),
     );
   });
+}
+
+/**
+ * `form.checkValidity()` inside `act`. It fires `invalid` on every invalid control, and the
+ * components that listen for it (required groups, pickers) update state in response.
+ */
+export function checkValidity(form: HTMLFormElement) {
+  let valid = false;
+  act(() => {
+    valid = form.checkValidity();
+  });
+  return valid;
 }

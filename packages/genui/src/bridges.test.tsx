@@ -82,7 +82,19 @@ describe("form state", () => {
 
   it("subscribes once and reports to the newest onStateChange when the host passes a new one each render", async () => {
     const store = createGenUIStore();
-    const subscribe = vi.spyOn(store, "subscribeToEdits");
+    // StrictMode replays effects, so count live subscriptions rather than calls.
+    let live = 0;
+    let subscriptions = 0;
+    const subscribeToEdits = store.subscribeToEdits.bind(store);
+    vi.spyOn(store, "subscribeToEdits").mockImplementation((listener) => {
+      const unsubscribe = subscribeToEdits(listener);
+      live++;
+      subscriptions++;
+      return () => {
+        live--;
+        unsubscribe();
+      };
+    });
     const response = JSON.stringify({
       type: "Stack",
       children: [{ type: "TextField", label: "Name", name: "name" }],
@@ -104,7 +116,9 @@ describe("form state", () => {
 
     await user.type(getByRole("textbox", { name: "Name" }), "A");
 
-    expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(live).toBe(1);
+    // Mount, StrictMode's replay, and nothing for the rerenders.
+    expect(subscriptions).toBe(2);
     expect(calls).toEqual(["newest"]);
   });
 

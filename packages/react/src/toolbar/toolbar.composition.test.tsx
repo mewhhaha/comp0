@@ -1,3 +1,4 @@
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { setup } from "../../test/render.js";
 import { ToggleButton } from "../toggle-button/ToggleButton.js";
@@ -33,7 +34,7 @@ describe("toolbar composition", () => {
 
   it("roves with arrows over enabled controls, skipping disabled, without looping", async () => {
     const { buttons, user } = renderToolbar();
-    buttons[0]!.focus();
+    act(() => buttons[0]!.focus());
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(buttons[2]);
     expect(buttons[2]!.tabIndex).toBe(0);
@@ -56,7 +57,7 @@ describe("toolbar composition", () => {
     const { toolbar, buttons, user } = renderToolbar({ orientation: "vertical" });
     expect(toolbar.getAttribute("aria-orientation")).toBe("vertical");
     expect(toolbar.getAttribute("data-orientation")).toBe("vertical");
-    buttons[0]!.focus();
+    act(() => buttons[0]!.focus());
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(buttons[2]);
     await user.keyboard("{ArrowUp}");
@@ -79,7 +80,7 @@ describe("toolbar composition", () => {
     expect(buttons[0]!.tabIndex).toBe(0);
     expect(buttons[1]!.tabIndex).toBe(-1);
     expect(buttons[2]!.tabIndex).toBe(-1);
-    buttons[0]!.focus();
+    act(() => buttons[0]!.focus());
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(buttons[1]);
     await user.keyboard("{ArrowRight}");
@@ -99,7 +100,7 @@ describe("toolbar composition", () => {
     );
     const buttons = [...container.querySelectorAll<HTMLButtonElement>("button")];
     expect(buttons[1]!.tabIndex).toBe(0);
-    buttons[1]!.focus();
+    act(() => buttons[1]!.focus());
     await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(buttons[1]);
   });

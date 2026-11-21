@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it } from "vitest";
-import { setup } from "../../test/render.js";
+import { checkValidity, setup } from "../../test/render.js";
 import { Checkbox } from "./Checkbox.js";
 import { CheckboxGroup } from "./CheckboxGroup.js";
 
@@ -22,7 +22,7 @@ describe("CheckboxGroup", () => {
     const form = container.querySelector("form")!;
     const first = container.querySelector<HTMLInputElement>("input[value=news]")!;
 
-    expect(form.checkValidity()).toBe(false);
+    expect(checkValidity(form)).toBe(false);
     act(() => {
       form.reportValidity();
     });

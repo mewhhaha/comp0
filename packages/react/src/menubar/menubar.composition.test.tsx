@@ -63,7 +63,7 @@ describe("menubar composition", () => {
 
   it("roves with ArrowRight and ArrowLeft, wrapping at both ends", async () => {
     const { file, edit, view, user } = renderMenubar();
-    file.focus();
+    act(() => file.focus());
 
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(edit);
@@ -86,7 +86,7 @@ describe("menubar composition", () => {
   it("mirrors horizontal roving in right-to-left layouts", async () => {
     const { bar, file, edit, user } = renderMenubar();
     bar.style.direction = "rtl";
-    file.focus();
+    act(() => file.focus());
 
     await user.keyboard("{ArrowLeft}");
     expect(document.activeElement).toBe(edit);
@@ -98,7 +98,7 @@ describe("menubar composition", () => {
     const frameDocument = frame.contentDocument!;
     const { file, edit, unmount, user } = renderMenubar(frameDocument);
 
-    file.focus();
+    act(() => file.focus());
     await user.keyboard("{ArrowRight}");
 
     expect(frameDocument.activeElement).toBe(edit);
@@ -109,14 +109,14 @@ describe("menubar composition", () => {
 
   it("keeps the bar's arrows away from menus while closed", async () => {
     const { file, surfaces, user } = renderMenubar();
-    file.focus();
+    act(() => file.focus());
     await user.keyboard("{ArrowRight}");
     expect(surfaces.every((surface) => surface.hidden)).toBe(true);
   });
 
   it("opens with ArrowDown and focuses the first item", async () => {
     const { container, file, surfaces, user } = renderMenubar();
-    file.focus();
+    act(() => file.focus());
     await user.keyboard("{ArrowDown}");
     expect(surfaces[0]!.hidden).toBe(false);
     expect(file.getAttribute("aria-expanded")).toBe("true");
@@ -126,18 +126,18 @@ describe("menubar composition", () => {
 
   it("opens with Enter and Space, and ArrowUp focuses the last item", async () => {
     const { container, file, edit, view, surfaces, user } = renderMenubar();
-    file.focus();
+    act(() => file.focus());
     await user.keyboard("{Enter}");
     expect(surfaces[0]!.hidden).toBe(false);
     await user.keyboard("{Escape}");
     expect(surfaces[0]!.hidden).toBe(true);
 
-    edit.focus();
+    act(() => edit.focus());
     await user.keyboard(" ");
     expect(surfaces[1]!.hidden).toBe(false);
     await user.keyboard("{Escape}");
 
-    view.focus();
+    act(() => view.focus());
     await user.keyboard("{ArrowUp}");
     expect(surfaces[2]!.hidden).toBe(false);
     expect(document.activeElement).toBe(container.querySelector("[data-value='zoom']"));
@@ -145,7 +145,7 @@ describe("menubar composition", () => {
 
   it("moves openness to the neighbor menu with horizontal arrows while open", async () => {
     const { container, file, surfaces, user } = renderMenubar();
-    file.focus();
+    act(() => file.focus());
     await user.keyboard("{ArrowDown}");
 
     await user.keyboard("{ArrowRight}");
@@ -162,7 +162,7 @@ describe("menubar composition", () => {
 
   it("carries openness when focus lands on another item while a menu is open", async () => {
     const { file, view, surfaces, user } = renderMenubar();
-    file.focus();
+    act(() => file.focus());
     await user.keyboard("{ArrowDown}");
     expect(surfaces[0]!.hidden).toBe(false);
 
@@ -173,7 +173,7 @@ describe("menubar composition", () => {
 
   it("closes with Escape, restores focus to the item, and stays closed", async () => {
     const { edit, surfaces, user } = renderMenubar();
-    edit.focus();
+    act(() => edit.focus());
     await user.keyboard("{ArrowDown}");
     expect(surfaces[1]!.hidden).toBe(false);
 
@@ -229,7 +229,7 @@ describe("menubar composition", () => {
     const surfaces = [...container.querySelectorAll<HTMLElement>("[popover]")];
 
     expect(edit.getAttribute("aria-disabled")).toBe("true");
-    container.querySelector<HTMLElement>("#file-trigger")!.focus();
+    act(() => container.querySelector<HTMLElement>("#file-trigger")!.focus());
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(container.querySelector("#view-trigger"));
     await user.click(edit);

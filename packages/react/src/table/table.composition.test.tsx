@@ -291,16 +291,16 @@ describe("table range selection", () => {
       <Table as="div" aria-label="Custom">
         <TableBody as="section" data-testid="body">
           <TableRow as={Fragment}>
-            <tr data-custom="">
-              <TableCell as="td">One</TableCell>
-            </tr>
+            <div data-custom="">
+              <TableCell as="span">One</TableCell>
+            </div>
           </TableRow>
         </TableBody>
       </Table>,
     );
     expect(container.querySelector("div[role='grid']")).not.toBeNull();
     expect(container.querySelector("section[data-testid='body']")).not.toBeNull();
-    expect(container.querySelector("tr[data-custom]")?.getAttribute("data-selected")).toBeNull();
+    expect(container.querySelector("div[data-custom]")?.getAttribute("data-selected")).toBeNull();
   });
 });
 
@@ -1770,7 +1770,8 @@ describe("table tab stop when React hides rows or cells", () => {
     pending = new Promise<void>((done) => {
       resolve = done;
     });
-    rerender(ui());
+    // The rows suspend, so the update goes through an awaited act.
+    await act(async () => rerender(ui()));
     await settle();
     await user.click(before!);
     await user.tab();

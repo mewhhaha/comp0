@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { act, Fragment } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Autocomplete,
@@ -247,7 +247,9 @@ describe("Autocomplete with a ListBox", () => {
 
     // userEvent cannot report whether the app prevented the default action.
     const end = new KeyboardEvent("keydown", { key: "End", bubbles: true, cancelable: true });
-    input.dispatchEvent(end);
+    act(() => {
+      input.dispatchEvent(end);
+    });
     expect(end.defaultPrevented).toBe(false);
     await user.keyboard("{Tab}");
     expect(input.hasAttribute("aria-activedescendant")).toBe(false);

@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react";
 import { useEventCallback } from "@comp0/core";
 import { BusyRegion } from "@comp0/react";
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
@@ -84,8 +84,12 @@ export function GenUI({
   const failures = validated.complete && validated.errors.length > 0 ? validated.errors : undefined;
   // The same problems are reported once, however often the response is validated again.
   const failureText = failures === undefined ? "" : JSON.stringify(failures);
+  // Survives StrictMode's effect replay, so development reports the same problems once too.
+  const reported = useRef("");
   useEffect(() => {
-    if (failureText !== "") reportErrors(JSON.parse(failureText) as GenUIError[]);
+    if (failureText === "" || reported.current === failureText) return;
+    reported.current = failureText;
+    reportErrors(JSON.parse(failureText) as GenUIError[]);
   }, [failureText]);
 
   const context = {

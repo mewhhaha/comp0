@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { act, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { setup } from "../../test/render.js";
 import { Toast } from "./Toast.js";
@@ -69,8 +69,8 @@ describe("toast dismissal", () => {
     await user.click(notify);
 
     // Dismiss through the keyboard-free path: focus stays on Notify.
-    notify.focus();
-    document.querySelector<HTMLButtonElement>("[data-comp0='toast-close']")!.click();
+    act(() => notify.focus());
+    act(() => document.querySelector<HTMLButtonElement>("[data-comp0='toast-close']")!.click());
 
     expect(document.activeElement).toBe(notify);
   });

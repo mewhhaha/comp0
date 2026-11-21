@@ -92,6 +92,8 @@ describe("roving tab stop registration", () => {
 
   it("moves the listbox stop in one commit without re-registering options", async () => {
     let commits = 0;
+    // A commit count is a production contract. Under StrictMode the arrow key that also moves
+    // the uncontrolled selection commits twice; production commits once.
     const { container, user, unmount } = setup(
       <Profiler id="listbox" onRender={() => (commits += 1)}>
         <button type="button">Before</button>
@@ -103,6 +105,8 @@ describe("roving tab stop registration", () => {
           ))}
         </ListBox>
       </Profiler>,
+      document,
+      { strictMode: false },
     );
     const before = container.querySelector<HTMLElement>("button")!;
     const options = container.querySelectorAll<HTMLElement>("[role='option']");

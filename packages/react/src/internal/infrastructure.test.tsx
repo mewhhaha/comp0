@@ -128,7 +128,13 @@ describe("polymorphic helpers", () => {
       );
     }
 
+    // React warns about the unknown attribute the type check above rejects.
+    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(render(<TypedRoot />).container.querySelectorAll("ul")).toHaveLength(3);
+    expect(errors.mock.calls.some((call) => String(call[1]).includes("unknownAttribute"))).toBe(
+      true,
+    );
+    errors.mockRestore();
   });
 
   it("renders a part as its fallback tag or the as element", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, setup } from "../../test/render.js";
+import { checkValidity, render, setup } from "../../test/render.js";
 import {
   Combobox,
   ComboboxInput,
@@ -155,7 +155,7 @@ describe("Combobox", () => {
     const input = container.querySelector<HTMLInputElement>("input[role='combobox']")!;
 
     expect(input.value).toBe("Paris");
-    expect(form.checkValidity()).toBe(true);
+    expect(checkValidity(form)).toBe(true);
     expect(new FormData(form).get("city")).toBe("paris");
   });
 });

@@ -1,3 +1,4 @@
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { setup } from "../../test/render.js";
 import { pressKey } from "../../test/press-key.js";
@@ -86,7 +87,7 @@ describe("tree grid composition", () => {
   it("expands from row focus, then enters and traverses cells", async () => {
     const onOpenChange = vi.fn();
     const { row, cell, user } = renderTreeGrid({ onOpenChange });
-    row("components").focus();
+    act(() => row("components").focus());
     await pressKey(user, row("components"), "{ArrowRight}");
     expect(row("components").getAttribute("aria-expanded")).toBe("true");
     expect(onOpenChange).toHaveBeenLastCalledWith(["src", "components"]);
@@ -109,7 +110,7 @@ describe("tree grid composition", () => {
   it("mirrors branch and cell arrows in right-to-left layouts", async () => {
     const { container, row, cell, user } = renderTreeGrid({ defaultOpen: ["src"] });
     container.querySelector("table")!.style.direction = "rtl";
-    row("components").focus();
+    act(() => row("components").focus());
 
     await pressKey(user, row("components"), "{ArrowLeft}");
     expect(row("components").getAttribute("aria-expanded")).toBe("true");
@@ -121,7 +122,7 @@ describe("tree grid composition", () => {
 
   it("collapses a parent row, else moves row focus to its parent", async () => {
     const { row, user } = renderTreeGrid({ defaultOpen: ["src", "components"] });
-    row("components").focus();
+    act(() => row("components").focus());
     await pressKey(user, row("components"), "{ArrowLeft}");
     expect(row("components").getAttribute("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(row("components"));
@@ -131,13 +132,13 @@ describe("tree grid composition", () => {
 
   it("moves vertically over visible rows while preserving row or cell focus", async () => {
     const { row, cell, user } = renderTreeGrid();
-    row("src").focus();
+    act(() => row("src").focus());
     await pressKey(user, row("src"), "{ArrowDown}");
     expect(document.activeElement).toBe(row("components"));
     await pressKey(user, row("components"), "{ArrowDown}");
     expect(document.activeElement).toBe(row("index"));
 
-    cell("index", 1).focus();
+    act(() => cell("index", 1).focus());
     await pressKey(user, cell("index", 1), "{ArrowDown}");
     expect(document.activeElement).toBe(cell("readme", 1));
     await pressKey(user, cell("readme", 1), "{ArrowUp}");
@@ -146,13 +147,13 @@ describe("tree grid composition", () => {
 
   it("applies row and cell Home/End semantics including Control edges", async () => {
     const { row, cell, user } = renderTreeGrid();
-    row("components").focus();
+    act(() => row("components").focus());
     await pressKey(user, row("components"), "{End}");
     expect(document.activeElement).toBe(row("readme"));
     await pressKey(user, row("readme"), "{Home}");
     expect(document.activeElement).toBe(row("src"));
 
-    cell("index", 1).focus();
+    act(() => cell("index", 1).focus());
     await pressKey(user, cell("index", 1), "{Home}");
     expect(document.activeElement).toBe(cell("index", 0));
     await pressKey(user, cell("index", 0), "{End}");
@@ -170,13 +171,13 @@ describe("tree grid composition", () => {
     expect(onChange).toHaveBeenLastCalledWith("index");
     expect(row("index").getAttribute("aria-selected")).toBe("true");
 
-    row("readme").focus();
+    act(() => row("readme").focus());
     await pressKey(user, row("readme"), " ");
     expect(onChange).toHaveBeenLastCalledWith("readme");
     expect(row("readme").getAttribute("aria-selected")).toBe("true");
 
     const controlled = renderTreeGrid({ value: "readme", onChange });
-    controlled.row("src").focus();
+    act(() => controlled.row("src").focus());
     await pressKey(user, controlled.row("src"), "{Enter}");
     expect(onChange).toHaveBeenLastCalledWith("src");
     expect(controlled.row("readme").getAttribute("aria-selected")).toBe("true");
@@ -186,7 +187,7 @@ describe("tree grid composition", () => {
   it("reports but does not apply rejected controlled expansion", async () => {
     const onOpenChange = vi.fn();
     const { row, user } = renderTreeGrid({ open: ["src"], onOpenChange });
-    row("components").focus();
+    act(() => row("components").focus());
     await pressKey(user, row("components"), "{ArrowRight}");
     expect(onOpenChange).toHaveBeenLastCalledWith(["src", "components"]);
     expect(row("components").getAttribute("aria-expanded")).toBe("false");
@@ -229,12 +230,12 @@ describe("tree grid composition", () => {
     await user.click(button);
     expect(onChange).not.toHaveBeenCalled();
     expect(onOpenChange).not.toHaveBeenCalled();
-    button.focus();
+    act(() => button.focus());
     await pressKey(user, button, "{ArrowRight}");
     expect(document.activeElement).toBe(button);
 
     const otherRow = result.container.querySelector<HTMLTableRowElement>('tr[data-value="other"]')!;
-    otherRow.focus();
+    act(() => otherRow.focus());
     expect(button.tabIndex).toBe(-1);
     expect(buttons[1]!.tabIndex).toBe(0);
     expect(rovingStops()).toEqual([otherRow]);
@@ -258,7 +259,7 @@ describe("tree grid composition", () => {
     );
     const { user } = result;
     const rows = [...result.container.querySelectorAll<HTMLTableRowElement>("tr")];
-    rows[0]!.focus();
+    act(() => rows[0]!.focus());
     await pressKey(user, rows[0]!, "{ArrowDown}");
     expect(document.activeElement).toBe(rows[2]);
     expect(rows[1]!.getAttribute("aria-disabled")).toBe("true");
