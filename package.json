@@ -20,6 +20,8 @@
     "test:e2e": "playwright test",
     "test:wcag": "playwright test e2e/wcag.spec.ts",
     "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0",
+    "test:text": "playwright test e2e/text-presentation.spec.ts",
+    "test:text:baseline": "TEXT_BASELINE=update playwright test e2e/text-presentation.spec.ts --retries 0",
     "test:package": "node scripts/verify-packages.mjs",
     "test:compiler-conformance": "node scripts/compare-react-compilers.mjs",
     "test:compiler-smoke": "pnpm build && pnpm test:compiler-conformance && node packages/react/test/verify-react-compiler.mjs",

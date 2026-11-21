@@ -13,7 +13,7 @@ export function Example() {
   return (
     <div className="mx-auto w-full max-w-xs">
       <p className="mb-6 text-sm/6 text-zinc-600 dark:text-zinc-400">
-        Tap a circle, then the square. Or drag between them.
+        Tap Sun or Rain, then Flower. Or drag between them.
       </p>
       <Connect
         aria-label="Flower connections"
