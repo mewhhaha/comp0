@@ -35,6 +35,11 @@ export default defineConfig({
     navigationTimeout: 60_000,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  // Every spec runs in all three engines; `--project chromium` narrows a quick local run.
+  projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    { name: "firefox", use: { browserName: "firefox" } },
+    { name: "webkit", use: { browserName: "webkit" } },
+  ],
   ...server,
 });

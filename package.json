@@ -19,7 +19,7 @@
     "bench": "vitest run -c vitest.bench.config.ts",
     "test:e2e": "playwright test",
     "test:wcag": "playwright test e2e/wcag.spec.ts",
-    "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0",
+    "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0 --project chromium && WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0 --project firefox --project webkit",
     "test:screen-reader:voiceover": "playwright test -c playwright.screen-reader.config.ts --project voiceover",
     "test:screen-reader:nvda": "playwright test -c playwright.screen-reader.config.ts --project nvda",
     "test:package": "node scripts/verify-packages.mjs",

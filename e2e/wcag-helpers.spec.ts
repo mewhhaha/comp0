@@ -13,6 +13,7 @@ import {
   visitExample,
   wcagAxeFindings,
   writeBaseline,
+  writeBrowserBaseline,
 } from "./wcag.js";
 
 // Regression tests for the WCAG sweep helpers in e2e/wcag.ts. Each hostile input gets a page
@@ -42,7 +43,8 @@ test("an example still on Loading fails by its slug", async ({ page }) => {
   await page.route("**/components/stuck-example", (route) =>
     route.fulfill({
       contentType: "text/html; charset=utf-8",
-      body: liveExample("<p>Loading example…</p>"),
+      // WebKit decodes a fulfilled body as Latin-1 despite the header's charset.
+      body: `<meta charset="utf-8">${liveExample("<p>Loading example…</p>")}`,
     }),
   );
   await expect(visitExample(page, "stuck-example")).rejects.toThrow(
@@ -56,6 +58,44 @@ test("a page without a Live example region fails by its slug", async ({ page }) 
   );
   await expect(visitExample(page, "no-example")).rejects.toThrow(
     "no-example: no Live example region",
+  );
+});
+
+// The docs stream an example's server HTML inside React Suspense markers, then React renders
+// that boundary again on the client, showing "Loading example…" for a moment. The fixture's
+// script plays that part, tagging its elements with React's fiber key as React does.
+const streamedExample = (rerender: string) =>
+  `<meta charset="utf-8"><main><section role="region" aria-label="Live example"><!--$--><button>Server</button><!--/$--></section></main><script>${rerender}</script>`;
+const clientRender = `
+  const region = document.querySelector("section");
+  setTimeout(() => {
+    region.innerHTML = "<output>Loading example…</output>";
+    setTimeout(() => {
+      const button = Object.assign(document.createElement("button"), { textContent: "Client" });
+      button.__reactFiber$fixture = {};
+      region.replaceChildren(button);
+    }, 300);
+  }, 700);`;
+
+test("an example streamed by the server is visited once the client has rendered it", async ({
+  page,
+}) => {
+  await page.route("**/components/streamed-example", (route) =>
+    route.fulfill({ contentType: "text/html; charset=utf-8", body: streamedExample(clientRender) }),
+  );
+  const example = await visitExample(page, "streamed-example");
+  // Read once, without auto-waiting: the helper itself must have waited for the client render.
+  expect(await example.textContent()).toBe("Client");
+});
+
+test("an example whose server HTML is never rendered by the client fails by its slug", async ({
+  page,
+}) => {
+  await page.route("**/components/dehydrated-example", (route) =>
+    route.fulfill({ contentType: "text/html; charset=utf-8", body: streamedExample("") }),
+  );
+  await expect(visitExample(page, "dehydrated-example")).rejects.toThrow(
+    "dehydrated-example: example never rendered by the client",
   );
 });
 
@@ -83,7 +123,7 @@ test("duplicate findings on one page are stored once", async ({ page }) => {
   await page.setContent(liveExample("<button></button><button></button>"));
   const findings = await wcagAxeFindings(page, region(page));
   expect(findings).toEqual(['axe:button-name: button ""', 'axe:button-name: button ""']);
-  expect(compareWithBaseline("no-such-page", findings).added).toEqual([
+  expect(compareWithBaseline("no-such-page", "chromium", findings).added).toEqual([
     'axe:button-name: button ""',
   ]);
 });
@@ -110,6 +150,84 @@ test("a Tab keydown that is prevented is a keyboard-trap", async ({ page }) => {
     });
   });
   expect(await keyboardFindings(page, region(page))).toEqual(['keyboard-trap: button "Trap"']);
+});
+
+test("the last stop of the document leads out of the example in every engine, and the walk leaves no stop behind", async ({
+  page,
+}) => {
+  // Nothing follows the example: Playwright's Firefox keeps focus on Save when Tab runs out.
+  await page.setContent(liveExample("<button>Save</button>"));
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+  expect(await page.locator("[data-wcag-exit]").count()).toBe(0);
+});
+
+test("a prevented Tab inside a modal dialog the example opened is still a keyboard-trap", async ({
+  page,
+}) => {
+  await page.setContent(
+    `${liveExample('<button aria-controls="editor">Edit</button>')}<dialog id="editor" aria-label="Editor"><button>Stuck</button></dialog>`,
+  );
+  await page.evaluate(() => {
+    const dialog = document.getElementById("editor") as HTMLDialogElement;
+    dialog.querySelector("button")!.addEventListener("keydown", (event) => {
+      if (event.key === "Tab") event.preventDefault();
+    });
+    dialog.showModal();
+  });
+  expect(await keyboardFindings(page, region(page))).toEqual(['keyboard-trap: button "Stuck"']);
+});
+
+test("a modal dialog nested in another modal leads out through the inner one, which is on top", async ({
+  page,
+}) => {
+  // The outer dialog comes first in document order but is inert under the inner one, so a stop
+  // placed in it could never take focus.
+  await page.setContent(
+    `${liveExample('<button aria-controls="outer">Edit</button>')}<dialog id="outer" aria-label="Outer"><button>Close</button><dialog id="inner" aria-label="Inner"><button>Confirm</button></dialog></dialog>`,
+  );
+  await page.evaluate(() => {
+    (document.getElementById("outer") as HTMLDialogElement).showModal();
+    (document.getElementById("inner") as HTMLDialogElement).showModal();
+  });
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+  expect(await page.locator("[data-wcag-exit]").count()).toBe(0);
+});
+
+test("of two sibling modal dialogs the walk leaves through the one on top", async ({ page }) => {
+  await page.setContent(
+    `${liveExample('<button aria-controls="first">A</button><button aria-controls="second">B</button>')}<dialog id="first" aria-label="First"><button>A1</button></dialog><dialog id="second" aria-label="Second"><button>B1</button></dialog>`,
+  );
+  await page.evaluate(() => {
+    (document.getElementById("first") as HTMLDialogElement).showModal();
+    (document.getElementById("second") as HTMLDialogElement).showModal();
+  });
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+  expect(await page.locator("[data-wcag-exit]").count()).toBe(0);
+});
+
+test("a modal dialog whose script wraps Tab from its last stop to its first is not a keyboard-trap", async ({
+  page,
+}) => {
+  // Keeping Tab inside a modal is what a modal does (2.1.2 allows it: Escape or a button leaves
+  // it); the walk still leaves the example through its own stop at the end of the modal.
+  await page.setContent(
+    `${liveExample('<button aria-controls="editor">Edit</button>')}<dialog id="editor" aria-label="Editor"><button>First</button><button>Last</button></dialog>`,
+  );
+  await page.evaluate(() => {
+    const dialog = document.getElementById("editor") as HTMLDialogElement;
+    dialog.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab") return;
+      const stops = [
+        ...dialog.querySelectorAll<HTMLElement>('button, [tabindex]:not([tabindex="-1"])'),
+      ];
+      const edge = event.shiftKey ? stops[0] : stops.at(-1);
+      if (document.activeElement !== edge) return;
+      event.preventDefault();
+      (event.shiftKey ? stops.at(-1) : stops[0])!.focus();
+    });
+    dialog.showModal();
+  });
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
 });
 
 test("Tab that never leaves the example within 60 stops is a keyboard-trap on the last stop", async ({
@@ -193,7 +311,7 @@ test("a baseline file that is not valid JSON fails naming the file", () => {
 });
 
 test("a listed finding that no longer occurs is reported as fixed", () => {
-  expect(compareWithBaseline("color-picker", [])).toEqual({
+  expect(compareWithBaseline("color-picker", "chromium", [])).toEqual({
     added: [],
     fixed: ['axe:label-content-name-mismatch: button "Choose accent color"'],
   });
@@ -201,16 +319,21 @@ test("a listed finding that no longer occurs is reported as fixed", () => {
 
 test("a finding missing from the baseline is reported as added", () => {
   expect(
-    compareWithBaseline("color-picker", [
+    compareWithBaseline("color-picker", "chromium", [
       'axe:label-content-name-mismatch: button "Choose accent color"',
       'axe:button-name: button ""',
     ]),
   ).toEqual({ added: ['axe:button-name: button ""'], fixed: [] });
 });
 
+/** A baseline fixture slug of the running project's own, so the browser projects never share a file. */
+const fixtureSlug = (name: string) => `zz-wcag-${name}-${test.info().project.name}`;
+const baselineFile = (name: string) =>
+  fileURLToPath(new URL(`./wcag-baseline/${name}.json`, import.meta.url));
+
 test("writeBaseline writes sorted unique findings and deletes an empty file", () => {
-  const slug = "zz-wcag-helper-fixture";
-  const file = fileURLToPath(new URL(`./wcag-baseline/${slug}.json`, import.meta.url));
+  const slug = fixtureSlug("helper-fixture");
+  const file = baselineFile(slug);
   try {
     writeBaseline(slug, ["b", "a", "b"]);
     expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(["a", "b"]);
@@ -218,6 +341,43 @@ test("writeBaseline writes sorted unique findings and deletes an empty file", ()
     expect(existsSync(file)).toBe(false);
   } finally {
     rmSync(file, { force: true });
+  }
+});
+
+test("a browser's own baseline file replaces the shared one for that browser only", () => {
+  const slug = fixtureSlug("browser-fixture");
+  const files = [baselineFile(slug), baselineFile(`${slug}.webkit`)];
+  try {
+    writeFileSync(files[0]!, '["shared"]');
+    writeFileSync(files[1]!, '["webkit only"]');
+    expect(compareWithBaseline(slug, "webkit", ["webkit only"])).toEqual({ added: [], fixed: [] });
+    expect(compareWithBaseline(slug, "chromium", ["webkit only"])).toEqual({
+      added: ["webkit only"],
+      fixed: ["shared"],
+    });
+    expect(compareWithBaseline(slug, "firefox", ["shared"])).toEqual({ added: [], fixed: [] });
+  } finally {
+    for (const file of files) rmSync(file, { force: true });
+  }
+});
+
+test("writeBrowserBaseline keeps a browser file only while its findings differ from the shared one", () => {
+  const slug = fixtureSlug("browser-write-fixture");
+  const shared = baselineFile(slug);
+  const own = baselineFile(`${slug}.firefox`);
+  try {
+    writeBaseline(slug, ["a"]);
+    writeBrowserBaseline(slug, "firefox", ["b", "a", "b"]);
+    expect(JSON.parse(readFileSync(own, "utf8"))).toEqual(["a", "b"]);
+    // No findings where the shared file lists some is a difference too.
+    writeBrowserBaseline(slug, "firefox", []);
+    expect(JSON.parse(readFileSync(own, "utf8"))).toEqual([]);
+    writeBrowserBaseline(slug, "firefox", ["a", "a"]);
+    expect(existsSync(own)).toBe(false);
+    expect(JSON.parse(readFileSync(shared, "utf8"))).toEqual(["a"]);
+  } finally {
+    rmSync(shared, { force: true });
+    rmSync(own, { force: true });
   }
 });
 
@@ -256,6 +416,14 @@ test("an element with an interactive role and no tabindex is keyboard-unreachabl
 
 test("a clickable div with tabindex=0 is reachable", async ({ page }) => {
   await page.setContent(liveExample('<div style="cursor:pointer" tabindex="0">Pick me</div>'));
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("native date and time inputs Tab enters are reachable", async ({ page }) => {
+  // WebKit fires focus but no focusin when Tab enters their segments.
+  await page.setContent(
+    liveExample('<input type="date" aria-label="Day"><input type="time" aria-label="At">'),
+  );
   expect(await keyboardFindings(page, region(page))).toEqual([]);
 });
 

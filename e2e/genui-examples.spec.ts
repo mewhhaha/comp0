@@ -1,11 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { examples } from "../apps/docs/src/examples/genui/gallery/examples.js";
 import { axeViolations } from "./axe.js";
+import { clipboardAccess } from "./clipboard.js";
 
-test.use({
-  viewport: { width: 390, height: 844 },
-  permissions: ["clipboard-read", "clipboard-write"],
-});
+test.use({ viewport: { width: 390, height: 844 }, permissions: clipboardAccess });
 
 const interactions: Record<string, (view: Locator, page: Page) => Promise<void>> = {
   async "print-proof"(view, page) {
@@ -171,7 +169,10 @@ test("leaving a streaming JSX reply opens the next example with its own prompt",
   await view.getByRole("button", { name: "Send prompt" }).click();
   await expect(log.getByRole("tab", { name: "First take" })).toBeVisible();
   await expect(log).toHaveAttribute("aria-busy", "true");
-  await page.getByRole("link", { name: /The encore revision/ }).click();
+  // The streaming reply keeps growing above the link, so a pointer click can land where the link
+  // was a moment ago (Firefox and WebKit lay out late enough to miss it); Enter follows the link
+  // wherever it has moved.
+  await page.getByRole("link", { name: /The encore revision/ }).press("Enter");
   await expect(page).toHaveURL(/genui\/examples\/encore$/);
   await expect(view.getByRole("button", { name: "Send prompt" })).toBeEnabled();
   await expect(log.getByRole("article", { name: "Assistant" })).toHaveCount(0);

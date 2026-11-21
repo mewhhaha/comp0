@@ -1,10 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { clipboardAccess } from "./clipboard.js";
 
 test.use({
   viewport: { width: 320, height: 844 },
-  isMobile: true,
+  // Firefox has no mobile viewport emulation (`isMobile`); there the routes are audited at the
+  // same CSS widths as a narrow desktop window, and taps still go through touch.
+  isMobile: async ({ browserName }, use) => use(browserName !== "firefox"),
   hasTouch: true,
-  permissions: ["clipboard-read", "clipboard-write"],
+  permissions: clipboardAccess,
 });
 
 test("mobile docs: every route fits 320, 390, and 768px; touch navigation, search, and copy feedback", async ({
@@ -14,8 +17,18 @@ test("mobile docs: every route fits 320, 390, and 768px; touch navigation, searc
 }) => {
   test.setTimeout(300_000);
   const errors: string[] = [];
+  // Navigating an audit page cancels what its document still had in flight (a lazy chunk, React
+  // Router's route discovery), and Firefox and WebKit report each cancelled request as an error
+  // of the document being left. Errors from a document the audit is already leaving are dropped;
+  // the next document's own errors count from the moment it commits.
+  const leaving = new Set<Page>();
   context.on("page", (opened) => {
-    opened.on("pageerror", (error) => errors.push(`${opened.url()}: ${error.message}`));
+    opened.on("framenavigated", (frame) => {
+      if (frame === opened.mainFrame()) leaving.delete(opened);
+    });
+    opened.on("pageerror", (error) => {
+      if (!leaving.has(opened)) errors.push(`${opened.url()}: ${error.message}`);
+    });
   });
 
   await page.goto("/components");
@@ -33,6 +46,7 @@ test("mobile docs: every route fits 320, 390, and 768px; touch navigation, searc
       const audit = await context.newPage();
       for (let next = pending.pop(); next; next = pending.pop()) {
         await audit.setViewportSize({ width: next.width, height: 844 });
+        leaving.add(audit);
         const response = await audit.goto(`${baseURL}${next.route}`);
         expect(response?.ok(), `${next.route}: HTTP ${response?.status()}`).toBe(true);
         await audit.waitForLoadState("networkidle");

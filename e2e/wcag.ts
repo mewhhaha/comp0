@@ -69,8 +69,30 @@ export async function visitExample(page: Page, slug: string) {
     region.getByText("Loading example…"),
     `${slug}: example stayed on "Loading example…"`,
   ).toHaveCount(0);
+  // The docs stream an example's server HTML inside React's Suspense markers (`<!--$-->`), and
+  // the client then renders that boundary again, showing "Loading example…" for a moment, which
+  // can come after the check above and after the network is idle (more often in a slower engine).
+  // Server HTML counts as visited only once React owns it: its elements carry React's fiber key.
+  await expect
+    .poll(() => region.evaluate(renderedByClient), {
+      message: `${slug}: example never rendered by the client`,
+    })
+    .toBe(true);
   await page.waitForLoadState("networkidle");
   return region;
+}
+
+/** The example is not React's server HTML still waiting for the client. Runs in the page. */
+function renderedByClient(region: Element) {
+  if (region.textContent?.includes("Loading example…")) return false;
+  const streamed = [...region.childNodes].some(
+    (node) => node.nodeType === Node.COMMENT_NODE && (node as Comment).data.startsWith("$"),
+  );
+  const content = region.firstElementChild;
+  return (
+    !streamed ||
+    Boolean(content && Object.keys(content).some((key) => key.startsWith("__reactFiber$")))
+  );
 }
 
 /**
@@ -138,23 +160,61 @@ type FocusStop = {
  * Tooltip triggers it meets are remembered for `openedStateFindings`.
  */
 export async function keyboardFindings(page: Page, region: Locator) {
-  const maxStops = 60;
-  const findings: string[] = [];
   // Smooth scrolling would leave the focused element mid-scroll when it is measured.
   await page.addStyleTag({ content: "html, * { scroll-behavior: auto !important; }" });
   await region.evaluate((element) => {
     const memory = window as unknown as SweepWindow;
+    // Tab past the last stop of the document (or of an open modal dialog) moves focus to the
+    // browser's own UI in Chromium and WebKit, while Playwright's Firefox has none and keeps
+    // focus where it was, which would read as a trap. A stop after everything else, inside the
+    // modal when one is open, gives every engine the same place to leave to; reaching it is
+    // leaving the example. `keyboardFindings` removes it when it returns.
+    // A modal that keeps Tab inside itself (natively, as Firefox does, or by script) is what a
+    // modal is for, not a 2.1.2 trap, as long as the walk can still leave the example: the stop
+    // is one more stop of the modal, so Tab reaches it before any wrap back to the first one.
+    const exit = document.createElement("span");
+    exit.tabIndex = 0;
+    exit.setAttribute("data-wcag-exit", "");
+    const modals = [...document.querySelectorAll("dialog:modal")];
+    if (modals.length < 2) (modals[0] ?? document.body).append(exit);
+    else {
+      // Only the modal on top takes focus; the others (an outer dialog under a nested one, an
+      // earlier sibling) are inert. The top layer's order is not exposed, so each modal, the
+      // last in the document first, is tried until the stop can take focus there.
+      const previous = document.activeElement as HTMLElement | null;
+      for (const modal of modals.reverse()) {
+        modal.append(exit);
+        exit.focus({ preventScroll: true });
+        if (document.activeElement === exit) break;
+      }
+      previous?.focus({ preventScroll: true });
+    }
     memory.__wcagFocused = new Set();
     memory.__wcagTooltipTriggers = new Set();
     // focusin also sees the segments of date and time fields, which Tab visits one by one.
-    document.addEventListener(
-      "focusin",
-      (event) => memory.__wcagFocused?.add(event.target as Element),
-      true,
-    );
+    // WebKit fires only focus, not focusin, when Tab enters a native date or time input, so
+    // both are recorded.
+    for (const type of ["focusin", "focus"]) {
+      document.addEventListener(
+        type,
+        (event) => memory.__wcagFocused?.add(event.target as Element),
+        true,
+      );
+    }
     element.setAttribute("tabindex", "-1");
     (element as HTMLElement).focus();
   });
+  try {
+    return await tabWalk(page, region);
+  } finally {
+    await page.evaluate(() => document.querySelector("[data-wcag-exit]")?.remove());
+  }
+}
+
+/** The Tab walk of `keyboardFindings`, from focus on the region. */
+async function tabWalk(page: Page, region: Locator) {
+  const maxStops = 60;
+  const findings: string[] = [];
   let repeats = 0;
   let key = "(none)";
   for (let stop = 0; stop < maxStops; stop++) {
@@ -190,7 +250,11 @@ export async function keyboardFindings(page: Page, region: Locator) {
 async function focusState(page: Page, region: Locator): Promise<FocusStop> {
   const handle = await region.elementHandle();
   return page.evaluate(
-    ({ region: element, describe }) => {
+    async ({ region: element, describe }) => {
+      // WebKit scrolls a newly focused element into view in a task it queues on focus, not
+      // during focus as Chromium and Firefox do, and this evaluation can run before that task.
+      // A task queued now runs after it, so the element is measured where the user sees it.
+      await new Promise((resolve) => setTimeout(resolve));
       const scope = element as Element;
       const active = document.activeElement;
       const toKey = new Function(`return ${describe}`)() as (node: Element | null) => string;
@@ -233,7 +297,13 @@ async function focusState(page: Page, region: Locator): Promise<FocusStop> {
       // Tab moved focus to a different element; segments of one field share a key, not an element.
       const moved = memory.__wcagLastFocus !== active;
       memory.__wcagLastFocus = active;
-      if (!active || active === document.body || active === scope || !owned(active)) {
+      const left =
+        !active ||
+        active === document.body ||
+        active === scope ||
+        active.hasAttribute("data-wcag-exit") ||
+        !owned(active);
+      if (left) {
         return { key: toKey(active), inside: false, moved, obscured: false };
       }
       const area = (node: Element) => {
@@ -720,11 +790,14 @@ export function readBaseline(file: string): string[] {
 /**
  * Known findings per page live in `e2e/wcag-baseline/<slug>.json`: the remediation backlog.
  * A finding missing from it fails the suite (a regression), and so does a baseline entry
- * that no longer occurs, so the backlog only shrinks. `pnpm test:wcag:baseline` rewrites it
- * through `writeBaseline`.
+ * that no longer occurs, so the backlog only shrinks. Chromium's findings are the shared file;
+ * a browser that legitimately finds something else (an engine's own keyboard behavior) has
+ * `<slug>.<browser>.json` beside it, which replaces the shared file for that browser only.
+ * `pnpm test:wcag:baseline` rewrites them through `writeBaseline` and `writeBrowserBaseline`.
  */
-export function compareWithBaseline(slug: string, findings: string[]) {
-  const known = readBaseline(`${baselineDir}${slug}.json`);
+export function compareWithBaseline(slug: string, browser: string, findings: string[]) {
+  const own = `${baselineDir}${slug}.${browser}.json`;
+  const known = readBaseline(existsSync(own) ? own : `${baselineDir}${slug}.json`);
   const actual = [...new Set(findings)].sort();
   return {
     added: actual.filter((finding) => !known.includes(finding)),
@@ -732,15 +805,36 @@ export function compareWithBaseline(slug: string, findings: string[]) {
   };
 }
 
-/** Replaces a page's baseline with its findings, sorted and unique; no findings deletes the file. */
+/** Writes findings as a sorted JSON array, formatted the way `pnpm format:check` expects. */
+function writeFindings(file: string, findings: string[]) {
+  mkdirSync(baselineDir, { recursive: true });
+  writeFileSync(file, `${JSON.stringify(findings, null, 2)}\n`);
+  execFileSync("pnpm", ["exec", "oxfmt", "--write", file]);
+}
+
+/**
+ * Replaces a page's shared baseline (Chromium's findings) with its findings, sorted and unique;
+ * no findings deletes the file.
+ */
 export function writeBaseline(slug: string, findings: string[]) {
   const file = `${baselineDir}${slug}.json`;
   const actual = [...new Set(findings)].sort();
   if (actual.length === 0) rmSync(file, { force: true });
-  else {
-    mkdirSync(baselineDir, { recursive: true });
-    writeFileSync(file, `${JSON.stringify(actual, null, 2)}\n`);
-    // Leave the file as `pnpm format:check` expects it.
-    execFileSync("pnpm", ["exec", "oxfmt", "--write", file]);
-  }
+  else writeFindings(file, actual);
+}
+
+/**
+ * Keeps `<slug>.<browser>.json` only while the browser's findings differ from the shared
+ * baseline: written (an empty list included) when they differ, deleted when they match. Run it
+ * after the shared file is current, which `pnpm test:wcag:baseline` does by updating Chromium
+ * first.
+ */
+export function writeBrowserBaseline(slug: string, browser: string, findings: string[]) {
+  const file = `${baselineDir}${slug}.${browser}.json`;
+  const actual = [...new Set(findings)].sort();
+  const shared = readBaseline(`${baselineDir}${slug}.json`);
+  const same =
+    actual.length === shared.length && actual.every((finding) => shared.includes(finding));
+  if (same) rmSync(file, { force: true });
+  else writeFindings(file, actual);
 }

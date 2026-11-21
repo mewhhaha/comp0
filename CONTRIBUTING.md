@@ -20,7 +20,7 @@ pnpm test:compiler-smoke   # builds every package and the docs app first
 pnpm test:e2e          # Playwright Test against `vite preview` of the docs build
 ```
 
-`pnpm test:e2e` serves `apps/docs/build` on port 4318; run it after a build. Set `DOCS_URL` to test an already-running server instead. CI also runs a scheduled weekly `pnpm audit --prod`; run it locally when changing dependencies.
+`pnpm test:e2e` serves `apps/docs/build` on port 4318; run it after a build. It runs in Chromium, Firefox and WebKit (`pnpm exec playwright install chromium firefox webkit` once); add `--project chromium` for a quick run in one engine. Set `DOCS_URL` to test an already-running server instead. CI also runs a scheduled weekly `pnpm audit --prod`; run it locally when changing dependencies.
 
 Guards that read the docs and sources: `apps/docs/src/content/props.test.ts` typechecks every prop table against the real component types (`DOCS_PROPS_SLUGS=select,menu` limits it to some pages), and `apps/docs/src/content/data-attributes.test.ts` checks emitted `data-*` attributes against `packages/react/data-attributes.json` and each page's `stateHooks` (`DATA_ATTR_FAMILIES=select,menu` limits it to some families).
 

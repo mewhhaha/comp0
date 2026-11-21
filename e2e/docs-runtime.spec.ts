@@ -34,3 +34,27 @@ test("docs runtime: server highlighting, hydration, lazy Select example, and sel
   expect(unrelated, "Select loaded unrelated examples").toEqual([]);
   expect(errors, "Docs hydration or interaction logged browser errors").toEqual([]);
 });
+
+test("docs search: the palette opens with its results listed and closes back to its button", async ({
+  page,
+}) => {
+  // The palette is a modal Dialog holding a Combobox whose popover is open from the first render.
+  // WebKit's showModal() once hid that popover without telling the surface, leaving no results.
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/components/select");
+  await page.waitForLoadState("networkidle");
+
+  const opener = page.getByRole("button", { name: "Search docs", exact: true });
+  await opener.click();
+  const results = page.getByRole("listbox", { name: "Search results" });
+  await expect(results).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Search docs" })).toBeFocused();
+  await page.getByRole("combobox", { name: "Search docs" }).fill("Calendar");
+  await expect(results.getByRole("option", { name: /^Calendar/ }).first()).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Search documentation" })).toBeHidden();
+  await expect(opener).toBeFocused();
+  expect(errors, "Docs search logged page errors").toEqual([]);
+});

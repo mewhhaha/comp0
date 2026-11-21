@@ -230,7 +230,13 @@ export function useOverlaySurface<TElement extends HTMLElement = HTMLElement>({
         // Toggle events from nested popovers bubble through the React tree;
         // only this surface's own toggles drive its state.
         if (event.target !== event.currentTarget) return;
-        if (!event.defaultPrevented) onNativeToggle(event.newState === "open");
+        // WebKit's showModal() hides an open auto popover without queueing a "closed" toggle,
+        // so the "open" toggle queued just before can arrive for a surface already hidden
+        // (a Combobox held open inside a Dialog opening in the same commit): trust the element.
+        const surface = event.currentTarget as TElement & PopoverSurfaceElement;
+        const hiddenNatively =
+          typeof surface.showPopover === "function" && !surface.matches(":popover-open");
+        if (!event.defaultPrevented) onNativeToggle(event.newState === "open" && !hiddenNatively);
       },
     },
   };
