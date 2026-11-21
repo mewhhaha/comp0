@@ -2,6 +2,12 @@ import { expect, test, type Locator } from "@playwright/test";
 import { axeViolations } from "./axe.js";
 
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+// Finger movement is driven through CDP's Input.dispatchTouchEvent: Playwright offers only taps
+// as touch input, and CDP sessions exist only in Chromium.
+test.skip(
+  ({ browserName }) => browserName !== "chromium",
+  "touch drags need CDP Input.dispatchTouchEvent, which only Chromium has",
+);
 
 type Point = { x: number; y: number };
 

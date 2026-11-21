@@ -31,14 +31,23 @@ Judge `pnpm typecheck` by its exit code.
 
 ```sh
 pnpm --filter @comp0/docs build
-pnpm test:wcag                 # every /components/<slug> page
+pnpm test:wcag                 # every /components/<slug> page, in Chromium, Firefox and WebKit
+pnpm test:wcag --project chromium   # a quick run in one engine
 ```
+
+`pnpm test:e2e` and `pnpm test:wcag` run every Playwright project; add `--project chromium` (or
+`firefox`, `webkit`) for a quick local run, then run all three before the pull request. Install
+the engines once with `pnpm exec playwright install chromium firefox webkit`.
 
 The sweep fails on two kinds of difference from `e2e/wcag-baseline/<slug>.json`:
 
 - **New findings**: a regression. Fix the component or the example. Do not add it to the baseline.
 - **Fixed findings still listed**: good news. Run `pnpm test:wcag:baseline` and commit the
-  smaller baseline file with the fix.
+  smaller baseline file with the fix. It updates Chromium's shared file first, then keeps a
+  `<slug>.<browser>.json` only for a browser whose findings differ. It is the only supported
+  way to update baselines: Firefox and WebKit compare against the shared file, so they run only
+  after the Chromium half succeeded. Setting `WCAG_BASELINE=update` by hand across all projects
+  at once races, with a browser reading the shared file while Chromium writes it.
 
 Then open the changed page with `pnpm dev` and use it with the keyboard alone: Tab in and out,
 operate it, open and close any surface, and check focus never gets lost. Automated

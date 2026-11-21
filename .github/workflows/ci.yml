@@ -103,10 +103,16 @@ jobs:
           if-no-files-found: error
 
   e2e:
-    name: Docs runtime (Playwright)
+    # One job per engine keeps each within the timeout; together they run every project of
+    # playwright.config.ts, as `pnpm test:e2e` does locally.
+    name: Docs runtime (Playwright, ${{ matrix.browser }})
     needs: package
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -125,14 +131,15 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
+      # --with-deps installs the engine's system libraries, which the browser cache does not hold.
+      - name: Install ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - run: pnpm test:e2e --project ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: |
             .playwright/report
             .playwright/results

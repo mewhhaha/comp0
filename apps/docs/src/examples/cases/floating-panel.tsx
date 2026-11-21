@@ -51,7 +51,7 @@ export function Example() {
           </FloatingPanelTrigger>
           <FloatingPanelSurface
             placement="bottom start"
-            className="w-72 min-w-56 min-h-44 overflow-auto rounded-xl border border-zinc-950/10 bg-white shadow-xl outline-teal-600 data-active:outline-2 data-active:outline-teal-500 data-moving:outline-dashed data-resizing:outline-dashed dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400"
+            className="w-72 max-w-full min-w-56 min-h-44 overflow-auto rounded-xl border border-zinc-950/10 bg-white shadow-xl outline-teal-600 data-active:outline-2 data-active:outline-teal-500 data-moving:outline-dashed data-resizing:outline-dashed dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400"
           >
             <FloatingPanelHeader className="flex cursor-grab items-center gap-2 border-b border-zinc-950/10 px-3 py-2 data-moving:cursor-grabbing dark:border-white/10">
               <FloatingPanelDragHandle className="cursor-grab touch-none rounded p-1 text-zinc-400 outline-teal-600 hover:bg-zinc-100 active:cursor-grabbing focus-visible:outline-2 data-moving:cursor-grabbing dark:outline-teal-400 dark:hover:bg-zinc-800">
@@ -87,7 +87,7 @@ export function Example() {
           </FloatingPanelTrigger>
           <FloatingPanelSurface
             placement="bottom end"
-            className="w-72 min-w-56 min-h-44 overflow-auto rounded-xl border border-zinc-950/10 bg-white shadow-xl outline-teal-600 data-active:outline-2 data-active:outline-teal-500 data-moving:outline-dashed data-resizing:outline-dashed dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400"
+            className="w-72 max-w-full min-w-56 min-h-44 overflow-auto rounded-xl border border-zinc-950/10 bg-white shadow-xl outline-teal-600 data-active:outline-2 data-active:outline-teal-500 data-moving:outline-dashed data-resizing:outline-dashed dark:border-white/10 dark:bg-zinc-900 dark:outline-teal-400"
           >
             <FloatingPanelHeader className="flex cursor-grab items-center gap-2 border-b border-zinc-950/10 px-3 py-2 data-moving:cursor-grabbing dark:border-white/10">
               <FloatingPanelDragHandle className="cursor-grab touch-none rounded p-1 text-zinc-400 outline-teal-600 hover:bg-zinc-100 active:cursor-grabbing focus-visible:outline-2 data-moving:cursor-grabbing dark:outline-teal-400 dark:hover:bg-zinc-800">

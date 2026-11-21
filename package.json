@@ -19,7 +19,7 @@
     "bench": "vitest run -c vitest.bench.config.ts",
     "test:e2e": "playwright test",
     "test:wcag": "playwright test e2e/wcag.spec.ts",
-    "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0",
+    "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0 --project chromium && WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0 --project firefox --project webkit",
     "test:package": "node scripts/verify-packages.mjs",
     "test:compiler-conformance": "node scripts/compare-react-compilers.mjs",
     "test:compiler-smoke": "pnpm build && pnpm test:compiler-conformance && node packages/react/test/verify-react-compiler.mjs",
