@@ -56,12 +56,14 @@ async function pressUntilHeard(
   when: string,
 ) {
   const before = (await context.reader.spokenPhraseLog()).length;
-  await context.page.keyboard.press(key);
+  // NVDA's capture returns the phrase it spoke; VoiceOver's later speech only reaches the log.
+  const captured = await press(context, key);
   await expect
-    .poll(async () => heard((await context.reader.spokenPhraseLog()).slice(before), terms), {
-      timeout: 10_000,
-      message: `${when}: expected ${terms.map(String).join(" + ")}`,
-    })
+    .poll(
+      async () =>
+        heard([...captured, ...(await context.reader.spokenPhraseLog()).slice(before)], terms),
+      { timeout: 10_000, message: `${when}: expected ${terms.map(String).join(" + ")}` },
+    )
     .toBe(true);
 }
 
