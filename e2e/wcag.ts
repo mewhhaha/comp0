@@ -173,13 +173,13 @@ async function focusState(page: Page, region: Locator): Promise<FocusStop> {
       const onscreen = points.filter(
         ([x, y]) => x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight,
       );
-      // Hits inside the example (a label over a visually hidden input, the element's own
-      // children) do not obscure it.
+      // Hits inside the example or a surface it opened (a label over a visually hidden input,
+      // the element's own children) and the element's own ancestors do not obscure it.
       const visible =
         onscreen.length === 0 ||
         onscreen.some(([x, y]) => {
           const hit = document.elementFromPoint(x, y);
-          return Boolean(hit && (owned(hit) || active.contains(hit) || hit.contains(active)));
+          return Boolean(hit && (owned(hit) || hit.contains(active)));
         });
       return { key: toKey(active), inside: true, moved, obscured: !visible };
     },

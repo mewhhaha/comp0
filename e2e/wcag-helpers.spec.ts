@@ -119,30 +119,59 @@ test("Tab that never leaves the example within 60 stops is a keyboard-trap on th
 });
 
 test("a visually hidden checkbox inside its label is not focus-obscured", async ({ page }) => {
+  // A badge outside the example covers the label's corner, where the 1px input sits; the rest
+  // of the label (what a sighted user sees as the checkbox) stays visible, so it is not obscured.
+  await page.setContent(
+    `<style>body { margin: 0 }</style>${liveExample(
+      '<label style="position:relative;display:block;width:160px;height:40px"><input type="checkbox" style="position:absolute;top:0;left:0;opacity:0;width:1px;height:1px;margin:0"><span>Accept terms</span></label>',
+    )}<div style="position:fixed;top:0;left:0;width:24px;height:24px;background:#fff"></div>`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("the focused element's own ancestors outside the example do not obscure it", async ({
+  page,
+}) => {
+  // The button ignores pointer events and is painted below the region's box, so hit-testing
+  // falls through to the page's body: an ancestor, not content covering it.
   await page.setContent(
     liveExample(
-      '<label style="position:relative;display:inline-block;width:160px;height:40px"><input type="checkbox" style="position:absolute;opacity:0;width:1px;height:1px;margin:0"><span>Accept terms</span></label>',
+      '<div style="position:relative;height:20px"><button style="position:absolute;top:200px;pointer-events:none">Floating</button></div>',
     ),
   );
   expect(await keyboardFindings(page, region(page))).toEqual([]);
 });
 
-test("smooth scrolling does not create focus-obscured findings", async ({ page }) => {
-  const steps = Array.from(
-    { length: 6 },
-    (_, index) => `<div style="height:900px"></div><button>Step ${index + 1}</button>`,
-  );
+test("smooth scrolling does not hide a control from the focus-obscured check", async ({ page }) => {
+  // Mid-scroll, Step 1 is still off screen and would not be judged; at rest the fixed header
+  // covers it, which is a real finding.
   await page.setContent(
-    `<style>html { scroll-behavior: smooth }</style>${liveExample(steps.join(""))}`,
+    `<style>html { scroll-behavior: smooth } body { margin: 0 }</style><header style="position:fixed;top:0;left:0;right:0;height:120px;background:#fff;z-index:1"></header>${liveExample(
+      '<button style="display:block;height:40px">Step 1</button><div style="height:3000px"></div>',
+    )}`,
   );
+  await page.evaluate(() =>
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual(['focus-obscured: button "Step 1"']);
+});
+
+test("smooth scrolling does not create false focus-obscured findings", async ({ page }) => {
+  // scroll-padding-top keeps a focused control clear of the fixed header at rest. Step 1 starts
+  // half under the header, so mid-scroll it would still be covered.
+  await page.setContent(
+    `<style>html { scroll-behavior: smooth; scroll-padding-top: 140px } body { margin: 0 }</style><header style="position:fixed;top:0;left:0;right:0;height:120px;background:#fff;z-index:1"></header>${liveExample(
+      '<div style="height:140px"></div><button style="display:block;height:100px">Step 1</button><div style="height:3000px"></div>',
+    )}`,
+  );
+  await page.evaluate(() => window.scrollTo({ top: 190, behavior: "instant" }));
   expect(await keyboardFindings(page, region(page))).toEqual([]);
 });
 
 test("a surface the example opened is not counted as covering its trigger", async ({ page }) => {
+  // The popover lives in body, outside the region, as portalled overlays do.
   await page.setContent(
-    liveExample(
-      '<button>Open</button><div id="sheet" popover style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff"><button>Inside</button></div>',
-    ),
+    `${liveExample("<button>Open</button>")}<div id="sheet" popover="manual" style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff"><button>Inside</button></div>`,
   );
   await page.evaluate(() => document.getElementById("sheet")!.showPopover());
   expect(await keyboardFindings(page, region(page))).toEqual([]);

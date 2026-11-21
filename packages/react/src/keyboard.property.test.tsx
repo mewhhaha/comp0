@@ -21,6 +21,10 @@ import {
   TagList,
   Toolbar,
   Tree,
+  TreeGrid,
+  TreeGridCell,
+  TreeGridRow,
+  TreeGridRowGroup,
   TreeItem,
 } from "./index.js";
 import { cleanupRoots, setup } from "../test/render.js";
@@ -36,6 +40,10 @@ import { cleanupRoots, setup } from "../test/render.js";
  * - one Tab leaves the composite and one Shift+Tab returns to the item that was focused.
  *
  * A failure prints the shrunk counterexample (items, disabled set, keys) to replay by hand.
+ *
+ * Table (interactive) is left out by design: its cells are never disabled (`useTableCell` in
+ * table/table-shared.tsx), so a generated disabled set has nothing to apply to. Its single
+ * roving stop is pinned by table/table.composition.test.tsx.
  */
 
 type Composite = {
@@ -119,6 +127,22 @@ const composites: Composite[] = [
           </TreeItem>
         ))}
       </Tree>
+    ),
+  },
+  {
+    name: "TreeGrid",
+    role: "treegrid",
+    render: (labels, disabled) => (
+      <TreeGrid aria-label="Items">
+        <TreeGridRowGroup>
+          {labels.map((label, index) => (
+            <TreeGridRow key={label} value={label} disabled={disabled[index]}>
+              <TreeGridCell>{label}</TreeGridCell>
+              <TreeGridCell>{label} kind</TreeGridCell>
+            </TreeGridRow>
+          ))}
+        </TreeGridRowGroup>
+      </TreeGrid>
     ),
   },
   {
