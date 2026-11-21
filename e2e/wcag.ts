@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import axe from "axe-core";
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** The WCAG 2.2 Level A and AA rule sets. */
 export const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
@@ -20,11 +20,32 @@ const componentsDir = fileURLToPath(
 );
 const baselineDir = fileURLToPath(new URL("./wcag-baseline/", import.meta.url));
 
-/** Every `/components/<slug>` page, read from the docs entry files (one file per page). */
-export const componentSlugs = readdirSync(componentsDir)
-  .filter((file) => file.endsWith(".ts") && !file.includes(".test."))
-  .map((file) => file.slice(0, -".ts".length))
-  .sort();
+/** One `/components/<slug>` page per docs entry file; tests and other files are not pages. */
+export function entrySlugs(files: string[]) {
+  return files
+    .filter((file) => file.endsWith(".ts") && !file.includes(".test."))
+    .map((file) => file.slice(0, -".ts".length))
+    .sort();
+}
+
+export const componentSlugs = entrySlugs(readdirSync(componentsDir));
+
+/**
+ * Opens `/components/<slug>` and waits for its live example. A missing page, a page without the
+ * example region, or an example still on "Loading example…" fails here, naming the slug.
+ */
+export async function visitExample(page: Page, slug: string) {
+  const response = await page.goto(`/components/${slug}`);
+  expect(response?.ok(), `${slug}: HTTP ${response?.status()}`).toBe(true);
+  const region = page.getByRole("region", { name: "Live example", exact: true });
+  await expect(region, `${slug}: no Live example region`).toBeVisible();
+  await expect(
+    region.getByText("Loading example…"),
+    `${slug}: example stayed on "Loading example…"`,
+  ).toHaveCount(0);
+  await page.waitForLoadState("networkidle");
+  return region;
+}
 
 /**
  * Describes an element by what a person perceives (role, name), not by generated ids, so a
@@ -92,10 +113,12 @@ export async function keyboardFindings(page: Page, region: Locator, maxStops = 6
     (element as HTMLElement).focus();
   });
   let repeats = 0;
+  let key = "(none)";
   for (let stop = 0; stop < maxStops; stop++) {
     await page.keyboard.press("Tab");
     const state = await focusState(page, region);
     if (!state.inside) return findings;
+    key = state.key;
     if (!state.moved) {
       repeats += 1;
       // Segmented fields (date, time) move between segments on Tab before focus leaves them.
@@ -108,7 +131,8 @@ export async function keyboardFindings(page: Page, region: Locator, maxStops = 6
     repeats = 0;
     if (state.obscured) findings.push(`focus-obscured: ${state.key}`);
   }
-  findings.push(`keyboard-trap: Tab did not leave the example within ${maxStops} stops`);
+  // Tab never left the example: the last stop is the one to fix.
+  findings.push(`keyboard-trap: ${key}`);
   return findings;
 }
 
@@ -121,7 +145,7 @@ async function focusState(page: Page, region: Locator): Promise<FocusStop> {
       const toKey = new Function(`return ${describe}`)() as (node: Element | null) => string;
       // Focus may sit in a surface the example opened in the top layer; count it as the example's.
       const owned = (node: Element | null) =>
-        Boolean(node && (scope.contains(node) || node.closest("[popover], dialog")));
+        Boolean(node && (scope.contains(node) || node.closest(":popover-open, dialog:modal")));
       // Tab moved focus to a different element; segments of one field share a key, not an element.
       const memory = window as unknown as { __wcagLastFocus?: Element | null };
       const moved = memory.__wcagLastFocus !== active;
@@ -136,23 +160,44 @@ async function focusState(page: Page, region: Locator): Promise<FocusStop> {
       )
         target = target.parentElement;
       const box = (target ?? active).getBoundingClientRect();
-      const points = [
+      const points: [number, number][] = [
         [box.left + box.width / 2, box.top + box.height / 2],
         [box.left + 2, box.top + 2],
         [box.right - 2, box.top + 2],
         [box.left + 2, box.bottom - 2],
         [box.right - 2, box.bottom - 2],
       ];
+      // A point off screen cannot be hit-tested; an element with no point on screen is not judged.
+      const onscreen = points.filter(
+        ([x, y]) => x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight,
+      );
       // Hits inside the example (a label over a visually hidden input, the element's own
       // children) do not obscure it.
-      const visible = points.some(([x, y]) => {
-        const hit = document.elementFromPoint(x!, y!);
-        return Boolean(hit && (owned(hit) || active.contains(hit) || hit.contains(active)));
-      });
+      const visible =
+        onscreen.length === 0 ||
+        onscreen.some(([x, y]) => {
+          const hit = document.elementFromPoint(x, y);
+          return Boolean(hit && (owned(hit) || active.contains(hit) || hit.contains(active)));
+        });
       return { key: toKey(active), inside: true, moved, obscured: !visible };
     },
     { region: handle, describe: describeSource },
   );
+}
+
+/** Reads a baseline file; a file that is not a JSON array of strings fails naming the file. */
+export function readBaseline(file: string): string[] {
+  if (!existsSync(file)) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new Error(`${file} is not valid JSON: ${(error as Error).message}`);
+  }
+  if (!Array.isArray(parsed) || !parsed.every((finding) => typeof finding === "string")) {
+    throw new Error(`${file} must hold a JSON array of finding strings`);
+  }
+  return parsed;
 }
 
 /**
@@ -171,7 +216,7 @@ export function compareWithBaseline(slug: string, findings: string[]) {
     }
     return { added: [], fixed: [] };
   }
-  const known: string[] = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : [];
+  const known = readBaseline(file);
   return {
     added: actual.filter((finding) => !known.includes(finding)),
     fixed: known.filter((finding) => !actual.includes(finding)),

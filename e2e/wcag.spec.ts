@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { compareWithBaseline, componentSlugs, keyboardFindings, wcagAxeFindings } from "./wcag.js";
+import {
+  compareWithBaseline,
+  componentSlugs,
+  keyboardFindings,
+  visitExample,
+  wcagAxeFindings,
+} from "./wcag.js";
 
 // WCAG 2.2 AA sweep over every component page of the production docs build, where the
 // examples run in a real browser with real focus. Each page's live example is checked with axe
@@ -13,11 +19,7 @@ for (const slug of componentSlugs) {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
 
-    const response = await page.goto(`/components/${slug}`);
-    expect(response?.ok(), `/components/${slug}: HTTP ${response?.status()}`).toBe(true);
-    const region = page.getByRole("region", { name: "Live example", exact: true });
-    await expect(region.getByText("Loading example…")).toHaveCount(0);
-    await page.waitForLoadState("networkidle");
+    const region = await visitExample(page, slug);
 
     const findings: string[] = [];
     findings.push(...(await wcagAxeFindings(page, region)));

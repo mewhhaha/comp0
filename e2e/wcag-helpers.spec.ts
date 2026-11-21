@@ -1,0 +1,192 @@
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { expect, test } from "@playwright/test";
+import {
+  compareWithBaseline,
+  entrySlugs,
+  keyboardFindings,
+  readBaseline,
+  visitExample,
+  wcagAxeFindings,
+} from "./wcag.js";
+
+// Regression tests for the WCAG sweep helpers in e2e/wcag.ts. Each hostile input gets a page
+// built with setContent (or a route fulfilled by the docs server) so the helpers see exactly the
+// markup the criterion describes; the sweep itself is e2e/wcag.spec.ts.
+
+const liveExample = (content: string) =>
+  `<main><section role="region" aria-label="Live example">${content}</section></main>`;
+
+const region = (page: import("@playwright/test").Page) =>
+  page.getByRole("region", { name: "Live example", exact: true });
+
+test("only component entry files become sweep pages", () => {
+  expect(
+    entrySlugs(["tabs.ts", "tabs.test.ts", "catalog.test.ts", "README.md", "alert.ts"]),
+  ).toEqual(["alert", "tabs"]);
+});
+
+test("a page that answers 404 fails by its slug", async ({ page }) => {
+  await page.route("**/components/missing-page", (route) =>
+    route.fulfill({ status: 404, contentType: "text/plain", body: "Not found" }),
+  );
+  await expect(visitExample(page, "missing-page")).rejects.toThrow("missing-page: HTTP 404");
+});
+
+test("an example still on Loading fails by its slug", async ({ page }) => {
+  await page.route("**/components/stuck-example", (route) =>
+    route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: liveExample("<p>Loading example…</p>"),
+    }),
+  );
+  await expect(visitExample(page, "stuck-example")).rejects.toThrow(
+    'stuck-example: example stayed on "Loading example…"',
+  );
+});
+
+test("a page without a Live example region fails by its slug", async ({ page }) => {
+  await page.route("**/components/no-example", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<main><p>Plain page</p></main>" }),
+  );
+  await expect(visitExample(page, "no-example")).rejects.toThrow(
+    "no-example: no Live example region",
+  );
+});
+
+test("unreadable text is left to the consumer: no color-contrast finding", async ({ page }) => {
+  await page.setContent(liveExample('<p style="color:#ccc;background:#fff">Faint text</p>'));
+  expect(await wcagAxeFindings(page, region(page))).toEqual([]);
+});
+
+test("a button with no accessible name is an axe:button-name finding", async ({ page }) => {
+  await page.setContent(liveExample("<button></button>"));
+  expect(await wcagAxeFindings(page, region(page))).toEqual(['axe:button-name: button ""']);
+});
+
+test("finding keys ignore generated ids", async ({ page }) => {
+  const findingsWithId = async (id: string) => {
+    await page.setContent(liveExample(`<input id="${id}">`));
+    return wcagAxeFindings(page, region(page));
+  };
+  const first = await findingsWithId("_r_1_");
+  expect(first).toEqual(['axe:label: input ""']);
+  expect(await findingsWithId("_r_9_")).toEqual(first);
+});
+
+test("duplicate findings on one page are stored once", async ({ page }) => {
+  await page.setContent(liveExample("<button></button><button></button>"));
+  const findings = await wcagAxeFindings(page, region(page));
+  expect(findings).toEqual(['axe:button-name: button ""', 'axe:button-name: button ""']);
+  expect(compareWithBaseline("no-such-page", findings).added).toEqual([
+    'axe:button-name: button ""',
+  ]);
+});
+
+test("content outside the example covering the focused control is focus-obscured", async ({
+  page,
+}) => {
+  await page.setContent(
+    `${liveExample("<button>Open</button><button>Save</button>")}<div style="position:fixed;inset:0;background:#fff"></div>`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([
+    'focus-obscured: button "Open"',
+    'focus-obscured: button "Save"',
+  ]);
+});
+
+test("a Tab keydown that is prevented is a keyboard-trap", async ({ page }) => {
+  await page.setContent(
+    liveExample('<div role="button" tabindex="0">Trap</div><button>After</button>'),
+  );
+  await page.evaluate(() => {
+    document.querySelector<HTMLElement>("[role='button']")!.addEventListener("keydown", (event) => {
+      if (event.key === "Tab") event.preventDefault();
+    });
+  });
+  expect(await keyboardFindings(page, region(page))).toEqual(['keyboard-trap: button "Trap"']);
+});
+
+test("Tab that never leaves the example within 60 stops is a keyboard-trap on the last stop", async ({
+  page,
+}) => {
+  const buttons = Array.from({ length: 70 }, (_, index) => `<button>Button ${index + 1}</button>`);
+  await page.setContent(liveExample(buttons.join("")));
+  expect(await keyboardFindings(page, region(page))).toEqual(['keyboard-trap: button "Button 60"']);
+});
+
+test("a visually hidden checkbox inside its label is not focus-obscured", async ({ page }) => {
+  await page.setContent(
+    liveExample(
+      '<label style="position:relative;display:inline-block;width:160px;height:40px"><input type="checkbox" style="position:absolute;opacity:0;width:1px;height:1px;margin:0"><span>Accept terms</span></label>',
+    ),
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("smooth scrolling does not create focus-obscured findings", async ({ page }) => {
+  const steps = Array.from(
+    { length: 6 },
+    (_, index) => `<div style="height:900px"></div><button>Step ${index + 1}</button>`,
+  );
+  await page.setContent(
+    `<style>html { scroll-behavior: smooth }</style>${liveExample(steps.join(""))}`,
+  );
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a surface the example opened is not counted as covering its trigger", async ({ page }) => {
+  await page.setContent(
+    liveExample(
+      '<button>Open</button><div id="sheet" popover style="inset:0;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;background:#fff"><button>Inside</button></div>',
+    ),
+  );
+  await page.evaluate(() => document.getElementById("sheet")!.showPopover());
+  expect(await keyboardFindings(page, region(page))).toEqual([]);
+});
+
+test("a baseline file that is not valid JSON fails naming the file", () => {
+  const dir = mkdtempSync(join(tmpdir(), "wcag-baseline-"));
+  const file = join(dir, "broken.json");
+  try {
+    writeFileSync(file, '["axe:button-name: button \\"\\""');
+    expect(() => readBaseline(file)).toThrow(file);
+    writeFileSync(file, '{"not": "an array"}');
+    expect(() => readBaseline(file)).toThrow(file);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a listed finding that no longer occurs is reported as fixed", () => {
+  expect(compareWithBaseline("color-picker", [])).toEqual({
+    added: [],
+    fixed: ['axe:label-content-name-mismatch: button "Choose accent color"'],
+  });
+});
+
+test("a finding missing from the baseline is reported as added", () => {
+  expect(
+    compareWithBaseline("color-picker", [
+      'axe:label-content-name-mismatch: button "Choose accent color"',
+      'axe:button-name: button ""',
+    ]),
+  ).toEqual({ added: ['axe:button-name: button ""'], fixed: [] });
+});
+
+test("WCAG_BASELINE=update writes sorted unique findings and deletes an empty file", () => {
+  const slug = "zz-wcag-helper-fixture";
+  const file = fileURLToPath(new URL(`./wcag-baseline/${slug}.json`, import.meta.url));
+  process.env.WCAG_BASELINE = "update";
+  try {
+    compareWithBaseline(slug, ["b", "a", "b"]);
+    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(["a", "b"]);
+    compareWithBaseline(slug, []);
+    expect(existsSync(file)).toBe(false);
+  } finally {
+    delete process.env.WCAG_BASELINE;
+    rmSync(file, { force: true });
+  }
+});

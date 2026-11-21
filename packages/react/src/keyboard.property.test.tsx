@@ -6,6 +6,12 @@ import {
   GridListItem,
   ListBox,
   ListBoxOption,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
+  Menubar,
   Tab,
   TabList,
   TabPanel,
@@ -13,6 +19,7 @@ import {
   Tag,
   TagGroup,
   TagList,
+  Toolbar,
   Tree,
   TreeItem,
 } from "./index.js";
@@ -34,6 +41,8 @@ import { cleanupRoots, setup } from "../test/render.js";
 type Composite = {
   name: string;
   role: string;
+  /** Navigation keys this composite is driven with; defaults to every arrow, Home and End. */
+  keys?: readonly string[];
   render: (labels: string[], disabled: boolean[]) => ReactElement;
 };
 
@@ -112,6 +121,40 @@ const composites: Composite[] = [
       </Tree>
     ),
   },
+  {
+    name: "Menubar",
+    role: "menubar",
+    // ArrowDown, ArrowUp, Enter and Space open a menu, which moves focus into its popover by
+    // design, so the bar is driven with its horizontal keys only.
+    keys: ["{ArrowLeft}", "{ArrowRight}", "{Home}", "{End}"],
+    render: (labels, disabled) => (
+      <Menubar aria-label="Items">
+        {labels.map((label, index) => (
+          <Menu key={label} id={`item-${index + 1}`}>
+            <MenuTrigger disabled={disabled[index]}>{label}</MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                <MenuItem>{label} command</MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        ))}
+      </Menubar>
+    ),
+  },
+  {
+    name: "Toolbar",
+    role: "toolbar",
+    render: (labels, disabled) => (
+      <Toolbar aria-label="Items">
+        {labels.map((label, index) => (
+          <button key={label} type="button" disabled={disabled[index]}>
+            {label}
+          </button>
+        ))}
+      </Toolbar>
+    ),
+  },
 ];
 
 const navigationKeys = [
@@ -126,61 +169,83 @@ const navigationKeys = [
 ] as const;
 
 /** A collection of 1–6 items with at least one enabled, and 1–20 navigation keys. */
-const scenario = fc.integer({ min: 1, max: 6 }).chain((size) =>
-  fc.record({
-    size: fc.constant(size),
-    disabled: fc
-      .array(fc.boolean(), { minLength: size, maxLength: size })
-      .filter((flags) => flags.some((flag) => !flag)),
-    keys: fc.array(fc.constantFrom(...navigationKeys), { minLength: 1, maxLength: 20 }),
-  }),
-);
+function scenario(keys: readonly string[]) {
+  return fc.integer({ min: 1, max: 6 }).chain((size) =>
+    fc.record({
+      size: fc.constant(size),
+      disabled: fc
+        .array(fc.boolean(), { minLength: size, maxLength: size })
+        .filter((flags) => flags.some((flag) => !flag)),
+      keys: fc.array(fc.constantFrom(...keys), { minLength: 1, maxLength: 20 }),
+    }),
+  );
+}
+
+/**
+ * Collections every composite must survive, run before the random cases: a single item, all but
+ * one item disabled, and the first and last items disabled with Home and End pressed.
+ */
+function hostileScenarios(keys: readonly string[]) {
+  const sequence = [...keys, "{Home}", "{End}"];
+  return [
+    [{ size: 1, disabled: [false], keys: sequence }],
+    [{ size: 5, disabled: [true, true, false, true, true], keys: sequence }],
+    [{ size: 4, disabled: [true, false, false, true], keys: sequence }],
+  ];
+}
 
 const isDisabled = (element: Element) =>
   element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true";
 
-describe.each(composites)("$name keyboard invariants", ({ role, render }) => {
-  it("keeps one tab stop on the focused enabled item and never traps focus", async () => {
-    await fc.assert(
-      fc.asyncProperty(scenario, async ({ size, disabled, keys }) => {
-        const labels = Array.from({ length: size }, (_, index) => `Item ${index + 1}`);
-        const { container, user } = setup(
-          <>
-            <button type="button">Before</button>
-            {render(labels, disabled)}
-            <button type="button">After</button>
-          </>,
-        );
-        try {
-          const root = container.querySelector(`[role='${role}']`)!;
-          const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
-          const stops = () => [...root.querySelectorAll("[tabindex='0']")];
+describe.each(composites)(
+  "$name keyboard invariants",
+  ({ role, render, keys = navigationKeys }) => {
+    it("keeps one tab stop on the focused enabled item and never traps focus", async () => {
+      await fc.assert(
+        fc.asyncProperty(scenario(keys), async ({ size, disabled, keys: sequence }) => {
+          const labels = Array.from({ length: size }, (_, index) => `Item ${index + 1}`);
+          const { container, user } = setup(
+            <>
+              <button type="button">Before</button>
+              {render(labels, disabled)}
+              <button type="button">After</button>
+            </>,
+          );
+          try {
+            const root = container.querySelector(`[role='${role}']`)!;
+            const [before] = container.querySelectorAll<HTMLElement>(":scope > button");
+            const stops = () => [...root.querySelectorAll("[tabindex='0']")];
 
-          await user.click(before!);
-          await user.tab();
-          expect(root.contains(document.activeElement), "Tab enters the composite").toBe(true);
+            await user.click(before!);
+            await user.tab();
+            expect(root.contains(document.activeElement), "Tab enters the composite").toBe(true);
 
-          for (const key of keys) {
-            await user.keyboard(key);
-            const active = document.activeElement!;
-            expect(root.contains(active), `${key} keeps focus inside`).toBe(true);
-            expect(isDisabled(active), `${key} skips disabled items`).toBe(false);
-            expect(stops(), `${key} leaves one tab stop, on the focused item`).toEqual([active]);
+            for (const key of sequence) {
+              await user.keyboard(key);
+              const active = document.activeElement!;
+              expect(root.contains(active), `${key} keeps focus inside`).toBe(true);
+              expect(isDisabled(active), `${key} skips disabled items`).toBe(false);
+              expect(stops(), `${key} leaves one tab stop, on the focused item`).toEqual([active]);
+            }
+
+            const focused = document.activeElement;
+            await user.tab();
+            // The next stop is the After button, or a tab panel, which is focusable by design.
+            expect(root.contains(document.activeElement), "one Tab leaves the composite").toBe(
+              false,
+            );
+            expect(document.activeElement, "one Tab leaves the composite").not.toBe(document.body);
+            await user.tab({ shift: true });
+            expect(document.activeElement, "Shift+Tab returns to the same item").toBe(focused);
+          } finally {
+            cleanupRoots();
+            document.body.innerHTML = "";
           }
-
-          const focused = document.activeElement;
-          await user.tab();
-          // The next stop is the After button, or a tab panel, which is focusable by design.
-          expect(root.contains(document.activeElement), "one Tab leaves the composite").toBe(false);
-          expect(document.activeElement, "one Tab leaves the composite").not.toBe(document.body);
-          await user.tab({ shift: true });
-          expect(document.activeElement, "Shift+Tab returns to the same item").toBe(focused);
-        } finally {
-          cleanupRoots();
-          document.body.innerHTML = "";
-        }
-      }),
-      { numRuns: 40 },
-    );
-  });
-});
+        }),
+        { numRuns: 40, examples: hostileScenarios(keys) },
+      );
+      // 40 runs of user events take seconds on a loaded runner; a timed-out run keeps going and
+      // would leak its DOM into the next test, so the budget is set here rather than left at 5s.
+    }, 60_000);
+  },
+);
