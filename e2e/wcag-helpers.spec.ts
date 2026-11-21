@@ -10,6 +10,7 @@ import {
   readBaseline,
   visitExample,
   wcagAxeFindings,
+  writeBaseline,
 } from "./wcag.js";
 
 // Regression tests for the WCAG sweep helpers in e2e/wcag.ts. Each hostile input gets a page
@@ -176,17 +177,15 @@ test("a finding missing from the baseline is reported as added", () => {
   ).toEqual({ added: ['axe:button-name: button ""'], fixed: [] });
 });
 
-test("WCAG_BASELINE=update writes sorted unique findings and deletes an empty file", () => {
+test("writeBaseline writes sorted unique findings and deletes an empty file", () => {
   const slug = "zz-wcag-helper-fixture";
   const file = fileURLToPath(new URL(`./wcag-baseline/${slug}.json`, import.meta.url));
-  process.env.WCAG_BASELINE = "update";
   try {
-    compareWithBaseline(slug, ["b", "a", "b"]);
+    writeBaseline(slug, ["b", "a", "b"]);
     expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(["a", "b"]);
-    compareWithBaseline(slug, []);
+    writeBaseline(slug, []);
     expect(existsSync(file)).toBe(false);
   } finally {
-    delete process.env.WCAG_BASELINE;
     rmSync(file, { force: true });
   }
 });

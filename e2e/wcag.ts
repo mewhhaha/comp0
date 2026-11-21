@@ -1,16 +1,17 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import axe from "axe-core";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /** The WCAG 2.2 Level A and AA rule sets. */
-export const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
+const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
 /**
  * comp0 is headless: the consumer owns color and size, so contrast (1.4.3) and target size
  * (2.5.8) judge the docs example styling, not the library. They stay out of this sweep.
  */
-export const consumerOwnedRules = {
+const consumerOwnedRules = {
   "color-contrast": { enabled: false },
   "target-size": { enabled: false },
 };
@@ -104,7 +105,8 @@ type FocusStop = {
  * - `focus-obscured` (2.4.11) when content outside the example covers every sampled point of
  *   the focused element (a sticky header, for instance).
  */
-export async function keyboardFindings(page: Page, region: Locator, maxStops = 60) {
+export async function keyboardFindings(page: Page, region: Locator) {
+  const maxStops = 60;
   const findings: string[] = [];
   // Smooth scrolling would leave the focused element mid-scroll when it is measured.
   await page.addStyleTag({ content: "html, * { scroll-behavior: auto !important; }" });
@@ -153,12 +155,12 @@ async function focusState(page: Page, region: Locator): Promise<FocusStop> {
       if (!active || active === document.body || active === scope || !owned(active)) {
         return { key: toKey(active), inside: false, moved, obscured: false };
       }
+      const area = (node: Element) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width * rect.height;
+      };
       let target: Element | null = active;
-      while (
-        target &&
-        target.getBoundingClientRect().width * target.getBoundingClientRect().height < 4
-      )
-        target = target.parentElement;
+      while (target && area(target) < 4) target = target.parentElement;
       const box = (target ?? active).getBoundingClientRect();
       const points: [number, number][] = [
         [box.left + box.width / 2, box.top + box.height / 2],
@@ -203,22 +205,27 @@ export function readBaseline(file: string): string[] {
 /**
  * Known findings per page live in `e2e/wcag-baseline/<slug>.json`: the remediation backlog.
  * A finding missing from it fails the suite (a regression), and so does a baseline entry
- * that no longer occurs, so the backlog only shrinks. `WCAG_BASELINE=update` rewrites it.
+ * that no longer occurs, so the backlog only shrinks. `pnpm test:wcag:baseline` rewrites it
+ * through `writeBaseline`.
  */
 export function compareWithBaseline(slug: string, findings: string[]) {
-  const file = `${baselineDir}${slug}.json`;
+  const known = readBaseline(`${baselineDir}${slug}.json`);
   const actual = [...new Set(findings)].sort();
-  if (process.env.WCAG_BASELINE === "update") {
-    if (actual.length === 0) rmSync(file, { force: true });
-    else {
-      mkdirSync(baselineDir, { recursive: true });
-      writeFileSync(file, `${JSON.stringify(actual, null, 2)}\n`);
-    }
-    return { added: [], fixed: [] };
-  }
-  const known = readBaseline(file);
   return {
     added: actual.filter((finding) => !known.includes(finding)),
     fixed: known.filter((finding) => !actual.includes(finding)),
   };
+}
+
+/** Replaces a page's baseline with its findings, sorted and unique; no findings deletes the file. */
+export function writeBaseline(slug: string, findings: string[]) {
+  const file = `${baselineDir}${slug}.json`;
+  const actual = [...new Set(findings)].sort();
+  if (actual.length === 0) rmSync(file, { force: true });
+  else {
+    mkdirSync(baselineDir, { recursive: true });
+    writeFileSync(file, `${JSON.stringify(actual, null, 2)}\n`);
+    // Leave the file as `pnpm format:check` expects it.
+    execFileSync("pnpm", ["exec", "oxfmt", "--write", file]);
+  }
 }
