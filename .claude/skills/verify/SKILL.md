@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Verify a comp0 change before committing it, by running the cheap checks and then the docs build with the WCAG 2.2 AA sweep and the suites for the touched families. Use before every commit or pull request.
+description: Verify a comp0 change before committing it, by running the cheap checks and then the docs build with the WCAG 2.2 AA and text presentation sweeps and the suites for the touched families. Use before every commit or pull request.
 ---
 
 # Verify a comp0 change
@@ -28,11 +28,12 @@ Judge `pnpm typecheck` by its exit code.
 | Select, Combobox, Checkbox, Tabs, Tree, Dialog, Menu | also `gh workflow run screen-readers.yml --ref <branch>` (real VoiceOver and NVDA; Linux cannot run them)                              |
 | A docs example, docs styles, or any component markup | step 3                                                                                                                                 |
 
-## 3. Run the docs build and the WCAG 2.2 AA sweep
+## 3. Run the docs build and the WCAG 2.2 AA sweeps
 
 ```sh
 pnpm --filter @comp0/docs build
 pnpm test:wcag                 # every /components/<slug> page
+pnpm test:text                 # orientation, 200% text, and text spacing on every page
 ```
 
 The sweep fails on two kinds of difference from `e2e/wcag-baseline/<slug>.json`:
@@ -40,6 +41,10 @@ The sweep fails on two kinds of difference from `e2e/wcag-baseline/<slug>.json`:
 - **New findings**: a regression. Fix the component or the example. Do not add it to the baseline.
 - **Fixed findings still listed**: good news. Run `pnpm test:wcag:baseline` and commit the
   smaller baseline file with the fix.
+
+`pnpm test:text` follows the same contract for clipped text with
+`e2e/text-presentation-baseline/<slug>.json` and `pnpm test:text:baseline`; its orientation
+checks have no baseline and must pass.
 
 Then open the changed page with `pnpm dev` and use it with the keyboard alone: Tab in and out,
 operate it, open and close any surface, and check focus never gets lost. Automated

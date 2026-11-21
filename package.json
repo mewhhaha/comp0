@@ -20,6 +20,8 @@
     "test:e2e": "playwright test",
     "test:wcag": "playwright test e2e/wcag.spec.ts",
     "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0",
+    "test:text": "playwright test e2e/text-presentation.spec.ts",
+    "test:text:baseline": "TEXT_BASELINE=update playwright test e2e/text-presentation.spec.ts --retries 0",
     "test:screen-reader:voiceover": "playwright test -c playwright.screen-reader.config.ts --project voiceover",
     "test:screen-reader:nvda": "playwright test -c playwright.screen-reader.config.ts --project nvda",
     "test:package": "node scripts/verify-packages.mjs",
