@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
+import { useRef, useState, type ComponentProps, type KeyboardEvent } from "react";
 import { dataAttr, useComposedRefs, useControllableState } from "@comp0/core";
 import { useWarnOnce } from "../internal/dev.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -60,10 +60,12 @@ export function Inventory({
   const keyboard = useInventoryKeyboard(gesture);
   const pointer = useInventoryPointer({ ...gesture, rootRef, keyboard });
 
-  useLayoutEffect(() => {
-    if (layout.some((entry) => entry.value === focusedValue)) return;
-    setFocusedValue(layout[0]?.value ?? "");
-  }, [focusedValue, layout]);
+  // Reset during render, not after commit, so no commit renders without a tab stop. Resetting the
+  // state (rather than deriving a fallback) keeps the stop put if the removed item comes back.
+  if (!layout.some((entry) => entry.value === focusedValue)) {
+    const firstValue = layout[0]?.value ?? "";
+    if (firstValue !== focusedValue) setFocusedValue(firstValue);
+  }
 
   const context = {
     activeValue: session.activeValue,
