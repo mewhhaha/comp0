@@ -58,13 +58,21 @@ async function pressUntilHeard(
   const before = (await context.reader.spokenPhraseLog()).length;
   // NVDA's capture returns the phrase it spoke; VoiceOver's later speech only reaches the log.
   const captured = await press(context, key);
-  await expect
-    .poll(
-      async () =>
-        heard([...captured, ...(await context.reader.spokenPhraseLog()).slice(before)], terms),
-      { timeout: 10_000, message: `${when}: expected ${terms.map(String).join(" + ")}` },
-    )
-    .toBe(true);
+  let utterances: string[] = captured;
+  try {
+    await expect
+      .poll(
+        async () => {
+          utterances = [...captured, ...(await context.reader.spokenPhraseLog()).slice(before)];
+          return heard(utterances, terms);
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+  } catch {
+    // The poll's own message can't name what was spoken, which is what a failure needs.
+    expectHeard(utterances, terms, when);
+  }
 }
 
 /**
