@@ -19,7 +19,7 @@ type ScenarioContext = {
    * Reader commands that describe where the reader is, tried in order when an announcement does
    * not come on its own. VoiceOver sometimes drops the announcement for a focus or state change
    * and speaks only its usage hint, though the page and the reader's own model are right; asking
-   * it is what a user does (VO-Shift-F4, VO-F3), and the answer is checked for the same terms.
+   * it is what a user does (VO-F4, VO-F3), and the answer is checked for the same terms.
    */
   describers?: readonly (() => Promise<unknown>)[];
 };
@@ -49,6 +49,19 @@ async function say(context: ScenarioContext, action: () => Promise<unknown>) {
 }
 
 type HeardOptions = { hints?: boolean };
+
+/** Fails after `ms` instead of waiting on a reader command that never returns. */
+async function within<T>(ms: number, work: Promise<T>, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${what} did not finish within ${ms} ms`)), ms);
+  });
+  try {
+    return await Promise.race([work, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
  * Presses `key` and checks the reader says `terms` because of it. VoiceOver can finish the
@@ -94,7 +107,7 @@ async function confirmSaid(
   }
   const spoken = utterances;
   for (const describe of context.describers ?? []) {
-    const described = await say(context, describe);
+    const described = await within(15_000, say(context, describe), `${when}: describing`);
     if (heard(described, terms, options)) {
       test.info().annotations.push({
         type: "screen reader",
