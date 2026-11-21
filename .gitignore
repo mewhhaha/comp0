@@ -7,7 +7,9 @@ apps/docs/.dev.vars
 apps/docs/.env
 packages/*/dist
 .agents
-.claude
+# Project skills are shared; everything else under .claude is local.
+.claude/*
+!.claude/skills/
 .vite
 .todo
 .vitest

@@ -1,0 +1,111 @@
+# Accessibility
+
+comp0 targets [WCAG 2.2](https://www.w3.org/TR/WCAG22/) Level AA. This file maps each success
+criterion to what checks it, so it doubles as the rubric for "is this component done".
+
+comp0 is headless: the library owns semantics, keyboard behavior, focus management, and state;
+the consumer owns color, size, and focus styling. Criteria about visual presentation (1.4.3
+contrast, 1.4.11 non-text contrast, 2.4.7 focus appearance, 2.5.8 target size) are the
+consumer's to meet, so the suites do not test them; the library's part is exposing the state
+hooks (`data-focus-visible`, `data-disabled`, ...) that let a consumer style them.
+
+## Test layers
+
+| Layer                            | Where                                                                                                  | What it proves                                                                                                                                                                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Docs WCAG sweep (Playwright)     | `e2e/wcag.spec.ts`, `e2e/wcag.ts`                                                                      | Every `/components/<slug>` page in the production build: axe with the WCAG 2.2 A/AA tags (visual rules off) on the live example, then a Tab walk that flags keyboard traps and focus obscured by content outside the example. `e2e/wcag-helpers.spec.ts` regression-tests the helpers. |
+| Known findings                   | `e2e/wcag-baseline/<slug>.json`                                                                        | The remediation backlog. New findings fail; findings that no longer occur also fail until the file is shrunk with `pnpm test:wcag:baseline`.                                                                                                                                           |
+| Keyboard property tests          | `packages/react/src/keyboard.property.test.tsx`                                                        | For generated collections and key sequences, ListBox, GridList, TagGroup, Tabs, Tree, TreeGrid, Menubar, and Toolbar keep one tab stop on the focused enabled item, never lose focus, and never trap Tab. Table is excluded: its cells cannot be disabled.                             |
+| Browser tests (Vitest, Chromium) | `**/*.browser.test.tsx`                                                                                | Real focus, top-layer overlays, modal focus return and containment (`overlay-focus.browser.test.tsx`), and axe in opened states via `expectNoAxeViolations`.                                                                                                                           |
+| Screen reader model              | `**/*.screen-reader.test.tsx`                                                                          | What `@guidepup/virtual-screen-reader` announces: roles, names, states, positions.                                                                                                                                                                                                     |
+| Composition tests (jsdom)        | `**/*.composition.test.tsx`, `accessibility.test.tsx`, `apps/docs/src/examples/accessibility.test.tsx` | ARIA wiring, keyboard handlers, axe on canonical compositions and every example's first render.                                                                                                                                                                                        |
+| Docs runtime (Playwright)        | `e2e/docs-mobile.spec.ts`, `e2e/*-runtime.spec.ts`                                                     | Reflow at 320px, touch operation, end-to-end flows.                                                                                                                                                                                                                                    |
+
+Run `pnpm --filter @comp0/docs build && pnpm test:wcag` for the sweep; `.claude/skills/verify`
+is the full checklist.
+
+## Success criteria
+
+Coverage: **consumer** means the consumer's styling decides it, **auto** means a failing check exists, **partial** means checks catch common failures
+but a person still has to judge, **manual** means no automated check yet, **n/a** means it is
+about page content a component library does not author.
+
+### Perceivable
+
+| SC                               | Level | Coverage | Checked by                                                                                                                                                |
+| -------------------------------- | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1.1 Non-text Content           | A     | partial  | sweep axe (`image-alt`, `svg-img-alt`, `role-img-alt`); chart `role="img"` labels in `chart/chart.browser.test.tsx` and `chart/chart.navigation.test.tsx` |
+| 1.2.1–1.2.5 Time-based media     | A/AA  | n/a      |                                                                                                                                                           |
+| 1.3.1 Info and Relationships     | A     | partial  | sweep axe ARIA rules; screen-reader suites; composition tests of labels, descriptions, groups                                                             |
+| 1.3.2 Meaningful Sequence        | A     | partial  | screen-reader suites (announced order and positions); the sweep does not check reading or DOM order                                                       |
+| 1.3.3 Sensory Characteristics    | A     | manual   | docs copy review                                                                                                                                          |
+| 1.3.4 Orientation                | AA    | manual   | not tested: `docs-mobile.spec.ts` audits portrait widths only, so no orientation change is exercised                                                      |
+| 1.3.5 Identify Input Purpose     | AA    | partial  | sweep axe `autocomplete-valid`; fields forward `autoComplete`                                                                                             |
+| 1.4.1 Use of Color               | A     | manual   | state attributes (`data-selected`, `data-invalid`) must pair with a non-color cue in examples                                                             |
+| 1.4.2 Audio Control              | A     | n/a      |                                                                                                                                                           |
+| 1.4.3 Contrast (Minimum)         | AA    | consumer | presentation; not tested (`color-contrast` is disabled in the sweep)                                                                                      |
+| 1.4.4 Resize Text                | AA    | manual   |                                                                                                                                                           |
+| 1.4.5 Images of Text             | AA    | n/a      |                                                                                                                                                           |
+| 1.4.10 Reflow                    | AA    | auto     | `docs-mobile.spec.ts` (no page overflow at 320px)                                                                                                         |
+| 1.4.11 Non-text Contrast         | AA    | consumer | presentation; not tested                                                                                                                                  |
+| 1.4.12 Text Spacing              | AA    | manual   |                                                                                                                                                           |
+| 1.4.13 Content on Hover or Focus | AA    | partial  | Escape dismissal in `overlay.composition.test.tsx` and `internal/overlay/overlay-state.test.tsx`; hoverability is manual                                  |
+
+### Operable
+
+| SC                                  | Level | Coverage | Checked by                                                                                                                                                         |
+| ----------------------------------- | ----- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2.1.1 Keyboard                      | A     | auto     | keyboard property tests for roving composites; the sweep Tab walk checks the Tab order is trap-free, not that every control is reachable; family keyboard tests    |
+| 2.1.2 No Keyboard Trap              | A     | auto     | sweep Tab walk (`keyboard-trap`); property tests (one Tab leaves); `overlay-focus.browser.test.tsx` (Tab stays in a modal)                                         |
+| 2.1.4 Character Key Shortcuts       | A     | partial  | typeahead tests in collection families; other shortcuts manual                                                                                                     |
+| 2.2.1 Timing Adjustable             | A     | partial  | Toast composition tests (pause on hover and focus)                                                                                                                 |
+| 2.2.2 Pause, Stop, Hide             | A     | partial  | Carousel tests (pause while hovered or focused); reduced-motion check in `genui-examples.spec.ts`                                                                  |
+| 2.3.1 Three Flashes                 | A     | n/a      |                                                                                                                                                                    |
+| 2.4.1 Bypass Blocks                 | A     | partial  | SkipLink tests in `status.composition.test.tsx`                                                                                                                    |
+| 2.4.2 Page Titled                   | A     | n/a      |                                                                                                                                                                    |
+| 2.4.3 Focus Order                   | A     | auto     | property tests (Shift+Tab returns to the same item); focus return to the opener in `overlay.composition.test.tsx` and `overlay-focus.browser.test.tsx`             |
+| 2.4.4 Link Purpose (In Context)     | A     | partial  | sweep axe `link-name`                                                                                                                                              |
+| 2.4.5 Multiple Ways                 | AA    | n/a      |                                                                                                                                                                    |
+| 2.4.6 Headings and Labels           | AA    | partial  | sweep axe `label` for form controls; headings are manual (axe `empty-heading` is best-practice, outside the WCAG tags the sweep runs); GenUI schemas require names |
+| 2.4.7 Focus Visible                 | AA    | consumer | styling is the consumer's; the library exposes `data-focus-visible` as a state hook, and no test asserts it yet                                                    |
+| 2.4.11 Focus Not Obscured (Minimum) | AA    | auto     | sweep Tab walk (`focus-obscured`)                                                                                                                                  |
+| 2.5.1 Pointer Gestures              | A     | partial  | `connect-touch.spec.ts`; other families manual                                                                                                                     |
+| 2.5.2 Pointer Cancellation          | A     | manual   | no test asserts activation on release or abort when released outside                                                                                               |
+| 2.5.3 Label in Name                 | A     | auto     | sweep axe `label-content-name-mismatch`                                                                                                                            |
+| 2.5.4 Motion Actuation              | A     | n/a      |                                                                                                                                                                    |
+| 2.5.7 Dragging Movements            | AA    | partial  | keyboard and button alternatives in `gridlist.reorder.test.tsx`, Inventory, Connect, FloatingPanel tests                                                           |
+| 2.5.8 Target Size (Minimum)         | AA    | consumer | presentation; not tested                                                                                                                                           |
+
+### Understandable
+
+| SC                                              | Level | Coverage | Checked by                                                                            |
+| ----------------------------------------------- | ----- | -------- | ------------------------------------------------------------------------------------- |
+| 3.1.1 Language of Page                          | A     | n/a      |                                                                                       |
+| 3.1.2 Language of Parts                         | AA    | n/a      |                                                                                       |
+| 3.2.1 On Focus                                  | A     | manual   | the Tab walk exercises focus but does not judge context changes                       |
+| 3.2.2 On Input                                  | A     | partial  | composition tests of controlled values                                                |
+| 3.2.3 Consistent Navigation                     | AA    | n/a      |                                                                                       |
+| 3.2.4 Consistent Identification                 | AA    | n/a      |                                                                                       |
+| 3.2.6 Consistent Help                           | A     | n/a      |                                                                                       |
+| 3.3.1 Error Identification                      | A     | partial  | `field-feedback.composition.test.tsx` and family form tests                           |
+| 3.3.2 Labels or Instructions                    | A     | partial  | sweep axe `label`; Field tests                                                        |
+| 3.3.3 Error Suggestion                          | AA    | manual   |                                                                                       |
+| 3.3.4 Error Prevention (Legal, Financial, Data) | AA    | n/a      |                                                                                       |
+| 3.3.7 Redundant Entry                           | A     | n/a      |                                                                                       |
+| 3.3.8 Accessible Authentication (Minimum)       | AA    | manual   | `password-field.browser.test.tsx` keeps `autoComplete` working; paste is not asserted |
+
+### Robust
+
+| SC                      | Level | Coverage | Checked by                                                                                                 |
+| ----------------------- | ----- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| 4.1.2 Name, Role, Value | A     | auto     | sweep axe ARIA rules; screen-reader suites; composition tests                                              |
+| 4.1.3 Status Messages   | AA    | partial  | alert and status role tests in `accessibility-primitives.composition.test.tsx`; Toast and BusyRegion tests |
+
+## Known gaps
+
+- Opened states (an open Select, an expanded Tree item) are only axe-checked where a browser test
+  drives them; the sweep sees each example as it first renders.
+- 1.3.4, 1.4.4, 1.4.12, 1.3.3, and 2.5.2 have no automated check yet.
+- Headings (2.4.6) are not swept: axe's heading rules are best-practice, not WCAG tags.
+- Real screen readers (NVDA, JAWS, VoiceOver) are not run; the virtual reader models the
+  accessibility tree only.
