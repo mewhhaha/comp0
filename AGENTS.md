@@ -75,6 +75,10 @@ WCAG 2.2 AA is the target; `ACCESSIBILITY.md` maps each success criterion to the
 
 Benchmarks live in `packages/react/bench/*.bench.tsx` and run in Chromium with `pnpm bench`, outside `pnpm verify`, because their output is timing rather than a verdict. Each reports React commits, render time (Profiler `actualDuration`), and wall time until React settles, which also covers effects and their DOM writes. Use only the public API, so the same bench measures an older commit for comparison. Turn a structural property a bench reveals (commits per interaction, exactly one tab stop) into a deterministic test.
 
+## Pull Requests
+
+GitHub fills `.github/pull_request_template.md` only in its web form, so when you open a pull request through `gh` or the API, build the body from that file yourself. Leave the visible opener for the person to write or approve, or draft one or two plain sentences and say so; put your full write-up inside the `<details>` block with your model name in the `<summary>`, and fill the verification and accessibility sections with what you actually ran.
+
 ## Docs Component Pages
 
 Every page under `/components/<slug>` renders from one entry file, `apps/docs/src/content/components/<slug>.ts`, which default-exports `component({...})` from `define.ts`: lesson copy, accessibility notes, parts (`p()`/`prop()`), keyboard, state hooks, form notes, and related links all live in that one file. There are no per-component route files. `routes/components/route.tsx` lays out the fixed section order (Example, Anatomy, Step by step, Keyboard, Forms and accessibility, API reference) from the entry's fields. `catalog.ts` loads every entry and orders them through `groupOrder`.
