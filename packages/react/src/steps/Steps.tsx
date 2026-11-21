@@ -15,15 +15,18 @@ export type StepsProps = RootProps<{
 
 export function Steps({ as, children, value, defaultValue, onChange, ...props }: StepsProps) {
   const baseId = useId();
-  const [currentValue, setCurrentValue, { controlled }] = useControllableState({
+  const initialValue = defaultValue ?? "";
+  const [, setCurrentValue, { controlled }] = useControllableState({
     value,
-    defaultValue: defaultValue ?? "",
+    defaultValue: initialValue,
     onChange,
   });
   const [seed] = useState(createStepsSeed);
   // The seed answers only server and hydration renders, so the store never needs to clear it.
   const [items] = useState(() => createOrderedCollection());
-  const [status] = useState(() => createStepsStatus(items, seed, currentValue));
+  // The store mirrors the uncontrolled value: it starts from the same default and is written only
+  // in the event that sets that state, so dropping `value` later shows it in the same render.
+  const [status] = useState(() => createStepsStatus(items, seed, initialValue));
 
   // Uncontrolled moves update the status in the same event as the state, so they take one commit;
   // a controlled value waits for its owner, which may reject the change, and reaches the parts

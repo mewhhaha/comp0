@@ -66,7 +66,7 @@ function Step({ name }: { name: string }) {
 
 type FlowProps = {
   names: readonly string[];
-  value?: string;
+  value?: string | undefined;
   defaultValue?: string;
   onChange?: (value: string) => void;
 };
@@ -561,6 +561,34 @@ describe("every commit agrees with the value Steps rendered", () => {
         expect(entry).toBe(`${entry.split(":")[0]}: ${shownFor(step)}`);
       }
       expect(document.activeElement?.getAttribute("data-input")).toBe("d");
+    },
+  );
+
+  it.each([false, true])(
+    "when switching between controlled and uncontrolled (StrictMode: %s)",
+    async (strict) => {
+      const flow = (value: string | undefined) => {
+        let ui = <Flow names={CONSISTENT} value={value} defaultValue="b" onChange={() => {}} />;
+        if (strict) ui = <StrictMode>{ui}</StrictMode>;
+        return ui;
+      };
+      const { container, rerender, user } = setup(flow("c"));
+      expect(rows(container)).toEqual(expectedRows(CONSISTENT, "c"));
+
+      // Dropping `value` shows the uncontrolled value, which is still the default.
+      rerender(flow(undefined));
+      expect(rows(container)).toEqual(expectedRows(CONSISTENT, "b"));
+
+      await user.click(triggerFor(container, "d"));
+      expect(rows(container)).toEqual(expectedRows(CONSISTENT, "d"));
+
+      rerender(flow("a"));
+      expect(rows(container)).toEqual(expectedRows(CONSISTENT, "a"));
+
+      // A click while controlled leaves the uncontrolled value alone.
+      await user.click(triggerFor(container, "c"));
+      rerender(flow(undefined));
+      expect(rows(container)).toEqual(expectedRows(CONSISTENT, "d"));
     },
   );
 
