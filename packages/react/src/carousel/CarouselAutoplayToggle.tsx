@@ -1,5 +1,6 @@
 import { type ComponentProps, type MouseEvent } from "react";
 import { dataAttr } from "@comp0/core";
+import { useIsCollectionPass } from "../internal/collection-pass.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
 import { useCarouselContext } from "./carousel-shared.js";
 
@@ -15,7 +16,8 @@ export type CarouselAutoplayToggleProps = ComponentProps<"button"> & AsProp;
  */
 export function CarouselAutoplayToggle({ as, onClick, ...props }: CarouselAutoplayToggleProps) {
   const carousel = useCarouselContext("CarouselAutoplayToggle");
-  if (carousel.autoplay === undefined) return null;
+  const collecting = useIsCollectionPass();
+  if (collecting || carousel.autoplay === undefined) return null;
   let label = props["aria-label"];
   if (label === undefined) label = carousel.stopped ? "Play carousel" : "Pause carousel";
 

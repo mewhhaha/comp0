@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
+import { useEventCallback } from "@comp0/core";
 import { BusyRegion } from "@comp0/react";
 import { catalog as defaultCatalog } from "../catalog/catalog.js";
 import { type CatalogEntry } from "../catalog/types.js";
@@ -9,7 +10,6 @@ import { type GenUIError } from "../validate/errors.js";
 import { validateResponse, type ValidatedResponse } from "../validate/validate.js";
 import { GenUIContext, type GenUIAction } from "./context.js";
 import { NodeView } from "./node.js";
-import { useLatest } from "./use-latest.js";
 
 export type GenUIProps = {
   /**
@@ -73,21 +73,20 @@ export function GenUI({
     ? emptyResponse
     : validateResponse(response, { catalog, complete: !streaming, known });
 
-  const latestAction = useLatest(onAction);
-  const latestState = useLatest(onStateChange);
-  const latestError = useLatest(onError);
+  // A new inline callback each render neither resubscribes nor reports the same problems again.
+  const reportState = useEffectEvent((state: GenUIState) => onStateChange?.(state));
+  const reportErrors = useEffectEvent((errors: GenUIError[]) => onError?.(errors));
+  // Not an effect event: child event handlers call it. Its identity stays stable across renders.
+  const sendAction = useEventCallback(onAction);
 
-  useEffect(
-    () => store.subscribeToEdits((state) => latestState.current?.(state)),
-    [store, latestState],
-  );
+  useEffect(() => store.subscribeToEdits((state) => reportState(state)), [store]);
 
   const failures = validated.complete && validated.errors.length > 0 ? validated.errors : undefined;
   // The same problems are reported once, however often the response is validated again.
   const failureText = failures === undefined ? "" : JSON.stringify(failures);
   useEffect(() => {
-    if (failureText !== "") latestError.current?.(JSON.parse(failureText) as GenUIError[]);
-  }, [failureText, latestError]);
+    if (failureText !== "") reportErrors(JSON.parse(failureText) as GenUIError[]);
+  }, [failureText]);
 
   const context = {
     store,
@@ -97,7 +96,7 @@ export function GenUI({
     slots,
     act: (action: GenUIAction) => {
       // Acting on a half-written interface would send a half-written request.
-      if (!streaming) latestAction.current?.(action);
+      if (!streaming) sendAction(action);
     },
   };
   return (

@@ -25,6 +25,7 @@ Judge `pnpm typecheck` by its exit code.
 | Focus, roving tab stops, keyboard handlers           | `pnpm exec vitest run packages/react/src/keyboard.property.test.tsx` and `pnpm test:browser`                                           |
 | Overlays, popovers, dialogs                          | `pnpm exec vitest run --project browser packages/react/src/overlay.browser.test.tsx packages/react/src/overlay-focus.browser.test.tsx` |
 | What a screen reader announces                       | the family's `*.screen-reader.test.tsx`, or add one                                                                                    |
+| Select, Combobox, Checkbox, Tabs, Tree, Dialog, Menu | also `gh workflow run screen-readers.yml --ref <branch>` (real VoiceOver and NVDA; Linux cannot run them)                              |
 | A docs example, docs styles, or any component markup | step 3                                                                                                                                 |
 
 ## 3. Run the docs build and the WCAG 2.2 AA sweep

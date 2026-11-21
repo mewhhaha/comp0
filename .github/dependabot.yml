@@ -1,0 +1,37 @@
+# Weekly grouped updates. Patch and minor groups are merged automatically once CI passes
+# (see .github/workflows/dependabot-auto-merge.yml). Major updates get one PR each for review.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    # pnpm workspace root: covers every package.json and the catalog in pnpm-workspace.yaml.
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    # Skip versions published in the last few days, so a compromised or yanked release
+    # has time to be pulled before it can merge without a person looking.
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    cooldown:
+      default-days: 3
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: ci

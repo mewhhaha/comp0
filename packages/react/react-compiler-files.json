@@ -19,7 +19,6 @@
   "packages/genui/dist/mcp/react.js",
   "packages/genui/dist/render/GenUI.js",
   "packages/genui/dist/render/node.js",
-  "packages/genui/dist/render/use-latest.js",
   "packages/genui/dist/rsc/client.js",
   "packages/genui/dist/rsc/holes.js",
   "packages/genui/dist/rsc/renderer.js",
