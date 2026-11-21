@@ -67,7 +67,7 @@
     "@comp0/react": "workspace:*"
   },
   "devDependencies": {
-    "arktype": "2.2.8",
+    "arktype": "2.2.10",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zod": "catalog:"
