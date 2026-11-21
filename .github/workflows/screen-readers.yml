@@ -39,7 +39,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Built once on Linux: the package build scripts use POSIX shell commands.
       - run: pnpm build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: screen-reader-docs-build
           # Vite preview serves the Cloudflare Build Output (worker bundle and assets).
@@ -75,7 +75,7 @@ jobs:
       - name: Install VoiceOver assets
         run: pnpm exec guidepup install voiceover
       - run: pnpm test:screen-reader:voiceover
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: screen-reader-report-voiceover
@@ -113,7 +113,7 @@ jobs:
       - name: Install NVDA assets
         run: pnpm exec guidepup install nvda
       - run: pnpm test:screen-reader:nvda
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: screen-reader-report-nvda
