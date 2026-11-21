@@ -24,7 +24,7 @@ describe("grid list reordering", () => {
     const first = container.querySelector<HTMLElement>("[role='row']")!;
     expect(first.getAttribute("aria-keyshortcuts")).toBe("Alt+ArrowUp Alt+ArrowDown");
 
-    first.focus();
+    act(() => first.focus());
     await press(user, first, "{Alt>}{ArrowDown}{/Alt}");
     expect(spy).toHaveBeenLastCalledWith(["photos.zip", "report.pdf", "notes.txt"]);
     expect(rowValues()).toEqual(["photos.zip", "report.pdf", "notes.txt"]);
@@ -173,7 +173,7 @@ describe("grid list reordering", () => {
     await user.click(notes);
     expect(onChange).toHaveBeenLastCalledWith("notes");
 
-    notes.focus();
+    act(() => notes.focus());
     await press(user, notes, "{Alt>}{ArrowUp}{/Alt}");
     expect(onReorder).not.toHaveBeenCalled();
   });
@@ -202,7 +202,7 @@ describe("grid list reordering", () => {
     expect(row.hasAttribute("data-dragging")).toBe(true);
     fireDrag(row, "dragend");
 
-    handle.focus();
+    act(() => handle.focus());
     await press(user, handle, "{Alt>}{ArrowDown}{/Alt}");
     expect(spy).toHaveBeenLastCalledWith(["photos.zip", "report.pdf", "notes.txt"]);
   });
@@ -270,7 +270,7 @@ describe("grid list reordering", () => {
     fireDrag(first!, "dragend");
 
     // Alt+ArrowDown from photos.zip would push notes.txt up; it is refused aloud.
-    second!.focus();
+    act(() => second!.focus());
     await press(user, second!, "{Alt>}{ArrowDown}{/Alt}");
     expect(spy).not.toHaveBeenCalled();
     expect(container.querySelector("[aria-live]")?.textContent).toBe(

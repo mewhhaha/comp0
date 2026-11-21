@@ -1,6 +1,6 @@
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render } from "../test/render.js";
+import { checkValidity, render } from "../test/render.js";
 import {
   Checkbox,
   CheckboxGroup,
@@ -138,17 +138,17 @@ describe("form reset behavior", () => {
     );
     const radioControls = container.querySelectorAll<HTMLInputElement>("input[type=radio]");
 
-    expect(form.checkValidity()).toBe(true);
+    expect(checkValidity(form)).toBe(true);
     expect([...radioControls].every((radio) => radio.required)).toBe(true);
     act(() => {
       checkboxControls[0]!.click();
     });
-    expect(form.checkValidity()).toBe(false);
+    expect(checkValidity(form)).toBe(false);
     act(() => {
       checkboxControls[1]!.click();
       radioControls[1]!.click();
     });
-    expect(form.checkValidity()).toBe(true);
+    expect(checkValidity(form)).toBe(true);
 
     await reset(form);
 

@@ -82,7 +82,7 @@ describe("tree composition", () => {
   it("expands a collapsed item with ArrowRight, then moves into its first child", async () => {
     const onOpenChange = vi.fn();
     const { item, user } = renderTree({ onOpenChange });
-    item("components").focus();
+    act(() => item("components").focus());
     await pressKey(user, document.activeElement!, "{ArrowRight}");
     expect(item("components").getAttribute("aria-expanded")).toBe("true");
     expect(onOpenChange).toHaveBeenLastCalledWith(["src", "components"]);
@@ -98,7 +98,7 @@ describe("tree composition", () => {
 
   it("collapses an expanded item with ArrowLeft, else moves to the parent item", async () => {
     const { item, user } = renderTree({ defaultOpen: ["src", "components"] });
-    item("button").focus();
+    act(() => item("button").focus());
     await pressKey(user, document.activeElement!, "{ArrowLeft}");
     expect(document.activeElement).toBe(item("components"));
 
@@ -118,7 +118,7 @@ describe("tree composition", () => {
 
   it("mirrors branch arrows in right-to-left layouts", async () => {
     const { item, user } = renderTree({ defaultOpen: [], style: { direction: "rtl" } });
-    item("src").focus();
+    act(() => item("src").focus());
 
     await pressKey(user, document.activeElement!, "{ArrowLeft}");
     expect(item("src").getAttribute("aria-expanded")).toBe("true");
@@ -128,7 +128,7 @@ describe("tree composition", () => {
 
   it("moves over visible items only with ArrowDown and ArrowUp", async () => {
     const { item, user } = renderTree();
-    item("src").focus();
+    act(() => item("src").focus());
     await pressKey(user, document.activeElement!, "{ArrowDown}");
     expect(document.activeElement).toBe(item("components"));
     // The collapsed components subtree is skipped entirely.
@@ -152,7 +152,7 @@ describe("tree composition", () => {
     const source = item("src");
 
     act(() => {
-      source.focus();
+      act(() => source.focus());
       source.dispatchEvent(
         new frameWindow.KeyboardEvent("keydown", {
           key: "ArrowDown",
@@ -169,7 +169,7 @@ describe("tree composition", () => {
 
   it("jumps to the first and last visible item with Home and End", async () => {
     const { item, user } = renderTree();
-    item("components").focus();
+    act(() => item("components").focus());
     await pressKey(user, document.activeElement!, "{End}");
     expect(document.activeElement).toBe(item("readme"));
     await pressKey(user, document.activeElement!, "{Home}");
@@ -178,14 +178,14 @@ describe("tree composition", () => {
 
   it("moves to a visible typeahead match, ignoring hidden rows", async () => {
     const { item, user } = renderTree();
-    item("src").focus();
+    act(() => item("src").focus());
     await pressKey(user, document.activeElement!, "r");
     expect(document.activeElement).toBe(item("readme"));
   });
 
   it("does not match typeahead against items inside collapsed groups", async () => {
     const { item, user } = renderTree();
-    item("src").focus();
+    act(() => item("src").focus());
     // "Button.tsx" exists but is hidden inside the collapsed components group.
     await pressKey(user, document.activeElement!, "b");
     expect(document.activeElement).toBe(item("src"));
@@ -194,7 +194,7 @@ describe("tree composition", () => {
   it("selects with Enter and Space and manages uncontrolled selection", async () => {
     const onChange = vi.fn();
     const { item, user } = renderTree({ onChange });
-    item("components").focus();
+    act(() => item("components").focus());
     await pressKey(user, document.activeElement!, "{Enter}");
     expect(onChange).toHaveBeenLastCalledWith("components");
     expect(item("components").getAttribute("aria-selected")).toBe("true");
@@ -202,7 +202,7 @@ describe("tree composition", () => {
     // Enter alone does not expand.
     expect(item("components").getAttribute("aria-expanded")).toBe("false");
 
-    item("readme").focus();
+    act(() => item("readme").focus());
     await pressKey(user, document.activeElement!, " ");
     expect(onChange).toHaveBeenLastCalledWith("readme");
     expect(item("readme").getAttribute("aria-selected")).toBe("true");
@@ -212,7 +212,7 @@ describe("tree composition", () => {
   it("keeps controlled selection with the caller while still reporting changes", async () => {
     const onChange = vi.fn();
     const { item, user } = renderTree({ value: "readme", onChange });
-    item("src").focus();
+    act(() => item("src").focus());
     await pressKey(user, document.activeElement!, "{Enter}");
     expect(onChange).toHaveBeenLastCalledWith("src");
     expect(item("src").getAttribute("aria-selected")).toBeNull();
@@ -250,7 +250,7 @@ describe("tree composition", () => {
   it("respects controlled expansion", async () => {
     const onOpenChange = vi.fn();
     const { item, user } = renderTree({ open: ["src"], onOpenChange });
-    item("components").focus();
+    act(() => item("components").focus());
     await pressKey(user, document.activeElement!, "{ArrowRight}");
     expect(onOpenChange).toHaveBeenLastCalledWith(["src", "components"]);
     // The caller did not apply the change, so the group stays collapsed.
@@ -271,7 +271,7 @@ describe("tree composition", () => {
     const { user } = result;
     const item = (value: string) =>
       result.container.querySelector<HTMLElement>(`[data-value="${value}"]`)!;
-    item("one").focus();
+    act(() => item("one").focus());
     await pressKey(user, document.activeElement!, "{ArrowDown}");
     expect(document.activeElement).toBe(item("three"));
     expect(item("two").getAttribute("aria-disabled")).toBe("true");

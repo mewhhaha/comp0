@@ -12,7 +12,7 @@ import {
   SelectOption,
   SelectTrigger,
 } from "./index.js";
-import { render, setup } from "../test/render.js";
+import { checkValidity, render, setup } from "../test/render.js";
 
 describe("picker composition", () => {
   it("wires picker parts without a Popover wrapper and still requires the root", () => {
@@ -147,13 +147,13 @@ describe("picker composition", () => {
     expect(trigger.getAttribute("aria-label")).toBe("Choose plan");
     expect(trigger.hasAttribute("aria-labelledby")).toBe(false);
     expect(input.required).toBe(true);
-    expect(form.checkValidity()).toBe(false);
+    expect(checkValidity(form)).toBe(false);
 
     await user.click(trigger);
     await user.click(container.querySelector<HTMLElement>("[role='option']")!);
     await user.type(input, "Warsaw");
 
-    expect(form.checkValidity()).toBe(true);
+    expect(checkValidity(form)).toBe(true);
     const data = new FormData(form);
     expect(data.get("plan")).toBe("pro");
     expect(data.get("city")).toBe("Warsaw");

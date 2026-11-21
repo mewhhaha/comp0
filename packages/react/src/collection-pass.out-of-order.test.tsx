@@ -4,6 +4,7 @@ import { renderToPipeableStream } from "react-dom/server";
 import { Writable } from "node:stream";
 import { runInThisContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { allowConsole } from "../test/console-guard.js";
 import { userEvent } from "../test/render.js";
 import {
   GridList,
@@ -388,6 +389,9 @@ describe("hydrating HTML the server rendered out of order", () => {
   });
 
   it("gives the stop to the cell whose widget the user focused before hydration", async () => {
+    // The server and client renderers share context objects in this one realm, which React's
+    // development build reports; a browser only ever runs the client renderer.
+    allowConsole(/multiple renderers concurrently rendering the same context provider/);
     // Before hydration only the first cell is a stop, while the widgets inside later cells keep
     // their native Tab stops, so a widget is where the user usually lands in server HTML.
     const page = (
@@ -434,6 +438,9 @@ describe("hydrating HTML the server rendered out of order", () => {
   });
 
   it("leaves the stop alone when focus before hydration sits in a grid nested in a cell", async () => {
+    // The server and client renderers share context objects in this one realm, which React's
+    // development build reports; a browser only ever runs the client renderer.
+    allowConsole(/multiple renderers concurrently rendering the same context provider/);
     const page = (
       <Table aria-label="Teams">
         <TableBody>

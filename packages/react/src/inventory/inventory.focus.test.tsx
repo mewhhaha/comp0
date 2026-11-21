@@ -152,7 +152,10 @@ function Board({ values, commits }: { values: readonly string[]; commits: string
 
 function renderBoard(values: readonly string[]) {
   const commits: string[][] = [];
-  const result = setup(<Board values={values} commits={commits} />);
+  // `commits` records each committed stop; StrictMode's replayed mount would record it twice.
+  const result = setup(<Board values={values} commits={commits} />, document, {
+    strictMode: false,
+  });
   const item = (value: string) =>
     result.container.querySelector<HTMLElement>(`li[data-value='${value}']`)!;
   const show = (next: readonly string[]) =>
