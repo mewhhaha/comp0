@@ -8,8 +8,9 @@ import {
 } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { useCollectionPass, useCollectionSeed } from "../internal/collection-pass.js";
+import { createOrderedCollection } from "../internal/ordered-collection.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
-import { CarouselContext, createCarouselSlides } from "./carousel-shared.js";
+import { CarouselContext } from "./carousel-shared.js";
 
 export type CarouselProps = Omit<ComponentProps<"section">, "defaultValue" | "onChange" | "value"> &
   AsProp & {
@@ -54,7 +55,7 @@ export function Carousel({
   });
   const seed = useCollectionSeed();
   const renderOrder = useCollectionSeed();
-  const [slides] = useState(() => createCarouselSlides(seed, renderOrder));
+  const [slides] = useState(() => createOrderedCollection(seed, renderOrder));
   const [stopped, setStopped] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);

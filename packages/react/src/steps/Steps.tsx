@@ -1,7 +1,9 @@
-import { useId, useLayoutEffect, useState, type ReactNode } from "react";
-import { useCollection, useControllableState } from "@comp0/core";
+import { useId, useState, type ReactNode } from "react";
+import { useControllableState } from "@comp0/core";
+import { useCollectionPass } from "../internal/collection-pass.js";
+import { createOrderedCollection } from "../internal/ordered-collection.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
-import { StepsContext } from "./steps-shared.js";
+import { createStepsSeed, createStepsStatus, StepsContext } from "./steps-shared.js";
 
 export type StepsProps = RootProps<{
   value?: string | undefined;
@@ -13,36 +15,32 @@ export type StepsProps = RootProps<{
 
 export function Steps({ as, children, value, defaultValue, onChange, ...props }: StepsProps) {
   const baseId = useId();
-  const [currentValue, setCurrentValue] = useControllableState({
+  const initialValue = defaultValue ?? "";
+  const [, setCurrentValue, { controlled }] = useControllableState({
     value,
-    defaultValue: defaultValue ?? "",
+    defaultValue: initialValue,
     onChange,
   });
-  const collection = useCollection();
-  const [order, setOrder] = useState<string[]>([]);
+  const [seed] = useState(createStepsSeed);
+  // The seed answers only server and hydration renders, so the store never needs to clear it.
+  const [items] = useState(() => createOrderedCollection());
+  // The store mirrors the uncontrolled value: it starts from the same default and is written only
+  // in the event that sets that state, so dropping `value` later shows it in the same render.
+  const [status] = useState(() => createStepsStatus(items, seed, initialValue));
 
-  // Items register in their own layout effects, which run before this one, so the order is
-  // read once here and then kept current by the collection's change notifications.
-  useLayoutEffect(() => {
-    const syncOrder = () => {
-      setOrder((previous) => {
-        const next = collection.items().map((item) => item.key);
-        if (
-          next.length === previous.length &&
-          next.every((entry, index) => entry === previous[index])
-        ) {
-          return previous;
-        }
-        return next;
-      });
-    };
-    syncOrder();
-    return collection.subscribe(syncOrder);
-  }, [collection]);
+  // Uncontrolled moves update the status in the same event as the state, so they take one commit;
+  // a controlled value waits for its owner, which may reject the change, and reaches the parts
+  // through context in the render that commits it.
+  const select = (next: string) => {
+    setCurrentValue(next);
+    if (!controlled) status.setCurrent(next);
+  };
 
+  const pass = useCollectionPass(seed, children);
   const Root = rootElement(as);
   return (
-    <StepsContext value={{ baseId, currentValue, order, setCurrentValue, collection }}>
+    <StepsContext value={{ baseId, select, items, seed, status, value }}>
+      {pass}
       <Root data-comp0="steps" {...props}>
         {children}
       </Root>
