@@ -1,9 +1,9 @@
-import { act } from "react";
+import { act, useLayoutEffect } from "react";
 import { describe, expect, it } from "vitest";
 import { setup } from "../../test/render.js";
 import { pressKey } from "../../test/press-key.js";
 import { renderInventory } from "../../test/inventory-fixtures.js";
-import { Inventory } from "./Inventory.js";
+import { Inventory, type InventoryLayout } from "./Inventory.js";
 import { InventoryItem } from "./InventoryItem.js";
 
 describe("inventory structure and focus", () => {
@@ -116,4 +116,147 @@ describe("inventory structure and focus", () => {
     expect(alerts.tabIndex).toBe(0);
     expect(revenue.tabIndex).toBe(-1);
   });
+});
+
+/** Records, in every commit where the layout changed, the values of the items that are tab stops. */
+function Stops({ layout, commits }: { layout: InventoryLayout; commits: string[][] }) {
+  useLayoutEffect(() => {
+    const items = [...document.querySelectorAll<HTMLElement>("li[data-value]")];
+    commits.push(items.filter((item) => item.tabIndex === 0).map((item) => item.dataset.value!));
+  }, [layout, commits]);
+  return null;
+}
+
+function Board({ values, commits }: { values: readonly string[]; commits: string[][] }) {
+  const layout = values.map((value, index) => ({
+    value,
+    column: index + 1,
+    row: 1,
+    columnSpan: 1,
+    rowSpan: 1,
+  }));
+  return (
+    <>
+      <button type="button">Before</button>
+      <Inventory aria-label="Board" columns={8} rows={1} value={layout} onChange={() => {}}>
+        {layout.map((entry) => (
+          <InventoryItem key={entry.value} value={entry.value}>
+            {entry.value}
+          </InventoryItem>
+        ))}
+        <Stops layout={layout} commits={commits} />
+      </Inventory>
+    </>
+  );
+}
+
+function renderBoard(values: readonly string[]) {
+  const commits: string[][] = [];
+  const result = setup(<Board values={values} commits={commits} />);
+  const item = (value: string) =>
+    result.container.querySelector<HTMLElement>(`li[data-value='${value}']`)!;
+  const show = (next: readonly string[]) =>
+    result.rerender(<Board values={next} commits={commits} />);
+  return { ...result, commits, item, show };
+}
+
+describe("inventory tab stop when the layout changes", () => {
+  it("moves the stop to the first remaining item in the same commit as the removal", async () => {
+    const { commits, item, show, user } = renderBoard(["a", "b", "c"]);
+    act(() => item("a").focus());
+    await user.keyboard("{ArrowRight}");
+    expect(item("b").tabIndex).toBe(0);
+
+    show(["a", "c"]);
+
+    expect(commits.at(-1)).toEqual(["a"]);
+  });
+
+  it("keeps the stop on the first remaining item when the removed item returns", async () => {
+    const { commits, item, show, user } = renderBoard(["a", "b", "c"]);
+    act(() => item("a").focus());
+    await user.keyboard("{ArrowRight}");
+
+    show(["a", "c"]);
+    show(["a", "b", "c"]);
+
+    expect(commits.at(-1)).toEqual(["a"]);
+    expect(item("b").tabIndex).toBe(-1);
+  });
+
+  it("follows the focused item by value when an item is prepended", async () => {
+    const { commits, item, show, user } = renderBoard(["a", "b"]);
+    act(() => item("a").focus());
+    await user.keyboard("{ArrowRight}");
+
+    show(["z", "a", "b"]);
+
+    expect(commits.at(-1)).toEqual(["b"]);
+  });
+
+  it("renders no item for an empty layout and puts the stop on the first item once items arrive", () => {
+    const { commits, container, show } = renderBoard([]);
+    expect(container.querySelectorAll("li")).toHaveLength(0);
+
+    show(["x", "y"]);
+
+    expect(commits).toEqual([[], ["x"]]);
+  });
+
+  it("survives removing the focused item and then every item", async () => {
+    const { commits, container, item, show, user } = renderBoard(["a", "b", "c"]);
+    act(() => item("a").focus());
+    await user.keyboard("{ArrowRight}");
+
+    show(["a", "c"]);
+    show([]);
+    expect(container.querySelectorAll("li")).toHaveLength(0);
+    show(["c", "a"]);
+
+    expect(commits.slice(-3)).toEqual([["a"], [], ["c"]]);
+  });
+
+  it("tabs into the first remaining item after the focused one is removed and roves from it", async () => {
+    const { getByRole, item, show, user } = renderBoard(["a", "b", "c"]);
+    act(() => item("a").focus());
+    await user.keyboard("{ArrowRight}{ArrowRight}");
+    expect(document.activeElement).toBe(item("c"));
+
+    show(["a", "b"]);
+    act(() => getByRole("button", { name: "Before" }).focus());
+    await user.tab();
+    expect(document.activeElement).toBe(item("a"));
+    await user.keyboard("{ArrowRight}");
+
+    expect(document.activeElement).toBe(item("b"));
+    expect(item("a").tabIndex).toBe(-1);
+    expect(item("b").tabIndex).toBe(0);
+  });
+
+  it("keeps exactly one stop, on the focused or else the first item, across random layout changes", () => {
+    const pool = ["a", "b", "c", "d", "e", "f"];
+    let seed = 20261121;
+    const random = (below: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % below;
+    };
+    const { commits, item, show } = renderBoard(pool);
+    let expected = "a";
+
+    for (let step = 0; step < 1000; step++) {
+      const values = pool.filter(() => random(3) > 0);
+      for (let index = values.length - 1; index > 0; index--) {
+        const other = random(index + 1);
+        [values[index], values[other]] = [values[other]!, values[index]!];
+      }
+      show(values);
+      if (!values.includes(expected)) expected = values[0] ?? "";
+      expect(commits.at(-1), `step ${step}`).toEqual(expected === "" ? [] : [expected]);
+      if (values.length > 0 && random(2) === 0) {
+        expected = values[random(values.length)]!;
+        act(() => item(expected).focus());
+      }
+    }
+    // A thousand rerenders take a few seconds when the whole suite runs in parallel.
+  }, 20_000);
 });

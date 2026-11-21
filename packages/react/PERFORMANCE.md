@@ -92,6 +92,35 @@ Later, `aria-posinset`, `aria-setsize`, and `aria-expanded` moved from layout-ef
 - **A client mount renders about a seventh faster and keeps its two commits.** The bench mounts on the client, where no pass runs: items still learn their positions only once they register, so the second commit re-renders every item as before, but it no longer scans each item's siblings (render 91 → 78 ms at 1000). The commit it saves is the hydration one, which the bench does not measure: the hydrated items' client snapshots already match their server snapshots, so `useSyncExternalStore` schedules no re-render.
 - **Arrow presses are unchanged.** Moving the stop touches neither store.
 
+### Carousel
+
+`packages/react/bench/carousel.bench.tsx` mounts a Carousel with Previous, Next, and N slides and clicks Next 10 times, through the public API only. Carousel moved from an `order` array in root state, synced by a layout effect from the collection and read by each slide with `order.indexOf`, to a slides store read with `useSyncExternalStore` (`carousel-shared.tsx`): positions are cached once per registration change, so a slide's snapshot is a map lookup, and slides register from a ref callback instead of an element state plus a layout effect. Both columns come from one session, alternating over two rounds; the first round is shown, with the second's 1000-slide wall time in brackets.
+
+| Scenario | Slides | Store: commits / render ms / wall ms | Root state: commits / render ms / wall ms |
+| -------- | -----: | ------------------------------------ | ----------------------------------------- |
+| mount    |     10 | 2 / 2.7 / 3.8                        | 3 / 1.6 / 2.4                             |
+| mount    |    100 | 2 / 10.9 / 14.1                      | 3 / 8.9 / 11.2                            |
+| mount    |   1000 | 2 / 74.3 / 97.4 (100.6)              | 3 / 162.7 / 175.5 (209.5)                 |
+| Next     |    100 | 1 / 0.50 / 0.95                      | 1 / 0.76 / 1.18                           |
+| Next     |   1000 | 1 / 4.53 / 8.42 (8.69)               | 1 / 9.23 / 11.31 (10.11)                  |
+
+- **Mount is a commit shorter and about half the time at 1000 slides.** Each slide's element state cost a commit, and the root's order sync another that re-rendered every slide with an O(n) `indexOf`: 3 commits and 175–210 ms wall at 1000. Now the first commit renders unnumbered slides, they register from their ref callbacks, and the store's one notification re-renders them with O(1) lookups: 2 commits and about 100 ms. At 10 and 100 slides the difference is within the noise between rounds. "mounts in at most two commits" in `carousel/carousel.slides.test.tsx` keeps it that way.
+- **Next stays one commit.** Every slide still reads the current index from context, so a click re-renders all of them, but none re-registers: the registration ref callback depends only on the stable collection ("moves to the next slide in one commit without re-registering every slide"). After each render a slide's layout effect checks that its element still precedes the next slide in the cached order (one `compareDocumentPosition` per slide), so a keyed reorder renumbers the slides even though it registers nothing, as long as the slides re-render. A reorder of memoized slide elements (built once and passed through a `memo` component) renders no slide, so nothing checks and the numbers stay stale, as before this change; there is no `MutationObserver`. re-measured with that check, mount stayed at 2 commits and about 100–113 ms wall at 1000 slides, and Next at 1 commit and 9.5–10.7 ms.
+- **Server HTML now has the positions.** The collection pass records the slides ahead of the real ones, so each slide's "N of M", `data-current`, `aria-hidden`, and `inert` are in server HTML and hydrating writes none of them (`carousel/carousel.collection-pass.test.tsx`). The bench mounts on the client, where no pass runs.
+
+### Inventory focus reset
+
+`packages/react/bench/inventory-and-genui.bench.tsx` removes the focused item (the tab stop) from a controlled Inventory layout, through the public API only. Inventory moved from a layout effect that reset the focused value after commit to a reset during render. Medians of 7 runs; both columns come from one session, alternating over two rounds; the first round is shown.
+
+| Scenario            | Items | Render-time reset: commits / render ms / wall ms | Layout effect: commits / render ms / wall ms |
+| ------------------- | ----: | ------------------------------------------------ | -------------------------------------------- |
+| remove focused item |    10 | 1 / 1.0 / 1.3                                    | 2 / 2.0 / 2.5                                |
+| remove focused item |   100 | 1 / 5.2 / 6.7                                    | 2 / 14.2 / 16.8                              |
+| remove focused item |   400 | 1 / 21.4 / 24.8                                  | 2 / 44.1 / 52.9                              |
+
+- **Removing the focused item is a commit shorter and about half the time.** The layout effect committed a render with no tab stop and then re-rendered every item to restore it; the reset during render reaches the same state before React commits. Mount is one commit either way and within the noise between rounds.
+- **GenUI's callbacks cost nothing either way.** The same file re-renders a GenUI host with new inline `onAction`, `onStateChange`, and `onError` functions: one commit per host render before and after the move from a latest-ref helper to `useEffectEvent`.
+
 ### TagGroup
 
 TagGroup moved from an `activeKey` in `TagList` state and context, set from each tag's registration, to `useTabStopStore` with each `Tag` reading `useIsTabStop`. Selection is multiple and never chooses the stop, so the store resolves it from the tag that last held focus, else the first enabled tag. Same bench and setup as above; the two columns were measured back to back in one session, alternating twice, and the second pair was within 0.4 ms of the first except the context column's unselected mount at 1000 (67.9 ms wall).
