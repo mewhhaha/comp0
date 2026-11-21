@@ -27,13 +27,24 @@ export type CollectionSeed = {
   clear: () => void;
 };
 
-function createCollectionSeed(): CollectionSeed {
+/** A seed that also answers where each key was recorded and how many were, for "N of M". */
+export type OrderedCollectionSeed = CollectionSeed & {
+  /** The key's 0-based place in recording order, if recorded. */
+  position: (key: string) => number | undefined;
+  /** How many keys are recorded. */
+  size: () => number;
+};
+
+function createCollectionSeed(): OrderedCollectionSeed {
   const disabledByKey = new Map<string, boolean>();
+  const positions = new Map<string, number>();
   let fallback = "";
   const isEnabled = (key: string) => disabledByKey.get(key) === false;
   return {
     add(key, disabled) {
-      if (!disabledByKey.has(key)) disabledByKey.set(key, disabled);
+      if (disabledByKey.has(key)) return;
+      disabledByKey.set(key, disabled);
+      positions.set(key, positions.size);
     },
     resolve(preferred) {
       if (disabledByKey.size === 0) return null;
@@ -47,8 +58,11 @@ function createCollectionSeed(): CollectionSeed {
       }
       return fallback;
     },
+    position: (key) => positions.get(key),
+    size: () => positions.size,
     clear() {
       disabledByKey.clear();
+      positions.clear();
       fallback = "";
     },
   };
