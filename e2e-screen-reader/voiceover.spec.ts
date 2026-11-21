@@ -15,13 +15,5 @@ for (const scenario of scenarios) {
       reader: voiceOver,
       phrases: voiceOverPhrases,
       tabKey: "Alt+Tab",
-      // What has keyboard focus (VO-F4), then what the VoiceOver cursor is on (VO-F3): an option
-      // reached through aria-activedescendant has the cursor but not focus. They go through
-      // VoiceOver's commander, not as key presses: F3 and F4 are Mission Control and Launchpad
-      // keys on the runner, which take the screen away from the browser.
-      describers: [
-        () => voiceOver.perform(voiceOver.commanderCommands.DESCRIBE_ITEM_WITH_KEYBOARD_FOCUS),
-        () => voiceOver.perform(voiceOver.commanderCommands.DESCRIBE_ITEM_IN_VOICEOVER_CURSOR),
-      ],
     }));
 }

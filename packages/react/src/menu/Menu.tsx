@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { dataAttr, useControllableState } from "@comp0/core";
 import { useAutocompleteContext } from "../autocomplete/autocomplete-shared.js";
 import { type RootProps, rootElement } from "../internal/polymorphic.js";
@@ -53,33 +53,6 @@ export function Menu({
     }
     triggerElement.current?.focus();
   };
-  const focusTriggerNow = () => {
-    if (
-      autocomplete &&
-      !autocomplete.disableVirtualFocus &&
-      !surfaceElement.current?.contains(autocomplete.inputRef.current)
-    ) {
-      autocomplete.clearActive();
-      autocomplete.inputRef.current?.focus();
-    } else {
-      triggerElement.current?.focus();
-    }
-  };
-  // Focus leaves an open menu only once it has closed. Moving focus to the trigger while the
-  // popover is still shown, and hiding it after, leaves VoiceOver on WebKit reporting the old
-  // menu item as focused, so it never announces the trigger. Select and Dialog already restore
-  // focus after closing.
-  const pendingFocus = useRef<(() => void) | null>(null);
-  const focusWhenClosed = (focus: () => void) => {
-    if (open) pendingFocus.current = focus;
-    else focus();
-  };
-  useLayoutEffect(() => {
-    if (open || !pendingFocus.current) return;
-    const focus = pendingFocus.current;
-    pendingFocus.current = null;
-    focus();
-  }, [open]);
   const context = {
     open,
     isSubmenu: parentMenu !== null,
@@ -91,10 +64,19 @@ export function Menu({
       if (autocomplete && !autocomplete.disableVirtualFocus) autocomplete.clearActive();
       setOpen(false);
       if (parentMenu) parentMenu.closeAll();
-      else focusWhenClosed(focusAfterClose);
+      else focusAfterClose();
     },
     focusTrigger() {
-      focusWhenClosed(focusTriggerNow);
+      if (
+        autocomplete &&
+        !autocomplete.disableVirtualFocus &&
+        !surfaceElement.current?.contains(autocomplete.inputRef.current)
+      ) {
+        autocomplete.clearActive();
+        autocomplete.inputRef.current?.focus();
+      } else {
+        triggerElement.current?.focus();
+      }
     },
     focusInitial() {
       const position = pendingInitialFocus.current;

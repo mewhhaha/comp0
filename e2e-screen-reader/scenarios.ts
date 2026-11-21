@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import type { NVDAPlaywright, VoiceOverPlaywright } from "@guidepup/playwright";
 import { visitExample } from "../e2e/wcag.js";
 import { heard, type Phrases, type Term } from "./spoken.js";
@@ -15,13 +15,6 @@ type ScenarioContext = {
   phrases: Phrases;
   /** WebKit only tabs to buttons and checkboxes with Option held; Chromium tabs to everything. */
   tabKey: string;
-  /**
-   * Reader commands that describe where the reader is, tried in order when an announcement does
-   * not come on its own. VoiceOver sometimes drops the announcement for a focus or state change
-   * and speaks only its usage hint, though the page and the reader's own model are right; asking
-   * it is what a user does (VO-F4, VO-F3), and the answer is checked for the same terms.
-   */
-  describers?: readonly (() => Promise<unknown>)[];
 };
 
 type Scenario = {
@@ -50,24 +43,9 @@ async function say(context: ScenarioContext, action: () => Promise<unknown>) {
 
 type HeardOptions = { hints?: boolean };
 
-/** Fails after `ms` instead of waiting on a reader command that never returns. */
-async function within<T>(ms: number, work: Promise<T>, what: string): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`${what} did not finish within ${ms} ms`)), ms);
-  });
-  try {
-    return await Promise.race([work, timeout]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /**
  * Presses `key` and checks the reader says `terms` because of it. VoiceOver can finish the
- * previous announcement first and only then read the new one, so its log is polled. If the
- * announcement never comes, the reader is asked to describe where it is (see `describers`); the
- * test fails only if no answer has the terms either.
+ * previous announcement first and only then read the new one, so its log is polled.
  */
 async function expectSaid(
   context: ScenarioContext,
@@ -103,28 +81,7 @@ async function confirmSaid(
       .toBe(true);
     return;
   } catch {
-    // Fall through to the describers, then to a failure that names everything heard.
-  }
-  const spoken = utterances;
-  for (const describe of context.describers ?? []) {
-    // Not through `say`: a reader command queues behind the capture that would wrap it, and
-    // waits for it forever. The command captures its own speech into the log.
-    const start = (await context.reader.spokenPhraseLog()).length;
-    await within(15_000, describe(), `${when}: describing`);
-    let described: string[] = [];
-    for (let attempt = 0; attempt < 6; attempt++) {
-      described = (await context.reader.spokenPhraseLog()).slice(start);
-      if (heard(described, terms, options)) break;
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-    if (heard(described, terms, options)) {
-      test.info().annotations.push({
-        type: "screen reader",
-        description: `${when}: not announced on its own (heard ${JSON.stringify(spoken)}); described on request as ${JSON.stringify(described)}`,
-      });
-      return;
-    }
-    utterances = [...utterances, ...described];
+    // The poll's own message can't name what was spoken, which is what a failure needs.
   }
   expectHeard(utterances, terms, when, options);
 }
