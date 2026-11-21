@@ -1,0 +1,9 @@
+[
+  "axe:dark:color-contrast: button \"Monday, June 29, 2026\"",
+  "axe:dark:color-contrast: button \"Sunday, June 28, 2026\"",
+  "axe:dark:color-contrast: button \"Tuesday, June 30, 2026\"",
+  "axe:light:color-contrast: button \"Monday, June 29, 2026\"",
+  "axe:light:color-contrast: button \"Sunday, June 28, 2026\"",
+  "axe:light:color-contrast: button \"Tuesday, July 14, 2026\"",
+  "axe:light:color-contrast: button \"Tuesday, June 30, 2026\""
+]
