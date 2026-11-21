@@ -3,7 +3,7 @@ import { runScenario, scenarios } from "./scenarios.js";
 import { voiceOverPhrases } from "./spoken.js";
 
 // VoiceOver on macOS with WebKit. The fixture starts VoiceOver for each test and stops it in
-// teardown, so a failed attempt never leaves it running into the retry.
+// teardown, so a failed attempt never leaves it running into the next test.
 
 // Capture everything said, usage hints included; `heard` ignores the hints.
 test.use({ voiceOverStartOptions: { capture: true } });
@@ -15,7 +15,11 @@ for (const scenario of scenarios) {
       reader: voiceOver,
       phrases: voiceOverPhrases,
       tabKey: "Alt+Tab",
-      describeFocus: () =>
-        voiceOver.perform(voiceOver.keyboardCommands.describeItemWithKeyboardFocus),
+      // What has keyboard focus (VO-Shift-F4), then what the VoiceOver cursor is on (VO-F3):
+      // an option reached through aria-activedescendant has the cursor but not focus.
+      describers: [
+        () => voiceOver.perform(voiceOver.keyboardCommands.describeItemWithKeyboardFocus),
+        () => voiceOver.perform(voiceOver.keyboardCommands.describeItem),
+      ],
     }));
 }

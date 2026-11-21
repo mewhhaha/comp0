@@ -4,6 +4,11 @@ name: Screen readers
 # Informational, not a required check: real readers are slower and noisier than the CI gate.
 on:
   workflow_dispatch:
+    inputs:
+      repeat:
+        description: Runs of each scenario, to check the suite is stable
+        type: number
+        default: 1
   schedule:
     # Mondays 05:17 UTC.
     - cron: "17 5 * * 1"
@@ -53,7 +58,7 @@ jobs:
     needs: docs
     # Guidepup supports macOS Sonoma, Sequoia and Tahoe; macos-15 is Sequoia.
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: ${{ (inputs.repeat || 1) > 1 && 180 || 45 }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -74,7 +79,7 @@ jobs:
         run: pnpm exec guidepup setup --ci
       - name: Install VoiceOver assets
         run: pnpm exec guidepup install voiceover
-      - run: pnpm test:screen-reader:voiceover
+      - run: pnpm test:screen-reader:voiceover --repeat-each ${{ inputs.repeat || 1 }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -91,7 +96,7 @@ jobs:
     needs: docs
     # Guidepup supports Windows Server 2022 and 2025.
     runs-on: windows-2025
-    timeout-minutes: 45
+    timeout-minutes: ${{ (inputs.repeat || 1) > 1 && 180 || 45 }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -112,7 +117,7 @@ jobs:
         run: pnpm exec guidepup setup --ci
       - name: Install NVDA assets
         run: pnpm exec guidepup install nvda
-      - run: pnpm test:screen-reader:nvda
+      - run: pnpm test:screen-reader:nvda --repeat-each ${{ inputs.repeat || 1 }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

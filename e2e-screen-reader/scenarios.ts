@@ -16,10 +16,12 @@ type ScenarioContext = {
   /** WebKit only tabs to buttons and checkboxes with Option held; Chromium tabs to everything. */
   tabKey: string;
   /**
-   * Asks the reader to describe the element with keyboard focus, for a reader that does not
-   * always announce focus moving on its own (VoiceOver after a menu closes).
+   * Reader commands that describe where the reader is, tried in order when an announcement does
+   * not come on its own. VoiceOver sometimes drops the announcement for a focus or state change
+   * and speaks only its usage hint, though the page and the reader's own model are right; asking
+   * it is what a user does (VO-Shift-F4, VO-F3), and the answer is checked for the same terms.
    */
-  describeFocus?: () => Promise<unknown>;
+  describers?: readonly (() => Promise<unknown>)[];
 };
 
 type Scenario = {
@@ -46,63 +48,86 @@ async function say(context: ScenarioContext, action: () => Promise<unknown>) {
   return utterances;
 }
 
-function press(context: ScenarioContext, key: string) {
-  return say(context, () => context.page.keyboard.press(key));
-}
+type HeardOptions = { hints?: boolean };
 
 /**
- * Presses a key and waits for the reader to say `terms`. VoiceOver can finish the previous
- * announcement first (a menu item's hint after Escape) and only then read where focus returned.
+ * Presses `key` and checks the reader says `terms` because of it. VoiceOver can finish the
+ * previous announcement first and only then read the new one, so its log is polled. If the
+ * announcement never comes, the reader is asked to describe where it is (see `describers`); the
+ * test fails only if no answer has the terms either.
  */
-async function pressUntilHeard(
+async function expectSaid(
   context: ScenarioContext,
   key: string,
   terms: readonly Term[],
   when: string,
+  options?: HeardOptions,
 ) {
   const before = (await context.reader.spokenPhraseLog()).length;
   // NVDA's capture returns the phrase it spoke; VoiceOver's later speech only reaches the log.
-  const captured = await press(context, key);
-  let utterances: string[] = captured;
+  const captured = await say(context, () => context.page.keyboard.press(key));
+  await confirmSaid(context, before, captured, terms, when, options);
+}
+
+async function confirmSaid(
+  context: ScenarioContext,
+  before: number,
+  captured: readonly string[],
+  terms: readonly Term[],
+  when: string,
+  options?: HeardOptions,
+) {
+  let utterances = [...captured];
   try {
     await expect
       .poll(
         async () => {
           utterances = [...captured, ...(await context.reader.spokenPhraseLog()).slice(before)];
-          return heard(utterances, terms);
+          return heard(utterances, terms, options);
         },
-        { timeout: 10_000 },
+        { timeout: 5_000 },
       )
       .toBe(true);
+    return;
   } catch {
-    // VoiceOver sometimes leaves its cursor on the menu item that Escape removed and says nothing
-    // about focus returning to the trigger, though focus did return. Ask it what has keyboard
-    // focus: that is what a user hears with VO-Shift-F4, and it still checks role and name.
-    if (context.describeFocus) {
-      const described = await say(context, context.describeFocus);
+    // Fall through to the describers, then to a failure that names everything heard.
+  }
+  const spoken = utterances;
+  for (const describe of context.describers ?? []) {
+    const described = await say(context, describe);
+    if (heard(described, terms, options)) {
       test.info().annotations.push({
         type: "screen reader",
-        description: `${when}: not announced on its own; described on request as ${JSON.stringify(described)}`,
+        description: `${when}: not announced on its own (heard ${JSON.stringify(spoken)}); described on request as ${JSON.stringify(described)}`,
       });
-      utterances = described;
+      return;
     }
-    // The poll's own message can't name what was spoken, which is what a failure needs.
-    expectHeard(utterances, terms, when);
+    utterances = [...utterances, ...described];
   }
+  expectHeard(utterances, terms, when, options);
 }
 
 /**
  * Moves focus to the start of the example, then tabs until `target` has focus, the way a
- * keyboard user enters it. Returns what the reader said at the last stop.
+ * keyboard user enters it, and checks the reader says `terms` at that stop.
  */
-async function tabTo(context: ScenarioContext, target: Locator) {
+async function tabTo(
+  context: ScenarioContext,
+  target: Locator,
+  terms: readonly Term[],
+  when: string,
+) {
   await context.region.evaluate((element) => {
     element.setAttribute("tabindex", "-1");
     (element as HTMLElement).focus();
   });
   for (let stop = 0; stop < 10; stop++) {
-    const utterances = await press(context, context.tabKey);
-    if (await target.evaluate((element) => element === document.activeElement)) return utterances;
+    const before = (await context.reader.spokenPhraseLog()).length;
+    const captured = await say(context, () => context.page.keyboard.press(context.tabKey));
+    if (await target.evaluate((element) => element === document.activeElement)) {
+      await confirmSaid(context, before, captured, terms, when);
+      return;
+    }
   }
   throw new Error(`${context.tabKey} never reached ${target} from the start of the Live example`);
 }
@@ -125,16 +150,18 @@ export const scenarios: Scenario[] = [
     async run(context) {
       const { phrases, region } = context;
       const trigger = region.locator("button[aria-haspopup='listbox']");
-      expectHeard(
-        await tabTo(context, trigger),
+      await tabTo(
+        context,
+        trigger,
         ["Size", phrases.popupButton, phrases.popupClosed],
         "focus on the trigger",
       );
       // Opening moves focus to the selected option, so the option is what is announced.
-      expectHeard(await press(context, "Enter"), ["Medium", phrases.option], "open");
+      await expectSaid(context, "Enter", ["Medium", phrases.option], "open");
       await expect(trigger).toHaveAttribute("aria-expanded", "true");
-      expectHeard(
-        await press(context, "Escape"),
+      await expectSaid(
+        context,
+        "Escape",
         ["Size", phrases.popupButton, phrases.popupClosed],
         "close",
       );
@@ -146,15 +173,16 @@ export const scenarios: Scenario[] = [
     async run(context) {
       const { phrases, region } = context;
       const input = region.getByRole("combobox", { name: "City" });
-      expectHeard(
-        await tabTo(context, input),
+      await tabTo(
+        context,
+        input,
         ["City", phrases.comboBox, phrases.popupClosed],
         "focus on the input",
       );
       // Opening moves the reader to the first option, so the option is what is announced; NVDA
       // never speaks the input's new "expanded" state, so that is checked on the element.
       // VoiceOver names the option's role only in its hint ("a selectable").
-      expectHeard(await press(context, "ArrowDown"), ["Warsaw", phrases.option], "open", {
+      await expectSaid(context, "ArrowDown", ["Warsaw", phrases.option], "open", {
         hints: true,
       });
       await expect(input).toHaveAttribute("aria-expanded", "true");
@@ -166,12 +194,13 @@ export const scenarios: Scenario[] = [
       const { phrases, region } = context;
       const name = "Send me product updates";
       const checkbox = region.getByRole("checkbox", { name });
-      expectHeard(
-        await tabTo(context, checkbox),
+      await tabTo(
+        context,
+        checkbox,
         [name, phrases.checkbox, phrases.checked],
         "focus on the checkbox",
       );
-      expectHeard(await press(context, "Space"), [phrases.unchecked], "toggle");
+      await expectSaid(context, "Space", [phrases.unchecked], "toggle");
       await expect(checkbox).not.toBeChecked();
     },
   },
@@ -179,16 +208,13 @@ export const scenarios: Scenario[] = [
     slug: "tabs",
     async run(context) {
       const { phrases, region } = context;
-      expectHeard(
-        await tabTo(context, region.getByRole("tab", { name: "Preview" })),
+      await tabTo(
+        context,
+        region.getByRole("tab", { name: "Preview" }),
         ["Preview", phrases.tab, phrases.selected],
         "focus on the selected tab",
       );
-      expectHeard(
-        await press(context, "ArrowRight"),
-        ["Code", phrases.tab, phrases.selected],
-        "next tab",
-      );
+      await expectSaid(context, "ArrowRight", ["Code", phrases.tab, phrases.selected], "next tab");
       await expect(region.getByRole("tab", { name: "Code" })).toHaveAttribute(
         "aria-selected",
         "true",
@@ -199,21 +225,17 @@ export const scenarios: Scenario[] = [
     slug: "tree",
     async run(context) {
       const { phrases, region } = context;
-      expectHeard(
-        await tabTo(context, region.getByRole("treeitem", { name: "README.md" })),
-        // NVDA reads the extension as "dot md".
+      await tabTo(
+        context,
+        region.getByRole("treeitem", { name: "README.md" }), // NVDA reads the extension as "dot md".
         ["README", phrases.treeItem],
         "focus on the selected item",
       );
-      expectHeard(
-        await press(context, "Home"),
-        ["src", phrases.treeItem, phrases.expanded],
-        "first item",
-      );
+      await expectSaid(context, "Home", ["src", phrases.treeItem, phrases.expanded], "first item");
       const src = region.getByRole("treeitem").first();
-      expectHeard(await press(context, "ArrowLeft"), [phrases.collapsed], "collapse");
+      await expectSaid(context, "ArrowLeft", [phrases.collapsed], "collapse");
       await expect(src).toHaveAttribute("aria-expanded", "false");
-      expectHeard(await press(context, "ArrowRight"), [phrases.expanded], "expand");
+      await expectSaid(context, "ArrowRight", [phrases.expanded], "expand");
       await expect(src).toHaveAttribute("aria-expanded", "true");
     },
   },
@@ -222,16 +244,12 @@ export const scenarios: Scenario[] = [
     async run(context) {
       const { page, phrases, region } = context;
       const trigger = region.getByRole("button", { name: "Open dialog" });
-      expectHeard(
-        await tabTo(context, trigger),
-        ["Open dialog", phrases.button],
-        "focus on the trigger",
-      );
+      await tabTo(context, trigger, ["Open dialog", phrases.button], "focus on the trigger");
       // VoiceOver announces the dialog only in its hint ("inside of a web dialog"), so the
       // role is taken from the hint and the name from the page.
-      expectHeard(await press(context, "Enter"), [phrases.dialog], "open", { hints: true });
+      await expectSaid(context, "Enter", [phrases.dialog], "open", { hints: true });
       await expect(page.getByRole("dialog", { name: "Example dialog" })).toBeVisible();
-      expectHeard(await press(context, "Escape"), ["Open dialog", phrases.button], "close");
+      await expectSaid(context, "Escape", ["Open dialog", phrases.button], "close");
       await expect(trigger).toBeFocused();
     },
   },
@@ -240,16 +258,12 @@ export const scenarios: Scenario[] = [
     async run(context) {
       const { page, phrases, region } = context;
       const trigger = region.getByRole("button", { name: "Actions" });
-      expectHeard(
-        await tabTo(context, trigger),
-        ["Actions", phrases.popupButton],
-        "focus on the trigger",
-      );
+      await tabTo(context, trigger, ["Actions", phrases.popupButton], "focus on the trigger");
       // VoiceOver says where focus landed only in its hint ("You are currently on a menu
       // item"), so the role is taken from the hint and the focused item from the page.
-      expectHeard(await press(context, "Enter"), [phrases.menuItem], "open", { hints: true });
+      await expectSaid(context, "Enter", [phrases.menuItem], "open", { hints: true });
       await expect(page.getByRole("menuitem", { name: "Rename" })).toBeFocused();
-      await pressUntilHeard(context, "Escape", ["Actions", phrases.popupButton], "close");
+      await expectSaid(context, "Escape", ["Actions", phrases.popupButton], "close");
       await expect(trigger).toBeFocused();
     },
   },

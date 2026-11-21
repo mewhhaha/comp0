@@ -27,7 +27,8 @@ export default defineConfig(
     testDir: "./e2e-screen-reader",
     outputDir: "./.playwright/screen-reader-results",
     forbidOnly: Boolean(process.env.CI),
-    retries: process.env.CI ? 2 : 0,
+    // No retries: a scenario that passes only on a second try is a bug in the scenario.
+    retries: 0,
     timeout: 5 * 60_000,
     reportSlowTests: null,
     expect: { timeout: 15_000 },
