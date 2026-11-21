@@ -1,0 +1,44 @@
+name: Dependabot auto-merge
+
+# Turns on auto-merge for Dependabot patch and minor updates. GitHub merges the PR only after
+# the required status checks pass. Major updates, and minor updates of 0.x packages (breaking
+# under semver), are left open for a person to review.
+on: pull_request
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'mewhhaha/comp0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: decide
+        env:
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          DEPENDENCIES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          # Any 0.x package moving to a new minor is a breaking change under semver.
+          zero_minor=$(jq '[.[] | select((.prevVersion // "") | test("^v?0\\.")) | select(.updateType == "version-update:semver-minor")] | length' <<<"$DEPENDENCIES")
+          case "$UPDATE_TYPE" in
+            version-update:semver-patch) merge=true ;;
+            version-update:semver-minor) [ "$zero_minor" = 0 ] && merge=true || merge=false ;;
+            *) merge=false ;;
+          esac
+          echo "Update type: $UPDATE_TYPE, 0.x minor bumps: $zero_minor, auto-merge: $merge"
+          echo "merge=$merge" >> "$GITHUB_OUTPUT"
+
+      - name: Enable auto-merge
+        if: steps.decide.outputs.merge == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
