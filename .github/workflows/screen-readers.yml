@@ -28,18 +28,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.1
         with:
           run_install: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Built once on Linux: the package build scripts use POSIX shell commands.
       - run: pnpm build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         with:
           name: screen-reader-docs-build
           # Vite preview serves the Cloudflare Build Output (worker bundle and assets).
@@ -55,16 +55,16 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.1
         with:
           run_install: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4.3.0
         with:
           name: screen-reader-docs-build
           path: apps/docs/.cloudflare/output
@@ -75,7 +75,7 @@ jobs:
       - name: Install VoiceOver assets
         run: pnpm exec guidepup install voiceover
       - run: pnpm test:screen-reader:voiceover
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: failure()
         with:
           name: screen-reader-report-voiceover
@@ -93,16 +93,16 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.1
         with:
           run_install: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4.3.0
         with:
           name: screen-reader-docs-build
           path: apps/docs/.cloudflare/output
@@ -113,7 +113,7 @@ jobs:
       - name: Install NVDA assets
         run: pnpm exec guidepup install nvda
       - run: pnpm test:screen-reader:nvda
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: failure()
         with:
           name: screen-reader-report-nvda
