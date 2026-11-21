@@ -64,7 +64,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: screen-reader-docs-build
           path: apps/docs/.cloudflare/output
@@ -102,7 +102,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: screen-reader-docs-build
           path: apps/docs/.cloudflare/output
