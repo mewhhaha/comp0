@@ -20,6 +20,8 @@
     "test:e2e": "playwright test",
     "test:wcag": "playwright test e2e/wcag.spec.ts",
     "test:wcag:baseline": "WCAG_BASELINE=update playwright test e2e/wcag.spec.ts --retries 0",
+    "test:screen-reader:voiceover": "playwright test -c playwright.screen-reader.config.ts --project voiceover",
+    "test:screen-reader:nvda": "playwright test -c playwright.screen-reader.config.ts --project nvda",
     "test:package": "node scripts/verify-packages.mjs",
     "test:compiler-conformance": "node scripts/compare-react-compilers.mjs",
     "test:compiler-smoke": "pnpm build && pnpm test:compiler-conformance && node packages/react/test/verify-react-compiler.mjs",
@@ -28,6 +30,9 @@
   },
   "devDependencies": {
     "@babel/core": "8.0.7",
+    "@guidepup/guidepup": "0.40.0",
+    "@guidepup/playwright": "0.21.0",
+    "@guidepup/setup": "0.29.3",
     "@guidepup/virtual-screen-reader": "0.33.0",
     "@playwright/test": "catalog:",
     "@testing-library/dom": "10.4.2",

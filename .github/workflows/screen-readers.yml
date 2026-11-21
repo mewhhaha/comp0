@@ -1,0 +1,124 @@
+name: Screen readers
+
+# VoiceOver and NVDA read the production docs build (playwright.screen-reader.config.ts).
+# Informational, not a required check: real readers are slower and noisier than the CI gate.
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 05:17 UTC.
+    - cron: "17 5 * * 1"
+  pull_request:
+    paths:
+      - .github/workflows/screen-readers.yml
+      - playwright.screen-reader.config.ts
+      - e2e-screen-reader/**
+      - package.json
+      - pnpm-lock.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: screen-readers-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: Docs build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Built once on Linux: the package build scripts use POSIX shell commands.
+      - run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screen-reader-docs-build
+          # Vite preview serves the Cloudflare Build Output (worker bundle and assets).
+          path: apps/docs/.cloudflare/output
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
+
+  voiceover:
+    name: VoiceOver (macOS, WebKit)
+    needs: docs
+    # Guidepup supports macOS Sonoma, Sequoia and Tahoe; macos-15 is Sequoia.
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: screen-reader-docs-build
+          path: apps/docs/.cloudflare/output
+      - name: Install WebKit
+        run: pnpm exec playwright install webkit
+      - name: Set up VoiceOver automation
+        run: pnpm exec guidepup setup --ci
+      - name: Install VoiceOver assets
+        run: pnpm exec guidepup install voiceover
+      - run: pnpm test:screen-reader:voiceover
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screen-reader-report-voiceover
+          # The results directory holds the trace and video of each failed attempt.
+          path: |
+            .playwright/screen-reader-report
+            .playwright/screen-reader-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+  nvda:
+    name: NVDA (Windows, Chromium)
+    needs: docs
+    # Guidepup supports Windows Server 2022 and 2025.
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: screen-reader-docs-build
+          path: apps/docs/.cloudflare/output
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium
+      - name: Set up NVDA automation
+        run: pnpm exec guidepup setup --ci
+      - name: Install NVDA assets
+        run: pnpm exec guidepup install nvda
+      - run: pnpm test:screen-reader:nvda
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screen-reader-report-nvda
+          path: |
+            .playwright/screen-reader-report
+            .playwright/screen-reader-results
+          retention-days: 7
+          if-no-files-found: ignore
