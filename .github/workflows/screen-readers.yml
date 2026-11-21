@@ -56,6 +56,10 @@ jobs:
   voiceover:
     name: VoiceOver (macOS, WebKit)
     needs: docs
+    # Weekly and on demand only. VoiceOver drops announcements now and then, and after Escape
+    # closes a menu it keeps reporting the closed menu's item as focused, so it cannot gate a
+    # pull request; NVDA, which reads the same scenarios reliably, does.
+    if: github.event_name != 'pull_request'
     # Guidepup supports macOS Sonoma, Sequoia and Tahoe; macos-15 is Sequoia.
     runs-on: macos-15
     timeout-minutes: ${{ (inputs.repeat || 1) > 1 && 180 || 45 }}
