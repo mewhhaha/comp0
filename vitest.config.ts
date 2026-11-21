@@ -2,6 +2,7 @@ import { defineConfig, type TestProjectInlineConfiguration } from "vitest/config
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
+import { pointerSequence } from "./packages/react/test/pointer-command.js";
 
 const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -44,6 +45,7 @@ export const browserProject = {
       headless: true,
       instances: [{ browser: "chromium" }],
       provider: playwright(),
+      commands: { pointerSequence },
     },
     include: [
       "packages/react/src/**/*.browser.test.tsx",
