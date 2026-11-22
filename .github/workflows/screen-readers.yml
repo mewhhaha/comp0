@@ -87,7 +87,6 @@ jobs:
         shell: bash
         env:
           GREP: ${{ inputs.grep }}
-          SR_REDUCED_MOTION: ${{ inputs.grep }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
