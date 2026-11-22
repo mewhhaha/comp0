@@ -18,10 +18,10 @@ type ScenarioContext = {
   tabKey: string;
   /**
    * Presses a key the way a user does, through the operating system and the reader, so the
-   * reader sees the key as well as the page's response to it. Without it, keys go straight to
-   * the page through Playwright.
+   * reader sees the key as well as the page's response to it, and returns what the reader said
+   * after it. Without it, keys go straight to the page through Playwright.
    */
-  press?: (key: string) => Promise<unknown>;
+  press?: (key: string) => Promise<string[]>;
 };
 
 type Scenario = {
@@ -51,14 +51,9 @@ async function say(context: ScenarioContext, action: () => Promise<unknown>) {
 type HeardOptions = { hints?: boolean };
 
 /** Presses `key` and returns what the reader said because of it. */
-async function keystroke(context: ScenarioContext, key: string) {
-  const { press } = context;
-  if (!press) return say(context, () => context.page.keyboard.press(key));
-  // The reader's own key press captures its speech into the log; wrapping it in `capture` would
-  // queue it behind that capture and wait forever.
-  const before = (await context.reader.spokenPhraseLog()).length;
-  await press(key);
-  return (await context.reader.spokenPhraseLog()).slice(before);
+function keystroke(context: ScenarioContext, key: string) {
+  if (context.press) return context.press(key);
+  return say(context, () => context.page.keyboard.press(key));
 }
 
 /**

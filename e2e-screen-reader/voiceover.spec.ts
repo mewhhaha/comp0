@@ -1,6 +1,7 @@
 import { voiceOverTest as test } from "@guidepup/playwright";
 import { runScenario, scenarios } from "./scenarios.js";
 import { voiceOverPhrases } from "./spoken.js";
+import { speechAfter } from "./voiceover-speech.js";
 
 // VoiceOver on macOS with WebKit. The fixture starts VoiceOver for each test and stops it in
 // teardown, so a failed attempt never leaves it running into the next test.
@@ -15,6 +16,6 @@ for (const scenario of scenarios) {
       reader: voiceOver,
       phrases: voiceOverPhrases,
       tabKey: "Alt+Tab",
-      press: (key) => voiceOver.press(key),
+      press: (key) => speechAfter(() => voiceOver.press(key, { capture: false })),
     }));
 }
