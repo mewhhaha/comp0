@@ -8,6 +8,8 @@ import { speechAfter } from "./voiceover-speech.js";
 
 // Capture everything said, usage hints included; `heard` ignores the hints.
 test.use({ voiceOverStartOptions: { capture: true } });
+// EXPERIMENT: does the combobox popover's opening transition make VoiceOver miss the option name?
+if (process.env.SR_REDUCED_MOTION) test.use({ reducedMotion: "reduce" });
 
 for (const scenario of scenarios) {
   test(`VoiceOver: ${scenario.slug}`, ({ page, voiceOver }) =>
