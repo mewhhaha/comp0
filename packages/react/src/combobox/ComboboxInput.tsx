@@ -1,4 +1,10 @@
-import { type ChangeEvent, type ComponentProps, type KeyboardEvent } from "react";
+import {
+  type ChangeEvent,
+  type ComponentProps,
+  type KeyboardEvent,
+  useEffect,
+  useState,
+} from "react";
 import { dataAttr, useCollectionNavigation, useComposedRefs } from "@comp0/core";
 import { describedBy, useFieldContext } from "../field/field-shared.js";
 import { type AsProp, partElement } from "../internal/polymorphic.js";
@@ -25,8 +31,17 @@ export function ComboboxInput({
   const invalid =
     props["aria-invalid"] === true || props["aria-invalid"] === "true" || Boolean(combobox.invalid);
   const description = describedBy(field, props["aria-describedby"]);
+  // The active option is named only once the list is showing. In the commit that opens it, the
+  // popover is still hidden while attributes are written (it is shown in a layout effect after),
+  // and VoiceOver on WebKit then reads the option that aria-activedescendant points at as
+  // "selectable (null)", with no name.
+  const [listShown, setListShown] = useState(false);
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- the second render is the point: it writes aria-activedescendant after the popover is shown.
+    setListShown(popover.open);
+  }, [popover.open]);
   let activeDescendant: string | undefined;
-  if (popover.open) {
+  if (popover.open && listShown) {
     activeDescendant =
       (props["aria-activedescendant"] ?? collection.get(combobox.activeKey)?.id) || undefined;
   }
