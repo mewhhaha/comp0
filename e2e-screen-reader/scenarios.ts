@@ -3,9 +3,10 @@ import type { NVDAPlaywright, VoiceOverPlaywright } from "@guidepup/playwright";
 import { visitExample } from "../e2e/wcag.js";
 import { heard, type Phrases, type Term } from "./spoken.js";
 
-// Component scenarios shared by the VoiceOver and NVDA specs. Keys go to the page through
-// Playwright, so both readers meet the same input; each reader's announcement is captured and
-// checked for the role, the accessible name and the state, in that reader's wording.
+// Component scenarios shared by the VoiceOver and NVDA specs. Both readers meet the same keys
+// (through the reader where a spec provides `press`, else through Playwright); each reader's
+// announcement is captured and checked for the role, the accessible name and the state, in that
+// reader's wording.
 
 type ScenarioContext = {
   page: Page;
@@ -15,6 +16,12 @@ type ScenarioContext = {
   phrases: Phrases;
   /** WebKit only tabs to buttons and checkboxes with Option held; Chromium tabs to everything. */
   tabKey: string;
+  /**
+   * Presses a key the way a user does, through the operating system and the reader, so the
+   * reader sees the key as well as the page's response to it. Without it, keys go straight to
+   * the page through Playwright.
+   */
+  press?: (key: string) => Promise<unknown>;
 };
 
 type Scenario = {
@@ -43,6 +50,17 @@ async function say(context: ScenarioContext, action: () => Promise<unknown>) {
 
 type HeardOptions = { hints?: boolean };
 
+/** Presses `key` and returns what the reader said because of it. */
+async function keystroke(context: ScenarioContext, key: string) {
+  const { press } = context;
+  if (!press) return say(context, () => context.page.keyboard.press(key));
+  // The reader's own key press captures its speech into the log; wrapping it in `capture` would
+  // queue it behind that capture and wait forever.
+  const before = (await context.reader.spokenPhraseLog()).length;
+  await press(key);
+  return (await context.reader.spokenPhraseLog()).slice(before);
+}
+
 /**
  * Presses `key` and checks the reader says `terms` because of it. VoiceOver can finish the
  * previous announcement first and only then read the new one, so its log is polled.
@@ -56,7 +74,7 @@ async function expectSaid(
 ) {
   const before = (await context.reader.spokenPhraseLog()).length;
   // NVDA's capture returns the phrase it spoke; VoiceOver's later speech only reaches the log.
-  const captured = await say(context, () => context.page.keyboard.press(key));
+  const captured = await keystroke(context, key);
   await confirmSaid(context, before, captured, terms, when, options);
 }
 
@@ -102,7 +120,7 @@ async function tabTo(
   });
   for (let stop = 0; stop < 10; stop++) {
     const before = (await context.reader.spokenPhraseLog()).length;
-    const captured = await say(context, () => context.page.keyboard.press(context.tabKey));
+    const captured = await keystroke(context, context.tabKey);
     if (await target.evaluate((element) => element === document.activeElement)) {
       await confirmSaid(context, before, captured, terms, when);
       return;

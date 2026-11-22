@@ -15,5 +15,6 @@ for (const scenario of scenarios) {
       reader: voiceOver,
       phrases: voiceOverPhrases,
       tabKey: "Alt+Tab",
+      press: (key) => voiceOver.press(key),
     }));
 }
