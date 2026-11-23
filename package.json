@@ -29,7 +29,7 @@
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:all && pnpm test:package && pnpm test:compiler-smoke && pnpm test:e2e"
   },
   "devDependencies": {
-    "@babel/core": "8.0.7",
+    "@babel/core": "8.1.2",
     "@guidepup/guidepup": "0.40.0",
     "@guidepup/playwright": "0.21.0",
     "@guidepup/setup": "0.29.3",
@@ -37,26 +37,26 @@
     "@playwright/test": "catalog:",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
-    "@testing-library/user-event": "14.6.7",
-    "@types/node": "26.6.5",
+    "@testing-library/user-event": "14.6.13",
+    "@types/node": "26.6.6",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitejs/plugin-react": "catalog:",
-    "@vitest/browser-playwright": "5.0.3",
-    "axe-core": "4.14.0",
+    "@vitest/browser-playwright": "5.1.1",
+    "axe-core": "4.14.1",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint-plugin-better-tailwindcss": "4.9.0",
+    "eslint-plugin-better-tailwindcss": "4.11.0",
     "fast-check": "4.10.3",
     "jsdom": "30.1.2",
     "oxc-transform-react": "catalog:",
-    "oxfmt": "0.72.0",
-    "oxlint": "1.87.0",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.94.0",
     "playwright": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:",
-    "vitest": "5.0.3"
+    "vitest": "5.1.1"
   },
   "packageManager": "pnpm@12.3.4"
 }
