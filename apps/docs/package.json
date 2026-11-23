@@ -17,22 +17,22 @@
     "@comp0/react": "workspace:*",
     "@fontsource-variable/inter": "5.3.0",
     "@heroicons/react": "^2.2.0",
-    "@shikijs/langs": "4.5.0",
+    "@shikijs/langs": "4.6.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router": "8.4.0",
-    "shiki": "4.5.0"
+    "react-router": "8.5.2",
+    "shiki": "4.6.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",
-    "@react-router/dev": "8.4.0",
-    "@tailwindcss/vite": "4.3.3",
+    "@react-router/dev": "8.5.2",
+    "@tailwindcss/vite": "4.3.5",
     "@vitejs/plugin-react": "catalog:",
-    "@vitejs/plugin-rsc": "0.5.36",
-    "arktype": "2.2.8",
+    "@vitejs/plugin-rsc": "0.5.39",
+    "arktype": "2.2.10",
     "cf": "1.0.0-rc.1",
     "oxc-transform-react": "catalog:",
-    "tailwindcss": "4.3.3",
+    "tailwindcss": "4.3.5",
     "vite": "catalog:"
   }
 }
