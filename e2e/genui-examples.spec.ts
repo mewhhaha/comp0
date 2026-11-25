@@ -274,9 +274,46 @@ test("waiting dots give way to a reply and respect the reader’s motion prefere
   const slider = log.getByRole("slider", { name: "Rows" });
   await expect(slider).toBeVisible();
   await expect(log.locator('[data-comp0="slider"]').first()).toHaveCSS("animation-name", "none");
+  await expect(log.getByRole("figure").locator(".genui-artwork")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
   await expect(log.locator(".room-seat[data-aisle]").first()).toHaveCSS("opacity", "0");
   await expect(page.getByRole("button", { name: "Replay conversation" })).toBeEnabled();
   await slider.press("ArrowRight");
   await expect(slider).toBeFocused();
   await expect(log.getByRole("status", { name: "Chairs to set out" })).toHaveText("20");
+});
+
+test("the streamed print bounces once and stays in place during edits", async ({ page }) => {
+  await page.goto("/genui/examples/print-proof", { waitUntil: "networkidle" });
+  await page.addStyleTag({ content: ".genui-artwork { animation-play-state: paused !important }" });
+  await page.getByRole("button", { name: "Send prompt" }).click();
+  const figure = page.getByRole("figure");
+  const artwork = figure.locator(".sleeve-proof");
+  await expect(artwork).toHaveCSS("animation-name", "genui-artwork-in");
+  const caption = figure.locator("figcaption");
+  const captionTop = await caption.evaluate((el) => el.getBoundingClientRect().top + scrollY);
+  const entrance = await artwork.evaluateHandle((el) => el.getAnimations()[0]!);
+  const samples = await artwork.evaluate((el, animation) => {
+    const duration = Number(animation.effect!.getTiming().duration);
+    return [0, 0.52, 1].map((fraction) => {
+      animation.currentTime = duration * fraction;
+      return el.getBoundingClientRect().width / el.clientWidth;
+    });
+  }, entrance);
+  expect(samples[0]).toBeLessThan(0.95);
+  expect(samples[1]).toBeGreaterThan(1.01);
+  expect(samples[2]).toBeCloseTo(1, 2);
+  await expect(caption).toHaveCSS("animation-name", "none");
+  await entrance.evaluate((animation) => {
+    animation.currentTime = 100;
+  });
+  await page.getByRole("button", { name: "Replay conversation" }).waitFor();
+  expect(await caption.evaluate((el) => el.getBoundingClientRect().top + scrollY)).toBe(captionTop);
+  await page.getByRole("slider").press("ArrowRight");
+  await expect(figure).toHaveAccessibleName(/4 mm offset/);
+  expect(
+    await artwork.evaluate((el, animation) => el.getAnimations()[0] === animation, entrance),
+  ).toBe(true);
 });

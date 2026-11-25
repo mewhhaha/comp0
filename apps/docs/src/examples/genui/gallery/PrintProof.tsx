@@ -10,7 +10,7 @@ export function PrintProof({ ink, offset }: PrintProofProps) {
     <figure className="m-0">
       <div
         aria-hidden="true"
-        className="sleeve-proof"
+        className="genui-artwork sleeve-proof"
         style={{ "--ink": colours[ink], "--shift": offset + "mm" } as CSSProperties}
       >
         <span className="sleeve-disc" />
