@@ -3,7 +3,7 @@ import { runScenario, scenarios } from "./scenarios.js";
 import { nvdaPhrases } from "./spoken.js";
 
 // NVDA on Windows with Chromium. The fixture starts NVDA for each test and stops it in
-// teardown, so a failed attempt never leaves it running into the retry.
+// teardown, so a failed attempt never leaves it running into the next test.
 
 // Capture everything said, not only the first phrase after each key.
 test.use({ nvdaStartOptions: { capture: true } });
